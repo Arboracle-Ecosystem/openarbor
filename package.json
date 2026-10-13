@@ -1,0 +1,15 @@
+{
+  "name": "openarbor",
+  "version": "2.0.0",
+  "description": "Open-standards arboricultural field assessment, root-zone protection (ANSI A300 / ISA BMP), allometric ecosystem valuation, and municipal tree ordinance engine.",
+  "type": "module",
+  "license": "AGPL-3.0-or-later",
+  "author": "George Steward (ISA Certified Arborist TX-362025A)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Arboracle-Ecosystem/openarbor.git"
+  },
+  "scripts": {
+    "test": "node tests/verify_openarbor.mjs"
+  }
+}

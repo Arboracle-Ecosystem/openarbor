@@ -1,168 +1,97 @@
-<div align="center">
+# OpenArbor
 
-<img src="https://arboracle.app/logo.png" alt="Arboracle" width="64" height="64" onerror="this.style.display='none'"/>
-
-# Open Arbor
-
-**The open-source operating system for land stewardship.**
-
-*One platform. Four modules. 100-year thinking.*
+**Open-Standards Arboricultural Field Assessment, Root Zone Protection (`ANSI A300` / `ISA BMP`), Allometric Ecosystem Valuation, and Municipal Tree Ordinance Engine**
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![STIM Protocol](https://img.shields.io/badge/STIM-Layer_0_Aligned-2d6a4f)](https://github.com/STIM-Protocol/stim-core)
-[![iNaturalist](https://img.shields.io/badge/iNaturalist-Arboracle_Project-74ac00)](https://www.inaturalist.org/projects/arboracle)
-[![Platform](https://img.shields.io/badge/Platform-arboracle.app-1a1a2e)](https://arboracle.app)
-
-</div>
+[![Standards: ANSI A300 / ISA BMP](https://img.shields.io/badge/Standards-ANSI_A300_%7C_ISA_BMP-2d6a4f)](#architecture--open-standards-modules)
+[![GeoJSON: OGC CRS84](https://img.shields.io/badge/GeoJSON-OGC_CRS84-74ac00)](#architecture--open-standards-modules)
 
 ---
 
-## What Is Open Arbor?
+## Overview
 
-Open Arbor is the open-source core of the Arboracle ecosystem — a community-governed platform for professional arborists, ecological stewards, land managers, and citizen scientists.
+Proprietary arboriculture and urban forestry software often locks field observations, municipal tree protection rules, and preservation plans inside closed cloud databases. When a practitioner, municipal forester, or researcher cannot inspect the underlying allometric equations, verify statutory ordinance citations, or export standard `GeoJSON` directly into `QGIS` or `ArcGIS Field Maps`, the software becomes a barrier rather than an instrument.
 
-It is not a tool. It is an instrument.
-
-The distinction matters: tools are picked up and put down. Instruments are mastered over time, and they accumulate the knowledge of everyone who has played them. Open Arbor is designed to accumulate 100 years of ecological intelligence — every tree tagged, every treatment logged, every forest planted — and make that intelligence available to the stewards who come next.
-
-> *"We are moving from SaaS (Software as a Service) to SaaI — Software as an Instrument."*
-> — George Steward, Founder
+**OpenArbor** (`v2.0`) refactors the core deterministic engines developed for the Arboracle platform into a zero-dependency, local-first open-standards library and dataset. Every calculation traces to a published arboricultural standard (`ANSI A300`, `ISA BMP`, `AS 4970`, `BS 5837`), peer-reviewed urban forestry literature (`Nowak`, `McPherson & Simpson`, `Xiao`, `John White FCIN12`), or a cited municipal code section.
 
 ---
 
-## Architecture: One Repo, Four Modules
+## Architecture & Open-Standards Modules
 
-Open Arbor is a single platform organized into four functional modules. They are not separate projects — they are interconnected layers of the same operating system, the same way roots, trunk, canopy, and fruit are not separate trees.
-
-```
+```text
 openarbor/
-├── modules/
-│   ├── arbor/        ← Professional tree inventory & business ops
-│   ├── nursery/      ← Native plant supply chain & propagation
-│   ├── forest/       ← Reforestation design & Miyawaki installations
-│   └── sanctuary/    ← Land tenure, stewardship agreements, legal frameworks
-├── core/             ← Shared data models, STIM integration, API contracts
-├── docs/             ← Architecture, philosophy, roadmap
-└── contrib/          ← Contribution guides, governance, community protocols
+├── src/
+│   └── core/
+│       ├── rootZone.js             # CRZ, TPZ (US / AS4970 / BS5837), SRZ, Multi-Stem DBH & 1-ft Grid Union Area
+│       ├── ordinanceEngine.js      # Data-driven municipal tree protection, Oak Wilt window & mitigation calculator
+│       └── ecosystemBenefits.js    # Nowak/McPherson allometrics, John White veteran tree age & OGC GeoJSON exporter
+├── data/
+│   └── ordinances/
+│       └── central_texas_ordinances.json  # Verified open ordinance rules (Austin, Georgetown, Liberty Hill, Cedar Park, Round Rock)
+├── schemas/
+│   └── municipal-ordinance.schema.json    # JSON Schema (Draft 2020-12) for community-contributed municipal tree codes
+├── tests/
+│   └── verify_openarbor.mjs        # Deterministic zero-dependency Node.js verification suite
+└── docs/                           # Architectural blueprints and historical design notes
 ```
 
-### Module: Arbor
-**For:** Professional arborists, tree care companies, municipal foresters
+### 1. Root Zone & Structural Stability Engine (`src/core/rootZone.js`)
+* **Critical Root Zone (`CRZ`) & Inner/Quarter Root Zones:** Computes full, half (`1/2 CRZ`), and quarter (`1/4 CRZ`) radii and areas in both imperial (`ft`, `sq ft`) and metric (`m`, `sq m`) units, honoring municipal minimum radius floors.
+* **International Tree Protection Zone (`TPZ`) Standards:** Supports `US 1:1` (`1.0 ft/in DBH`), `US 1:1.5` (`1.5 ft/in DBH` for mature/sensitive species), `Australian AS 4970` (`12x DBH`, clamped `2m to 15m`), and `UK BS 5837:2012`.
+* **Structural Root Zone (`SRZ`):** Implements the `AS 4970` / Mattheck windthrow stability equation `(D * 50)^0.42 * 0.64` from Root Flare Diameter (`DRF`).
+* **Multi-Stem DBH Aggregation:** Supports both ISA/CTLA quadratic mean (`sqrt(d1^2 + d2^2 + ...)`) and municipal largest-stem-plus-half formulas (`d_max + 0.5 * sum(d_rest)`).
+* **Spatial Root Zone Union (`unionRootZoneArea`):** Uses `1-ft` spatial grid sampling across GPS coordinates so overlapping root zones in dense groves are never double-counted when calculating pneumatic air-tilling (`AirSpade`), compost, or mulch volumes.
 
-The field operations layer. Tree inventory, risk assessment, treatment logging, client management, and work order generation. Every tree is tagged. Every intervention is recorded. The data outlives the arborist.
+### 2. Data-Driven Municipal Ordinance & Mitigation Engine (`src/core/ordinanceEngine.js`)
+Rather than hardcoding city logic in application code, OpenArbor reads declarative JSON records conforming to [`schemas/municipal-ordinance.schema.json`](schemas/municipal-ordinance.schema.json):
+* **Tiered Protection & Species Exceptions:** Evaluates each stem against general and species-specific `Protected`, `Legacy`, and `Heritage` DBH thresholds while automatically excluding listed invasive or nuisance species (such as *Celtis occidentalis*, *Melia azedarach*, *Triadica sebifera*).
+* **CRZ Encroachment & Seasonal Oak Wilt Guards:** Flags trees when construction disturbance exceeds municipal CRZ limits (e.g., `> 30%` in Liberty Hill or `> 50%` in Austin/Georgetown), cut/fill exceeds `4 inches` inside `1/2 CRZ`, or *Quercus* pruning is scheduled during prohibited *Ceratocystis fagacearum* (Oak Wilt) vector months.
+* **Ascending Diameter Exemption & Mitigation Ledger:** Implements whole-tree ascending diameter exemption caps (such as Liberty Hill UDC `§ 6.07.01(c)(5)(B)` `20%` cap), retained hardwood credits, replacement caliper inches, cash-in-lieu schedules, and unpermitted removal civil penalty disclosures.
 
-- ISA-compliant tree tagging
-- AirSpade and root collar excavation workflows
-- Soil analysis integration (TAMU, A&L Labs)
-- Treatment tracking with outcome encoding
-- Client portal and proposal generation
-
-### Module: Nursery
-**For:** Native plant nurseries, propagators, ecological restoration contractors
-
-The supply chain layer. Tracks provenance of plant material from seed source to installation site. Closes the loop between what gets planted and where it came from — critical for restoration genetics and regulatory compliance.
-
-- Seed source and provenance tracking
-- Propagation batch management
-- Native species database with regional ecotype data
-- Restoration contractor procurement workflows
-- iNaturalist integration for observation linkage
-
-### Module: Forest
-**For:** Landscape architects, municipalities, land stewards, Miyawaki practitioners
-
-The reforestation design layer. From site assessment through canopy closure. Built around the Miyawaki method — dense, rapid-growth, self-sustaining native forests — but compatible with any afforestation approach.
-
-- Site suitability analysis
-- Species selection by soil type, hydrology, and regional ecotype
-- Miyawaki planting design tools (Nano Forest to Legacy Forest scale)
-- Long-term monitoring and succession tracking
-- 100-year stewardship agreement templates
-
-### Module: Sanctuary
-**For:** Landowners, conservation stewards, impact investors, tribal land managers
-
-The land tenure layer. Tools for long-term stewardship agreements, conservation easements, and land transition planning. Designed for people who think in generations, not quarters.
-
-- Stewardship agreement templates (10, 50, 100-year)
-- Land transition planning tools
-- Conservation easement documentation
-- Tribal land restoration protocols (Miyawaki + indigenous knowledge integration)
-- Carbon and biodiversity credit framework support
+### 3. Allometric Ecosystem Benefits, Veteran Tree Age & GeoJSON Exporter (`src/core/ecosystemBenefits.js`)
+* **Biomass & Carbon Accounting:** Generalized urban hardwood allometric equations (`Nowak 1994`, `Cairns et al. 1997`) computing above-ground and below-ground dry biomass, stored carbon (`lbs`), and annual growth sequestration.
+* **Hydrology, Air Quality & Shade Energy:** Canopy rainfall interception and avoided stormwater runoff (`Xiao et al. 2000`), dry deposition removal of `O3`, `NO2`, `SO2`, `PM2.5`, and `CO` (`Nowak et al. 2006`), building shade cooling savings (`McPherson & Simpson 1999`, calibrated to ISA `~80 kWh/tree` baseline), and `CTLA` compensatory structural value.
+* **Veteran Tree Age Estimation:** Implements the `John White (FCIN12)` site-modified growth factor model across parkland, woodland, and urban street environments.
+* **OGC `GeoJSON` Export:** Converts evaluated inventories directly into `urn:ogc:def:crs:OGC:1.3:CRS84` `FeatureCollection` payloads ready for `QGIS`, `ArcGIS`, or `Leaflet`.
 
 ---
 
-## The Enterprise Layer
+## Quick Start & Verification
 
-**[Arboracle](https://arboracle.app)** is the managed enterprise platform built on Open Arbor's open-source core. It adds:
+OpenArbor's core library uses standard ECMAScript Modules (`ESM`) with **zero external npm dependencies** required at runtime.
 
-- Hosted infrastructure (no DevOps required)
-- AI agent (Bodhi) — context-aware ecological intelligence powered by the STIM Protocol
-- Multi-user organization management
-- WhatsApp and mobile-first field interface
-- Managed data persistence and backups
-- Professional onboarding and support
+```bash
+# Run the deterministic verification suite (Node.js >= 18)
+npm test
+```
 
-Community members and individual stewards use Open Arbor free. Businesses and institutions that need managed infrastructure, AI capabilities, and enterprise support use Arboracle.
+### Example Usage
 
-This is the same model as Linux → Red Hat, WordPress → WP Engine, or Postgres → Supabase. The open-source work makes the enterprise layer trustworthy. The enterprise layer funds the open-source work.
+```javascript
+import fs from 'node:fs';
+import { evaluateTreeInventory, computeMitigationPlan, estimateRootZoneRemediation } from './src/core/ordinanceEngine.js';
+import { toGeoJSONFeatureCollection } from './src/core/ecosystemBenefits.js';
 
----
+const ordinances = JSON.parse(fs.readFileSync('./data/ordinances/central_texas_ordinances.json', 'utf8'));
+const libertyHill = ordinances.municipalities.find((m) => m.id === 'tx-liberty-hill');
 
-## The STIM Foundation
+const stand = [
+  { tag: 'T-101', species_common: 'Live Oak', species_scientific: 'Quercus virginiana', stems_inches: [26], lat: 30.6653, lng: -97.9250, removal: false },
+  { tag: 'T-102', species_common: 'Cedar Elm', species_scientific: 'Ulmus crassifolia', stems_inches: [9], lat: 30.6654, lng: -97.9251, removal: true },
+  { tag: 'T-103', species_common: 'Post Oak', species_scientific: 'Quercus stellata', stems_inches: [15], lat: 30.6655, lng: -97.9252, removal: true }
+];
 
-Every module in Open Arbor is built on the **STIM Protocol** — Stasis Through Inferred Memory — a Layer 0 AI alignment framework derived from biological systems.
-
-Seven axioms. All derived from nature:
-
-| Axiom | Principle |
-|-------|-----------|
-| Interconnectedness | All system components are interdependent |
-| Balance | Systems seek dynamic equilibrium |
-| Sustainability | Regenerative cycles sustain long-term function |
-| Adaptation | Flexibility enables survival through change |
-| Diversity | Biological diversity builds systemic resilience |
-| Long-Term Perspective | Ecological processes operate across centuries |
-| Circularity | Natural systems minimize waste through regeneration |
-
-STIM governs how the AI agents within Open Arbor behave. They accumulate context chronologically rather than overwriting it. They infer from history rather than hallucinating from instructions. They encode outcomes rather than just logging actions.
-
-→ [Read the STIM White Paper (v7.0009)](https://github.com/STIM-Protocol/white-paper/blob/master/STIM_White_Paper_v7.0009.md)
+const evaluated = evaluateTreeInventory(stand, libertyHill);
+const mitigation = computeMitigationPlan(evaluated, libertyHill);
+const remediation = estimateRootZoneRemediation(evaluated);
+const geojson = toGeoJSONFeatureCollection(evaluated, { municipality: 'Liberty Hill, TX' });
+```
 
 ---
 
-## Who Built This
+## Maintainer
 
-Open Arbor was founded by **George Steward** — CW2, 7th Special Forces Group (Airborne); ecological restoration practitioner; founder of [Soil Grower](https://soilgrower.com); Clay Hunt Fellow (Team Rubicon).
-
-He started working with trees at age 12. He spent 14 years keeping communications alive for Special Forces in combat. Then he came home and found that the software available for arborists was as fragmented as the ecosystems he was trying to restore. So he built the thing that should have existed.
-
-Open Arbor is the result of that work made public — so that every arborist, every land steward, every person who has ever planted a tree and wanted to know if it would survive, has access to the same tools.
-
----
-
-## Get Involved
-
-**Use it:** Deploy the platform for your practice, nursery, or restoration project.
-
-**Contribute:** See [CONTRIBUTING.md](./CONTRIBUTING.md) for protocols.
-
-**Connect:** Join the [iNaturalist Arboracle Project](https://www.inaturalist.org/projects/arboracle) to link field observations.
-
-**Enterprise:** For managed hosting, AI integration, and organizational support → [arboracle.app](https://arboracle.app)
-
----
-
-## License
-
-AGPL v3. Open source, permanently. Commercial use requires enterprise licensing via [Arboracle](https://arboracle.app).
-
----
-
-<div align="center">
-
-*Built by Soil Grower in Central Texas.*
-*Governed by the community.*
-*Designed for the next 200 years.*
-
-</div>
+**George Steward**  
+ISA Certified Arborist (`TX-362025A`, Oak Wilt Qualified) | Founder, [Soil Grower](https://soilgrower.com)  
+Master of Natural Resources (`MNR`) Candidate in Forests and Climate Change, Oregon State University  
+Spatial Field Records: [soilgrower.com/showcase](https://soilgrower.com/showcase/)

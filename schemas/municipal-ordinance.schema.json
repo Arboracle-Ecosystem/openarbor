@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soilgrower.com/schemas/openarbor-municipal-ordinance.schema.json",
+  "title": "OpenArbor Municipal Tree Protection Ordinance Schema",
+  "description": "Open JSON Schema for encoding municipal tree preservation ordinances, DBH protection tiers, species exceptions, seasonal oak wilt pruning restrictions, and mitigation fee/replacement schedules.",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "state",
+    "ordinance_numbers",
+    "source_url",
+    "dbh_threshold_inches"
+  ],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z]{2}-[a-z0-9-]+$" },
+    "name": { "type": "string" },
+    "state": { "type": "string", "minLength": 2, "maxLength": 2 },
+    "coordinates": {
+      "type": "object",
+      "required": ["lat", "lng"],
+      "properties": {
+        "lat": { "type": "number" },
+        "lng": { "type": "number" }
+      }
+    },
+    "ordinance_numbers": { "type": "string" },
+    "source_url": { "type": "string", "format": "uri" },
+    "dbh_threshold_inches": { "type": "number", "minimum": 0 },
+    "heritage_threshold_inches": { "type": ["number", "null"], "minimum": 0 },
+    "heritage_species_thresholds": {
+      "type": "object",
+      "additionalProperties": { "type": "number" }
+    },
+    "excepted_species": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "mitigation_fee_schedule": {
+      "type": "object",
+      "required": ["citation", "tiers"],
+      "properties": {
+        "citation": { "type": "string" },
+        "exemption_pct": { "type": "number", "minimum": 0, "maximum": 100 },
+        "exemption_citation": { "type": "string" },
+        "heritage_rate_per_inch": { "type": "number" },
+        "heritage_replacement_ratio": { "type": "number" },
+        "penalty_civil_per_tree": { "type": "number" },
+        "penalty_citation": { "type": "string" },
+        "tiers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["min_dbh", "rate_per_inch", "replacement_ratio"],
+            "properties": {
+              "min_dbh": { "type": "number" },
+              "max_dbh": { "type": ["number", "null"] },
+              "rate_per_inch": { "type": "number" },
+              "replacement_ratio": { "type": "number" }
+            }
+          }
+        }
+      }
+    },
+    "plan_rules": {
+      "type": "object",
+      "properties": {
+        "survey": {
+          "type": "object",
+          "properties": {
+            "citation": { "type": "string" },
+            "hardwood_min_dbh": { "type": "number" },
+            "max_age_years": { "type": "number" },
+            "multi_trunk": { "type": "string", "enum": ["largest_plus_half", "quadratic", "sum"] }
+          }
+        },
+        "root_zone": {
+          "type": "object",
+          "properties": {
+            "citation": { "type": "string" },
+            "crz_ft_per_inch": { "type": "number" },
+            "crz_min_ft": { "type": "number" },
+            "removal_if_disturbed_pct": { "type": "number" },
+            "cutfill_max_in": { "type": "number" },
+            "impervious_max_pct": { "type": "number" },
+            "crown_removal_max_pct": { "type": "number" }
+          }
+        },
+        "pruning": {
+          "type": "object",
+          "properties": {
+            "citation": { "type": "string" },
+            "standard": { "type": "string" },
+            "oak_months": {
+              "type": "array",
+              "items": { "type": "integer", "minimum": 1, "maximum": 12 }
+            }
+          }
+        }
+      }
+    }
+  }
+}

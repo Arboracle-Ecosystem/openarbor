@@ -20,7 +20,11 @@ import {
 
 import {
   evaluateTreeInventory,
+  permitDetermination,
+  permitSummary,
   computeMitigationPlan,
+  evaluateSiteContext,
+  renderSiteMapSVG,
   estimateRootZoneRemediation,
 } from '../src/core/ordinanceEngine.js';
 
@@ -135,7 +139,25 @@ console.log('=== OpenArbor v2.0 Open-Standards Verification Suite ===\n');
   const remediation = estimateRootZoneRemediation(rows);
   assert.equal(remediation.retained_tree_count, 1);
   assert.ok(remediation.union_crz_area_sqft > 2000);
-  console.log('[PASS] 2. Municipal Ordinance Engine, Oak Wilt Flagging & Ascending Exemption Math');
+
+  // Permit determination & summary
+  const permit = permitDetermination(rows, libertyHill);
+  assert.equal(permit.required, true);
+  assert.equal(permit.removalRequired, true);
+  assert.ok(permitSummary(permit).includes('Permit required'));
+
+  // Site context & SVG site map
+  const siteCtx = evaluateSiteContext(rows, libertyHill, {
+    survey_date: '2026-09-01',
+    site_use: 'single_family',
+    jurisdiction_context: 'city_limits',
+  });
+  assert.equal(siteCtx.surveyWarn, null);
+  assert.equal(siteCtx.surveyTrees.length, 4);
+
+  const svg = renderSiteMapSVG(rows);
+  assert.ok(svg.includes('<svg') && svg.includes('20 ft') && svg.includes('T-101'));
+  console.log('[PASS] 2. Municipal Ordinance Engine, Oak Wilt Flagging, Site Context, SVG Map & Ascending Exemption Math');
 }
 
 // 3. Test Allometric Ecosystem Benefits, Veteran Tree Age & GeoJSON Exporter

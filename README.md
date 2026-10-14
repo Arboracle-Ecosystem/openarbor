@@ -94,4 +94,4 @@ const geojson = toGeoJSONFeatureCollection(evaluated, { municipality: 'Liberty H
 **George Steward**  
 ISA Certified Arborist (`TX-362025A`, Oak Wilt Qualified) | Founder, [Soil Grower](https://soilgrower.com)  
 Master of Natural Resources (`MNR`) Candidate in Forests and Climate Change, Oregon State University  
-Spatial Field Records: [soilgrower.com/showcase](https://soilgrower.com/showcase/)
+Practice: [soilgrower.com](https://soilgrower.com)

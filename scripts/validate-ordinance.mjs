@@ -118,15 +118,24 @@ export function validateAgainstSchema(instance, schema, jsonPath = '$') {
   if (typeof instance === 'object' && !Array.isArray(instance)) {
     if (Array.isArray(schema.required)) {
       for (const reqKey of schema.required) {
-        if (!(reqKey in instance) || instance[reqKey] === undefined || instance[reqKey] === '') {
+        if (
+          !Object.hasOwn(instance, reqKey) ||
+          instance[reqKey] === undefined ||
+          instance[reqKey] === ''
+        ) {
           errors.push(`${jsonPath}: missing required field '${reqKey}'`);
         }
       }
     }
 
     const props = schema.properties || {};
+    const PROTO_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
     for (const key of Object.keys(instance)) {
-      if (key in props) {
+      if (PROTO_KEYS.has(key)) {
+        errors.push(
+          `${jsonPath}: additional property '${key}' is not allowed (prototype-chain key rejected; additionalProperties: false)`
+        );
+      } else if (Object.hasOwn(props, key)) {
         const sub = validateAgainstSchema(instance[key], props[key], `${jsonPath}.${key}`);
         errors.push(...sub.errors);
       } else if (schema.additionalProperties === false) {

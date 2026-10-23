@@ -52,6 +52,9 @@ const SERVER_INFO = {
 
 const PROTOCOL_VERSION = '2024-11-05';
 
+export const MAX_EVALUATE_TREES = 500;
+export const MAX_JURISDICTION_ID_LENGTH = 128;
+
 /**
  * Load all municipal ordinance records from data/ordinances/*.json.
  * @returns {Map<string, {record: object, file: string, region: string}>}
@@ -158,16 +161,21 @@ export const MCP_TOOLS = [
       properties: {
         trees: {
           type: 'array',
-          description: 'Array of tree inventory rows (tag, species_common, species_scientific, dbh or stems_inches, removal, crz_disturbed_pct, etc.).',
+          maxItems: MAX_EVALUATE_TREES,
+          description:
+            'Array of tree inventory rows (max 500 rows per call; tag, species_common, species_scientific, dbh or stems_inches, removal, crz_disturbed_pct, etc.).',
           items: { type: 'object' },
         },
         jurisdiction_id: {
           type: 'string',
-          description: 'Jurisdiction ID in data/ordinances/ (e.g., tx-austin, tx-georgetown, tx-liberty-hill, tx-cedar-park, tx-round-rock, or-ashland, or-medford, or-grants-pass).',
+          maxLength: MAX_JURISDICTION_ID_LENGTH,
+          description:
+            'Jurisdiction ID in data/ordinances/ (e.g., tx-austin, tx-georgetown, tx-liberty-hill, tx-cedar-park, tx-round-rock, or-ashland, or-medford, or-grants-pass).',
         },
         ordinance: {
           type: 'object',
-          description: 'Optional inline municipal ordinance object conforming to schemas/municipal-ordinance.schema.json (used when jurisdiction_id is not provided).',
+          description:
+            'Optional inline municipal ordinance object conforming to schemas/municipal-ordinance.schema.json (used when jurisdiction_id is not provided).',
         },
       },
     },
@@ -277,7 +285,9 @@ export const MCP_TOOLS = [
       properties: {
         jurisdiction_id: {
           type: 'string',
-          description: 'Municipality identifier (e.g., tx-austin, tx-georgetown, tx-liberty-hill, tx-cedar-park, tx-round-rock, or-ashland, or-medford, or-grants-pass).',
+          maxLength: MAX_JURISDICTION_ID_LENGTH,
+          description:
+            'Municipality identifier (max 128 chars; e.g., tx-austin, tx-georgetown, tx-liberty-hill, tx-cedar-park, tx-round-rock, or-ashland, or-medford, or-grants-pass).',
         },
       },
     },
@@ -362,6 +372,33 @@ export function executeToolCall(name, args = {}) {
           {
             error: 'INVALID_TREES_INPUT',
             message: 'evaluate_ordinance requires a trees array.',
+          },
+          true
+        );
+      }
+
+      if (trees.length > MAX_EVALUATE_TREES) {
+        return formatToolResult(
+          {
+            error: 'MAX_TREES_EXCEEDED',
+            max_trees: MAX_EVALUATE_TREES,
+            received_trees: trees.length,
+            message: `evaluate_ordinance accepts at most ${MAX_EVALUATE_TREES} tree rows per call (received ${trees.length}) to bound 1-ft spatial grid union evaluation.`,
+          },
+          true
+        );
+      }
+
+      if (
+        args.jurisdiction_id &&
+        String(args.jurisdiction_id).length > MAX_JURISDICTION_ID_LENGTH
+      ) {
+        return formatToolResult(
+          {
+            error: 'JURISDICTION_ID_TOO_LONG',
+            max_length: MAX_JURISDICTION_ID_LENGTH,
+            received_length: String(args.jurisdiction_id).length,
+            message: `jurisdiction_id exceeds maximum length of ${MAX_JURISDICTION_ID_LENGTH} characters.`,
           },
           true
         );
@@ -504,7 +541,19 @@ export function executeToolCall(name, args = {}) {
 
     case 'lookup_ordinance': {
       const catalog = loadOrdinanceCatalog();
-      const rawId = String(args.jurisdiction_id || '').toLowerCase().trim();
+      const rawInput = String(args.jurisdiction_id || '');
+      if (rawInput.length > MAX_JURISDICTION_ID_LENGTH) {
+        return formatToolResult(
+          {
+            error: 'JURISDICTION_ID_TOO_LONG',
+            max_length: MAX_JURISDICTION_ID_LENGTH,
+            received_length: rawInput.length,
+            message: `jurisdiction_id exceeds maximum length of ${MAX_JURISDICTION_ID_LENGTH} characters.`,
+          },
+          true
+        );
+      }
+      const rawId = rawInput.toLowerCase().trim();
       if (!rawId) {
         return formatToolResult(
           {

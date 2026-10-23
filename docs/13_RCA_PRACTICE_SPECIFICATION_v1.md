@@ -237,7 +237,7 @@ Tree-level RCA diagnostics aggregate deterministically into the five property-le
 
 ### 5.2 The Nature-First Attestation Model (`schemas/rca_openbadge_v3.schema.json`)
 
-`RCA-Spec v2.0` executes **Path C**, pairing the open specification with an optional, cryptographically verifiable **1EdTech Open Badges 3.0 / W3C Verifiable Credentials v2.0** attestation:
+`RCA-Spec v2.0` executes **Path C**, pairing the open specification with an optional **1EdTech Open Badges 3.0 / W3C Verifiable Credentials v2.0** attestation (`schemas/rca_openbadge_v3.schema.json`):
 
 * **Tier 1: Open Steward (Free, Open Access):**
   * Any arborist, land steward, or researcher may adopt `RCA-Spec v2.0` and `schemas/rca_assessment.schema.json` at zero cost under `CC BY-SA 4.0` and `AGPL v3`.
@@ -247,6 +247,7 @@ Tree-level RCA diagnostics aggregate deterministically into the five property-le
     2. **Field Rhizosphere Verification:** Documented non-destructive pneumatic root-collar excavation (`AirSpade`), biological amendment application (pre-charged biochar, fungal compost, ramial mulch), and soil microbiome baseline testing.
     3. **Longitudinal STIM Commitment:** Active enrollment in the Sanctuary Tree Inventory and Monitoring protocol with a scheduled Year-1 recovery audit date.
     4. **Optional Legacy Statutory Cross-Walk:** Practitioners holding active ISA, ASCA, or SAF credentials may record their registry identifiers in `legacy_statutory_equivalencies` to facilitate municipal permit processing without treating those guilds as gatekeepers.
+  * **Integrity Digest vs. Registered Issuer Signature (`proof`):** The local offline CLI (`openarbor-rca attest`) generates a deterministic SHA-256 content integrity digest over the canonical JSON-LD payload (`cryptosuite: "sha256-integrity"`, `proofValue: "sha256:<hex>"`). It does not perform asymmetric private-key signing. While `schemas/rca_openbadge_v3.schema.json` accepts `eddsa-jcs-2022` and `eddsa-rdfc-2022` for cryptographic signature issuance, signature-grade issuance requires a registered issuer Ed25519 private key (`[UNVERIFIED: production Ed25519 issuer key-signing infrastructure is not yet provisioned]`).
   * **Benchmarked Registry Maintenance Fee Band:** Where an optional annual registry directory listing fee is assessed, it is benchmarked at **$75 to $110 per year**, derived from the Society for Ecological Restoration CERP maintenance fee ($75/year member) and the Northeast Organic Farming Association AOLCP reaccreditation fee ($110/year; NOFA Organic Land Care, 2026). Per Open Arbor Core Principle 1, `schemas/rca_openbadge_v3.schema.json` contains zero payment gates.
 
 ---
@@ -266,7 +267,7 @@ Any practitioner can execute the complete Post-ISA and Post-ASCA diagnostic, leg
 3. **`openarbor-rca economics <assessment.json> [--json]`:**
    * Executes `computeRegenerativePracticeEconomics`, contrasting the one-time, high-casualty Legacy Contractor Removal model against the 5-Year Regenerative Stewardship model (Year 0 5-domain diagnostic and pneumatic radial trenching, SGR relief, biochar/compost/humate inoculation, and native understory guild installation; Year 1 STIM leading indicator audit; Year 3 mycorrhizal extract and ramial woodchip recharge; Year 5 Sanctuary Scorecard verification). Demonstrates deterministically that preserving mature trees yields a 4x to 7x higher 5-year net practitioner margin while preserving the landowner's biological asset.
 4. **`openarbor-rca attest <practitioner.json> <report1.json> <report2.json> <report3.json> [--out <badge.json>]`:**
-   * Validates three field assessments against `schemas/rca_assessment.schema.json` and `lintRcaEvidentiaryReport`, computes their canonical SHA-256 evidence hashes, verifies the Year-1 STIM longitudinal monitoring commitment, and mints a cryptographically verifiable **1EdTech Open Badges 3.0 / W3C Verifiable Credential (`OpenBadgeCredential`)** artifact conforming to `schemas/rca_openbadge_v3.schema.json`.
+   * Validates three field assessments against `schemas/rca_assessment.schema.json` and `lintRcaEvidentiaryReport`, computes their canonical SHA-256 evidence hashes, verifies the Year-1 STIM longitudinal monitoring commitment, and mints a schema-valid **1EdTech Open Badges 3.0 / W3C Verifiable Credential (`OpenBadgeCredential`)** artifact with a deterministic `sha256-integrity` content digest conforming to `schemas/rca_openbadge_v3.schema.json` (`[UNVERIFIED: asymmetric Ed25519 signature issuance requires a registered issuer private key]`).
 
 ### 6.2 Worked Reference Case (`examples/ashland_oregon_white_oak_rca_v2.json`)
 

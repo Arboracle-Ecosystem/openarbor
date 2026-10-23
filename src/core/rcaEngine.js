@@ -155,14 +155,14 @@ export function validateJsonSchema(instance, schema, path = '$') {
   if (typeof instance === 'object' && !Array.isArray(instance)) {
     if (Array.isArray(schema.required)) {
       for (const reqKey of schema.required) {
-        if (!(reqKey in instance) || instance[reqKey] === undefined) {
+        if (!Object.hasOwn(instance, reqKey) || instance[reqKey] === undefined) {
           errors.push(`${path}: missing required property '${reqKey}'`);
         }
       }
     }
     const props = schema.properties || {};
     for (const key of Object.keys(instance)) {
-      if (key in props) {
+      if (Object.hasOwn(props, key)) {
         const res = validateJsonSchema(instance[key], props[key], `${path}.${key}`);
         errors.push(...res.errors);
       } else if (schema.additionalProperties === false) {
@@ -776,7 +776,7 @@ export function computeCanonicalSha256(obj) {
   const canonicalize = (val) => {
     if (Array.isArray(val)) return val.map(canonicalize);
     if (val && typeof val === 'object') {
-      const sorted = {};
+      const sorted = Object.create(null);
       for (const k of Object.keys(val).sort()) {
         sorted[k] = canonicalize(val[k]);
       }
@@ -1144,11 +1144,11 @@ export function mintOpenBadgeAttestation(practitioner, assessments, rcaAssessmen
   const proofDigest = computeCanonicalSha256(badgePayload);
   badgePayload.proof = {
     type: 'DataIntegrityProof',
-    cryptosuite: 'eddsa-jcs-2022',
+    cryptosuite: 'sha256-integrity',
     created: issuedAt,
-    verificationMethod: 'https://soilgrower.com/issuers/open-arbor-alliance#key-1',
+    verificationMethod: 'https://soilgrower.com/specs/rca-spec-v2.0#sha256-content-digest',
     proofPurpose: 'assertionMethod',
-    proofValue: `z${proofDigest}`,
+    proofValue: `sha256:${proofDigest}`,
   };
 
   return badgePayload;

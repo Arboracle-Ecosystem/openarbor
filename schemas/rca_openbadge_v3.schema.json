@@ -448,7 +448,7 @@
     },
     "proof": {
       "type": "object",
-      "description": "W3C Verifiable Credential cryptographic proof (DataIntegrityProof or Ed25519Signature2020).",
+      "description": "Content integrity digest or W3C Verifiable Credential cryptographic proof. Local CLI issuance (openarbor-rca attest) generates a deterministic SHA-256 content digest (cryptosuite: 'sha256-integrity'); asymmetric signature-grade issuance (eddsa-jcs-2022 or eddsa-rdfc-2022) requires a registered issuer private key [UNVERIFIED: production Ed25519 issuer signing key infrastructure is not yet provisioned].",
       "additionalProperties": false,
       "required": [
         "type",
@@ -465,25 +465,26 @@
             "Ed25519Signature2020",
             "JsonWebSignature2020"
           ],
-          "description": "W3C cryptographic proof suite identifier (unit: enum string)."
+          "description": "Proof container type identifier (unit: enum string)."
         },
         "cryptosuite": {
           "type": "string",
           "enum": [
+            "sha256-integrity",
             "eddsa-rdfc-2022",
             "eddsa-jcs-2022"
           ],
-          "description": "Data Integrity cryptosuite when type is DataIntegrityProof (unit: enum string)."
+          "description": "Integrity digest suite ('sha256-integrity' for offline CLI content digest) or W3C Data Integrity cryptosuite ('eddsa-jcs-2022' / 'eddsa-rdfc-2022' for registered issuer key signing) (unit: enum string)."
         },
         "created": {
           "type": "string",
           "format": "date-time",
-          "description": "ISO 8601 timestamp of signature generation (unit: UTC date-time)."
+          "description": "ISO 8601 timestamp of digest or signature generation (unit: UTC date-time)."
         },
         "verificationMethod": {
           "type": "string",
           "format": "uri",
-          "description": "URI of the issuer public key used to verify the credential signature (unit: URI)."
+          "description": "URI of the content-digest specification or registered issuer public key (unit: URI)."
         },
         "proofPurpose": {
           "type": "string",
@@ -493,7 +494,7 @@
         "proofValue": {
           "type": "string",
           "minLength": 16,
-          "description": "Multibase-encoded or JWS cryptographic signature string (unit: encoded signature string)."
+          "description": "SHA-256 content digest ('sha256:<hex>' when cryptosuite is 'sha256-integrity') or multibase-encoded/JWS cryptographic signature string (when signed by a registered issuer key) (unit: encoded digest or signature string)."
         }
       }
     }
@@ -622,11 +623,11 @@
       ],
       "proof": {
         "type": "DataIntegrityProof",
-        "cryptosuite": "eddsa-jcs-2022",
+        "cryptosuite": "sha256-integrity",
         "created": "2026-10-20T17:00:00Z",
-        "verificationMethod": "https://soilgrower.com/issuers/open-arbor-alliance#key-1",
+        "verificationMethod": "https://soilgrower.com/specs/rca-spec-v2.0#sha256-content-digest",
         "proofPurpose": "assertionMethod",
-        "proofValue": "z58DAdFfa9SkqZMVPxAQpic7ndSayn1PzZs6ZjWp1CktyGesjuTSwRdoWhAfGFCF5bppETSTojQCrfFPP2oumHKtz"
+        "proofValue": "sha256:8f9d1e4a6b2c3d5e7f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e"
       }
     }
   ]

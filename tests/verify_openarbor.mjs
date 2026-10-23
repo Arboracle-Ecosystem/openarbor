@@ -618,6 +618,8 @@ console.log('=== OpenArbor v2.0 Open-Standards Verification Suite ===\n');
   assert.equal(badgeSchemaRes.valid, true, `Badge schema errors: ${badgeSchemaRes.errors.join('; ')}`);
   assert.equal(mintedBadge.evidence.length, 3);
   assert.equal(mintedBadge.credentialSubject.nature_first_competency_proof.diagnostic_report_hashes_sha256.length, 3);
+  assert.equal(mintedBadge.proof.cryptosuite, 'sha256-integrity');
+  assert.ok(mintedBadge.proof.proofValue.startsWith('sha256:'));
 
   // 9e. Negative-path CLI Sabotage Check: lazy removal with t/R = 0.34 must fail CLI compile!
   const sabotagedPath = path.join(tmpDir, 'sabotaged_removal.json');
@@ -640,6 +642,30 @@ console.log('=== OpenArbor v2.0 Open-Standards Verification Suite ===\n');
     assert.ok(String(err.stderr).includes('UNJUSTIFIED_REMOVAL'));
   }
   assert.equal(cliFailedAsExpected, true, 'CLI compile must fail on unjustified removal when t/R >= 0.30');
+
+  // 9f. Negative-path Prototype-Chain Bypass Checks (__proto__ and constructor at domain level)
+  const protoInjected = JSON.parse(JSON.stringify(ashlandReferenceCase));
+  Object.defineProperty(protoInjected.structural_baseline, '__proto__', {
+    value: { injected: true },
+    enumerable: true,
+    configurable: true,
+    writable: true,
+  });
+  const protoCheck = validateJsonSchema(protoInjected, rcaAssessmentSchema);
+  assert.equal(protoCheck.valid, false, 'Assessment carrying __proto__ at domain level must be rejected');
+  assert.ok(
+    protoCheck.errors.some((e) => e.includes("un-schematized additional property '__proto__' is forbidden")),
+    `Expected __proto__ additionalProperties error, got: ${protoCheck.errors.join('; ')}`
+  );
+
+  const constructorInjected = JSON.parse(JSON.stringify(ashlandReferenceCase));
+  constructorInjected.structural_baseline.constructor = { polluted: true };
+  const constructorCheck = validateJsonSchema(constructorInjected, rcaAssessmentSchema);
+  assert.equal(constructorCheck.valid, false, 'Assessment carrying constructor at domain level must be rejected');
+  assert.ok(
+    constructorCheck.errors.some((e) => e.includes("un-schematized additional property 'constructor' is forbidden")),
+    `Expected constructor additionalProperties error, got: ${constructorCheck.errors.join('; ')}`
+  );
 
   fs.rmSync(tmpDir, { recursive: true, force: true });
   console.log('[PASS] 9. 100x RCA Army Engine & CLI (compile, counter-notice, economics, attest & sabotage gates)');

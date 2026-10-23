@@ -72,6 +72,20 @@ Implements the Post-ISA / Post-ASCA diagnostic and appraisal standards governed 
 
 ---
 
+## Platform: engines, MCP, and the ordinance commons
+
+<a href="package.json"><img src="https://img.shields.io/badge/npm-v2.0.0_(local)-cb3837.svg" alt="npm: v2.0.0 (local)" /></a>
+<a href="server/mcp/README.md"><img src="https://img.shields.io/badge/MCP-Compatible_(6_Tools)-2d6a4f.svg" alt="MCP: Compatible (6 Tools)" /></a>
+<a href="data/ordinances/CONTRIBUTING_DATA.md"><img src="https://img.shields.io/badge/Ordinance_Commons-6_Cities-74ac00.svg" alt="Ordinance Commons: 6 Cities" /></a>
+
+Open Arbor packages its four zero-dependency calculation modules as subpath exports (`openarbor/root-zone`, `openarbor/ordinance-engine`, `openarbor/ecosystem-benefits`, and `openarbor/rca-engine`) under `AGPL-3.0-only`. Any Node.js application, GIS script, or research pipeline can import the deterministic functions directly without cloud keys or native binary compilation. See [`docs/14_OPENARBOR_PLATFORM_100X.md`](docs/14_OPENARBOR_PLATFORM_100X.md) for the platform architecture and dual-surface licensing model.
+
+For AI assistants and local agents, [`server/mcp/openarbor-mcp.mjs`](server/mcp/openarbor-mcp.mjs) exposes all four engines and the municipal ordinance catalog over newline-delimited stdio JSON-RPC 2.0 (`calculate_root_zone`, `evaluate_ordinance`, `calculate_ecosystem_benefits`, `rca_biomechanics`, `rca_lint`, and `lookup_ordinance`). Register the server in Claude Desktop or Hermes using the snippets in [`server/mcp/README.md`](server/mcp/README.md) and verify subprocess protocol conformance with `npm run test:mcp`.
+
+The Municipal Ordinance Commons (`data/ordinances/`) encodes municipal tree preservation statutes into machine-readable JSON validated against [`schemas/municipal-ordinance.schema.json`](schemas/municipal-ordinance.schema.json). The commons currently ships with six full-rule cities (Austin, Georgetown, and Liberty Hill in Texas; Ashland, Medford, and Grants Pass in Oregon) plus two baseline threshold-and-fee records (Cedar Park and Round Rock). Contributors can validate new or updated city records locally with `node scripts/validate-ordinance.mjs` following [`data/ordinances/CONTRIBUTING_DATA.md`](data/ordinances/CONTRIBUTING_DATA.md).
+
+---
+
 ## Quick Start & Verification
 
 Open Arbor's core library uses standard ECMAScript Modules (`ESM`) with **zero external npm dependencies** required at runtime.

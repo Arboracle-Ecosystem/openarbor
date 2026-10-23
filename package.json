@@ -1,18 +1,36 @@
 {
   "name": "openarbor",
   "version": "2.0.0",
-  "description": "Open-standards arboricultural field assessment, root-zone protection (ANSI A300 / ISA BMP), allometric ecosystem valuation, and municipal tree ordinance engine.",
+  "description": "Open-standards arboricultural field assessment, root-zone protection (ANSI A300 / ISA BMP), allometric ecosystem valuation, Regenerative Consulting Arborist (RCA-Spec v2.0) engine, and municipal tree ordinance commons.",
   "type": "module",
-  "license": "AGPL-3.0-or-later",
+  "license": "AGPL-3.0-only",
   "author": "George Steward (ISA Certified Arborist TX-362025A)",
   "repository": {
     "type": "git",
     "url": "https://github.com/Arboracle-Ecosystem/openarbor.git"
   },
+  "exports": {
+    "./root-zone": "./src/core/rootZone.js",
+    "./ordinance-engine": "./src/core/ordinanceEngine.js",
+    "./ecosystem-benefits": "./src/core/ecosystemBenefits.js",
+    "./rca-engine": "./src/core/rcaEngine.js"
+  },
   "bin": {
     "openarbor-rca": "./bin/openarbor-rca.mjs"
   },
+  "files": [
+    "src/",
+    "schemas/",
+    "data/",
+    "server/",
+    "docs/13_*",
+    "docs/14_*",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
-    "test": "node tests/verify_openarbor.mjs"
+    "test": "node tests/verify_openarbor.mjs",
+    "test:mcp": "node tests/verify_mcp.mjs",
+    "validate:ordinances": "node scripts/validate-ordinance.mjs"
   }
 }

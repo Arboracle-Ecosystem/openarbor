@@ -1,4 +1,4 @@
-# OpenArbor
+# Open Arbor
 
 **Open-Standards Arboricultural Field Assessment, Root Zone Protection (`ANSI A300` / `ISA BMP`), Allometric Ecosystem Valuation, and Municipal Tree Ordinance Engine**
 
@@ -12,7 +12,7 @@
 
 Proprietary arboriculture and urban forestry software often locks field observations, municipal tree protection rules, and preservation plans inside closed cloud databases. When a practitioner, municipal forester, or researcher cannot inspect the underlying allometric equations, verify statutory ordinance citations, or export standard `GeoJSON` directly into `QGIS` or `ArcGIS Field Maps`, the software becomes a barrier rather than an instrument.
 
-**OpenArbor** (`v2.0`) refactors the core deterministic engines developed for the Arboracle platform into a zero-dependency, local-first open-standards library and dataset. Every calculation traces to a published arboricultural standard (`ANSI A300`, `ISA BMP`, `AS 4970`, `BS 5837`), peer-reviewed urban forestry literature (`Nowak`, `McPherson & Simpson`, `Xiao`, `John White FCIN12`), or a cited municipal code section.
+**Open Arbor** (`v2.0`) refactors the core deterministic engines developed for the Arboracle platform into a zero-dependency, local-first open-standards library and dataset. Every calculation traces to a published arboricultural standard (`ANSI A300`, `ISA BMP`, `AS 4970`, `BS 5837`), peer-reviewed urban forestry literature (`Nowak`, `McPherson & Simpson`, `Xiao`, `John White FCIN12`), or a cited municipal code section.
 
 ---
 
@@ -27,12 +27,21 @@ openarbor/
 │       └── ecosystemBenefits.js    # Nowak/McPherson allometrics, John White veteran tree age & OGC GeoJSON exporter
 ├── data/
 │   └── ordinances/
-│       └── central_texas_ordinances.json  # Verified open ordinance rules (Austin, Georgetown, Liberty Hill, Cedar Park, Round Rock)
+│       ├── central_texas_ordinances.json      # Verified open ordinance rules (Austin, Georgetown, Liberty Hill, Cedar Park, Round Rock)
+│       └── rogue_valley_oregon_ordinances.json # Verified open ordinance rules (Ashland, Medford, Grants Pass)
 ├── schemas/
-│   └── municipal-ordinance.schema.json    # JSON Schema (Draft 2020-12) for community-contributed municipal tree codes
+│   ├── municipal-ordinance.schema.json    # JSON Schema (Draft 2020-12) for community-contributed municipal tree codes
+│   ├── rca_assessment.schema.json         # JSON Schema (Draft 2020-12) for RCA-Spec v2.0 five-domain diagnostic assessments
+│   └── rca_openbadge_v3.schema.json       # JSON-LD Schema (Open Badges 3.0 / W3C VC) for RCA-Verified attestation
+├── src/
+│   └── core/
+│       ├── rootZone.js                    # CRZ, TPZ, SRZ, multi-stem, and spatial union de-duplication
+│       ├── ordinanceEngine.js             # Declarative municipal tree protection and mitigation ledger
+│       ├── ecosystemBenefits.js           # Nowak allometrics, Xiao hydrology, and OGC GeoJSON exporter
+│       └── rcaEngine.js                   # RCA-Spec v2.0 Mattheck t/R biomechanics, dual valuation, and Sanctuary rollup
 ├── tests/
-│   └── verify_openarbor.mjs        # Deterministic zero-dependency Node.js verification suite
-└── docs/                           # Architectural blueprints and historical design notes
+│   └── verify_openarbor.mjs        # Deterministic zero-dependency Node.js verification suite (8 test suites)
+└── docs/                           # Architectural blueprints and practice specifications (docs/13_RCA_PRACTICE_SPECIFICATION_v1.md)
 ```
 
 ### 1. Root Zone & Structural Stability Engine (`src/core/rootZone.js`)
@@ -43,10 +52,11 @@ openarbor/
 * **Spatial Root Zone Union (`unionRootZoneArea`):** Uses `1-ft` spatial grid sampling across GPS coordinates so overlapping root zones in dense groves are never double-counted when calculating pneumatic air-tilling (`AirSpade`), compost, or mulch volumes.
 
 ### 2. Data-Driven Municipal Ordinance & Mitigation Engine (`src/core/ordinanceEngine.js`)
-Rather than hardcoding city logic in application code, OpenArbor reads declarative JSON records conforming to [`schemas/municipal-ordinance.schema.json`](schemas/municipal-ordinance.schema.json):
+Rather than hardcoding city logic in application code, Open Arbor reads declarative JSON records conforming to [`schemas/municipal-ordinance.schema.json`](schemas/municipal-ordinance.schema.json):
 * **Tiered Protection & Species Exceptions:** Evaluates each stem against general and species-specific `Protected`, `Legacy`, and `Heritage` DBH thresholds while automatically excluding listed invasive or nuisance species (such as *Celtis occidentalis*, *Melia azedarach*, *Triadica sebifera*).
 * **CRZ Encroachment & Seasonal Oak Wilt Guards:** Flags trees when construction disturbance exceeds municipal CRZ limits (e.g., `> 30%` in Liberty Hill or `> 50%` in Austin/Georgetown), cut/fill exceeds `4 inches` inside `1/2 CRZ`, or *Quercus* pruning is scheduled during prohibited *Ceratocystis fagacearum* (Oak Wilt) vector months.
 * **Ascending Diameter Exemption & Mitigation Ledger:** Implements whole-tree ascending diameter exemption caps (such as Liberty Hill UDC `§ 6.07.01(c)(5)(B)` `20%` cap), retained hardwood credits, replacement caliper inches, cash-in-lieu schedules, and unpermitted removal civil penalty disclosures.
+* **Bioregional Coverage:** Ships with verified ordinances for Central Texas (Austin, Georgetown, Liberty Hill, Cedar Park, Round Rock) and Southern Oregon (Ashland AMC 18.4.5, Medford MMC 6.700, Grants Pass Development Code Art. 13).
 
 ### 3. Allometric Ecosystem Benefits, Veteran Tree Age & GeoJSON Exporter (`src/core/ecosystemBenefits.js`)
 * **Biomass & Carbon Accounting:** Generalized urban hardwood allometric equations (`Nowak 1994`, `Cairns et al. 1997`) computing above-ground and below-ground dry biomass, stored carbon (`lbs`), and annual growth sequestration.
@@ -54,11 +64,18 @@ Rather than hardcoding city logic in application code, OpenArbor reads declarati
 * **Veteran Tree Age Estimation:** Implements the `John White (FCIN12)` site-modified growth factor model across parkland, woodland, and urban street environments.
 * **OGC `GeoJSON` Export:** Converts evaluated inventories directly into `urn:ogc:def:crs:OGC:1.3:CRS84` `FeatureCollection` payloads ready for `QGIS`, `ArcGIS`, or `Leaflet`.
 
+### 4. Regenerative Consulting Arborist Engine (`src/core/rcaEngine.js`)
+Implements the Post-ISA / Post-ASCA diagnostic and appraisal standards governed by `docs/13_RCA_PRACTICE_SPECIFICATION_v1.md` (`RCA-Spec v2.0`):
+* **Mattheck Shell-Wall Physics (`evaluateBiomechanicsAndRhizosphere`):** Evaluates the hollow-cylinder safety factor `t/R >= 0.30` and calculates radial pneumatic decompaction (`AirSpade` at 150 psi) and biological amendments (pre-charged biochar, fungal humates, ramial woodchip mulch) scaled to the Tree Influence Zone (`TIZ`).
+* **Living Asset Equity vs. CTLA Dual Valuation (`computeHolobiontValuation`):** Computes classical CTLA 10th Edition depreciated cost and Regenerative Holobiont Biological Equity. Applies the veteran keystone habitat multiplier (1.0 to 3.5) so ancient hollow trees appreciate rather than depreciate.
+* **Sanctuary Scorecard Rollup (`computeSanctuaryScorecardRollup`):** Aggregates tree-level rhizosphere records into the five property-level Scorecard dimensions (`Soil Health Index`, `Canopy Coverage`, `Water Dynamics`, `Biodiversity Baseline`, `Restoration Potential Score`) with spatial root-zone union de-duplication.
+* **Evidentiary Linter (`lintRcaEvidentiaryReport`):** Enforces ASCA-grade evidentiary rigor and blocks un-justified removals when `t/R >= 0.30` and root-zone remediation is viable.
+
 ---
 
 ## Quick Start & Verification
 
-OpenArbor's core library uses standard ECMAScript Modules (`ESM`) with **zero external npm dependencies** required at runtime.
+Open Arbor's core library uses standard ECMAScript Modules (`ESM`) with **zero external npm dependencies** required at runtime.
 
 ```bash
 # Run the deterministic verification suite (Node.js >= 18)

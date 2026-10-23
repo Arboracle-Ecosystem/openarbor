@@ -1,0 +1,633 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soilgrower.com/schemas/openarbor-rca-openbadge-v3.schema.json",
+  "title": "Open Arbor Verified Regenerative Consulting Arborist (RCA-Verified) Open Badges 3.0 Schema",
+  "description": "AGPL v3 JSON Schema and JSON-LD template for a 1EdTech Open Badges 3.0 / W3C Verifiable Credentials v2.0 OpenBadgeCredential attesting to the Verified Regenerative Consulting Arborist (RCA-Verified) designation under RCA-Spec v2.0. Encodes objective nature-first competency proofs (3 diagnostic report SHA-256 hashes, rhizosphere verification, STIM monitoring commitment) and optional legacy guild cross-walks without any payment flow.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "@context",
+    "id",
+    "type",
+    "name",
+    "issuer",
+    "validFrom",
+    "credentialSubject",
+    "evidence",
+    "proof"
+  ],
+  "properties": {
+    "@context": {
+      "type": "array",
+      "minItems": 2,
+      "prefixItems": [
+        {
+          "type": "string",
+          "const": "https://www.w3.org/ns/credentials/v2"
+        },
+        {
+          "type": "string",
+          "const": "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json"
+        }
+      ],
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "description": "Required JSON-LD contexts for W3C Verifiable Credentials v2.0 and 1EdTech Open Badges v3.0 (unit: URI array)."
+    },
+    "id": {
+      "type": "string",
+      "format": "uri",
+      "description": "Globally unique URI identifying this issued OpenBadgeCredential instance (unit: RFC 3986 URI)."
+    },
+    "type": {
+      "type": "array",
+      "minItems": 2,
+      "contains": {
+        "type": "string",
+        "const": "OpenBadgeCredential"
+      },
+      "items": {
+        "type": "string",
+        "enum": [
+          "VerifiableCredential",
+          "OpenBadgeCredential"
+        ]
+      },
+      "description": "W3C VC and 1EdTech Open Badges 3.0 credential types (unit: type string array)."
+    },
+    "name": {
+      "type": "string",
+      "const": "Verified Regenerative Consulting Arborist (RCA-Verified)",
+      "description": "Canonical human-readable title of the credential (unit: string)."
+    },
+    "issuer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type",
+        "name",
+        "url"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uri",
+          "description": "Decentralized Identifier (DID) or canonical URI of the Open Arbor Alliance issuer profile (unit: URI)."
+        },
+        "type": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "const": "Profile"
+          },
+          "description": "1EdTech Open Badges 3.0 issuer entity type (unit: enum array)."
+        },
+        "name": {
+          "type": "string",
+          "enum": [
+            "Open Arbor Alliance",
+            "Open Arbor Alliance / Soil Grower"
+          ],
+          "description": "Public issuer name adhering to the two-word Open Arbor trademark boundary (unit: string)."
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Primary web host of the issuing organization (unit: URI)."
+        }
+      }
+    },
+    "validFrom": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when the attestation becomes active (unit: UTC date-time)."
+    },
+    "validUntil": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when annual evidence re-verification is due (unit: UTC date-time)."
+    },
+    "credentialSubject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type",
+        "practitioner_name",
+        "nature_first_competency_proof",
+        "achievement"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uri",
+          "description": "DID or URI identifying the attested practitioner (unit: URI)."
+        },
+        "type": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "const": "AchievementSubject"
+          },
+          "description": "1EdTech Open Badges 3.0 subject type (unit: enum array)."
+        },
+        "practitioner_name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Full legal or professional name of the Regenerative Consulting Arborist (unit: string)."
+        },
+        "nature_first_competency_proof": {
+          "type": "object",
+          "description": "Nature-first competency proof establishing practitioner diagnostic standing through verifiable field diagnostics, rhizosphere remediation, and longitudinal monitoring rather than closed guild membership.",
+          "additionalProperties": false,
+          "required": [
+            "diagnostic_report_hashes_sha256",
+            "field_rhizosphere_verification",
+            "longitudinal_monitoring_commitment"
+          ],
+          "properties": {
+            "diagnostic_report_hashes_sha256": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{64}$"
+              },
+              "description": "Three SHA-256 cryptographic hashes of machine-validated RCA diagnostic assessment reports conforming to rca_assessment.schema.json (unit: array of 64-char hex strings)."
+            },
+            "field_rhizosphere_verification": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "root_collar_airspade_verified",
+                "biological_amendment_verified",
+                "soil_biology_assessment_present"
+              ],
+              "properties": {
+                "root_collar_airspade_verified": {
+                  "type": "boolean",
+                  "const": true,
+                  "description": "Attests that non-destructive pneumatic root collar excavation was executed and documented (unit: boolean)."
+                },
+                "biological_amendment_verified": {
+                  "type": "boolean",
+                  "const": true,
+                  "description": "Attests that pre-charged biochar, fungal humates, or ramial woodchips were prescribed and applied (unit: boolean)."
+                },
+                "soil_biology_assessment_present": {
+                  "type": "boolean",
+                  "const": true,
+                  "description": "Attests that rhizosphere soil and microbiome baseline was captured (unit: boolean)."
+                }
+              },
+              "description": "Field verification of rhizosphere decompaction, root-collar excavation, and biological inoculation (unit: object)."
+            },
+            "longitudinal_monitoring_commitment": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "stim_monitoring_protocol_active",
+                "year_1_recovery_milestone_target_date"
+              ],
+              "properties": {
+                "stim_monitoring_protocol_active": {
+                  "type": "boolean",
+                  "const": true,
+                  "description": "Active commitment to Sanctuary Tree Inventory and Monitoring (STIM) longitudinal tracking (unit: boolean)."
+                },
+                "year_1_recovery_milestone_target_date": {
+                  "type": "string",
+                  "format": "date",
+                  "description": "Target date for Year-1 rhizosphere biology and tree vigor follow-up audit (unit: YYYY-MM-DD date)."
+                }
+              },
+              "description": "Longitudinal monitoring commitment anchoring continuous biological recovery (unit: object)."
+            }
+          }
+        },
+        "legacy_statutory_equivalencies": {
+          "type": "object",
+          "description": "Optional cross-walk mapping of legacy guild credentials (ISA, ASCA, SAF) used solely for municipal permit statutory compliance.",
+          "additionalProperties": false,
+          "properties": {
+            "credential_category": {
+              "type": "string",
+              "enum": [
+                "ISA_Certified_Arborist",
+                "ISA_Board_Certified_Master_Arborist",
+                "ASCA_Registered_Consulting_Arborist",
+                "SAF_Certified_Urban_And_Community_Forester",
+                "SAF_Certified_Forester",
+                "SER_Certified_Ecological_Restoration_Practitioner",
+                "Accredited_Degree_Forestry_Arboriculture_Horticulture_Ecology"
+              ],
+              "description": "Legacy credential category for municipal permit administrative processing (unit: enum string)."
+            },
+            "issuing_organization": {
+              "type": "string",
+              "description": "Legacy credential issuing organization (unit: string)."
+            },
+            "credential_identifier": {
+              "type": "string",
+              "description": "Legacy certificate or registration identifier (unit: string)."
+            },
+            "verification_url": {
+              "type": "string",
+              "format": "uri",
+              "description": "Public directory URL where legacy credential standing can be verified (unit: URI)."
+            }
+          }
+        },
+        "achievement": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "type",
+            "name",
+            "description",
+            "achievementType",
+            "criteria",
+            "governance_and_fee_benchmark"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uri",
+              "enum": [
+                "https://soilgrower.com/specs/rca-spec-v1.0",
+                "https://soilgrower.com/specs/rca-spec-v2.0"
+              ],
+              "description": "Canonical URI of the RCA-Spec achievement definition (unit: URI)."
+            },
+            "type": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "const": "Achievement"
+              },
+              "description": "1EdTech Open Badges 3.0 Achievement type (unit: enum array)."
+            },
+            "name": {
+              "type": "string",
+              "enum": [
+                "Regenerative Consulting Arborist (RCA-Spec v1.0)",
+                "Regenerative Consulting Arborist (RCA-Spec v2.0)"
+              ],
+              "description": "Achievement title (unit: string)."
+            },
+            "description": {
+              "type": "string",
+              "minLength": 20,
+              "description": "Summary of the diagnostic-first, holobiont-centered arboricultural practice standard (unit: string)."
+            },
+            "achievementType": {
+              "type": "string",
+              "const": "Competency",
+              "description": "1EdTech achievement classification (unit: enum string)."
+            },
+            "criteria": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "narrative"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uri",
+                  "description": "URI pointing to Section 5.2 of docs/13_RCA_PRACTICE_SPECIFICATION_v1.md (unit: URI)."
+                },
+                "narrative": {
+                  "type": "string",
+                  "minLength": 20,
+                  "description": "States the nature-first requirement for (1) 3 machine-validated RCA diagnostic reports with SHA-256 hashes, (2) verified pneumatic rhizosphere remediation and biological amendment, and (3) longitudinal STIM monitoring commitment (unit: string)."
+                }
+              }
+            },
+            "governance_and_fee_benchmark": {
+              "type": "object",
+              "description": "Non-paywalled benchmark metadata documenting Path C governance and the optional registry maintenance band.",
+              "additionalProperties": false,
+              "required": [
+                "specification_license",
+                "schema_license",
+                "optional_annual_registry_fee_band_min_usd",
+                "optional_annual_registry_fee_band_max_usd",
+                "benchmark_citations",
+                "payment_flow_encoded"
+              ],
+              "properties": {
+                "specification_license": {
+                  "type": "string",
+                  "const": "CC-BY-SA-4.0",
+                  "description": "SPDX license identifier for docs/13_RCA_PRACTICE_SPECIFICATION_v1.md (unit: SPDX string)."
+                },
+                "schema_license": {
+                  "type": "string",
+                  "const": "AGPL-3.0-or-later",
+                  "description": "SPDX license identifier for the JSON schemas and validation code (unit: SPDX string)."
+                },
+                "optional_annual_registry_fee_band_min_usd": {
+                  "type": "number",
+                  "const": 75,
+                  "description": "Lower bound of benchmarked optional annual attestation registry maintenance fee (unit: US Dollars per year)."
+                },
+                "optional_annual_registry_fee_band_max_usd": {
+                  "type": "number",
+                  "const": 110,
+                  "description": "Upper bound of benchmarked optional annual attestation registry maintenance fee (unit: US Dollars per year)."
+                },
+                "benchmark_citations": {
+                  "type": "array",
+                  "minItems": 2,
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Primary-source ecological credential maintenance benchmarks: SER CERP ($75/yr member maintenance) and NOFA AOLCP ($110/yr reaccreditation) (unit: citation string array)."
+                },
+                "payment_flow_encoded": {
+                  "type": "boolean",
+                  "const": false,
+                  "description": "Hard invariant confirming this schema contains zero payment gate or billing logic (unit: boolean)."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "description": "Exactly 3 machine-validated RCA_v1 diagnostic assessment report artifacts conforming to schemas/rca_assessment.schema.json.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "type",
+          "name",
+          "conforms_to_schema",
+          "schema_version",
+          "report_sha256_hash",
+          "assessment_date",
+          "plus_code_global",
+          "inaturalist_taxon_id",
+          "conflict_free_preservation_verified"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uri",
+            "description": "URI or content-addressed pointer to the anonymized RCA_v1 diagnostic report (unit: URI)."
+          },
+          "type": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "string",
+              "enum": [
+                "Evidence",
+                "RCADiagnosticReportEvidence"
+              ]
+            },
+            "description": "1EdTech Open Badges 3.0 Evidence type array (unit: enum array)."
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Human-readable title of the submitted diagnostic report (unit: string)."
+          },
+          "conforms_to_schema": {
+            "type": "string",
+            "const": "https://soilgrower.com/schemas/openarbor-rca-assessment.schema.json",
+            "description": "Canonical schema URI against which the report JSON was validated (unit: URI)."
+          },
+          "schema_version": {
+            "type": "string",
+            "enum": ["RCA_v1", "RCA_v2"],
+            "description": "Validated RCA specification version (unit: version string)."
+          },
+          "report_sha256_hash": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{64}$",
+            "description": "Hex-encoded 256-bit SHA-256 cryptographic digest of the canonical rca_assessment.schema.json payload (unit: 64-character hex string)."
+          },
+          "assessment_date": {
+            "type": "string",
+            "format": "date",
+            "description": "ISO 8601 date on which the field diagnostic was conducted (unit: YYYY-MM-DD date)."
+          },
+          "plus_code_global": {
+            "type": "string",
+            "pattern": "^[23456789CFGHJMPQRVWX]{8}\\+[23456789CFGHJMPQRVWX]{2,7}$",
+            "description": "Open Location Code (Plus Code) of the diagnosed tree (unit: Plus Code string)."
+          },
+          "inaturalist_taxon_id": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "iNaturalist taxon ID of the host tree evaluated in the report (unit: integer ID)."
+          },
+          "conflict_free_preservation_verified": {
+            "type": "boolean",
+            "const": true,
+            "description": "Verifies the report prioritizes preservation and rhizosphere regeneration over unnecessary tree removal (unit: boolean)."
+          }
+        }
+      }
+    },
+    "proof": {
+      "type": "object",
+      "description": "W3C Verifiable Credential cryptographic proof (DataIntegrityProof or Ed25519Signature2020).",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "created",
+        "verificationMethod",
+        "proofPurpose",
+        "proofValue"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "DataIntegrityProof",
+            "Ed25519Signature2020",
+            "JsonWebSignature2020"
+          ],
+          "description": "W3C cryptographic proof suite identifier (unit: enum string)."
+        },
+        "cryptosuite": {
+          "type": "string",
+          "enum": [
+            "eddsa-rdfc-2022",
+            "eddsa-jcs-2022"
+          ],
+          "description": "Data Integrity cryptosuite when type is DataIntegrityProof (unit: enum string)."
+        },
+        "created": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp of signature generation (unit: UTC date-time)."
+        },
+        "verificationMethod": {
+          "type": "string",
+          "format": "uri",
+          "description": "URI of the issuer public key used to verify the credential signature (unit: URI)."
+        },
+        "proofPurpose": {
+          "type": "string",
+          "const": "assertionMethod",
+          "description": "W3C proof purpose (unit: const string)."
+        },
+        "proofValue": {
+          "type": "string",
+          "minLength": 16,
+          "description": "Multibase-encoded or JWS cryptographic signature string (unit: encoded signature string)."
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "@context": [
+        "https://www.w3.org/ns/credentials/v2",
+        "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json"
+      ],
+      "id": "https://soilgrower.com/credentials/rca-verified/2026-0001",
+      "type": [
+        "VerifiableCredential",
+        "OpenBadgeCredential"
+      ],
+      "name": "Verified Regenerative Consulting Arborist (RCA-Verified)",
+      "issuer": {
+        "id": "https://soilgrower.com/issuers/open-arbor-alliance",
+        "type": [
+          "Profile"
+        ],
+        "name": "Open Arbor Alliance",
+        "url": "https://soilgrower.com"
+      },
+      "validFrom": "2026-10-20T00:00:00Z",
+      "validUntil": "2027-10-20T00:00:00Z",
+      "credentialSubject": {
+        "id": "did:web:soilgrower.com:stewards:george-steward",
+        "type": [
+          "AchievementSubject"
+        ],
+        "practitioner_name": "George Steward",
+        "nature_first_competency_proof": {
+          "diagnostic_report_hashes_sha256": [
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae",
+            "49a6f8211e5d388b9b8e301505e4d6c011a4f7c26149b1715a6085d3877b9241"
+          ],
+          "field_rhizosphere_verification": {
+            "root_collar_airspade_verified": true,
+            "biological_amendment_verified": true,
+            "soil_biology_assessment_present": true
+          },
+          "longitudinal_monitoring_commitment": {
+            "stim_monitoring_protocol_active": true,
+            "year_1_recovery_milestone_target_date": "2027-10-20"
+          }
+        },
+        "legacy_statutory_equivalencies": {
+          "credential_category": "ISA_Certified_Arborist",
+          "issuing_organization": "International Society of Arboriculture",
+          "credential_identifier": "TX-362025A",
+          "verification_url": "https://certificates.directory.isa-arbor.com/"
+        },
+        "achievement": {
+          "id": "https://soilgrower.com/specs/rca-spec-v2.0",
+          "type": [
+            "Achievement"
+          ],
+          "name": "Regenerative Consulting Arborist (RCA-Spec v2.0)",
+          "description": "Attests that the practitioner diagnoses and manages woody perennials as nested holobionts across the five mandatory domains of RCA-Spec v2.0.",
+          "achievementType": "Competency",
+          "criteria": {
+            "id": "https://soilgrower.com/specs/rca-spec-v2.0#tier-2-attestation-criteria",
+            "narrative": "Requires nature-first proof of stewardship (3 machine-validated RCA diagnostic reports, field rhizosphere verification, longitudinal monitoring commitment) with optional legacy guild equivalencies."
+          },
+          "governance_and_fee_benchmark": {
+            "specification_license": "CC-BY-SA-4.0",
+            "schema_license": "AGPL-3.0-or-later",
+            "optional_annual_registry_fee_band_min_usd": 75,
+            "optional_annual_registry_fee_band_max_usd": 110,
+            "benchmark_citations": [
+              "Society for Ecological Restoration CERP ($75/year member maintenance fee)",
+              "NOFA Accredited Organic Land Care Professional AOLCP ($110/year reaccreditation fee)"
+            ],
+            "payment_flow_encoded": false
+          }
+        }
+      },
+      "evidence": [
+        {
+          "id": "https://soilgrower.com/reports/rca-v1/report-001.json",
+          "type": [
+            "Evidence",
+            "RCADiagnosticReportEvidence"
+          ],
+          "name": "Quercus virginiana Rhizosphere Decompaction & Guild Prescription (Liberty Hill, TX)",
+          "conforms_to_schema": "https://soilgrower.com/schemas/openarbor-rca-assessment.schema.json",
+          "schema_version": "RCA_v1",
+          "report_sha256_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "assessment_date": "2026-09-15",
+          "plus_code_global": "8624M38F+4X",
+          "inaturalist_taxon_id": 49005,
+          "conflict_free_preservation_verified": true
+        },
+        {
+          "id": "https://soilgrower.com/reports/rca-v1/report-002.json",
+          "type": [
+            "Evidence",
+            "RCADiagnosticReportEvidence"
+          ],
+          "name": "Quercus garryana TIZ Hydrologic & Mycorrhizal Baseline (Medford, OR)",
+          "conforms_to_schema": "https://soilgrower.com/schemas/openarbor-rca-assessment.schema.json",
+          "schema_version": "RCA_v1",
+          "report_sha256_hash": "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae",
+          "assessment_date": "2026-10-02",
+          "plus_code_global": "84QVG49P+7M",
+          "inaturalist_taxon_id": 54784,
+          "conflict_free_preservation_verified": true
+        },
+        {
+          "id": "https://soilgrower.com/reports/rca-v1/report-003.json",
+          "type": [
+            "Evidence",
+            "RCADiagnosticReportEvidence"
+          ],
+          "name": "Quercus stellata Root-Collar Excavation & 5-Year Sanctuary Rollup (Georgetown, TX)",
+          "conforms_to_schema": "https://soilgrower.com/schemas/openarbor-rca-assessment.schema.json",
+          "schema_version": "RCA_v1",
+          "report_sha256_hash": "49a6f8211e5d388b9b8e301505e4d6c011a4f7c26149b1715a6085d3877b9241",
+          "assessment_date": "2026-10-12",
+          "plus_code_global": "8624J8MV+9R",
+          "inaturalist_taxon_id": 54781,
+          "conflict_free_preservation_verified": true
+        }
+      ],
+      "proof": {
+        "type": "DataIntegrityProof",
+        "cryptosuite": "eddsa-jcs-2022",
+        "created": "2026-10-20T17:00:00Z",
+        "verificationMethod": "https://soilgrower.com/issuers/open-arbor-alliance#key-1",
+        "proofPurpose": "assertionMethod",
+        "proofValue": "z58DAdFfa9SkqZMVPxAQpic7ndSayn1PzZs6ZjWp1CktyGesjuTSwRdoWhAfGFCF5bppETSTojQCrfFPP2oumHKtz"
+      }
+    }
+  ]
+}

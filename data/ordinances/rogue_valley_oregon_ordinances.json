@@ -1,0 +1,186 @@
+{
+  "dataset_version": "2.0.0",
+  "region": "Rogue Valley, Southern Oregon (Jackson & Josephine Counties)",
+  "standard": "OpenArbor Municipal Tree Protection Ordinance Schema v2.0",
+  "municipalities": [
+    {
+      "id": "or-ashland",
+      "name": "Ashland",
+      "state": "OR",
+      "coordinates": { "lat": 42.1946, "lng": -122.7095 },
+      "ordinance_numbers": "Ashland Municipal Code (AMC) Chapter 18.4.5 (Tree Preservation and Protection), Chapter 18.5.7 (Tree Removal Permits), and AMC 18.3.10.090.D (Hillside Development)",
+      "source_url": "https://ashland.municipal.codes/AMC/18.4.5",
+      "dbh_threshold_inches": 6,
+      "heritage_threshold_inches": 18,
+      "heritage_species_thresholds": {
+        "Quercus garryana (Oregon White Oak)": 18,
+        "Quercus kelloggii (California Black Oak)": 18,
+        "Pinus ponderosa (Ponderosa Pine)": 18,
+        "Arbutus menziesii (Pacific Madrone)": 12
+      },
+      "excepted_species": [
+        "Ailanthus altissima (Tree of Heaven)",
+        "Robinia pseudoacacia (Black Locust)",
+        "Populus nigra (Lombardy Poplar)"
+      ],
+      "permit_triggers_by_work_type": {
+        "protected": ["removal"],
+        "heritage": ["removal", "significant_pruning"],
+        "citation": "AMC § 18.5.7.020 / AMC § 18.4.5.030"
+      },
+      "mitigation_fee_schedule": {
+        "citation": "AMC § 18.5.7.060 Mitigation and Replacement",
+        "exemption_pct": 0,
+        "heritage_rate_per_inch": 150,
+        "heritage_replacement_ratio": 2,
+        "penalty_civil_per_tree": 1000,
+        "penalty_citation": "AMC § 18.5.7.090 Enforcement",
+        "tiers": [
+          { "min_dbh": 6, "max_dbh": 17.9, "rate_per_inch": 75, "replacement_ratio": 1 },
+          { "min_dbh": 18, "max_dbh": null, "rate_per_inch": 150, "replacement_ratio": 2 }
+        ]
+      },
+      "plan_rules": {
+        "survey": {
+          "citation": "AMC § 18.4.5.030.B Tree Inventory Requirements",
+          "hardwood_min_dbh": 6,
+          "max_age_years": 2,
+          "multi_trunk": "quadratic",
+          "multi_trunk_text": "Multi-trunk trees calculate equivalent DBH via quadratic mean root sum of squares."
+        },
+        "root_zone": {
+          "citation": "AMC § 18.4.5.030.C Tree Protection Zone Specifications",
+          "crz_ft_per_inch": 1.0,
+          "crz_min_ft": 5,
+          "removal_if_disturbed_pct": 25,
+          "cutfill_max_in": 3,
+          "impervious_max_pct": 20,
+          "crown_removal_max_pct": 25
+        },
+        "pruning": {
+          "citation": "AMC § 18.4.5.040 Performance Standards",
+          "standard": "ANSI A300 Part 1 / ISA Best Management Practices",
+          "oak_months": [4, 5, 6, 7]
+        }
+      }
+    },
+    {
+      "id": "or-medford",
+      "name": "Medford",
+      "state": "OR",
+      "coordinates": { "lat": 42.3265, "lng": -122.8756 },
+      "ordinance_numbers": "Medford Municipal Code (MMC) Sections 6.700 to 6.750 (Public and Street Trees); Medford Land Development Code (MLDC) § 10.780 (Landscaping); City of Medford Tree Protection Guidelines (April 2026)",
+      "source_url": "https://medford.municipal.codes/MMC/6.700",
+      "dbh_threshold_inches": 8,
+      "heritage_threshold_inches": 24,
+      "heritage_species_thresholds": {
+        "Quercus garryana (Oregon White Oak)": 20,
+        "Quercus kelloggii (California Black Oak)": 20,
+        "Pinus ponderosa (Ponderosa Pine)": 24
+      },
+      "excepted_species": [
+        "Ulmus pumila (Siberian Elm)",
+        "Ailanthus altissima (Tree of Heaven)"
+      ],
+      "permit_triggers_by_work_type": {
+        "protected": ["street_tree_removal", "commercial_development_removal"],
+        "heritage": ["street_tree_removal"],
+        "citation": "MMC § 6.725 / MLDC § 10.780"
+      },
+      "mitigation_fee_schedule": {
+        "citation": "MMC § 6.740 Street Tree Replacement / April 2026 Guidelines",
+        "exemption_pct": 0,
+        "heritage_rate_per_inch": 100,
+        "heritage_replacement_ratio": 2,
+        "penalty_civil_per_tree": 500,
+        "penalty_citation": "MMC § 6.750 Violations",
+        "tiers": [
+          { "min_dbh": 8, "max_dbh": 23.9, "rate_per_inch": 50, "replacement_ratio": 1 },
+          { "min_dbh": 24, "max_dbh": null, "rate_per_inch": 100, "replacement_ratio": 2 }
+        ]
+      },
+      "plan_rules": {
+        "survey": {
+          "citation": "Medford April 2026 Guidelines Section 3.a",
+          "hardwood_min_dbh": 8,
+          "max_age_years": 2,
+          "multi_trunk": "quadratic",
+          "multi_trunk_text": "Multi-trunk DBH calculated via quadratic mean."
+        },
+        "root_zone": {
+          "citation": "Medford April 2026 Guidelines Section 4",
+          "crz_ft_per_inch": 1.0,
+          "crz_min_ft": 6,
+          "removal_if_disturbed_pct": 30,
+          "cutfill_max_in": 4,
+          "impervious_max_pct": 25,
+          "crown_removal_max_pct": 25
+        },
+        "pruning": {
+          "citation": "MMC § 6.730 Public Tree Maintenance",
+          "standard": "ANSI A300 Part 1 Pruning",
+          "oak_months": [4, 5, 6, 7]
+        }
+      }
+    },
+    {
+      "id": "or-grants-pass",
+      "name": "Grants Pass",
+      "state": "OR",
+      "coordinates": { "lat": 42.4390, "lng": -123.3284 },
+      "ordinance_numbers": "City of Grants Pass Development Code (Title 10) Article 13 (Tree Retention and Canopy Re-establishment, revised May 3, 2023); Article 23 (Street Trees § 23.071 and § 23.074)",
+      "source_url": "https://www.grantspassoregon.gov/181/Development-Code",
+      "dbh_threshold_inches": 8,
+      "heritage_threshold_inches": 20,
+      "heritage_species_thresholds": {
+        "Quercus garryana (Oregon White Oak)": 18,
+        "Pinus ponderosa (Ponderosa Pine)": 20,
+        "Pseudotsuga menziesii (Douglas Fir)": 24
+      },
+      "excepted_species": [
+        "Ailanthus altissima (Tree of Heaven)",
+        "Robinia pseudoacacia (Black Locust)"
+      ],
+      "permit_triggers_by_work_type": {
+        "protected": ["subdivision_removal", "street_tree_removal"],
+        "heritage": ["subdivision_removal", "street_tree_removal"],
+        "citation": "Grants Pass Development Code Art. 13 § 13.030"
+      },
+      "mitigation_fee_schedule": {
+        "citation": "Grants Pass Development Code Art. 13 § 13.040 Canopy Re-establishment Schedule",
+        "exemption_pct": 0,
+        "heritage_rate_per_inch": 120,
+        "heritage_replacement_ratio": 2,
+        "penalty_civil_per_tree": 750,
+        "penalty_citation": "Grants Pass Municipal Code § 1.36.010 General Penalty",
+        "tiers": [
+          { "min_dbh": 8, "max_dbh": 19.9, "rate_per_inch": 60, "replacement_ratio": 1 },
+          { "min_dbh": 20, "max_dbh": null, "rate_per_inch": 120, "replacement_ratio": 2 }
+        ]
+      },
+      "plan_rules": {
+        "survey": {
+          "citation": "Grants Pass Development Code Art. 13 § 13.032 Tree Inventory Submittal",
+          "hardwood_min_dbh": 8,
+          "max_age_years": 2,
+          "multi_trunk": "quadratic",
+          "multi_trunk_text": "Multi-trunk DBH calculated via quadratic mean."
+        },
+        "root_zone": {
+          "citation": "Grants Pass Development Code Art. 13 § 13.034 Protection Specifications",
+          "crz_ft_per_inch": 1.0,
+          "crz_min_ft": 6,
+          "removal_if_disturbed_pct": 25,
+          "cutfill_max_in": 3,
+          "impervious_max_pct": 20,
+          "crown_removal_max_pct": 25
+        },
+        "pruning": {
+          "citation": "Grants Pass Development Code § 23.071 Street Tree Pruning",
+          "standard": "ANSI A300 / ISA BMP",
+          "oak_months": [4, 5, 6, 7]
+        }
+      }
+    }
+  ]
+}

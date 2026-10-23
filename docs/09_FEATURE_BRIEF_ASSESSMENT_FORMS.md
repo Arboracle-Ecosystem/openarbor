@@ -57,8 +57,8 @@ FEATURE_BRIEF_ASSESSMENT_FORMS.md
     *   `tree_id` (Foreign Key)
     *   `user_id` (Foreign Key)
     *   `assessment_date` (Date, Required)
-    *   `assessment_type` (Enum: 'Standard', 'Construction Monitoring', Required)
-    *   **`data_json` (JSONB): A flexible field to store all structured checklist data and notes specific to this assessment. This is critical for scalability and prevents dozens of new columns per checklist item.**
+    *   `assessment_type` (Enum: 'Standard', 'Construction Monitoring', 'Regenerative Diagnostic', Required)
+    *   **`data_json` (JSONB): A flexible field to store all structured checklist data and notes specific to this assessment. This is critical for scalability and prevents dozens of new columns per checklist item. When `assessment_type` is `'Regenerative Diagnostic'`, `data_json` must validate against [`schemas/rca_assessment.schema.json`](../schemas/rca_assessment.schema.json) per [`docs/13_RCA_PRACTICE_SPECIFICATION_v1.md`](13_RCA_PRACTICE_SPECIFICATION_v1.md).**
 
 *   **`Photos` Table:**
     *   `photo_id` (Primary Key)
@@ -98,6 +98,7 @@ This section details the UI and logic for each data entry form.
 | **Management Data** | Professional Mode | Toggle Switch| (Default: OFF). Toggling ON reveals the sections below. |
 | **Condition Assessment**| | `See Form 2 below`| |
 | **Construction Monitoring**| | `See Form 3 below` | |
+| **Regenerative Diagnostic (`RCA_v1`)**| | `See Form 4 below` | Validated by `schemas/rca_assessment.schema.json` |
 | **Photos** | `Photos` | File Upload | Native `[Camera]` and `[Gallery]` buttons. **Must show thumbnails of uploaded images with an optional caption field for each.** Backend must store files and link URLs to the `tree_id`. |
 
 #### **Form 2: Professional Condition Assessment Module (Embedded in Core Form)**
@@ -128,6 +129,18 @@ This section details the UI and logic for each data entry form.
 | | Canopy Impact | Dropdown | `None`, `Minor Damage`, `Moderate Damage`, `Significant Damage` |
 | | Rootzone Notes| Multi-Select Checklist | `Protected`, `Minor Compaction`, `Moderate Compaction`, `Significant Compaction`, `Excessive Compaction`, `Minor Fill`, `Moderate Fill`, `Significant Fill`, `Excessive Fill`, `Adequate Moisture`, `Ponding`, `Dry`, `Very Dry` |
 | **Narrative**| Notes & Rec. Action | Large Text Area| **Required.** For a detailed narrative of the site visit. |
+
+#### **Form 4: Regenerative Diagnostic Report (`RCA_v1`)**
+
+**Purpose:** A five-domain soil, rhizosphere, and living-systems diagnostic assessment governed by [`docs/13_RCA_PRACTICE_SPECIFICATION_v1.md`](13_RCA_PRACTICE_SPECIFICATION_v1.md) and validated by [`schemas/rca_assessment.schema.json`](../schemas/rca_assessment.schema.json) that rolls tree-level diagnostics up into the property-level **Sanctuary Scorecard**.
+
+| Domain Key in `data_json` | Required Core Fields (with Explicit Units) | Implementation Notes |
+| :--- | :--- | :--- |
+| **`structural_baseline`** | `dbh_cm`, `is_multistem`, `height_m`, `crown_spread_ns_m`, `crown_spread_ew_m`, `live_crown_ratio_pct`, `plus_code_global`, `isa_traq_risk`, `municipal_permit_disposition` | Satisfies `ANSI A300 Part 9` risk assessment and municipal tree preservation ordinances (`schemas/municipal-ordinance.schema.json`). |
+| **`rhizosphere_and_root_collar`** | `root_flare_burial_depth_cm`, `root_flare_diameter_cm`, `stem_girdling_root_count`, `stem_girdling_root_severity`, `airspade_radial_trenching_geometry`, `crz_radius_m`, `srz_radius_m`, `tiz_radius_m` | Captures supersonic pneumatic (`AirSpade`) root-collar excavation diagnostics and concentric protection zones (`CRZ`, `SRZ`, `TIZ`). |
+| **`soil_and_microbiome_baseline`** | `bulk_density_g_cm3`, `infiltration_rate_mm_hr`, `organic_matter_pct`, `soil_ph`, `lab_panel_url`, `mycorrhizal_and_fungal_observations` | Pairs physical infiltration and compaction measurements with external soil laboratory URI and fungal/mycorrhizal observations. |
+| **`understory_and_guild_prescription`** | `reference_ecosystem_name`, `biochar_volume_liters`, `humate_mass_kg`, `compost_volume_cubic_m`, `compost_extract_volume_liters`, `mulch_depth_cm`, `mulch_coverage_area_m2`, `synthetic_npk_and_fungicide_exclusion_verified`, `native_companion_species_guild` | Keys each prescribed companion species to `inaturalist_taxon_id` and `open_nursery_batch_id`. |
+| **`outcome_monitoring_schedule`** | `stim_hypothesis_statement`, `stim_kill_criterion`, `one_year_leading_indicators`, `five_year_lagging_indicators` | Encodes 1-year leading checklist indicators and 5-year lagging soil/hydrology outcomes plus `sanctuary_scorecard_targets`. |
 
 ---
 

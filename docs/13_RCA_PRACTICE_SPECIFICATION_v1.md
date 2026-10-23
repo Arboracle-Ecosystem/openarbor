@@ -149,7 +149,7 @@ Every RCA diagnostic assessment satisfies municipal tree protection ordinances a
 | `codit_wall_response_rating` | `string` | `rating` | Optional | Shigo CODIT compartmentalization response across Walls 1 to 4. |
 | `sonic_tomography_or_resistograph_uri` | `string` (`uri-reference`) | `URI` | Optional | URI to PiCUS tomogram or resistograph trace verifying internal sound shell. |
 | `dual_valuation` | `object` | `record` | Optional | Encodes `ctla_10th_ed_depreciated_usd`, `holobiont_200yr_biological_equity_usd`, and `veteran_keystone_habitat_multiplier`. |
-| `isa_traq_risk` | `object` | `TRAQ Matrix` | Required | Requires assessment level, time frame, target description, failure and impact likelihoods, consequences, and overall rating. |
+| `isa_traq_risk` | `object` | `TRAQ Matrix` | Required | Requires assessment level, time frame, target description, failure, and impact likelihoods, consequences, and overall rating. |
 | `municipal_permit_disposition` | `object` | `Statutory Record` | Required | Requires jurisdiction ID, citation, protection tier, permit required flag, disposition, and seasonal oak wilt restriction flag. |
 
 ### 4.2 Domain 2: `rhizosphere_and_root_collar`
@@ -251,7 +251,30 @@ Tree-level RCA diagnostics aggregate deterministically into the five property-le
 
 ---
 
-## 6. References (APA 7)
+## 6. The RCA Movement and Open-Source Field Playbook (Building the Post-ISA Army)
+
+Conventional arborists remain bound to legacy guilds and tree-removal revenue models because independent consulting historically required 4 to 6 hours of manual spreadsheet computation, statutory ordinance lookups, and report formatting per field inspection, while tree removal paid higher immediate contractor cash flow than preservation. Open Arbor eliminates both barriers through the zero-dependency **RCA Army Engine** (`src/core/rcaEngine.js` and `bin/openarbor-rca.mjs`).
+
+### 6.1 The Zero-Dependency CLI Field Compiler (`bin/openarbor-rca.mjs`)
+
+Any practitioner can execute the complete Post-ISA and Post-ASCA diagnostic, legal, economic, and attestation workflow from the command line:
+
+1. **`openarbor-rca compile <assessment.json> [--ordinance <jurisdiction-id>] [--out <report.md>]`:**
+   * Validates the field JSON payload against `schemas/rca_assessment.schema.json` via `validateJsonSchema`, runs `lintRcaEvidentiaryReport`, computes Mattheck `t/R` stability and pneumatic AirSpade amendment volumes, evaluates municipal ordinance permit triggers, embeds a vector SVG root-zone protection map, and outputs a 10-section evidentiary report anchored by a canonical SHA-256 digest.
+2. **`openarbor-rca counter-notice <assessment.json> [--out <notice.md>]`:**
+   * Generates a formal **Scientific Preservation and Biomechanical Counter-Notice** refuting conflicted contractor removal bids whenever the measured sound wood shell satisfies Mattheck's stability criterion (`t/R >= 0.30`). Documents the exact municipal tree protection code, Shigo CODIT compartmentalization status, fiduciary conflict-of-interest disclosure, and the 200-year Holobiont Biological Equity that would be destroyed by removal.
+3. **`openarbor-rca economics <assessment.json> [--json]`:**
+   * Executes `computeRegenerativePracticeEconomics`, contrasting the one-time, high-casualty Legacy Contractor Removal model against the 5-Year Regenerative Stewardship model (Year 0 5-domain diagnostic and pneumatic radial trenching, SGR relief, biochar/compost/humate inoculation, and native understory guild installation; Year 1 STIM leading indicator audit; Year 3 mycorrhizal extract and ramial woodchip recharge; Year 5 Sanctuary Scorecard verification). Demonstrates deterministically that preserving mature trees yields a 4x to 7x higher 5-year net practitioner margin while preserving the landowner's biological asset.
+4. **`openarbor-rca attest <practitioner.json> <report1.json> <report2.json> <report3.json> [--out <badge.json>]`:**
+   * Validates three field assessments against `schemas/rca_assessment.schema.json` and `lintRcaEvidentiaryReport`, computes their canonical SHA-256 evidence hashes, verifies the Year-1 STIM longitudinal monitoring commitment, and mints a cryptographically verifiable **1EdTech Open Badges 3.0 / W3C Verifiable Credential (`OpenBadgeCredential`)** artifact conforming to `schemas/rca_openbadge_v3.schema.json`.
+
+### 6.2 Worked Reference Case (`examples/ashland_oregon_white_oak_rca_v2.json`)
+
+The repository ships with a complete, schema-validated reference diagnostic for a 105 cm DBH *Quercus garryana* (Oregon White Oak) in Ashland, Oregon (`or-ashland`, Ashland Municipal Code 18.4.5 and 18.5.7). Despite internal heartwood decay that reduces its classical CTLA 10th Edition depreciated appraisal to $23,273, the tree exhibits a sound outer shell ratio of `t/R = 0.34` (exceeding Mattheck's `0.30` safety threshold) and an active Wall 4 barrier zone. The Open Arbor engine prescribes 10.79 m3 of 150 psi radial AirSpade decompaction, 863 L of pre-charged biochar, 1.62 m3 of fungal compost, 68.42 m3 of ramial woodchip mulch, and 62 native Rogue Valley companion plants (*Mahonia aquifolium*, *Ribes sanguineum*, *Polystichum munitum*, and *Ceanothus integerrimus*), preserving $427,039 in 200-year Holobiont Biological Equity (`18.35x` valuation inversion).
+
+---
+
+## 7. References (APA 7)
 
 * American National Standards Institute & Tree Care Industry Association. (2023). *ANSI A300 tree care standards: Consolidated edition*. TCIA; ISA. https://wwv.isa-arbor.com/store/product/4645/cid/117/
 * ANSI National Accreditation Board. (2013). *Fees: Accreditation of personnel certification bodies* (Public Procedure PCAC-PR-522, Rev. 2). ANSI. https://www.ansica.org/
@@ -259,14 +282,14 @@ Tree-level RCA diagnostics aggregate deterministically into the five property-le
 * Council of Tree and Landscape Appraisers. (2018). *Guide for plant appraisal* (10th ed.). International Society of Arboriculture.
 * Cunningham-Eurich, I., & Wentworth, J. (2025). *Regenerative agriculture* (POSTnote 748). UK Parliament Parliamentary Office of Science and Technology. https://researchbriefings.files.parliament.uk/documents/POST-PN-0748/POST-PN-0748.pdf
 * DDC-I, Inc. (2024). *OpenArbor: An Eclipse-based IDE & tool set for embedded real-time mixed language projects*. https://www.ddci.com/solutions/products/openarbor/
-* Dias, B. D. (2018). Regenerative development: Building evolutive capacity for healthy living systems. *International Journal of Design & Nature and Ecodynamics*, *13*(3), 315–323. https://doi.org/10.2495/DNE-V13-N3-315-323
-* Gann, G. D., McDonald, T., Walder, B., Aronson, J., Nelson, C. R., Jonson, J., Hallett, J. G., Eisenberg, C., Guariguata, M. R., Liu, J., Hua, F., Echeverría, C., Gonzales, E., Shaw, N., Decleer, K., & Dixon, K. W. (2019). International principles and standards for the practice of ecological restoration (2nd ed.). *Restoration Ecology*, *27*(S1), S1–S46. https://doi.org/10.1111/rec.13035
-* Giller, K. E., Hijbeek, R., Andersson, J. A., & Sumberg, J. (2021). Regenerative agriculture: An agronomic perspective. *Outlook on Agriculture*, *50*(1), 13–25. https://doi.org/10.1177/0030727021998063
+* Dias, B. D. (2018). Regenerative development: Building evolutive capacity for healthy living systems. *International Journal of Design & Nature and Ecodynamics*, *13*(3), 315-323. https://doi.org/10.2495/DNE-V13-N3-315-323
+* Gann, G. D., McDonald, T., Walder, B., Aronson, J., Nelson, C. R., Jonson, J., Hallett, J. G., Eisenberg, C., Guariguata, M. R., Liu, J., Hua, F., Echeverría, C., Gonzales, E., Shaw, N., Decleer, K., & Dixon, K. W. (2019). International principles and standards for the practice of ecological restoration (2nd ed.). *Restoration Ecology*, *27*(S1), S1-S46. https://doi.org/10.1111/rec.13035
+* Giller, K. E., Hijbeek, R., Andersson, J. A., & Sumberg, J. (2021). Regenerative agriculture: An agronomic perspective. *Outlook on Agriculture*, *50*(1), 13-25. https://doi.org/10.1177/0030727021998063
 * 1EdTech Consortium. (2026). *Open Badges specification* (Version 3.0, Document Version 1.4.5). https://www.imsglobal.org/spec/ob/v3p0
 * Institute for Credentialing Excellence. (2026). *Application, renewal, and maintenance fees: ISO/IEC 17024 and NCCA accreditation*. https://www.credentialingexcellence.org/
 * International Society of Arboriculture. (2025). *ISA launches new credentialing system and updated pricing structure*. https://www.isa-arbor.com/
 * Mang, P., & Haggard, B. (2016). *Regenerative development and design: A framework for evolving sustainability*. John Wiley & Sons. https://regenesisgroup.com/book
-* Mang, P., & Reed, B. (2012). Designing from place: A regenerative framework and methodology. *Building Research & Information*, *40*(1), 23–38. https://doi.org/10.1080/09613218.2012.621341
+* Mang, P., & Reed, B. (2012). Designing from place: A regenerative framework and methodology. *Building Research & Information*, *40*(1), 23-38. https://doi.org/10.1080/09613218.2012.621341
 * Mattheck, C. (2007). *Updated field guide for visual tree assessment*. Forschungszentrum Karlsruhe GmbH.
 * Mattheck, C., & Breloer, H. (1994). *The body language of trees: A handbook for failure analysis*. HMSO.
 * Newton, P., Civita, N., Frankel-Goldwater, L., Bartel, K., & Johns, C. (2020). What is regenerative agriculture? A review of scholar and practitioner definitions based on processes and outcomes. *Frontiers in Sustainable Food Systems*, *4*, Article 577723. https://doi.org/10.3389/fsufs.2020.577723
@@ -275,9 +298,9 @@ Tree-level RCA diagnostics aggregate deterministically into the five property-le
 * Scharenbroch, B. C., & Smiley, E. T. (2021). *Best management practices: Soil management for urban trees* (2nd ed.). International Society of Arboriculture. https://wwv.isa-arbor.com/store/product/863
 * Schreefel, L., Schulte, R. P. O., de Boer, I. J. M., Pas Schrijver, A., & van Zanten, H. H. E. (2020). Regenerative agriculture: The soil is the base. *Global Food Security*, *26*, Article 100404. https://doi.org/10.1016/j.gfs.2020.100404
 * Shigo, A. L. (1977). *Compartmentalization of decay in trees* (Agriculture Information Bulletin 405). U.S. Department of Agriculture, Forest Service.
-* Shigo, A. L. (1984). Compartmentalization: A universal defense process in plants. *Plant Disease*, *68*(3), 257–261.
+* Shigo, A. L. (1984). Compartmentalization: A universal defense process in plants. *Plant Disease*, *68*(3), 257-261.
 * Society for Ecological Restoration. (2026). *Become a Certified Ecological Restoration Practitioner (CERP): Requirements and fee schedule*. https://www.ser.org/page/cerpapplications/
 * Society of American Foresters. (2026). *Certified Forester (CF) and Certified Urban and Community Forester (CUCF) requirements and fees*. https://www.eforester.org/
 * Soil Food Web School. (2026). *Foundation courses overview and Consultant Training Program (CTP) tuition schedule*. https://soilfoodweb.com/
 * Stenberg, K. (2025). *Atmos Tree 2:1 tREeCYCLE alliance and blog*. Atmos Tree. https://www.atmostree.org/about
-* Xiao, Q., McPherson, E. G., Simpson, J. R., & Ustin, S. L. (2000). Winter rainfall interception by two mature street trees in Davis, California. *Hydrological Processes*, *14*(4), 763–784.
+* Xiao, Q., McPherson, E. G., Simpson, J. R., & Ustin, S. L. (2000). Winter rainfall interception by two mature street trees in Davis, California. *Hydrological Processes*, *14*(4), 763-784.

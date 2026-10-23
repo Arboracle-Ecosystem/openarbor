@@ -94,6 +94,31 @@
           "pattern": "^[23456789CFGHJMPQRVWX]{8}\\+[23456789CFGHJMPQRVWX]{2,7}$",
           "description": "Open Location Code (Plus Code) pinpointing stem coordinates (unit: 10-to-15 character Plus Code string)."
         },
+        "tree_tag": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Optional field tag or inventory identifier for the assessed tree (unit: tag string)."
+        },
+        "species_scientific": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Optional botanical binomial of the assessed host tree (unit: Latin binomial string)."
+        },
+        "species_common": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Optional regional common name of the assessed host tree (unit: string)."
+        },
+        "inaturalist_taxon_id": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Optional iNaturalist taxon ID of the assessed host tree (unit: integer ID)."
+        },
+        "assessment_date": {
+          "type": "string",
+          "format": "date",
+          "description": "Optional ISO 8601 date of the field diagnostic assessment (unit: YYYY-MM-DD date)."
+        },
         "isa_traq_risk": {
           "type": "object",
           "description": "International Society of Arboriculture Tree Risk Assessment Qualification (TRAQ) Level 2/3 risk matrix fields.",

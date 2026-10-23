@@ -25,7 +25,7 @@
       ],
       "permit_triggers_by_work_type": {
         "protected": ["removal"],
-        "heritage": ["removal", "significant_pruning"],
+        "heritage": ["removal", "pruning"],
         "citation": "AMC § 18.5.7.020 / AMC § 18.4.5.030"
       },
       "mitigation_fee_schedule": {
@@ -59,8 +59,7 @@
         },
         "pruning": {
           "citation": "AMC § 18.4.5.040 Performance Standards",
-          "standard": "ANSI A300 Part 1 / ISA Best Management Practices",
-          "oak_months": [4, 5, 6, 7]
+          "standard": "ANSI A300 Part 1 / ISA Best Management Practices"
         }
       }
     },
@@ -83,9 +82,9 @@
         "Ailanthus altissima (Tree of Heaven)"
       ],
       "permit_triggers_by_work_type": {
-        "protected": ["street_tree_removal", "commercial_development_removal"],
-        "heritage": ["street_tree_removal"],
-        "citation": "MMC § 6.725 / MLDC § 10.780"
+        "protected": ["removal"],
+        "heritage": ["removal", "pruning"],
+        "citation": "MMC § 6.725 (Street Trees) / MLDC § 10.780 (Commercial Development)"
       },
       "mitigation_fee_schedule": {
         "citation": "MMC § 6.740 Street Tree Replacement / April 2026 Guidelines",
@@ -118,8 +117,7 @@
         },
         "pruning": {
           "citation": "MMC § 6.730 Public Tree Maintenance",
-          "standard": "ANSI A300 Part 1 Pruning",
-          "oak_months": [4, 5, 6, 7]
+          "standard": "ANSI A300 Part 1 Pruning"
         }
       }
     },
@@ -142,9 +140,9 @@
         "Robinia pseudoacacia (Black Locust)"
       ],
       "permit_triggers_by_work_type": {
-        "protected": ["subdivision_removal", "street_tree_removal"],
-        "heritage": ["subdivision_removal", "street_tree_removal"],
-        "citation": "Grants Pass Development Code Art. 13 § 13.030"
+        "protected": ["removal"],
+        "heritage": ["removal", "pruning"],
+        "citation": "Grants Pass Development Code Art. 13 § 13.030 (Subdivisions) / Art. 23 § 23.074 (Street Trees)"
       },
       "mitigation_fee_schedule": {
         "citation": "Grants Pass Development Code Art. 13 § 13.040 Canopy Re-establishment Schedule",
@@ -177,8 +175,7 @@
         },
         "pruning": {
           "citation": "Grants Pass Development Code § 23.071 Street Tree Pruning",
-          "standard": "ANSI A300 / ISA BMP",
-          "oak_months": [4, 5, 6, 7]
+          "standard": "ANSI A300 / ISA BMP"
         }
       }
     }

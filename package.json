@@ -9,6 +9,9 @@
     "type": "git",
     "url": "https://github.com/Arboracle-Ecosystem/openarbor.git"
   },
+  "bin": {
+    "openarbor-rca": "./bin/openarbor-rca.mjs"
+  },
   "scripts": {
     "test": "node tests/verify_openarbor.mjs"
   }

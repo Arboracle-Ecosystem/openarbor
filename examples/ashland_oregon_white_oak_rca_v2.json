@@ -1,0 +1,181 @@
+{
+  "schema_version": "RCA_v2",
+  "assessment_mode": "Regenerative Diagnostic",
+  "structural_baseline": {
+    "tree_tag": "ASH-QG-105",
+    "species_scientific": "Quercus garryana",
+    "species_common": "Oregon White Oak",
+    "inaturalist_taxon_id": 47851,
+    "assessment_date": "2026-10-23",
+    "dbh_cm": 105.0,
+    "is_multistem": false,
+    "multistem_aggregation_method": "single_stem",
+    "height_m": 18.5,
+    "crown_spread_ns_m": 21.0,
+    "crown_spread_ew_m": 22.5,
+    "live_crown_ratio_pct": 72,
+    "plus_code_global": "84JV57VR+R6",
+    "codit_wall_response_rating": "Wall_4_Active_Barrier_Zone",
+    "sound_shell_thickness_ratio_t_over_r": 0.34,
+    "sonic_tomography_or_resistograph_uri": "https://soilgrower.com/diagnostics/picus/ash-qg-105-tomogram.png",
+    "dual_valuation": {
+      "ctla_10th_ed_depreciated_usd": 24414,
+      "holobiont_200yr_biological_equity_usd": 457919,
+      "veteran_keystone_habitat_multiplier": 3.5,
+      "valuation_delta_usd": 433505
+    },
+    "isa_traq_risk": {
+      "assessment_level": "Level_3_Advanced",
+      "time_frame_years": 5,
+      "target_zone_description": "Residential gravel courtyard and seasonal footpath; intermittent pedestrian occupancy.",
+      "primary_tree_part_of_concern": "Scaffold_Branch",
+      "likelihood_of_failure": "Possible",
+      "likelihood_of_impact": "Low",
+      "likelihood_of_failure_and_impact": "Unlikely",
+      "consequences_of_failure": "Significant",
+      "overall_risk_rating": "Low",
+      "residual_risk_rating": "Low"
+    },
+    "municipal_permit_disposition": {
+      "jurisdiction_id": "or-ashland",
+      "ordinance_citation": "Ashland Municipal Code (AMC) 18.4.5 & 18.5.7",
+      "protection_tier": "Heritage",
+      "permit_required": true,
+      "recommended_disposition": "Preservation_With_Rhizosphere_Remediation",
+      "seasonal_oak_wilt_restriction_active": false
+    }
+  },
+  "rhizosphere_and_root_collar": {
+    "root_flare_burial_depth_cm": 18,
+    "root_flare_diameter_cm": 136.0,
+    "stem_girdling_root_count": 2,
+    "stem_girdling_root_severity": "Moderate_25_To_50_Pct_Circumference",
+    "airspade_radial_trenching_geometry": {
+      "execution_status": "Prescribed_Radial_Remediation",
+      "operating_pressure_psi": 150,
+      "trench_count": 10,
+      "trench_length_m": 9.5,
+      "trench_width_cm": 30,
+      "trench_depth_cm": 35,
+      "root_collar_excavation_radius_m": 1.2
+    },
+    "crz_radius_m": 12.6,
+    "srz_radius_m": 3.68,
+    "tiz_radius_m": 16.5
+  },
+  "soil_and_microbiome_baseline": {
+    "bulk_density_g_cm3": 1.58,
+    "penetrometer_resistance_psi": 340,
+    "infiltration_rate_mm_hr": 14,
+    "organic_matter_pct": 2.4,
+    "soil_ph": 6.3,
+    "lab_panel_url": "https://soilgrower.com/labs/osu-soil-health/sample-ash-2026-105.pdf",
+    "lab_sample_id": "OSU-RV-2026-105",
+    "mycorrhizal_and_fungal_observations": {
+      "dominant_mycorrhizal_guild": "Ectomycorrhizal_EM",
+      "fungal_to_bacterial_biomass_ratio": 0.42,
+      "hyphal_colonization_status": "Depleted_Bacterial_Dominated",
+      "observed_fruiting_bodies_or_rhizomorphs": [
+        {
+          "species_or_morphotype": "Pisolithus arhizus",
+          "inaturalist_taxon_id": 55259,
+          "ecological_role": "Mycorrhizal_Symbiont"
+        },
+        {
+          "species_or_morphotype": "Laccaria laccata",
+          "inaturalist_taxon_id": 53287,
+          "ecological_role": "Mycorrhizal_Symbiont"
+        },
+        {
+          "species_or_morphotype": "Stereum hirsutum",
+          "inaturalist_taxon_id": 55501,
+          "ecological_role": "Saprotrophic_Wood_Or_Litter_Decomposer"
+        }
+      ]
+    }
+  },
+  "understory_and_guild_prescription": {
+    "reference_ecosystem_name": "Rogue Valley Oregon White Oak Savanna and Woodland",
+    "biochar_volume_liters": 850,
+    "humate_mass_kg": 16.0,
+    "compost_volume_cubic_m": 1.6,
+    "compost_extract_volume_liters": 400,
+    "mulch_depth_cm": 8,
+    "mulch_coverage_area_m2": 855.3,
+    "synthetic_npk_and_fungicide_exclusion_verified": true,
+    "native_companion_species_guild": [
+      {
+        "scientific_name": "Mahonia aquifolium",
+        "common_name": "Oregon Grape",
+        "inaturalist_taxon_id": 48441,
+        "open_nursery_batch_id": "ON-OR-2026-MAQ-01",
+        "stratum_layer": "Shrub_Layer",
+        "functional_role": "Pollinator_And_Predatory_Insect_Refuge",
+        "quantity_planted": 18
+      },
+      {
+        "scientific_name": "Ribes sanguineum",
+        "common_name": "Red Flowering Currant",
+        "inaturalist_taxon_id": 53408,
+        "open_nursery_batch_id": "ON-OR-2026-RSA-04",
+        "stratum_layer": "Shrub_Layer",
+        "functional_role": "Pollinator_And_Predatory_Insect_Refuge",
+        "quantity_planted": 12
+      },
+      {
+        "scientific_name": "Polystichum munitum",
+        "common_name": "Western Sword Fern",
+        "inaturalist_taxon_id": 47751,
+        "open_nursery_batch_id": "ON-OR-2026-PMU-09",
+        "stratum_layer": "Herbaceous_Perennial",
+        "functional_role": "Hydrologic_Swale_Or_Infiltration_Anchor",
+        "quantity_planted": 24
+      },
+      {
+        "scientific_name": "Ceanothus integerrimus",
+        "common_name": "Deer Brush",
+        "inaturalist_taxon_id": 50068,
+        "open_nursery_batch_id": "ON-OR-2026-CIN-02",
+        "stratum_layer": "Sub_Canopy_Understory",
+        "functional_role": "Symbiotic_Nitrogen_Fixer",
+        "quantity_planted": 8
+      }
+    ]
+  },
+  "outcome_monitoring_schedule": {
+    "stim_hypothesis_statement": "Supersonic AirSpade radial trenching (10 spokes at 150 psi), stem-girdling root excision, pre-charged biochar/humate backfill, and native Rogue Valley understory guild establishment will reduce top-15cm bulk density from 1.58 to <= 1.25 g/cm3 and elevate F:B biomass ratio from 0.42 to >= 1.2 within 60 months.",
+    "stim_kill_criterion": "If Year-1 terminal twig extension remains below 6 cm or upper crown dieback exceeds 15%, re-evaluate for deep vadose water table restriction or secondary root pathogen colonization.",
+    "one_year_leading_indicators": {
+      "scheduled_reinspection_date": "2027-10-23",
+      "target_canopy_dieback_max_pct": 10,
+      "target_annual_twig_extension_min_cm": 8,
+      "target_woundwood_callus_closure_mm_yr": 12,
+      "root_flare_unburied_verified": true,
+      "mulch_horizon_and_litter_incorporation_intact": true,
+      "soil_surface_crusting_or_capping_absent": true,
+      "companion_guild_survival_min_pct": 85,
+      "fixed_photopoint_azimuth_deg": 180
+    },
+    "five_year_lagging_indicators": {
+      "scheduled_audit_date": "2031-10-23",
+      "target_bulk_density_max_g_cm3": 1.25,
+      "target_infiltration_rate_min_mm_hr": 65,
+      "target_organic_matter_min_pct": 5.5,
+      "target_fungal_to_bacterial_ratio_min": 1.4,
+      "target_ser_recovery_wheel_stars": 4.5,
+      "sanctuary_scorecard_targets": {
+        "tiz_footprint_area_m2": 855.3,
+        "canopy_projection_area_m2": 371.1,
+        "soil_health_index_baseline_score": 38,
+        "soil_health_index_target_score": 86,
+        "canopy_volume_expansion_target_pct": 12,
+        "stormwater_interception_baseline_liters_yr": 44600,
+        "stormwater_interception_target_liters_yr": 58000,
+        "documented_native_biodiversity_taxa_baseline": 4,
+        "documented_native_biodiversity_taxa_min": 16,
+        "restoration_potential_baseline_pct": 42,
+        "restoration_potential_realized_pct": 88
+      }
+    }
+  }
+}

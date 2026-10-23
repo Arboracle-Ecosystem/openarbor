@@ -20,28 +20,27 @@ Proprietary arboriculture and urban forestry software often locks field observat
 
 ```text
 openarbor/
-├── src/
-│   └── core/
-│       ├── rootZone.js             # CRZ, TPZ (US / AS4970 / BS5837), SRZ, Multi-Stem DBH & 1-ft Grid Union Area
-│       ├── ordinanceEngine.js      # Data-driven municipal tree protection, Oak Wilt window & mitigation calculator
-│       └── ecosystemBenefits.js    # Nowak/McPherson allometrics, John White veteran tree age & OGC GeoJSON exporter
+├── bin/
+│   └── openarbor-rca.mjs       # Zero-dependency RCA Field Compiler, Counter-Notice, Economics & Badge Attester CLI
 ├── data/
 │   └── ordinances/
-│       ├── central_texas_ordinances.json      # Verified open ordinance rules (Austin, Georgetown, Liberty Hill, Cedar Park, Round Rock)
+│       ├── central_texas_ordinances.json       # Verified open ordinance rules (Austin, Georgetown, Liberty Hill, Cedar Park, Round Rock)
 │       └── rogue_valley_oregon_ordinances.json # Verified open ordinance rules (Ashland, Medford, Grants Pass)
+├── examples/
+│   └── ashland_oregon_white_oak_rca_v2.json    # Complete schema-valid RCA-Spec v2.0 reference payload (105 cm Quercus garryana)
 ├── schemas/
-│   ├── municipal-ordinance.schema.json    # JSON Schema (Draft 2020-12) for community-contributed municipal tree codes
-│   ├── rca_assessment.schema.json         # JSON Schema (Draft 2020-12) for RCA-Spec v2.0 five-domain diagnostic assessments
-│   └── rca_openbadge_v3.schema.json       # JSON-LD Schema (Open Badges 3.0 / W3C VC) for RCA-Verified attestation
+│   ├── municipal-ordinance.schema.json         # JSON Schema (Draft 2020-12) for community-contributed municipal tree codes
+│   ├── rca_assessment.schema.json              # JSON Schema (Draft 2020-12) for RCA-Spec v2.0 five-domain diagnostic assessments
+│   └── rca_openbadge_v3.schema.json            # JSON-LD Schema (Open Badges 3.0 / W3C VC) for RCA-Verified attestation
 ├── src/
 │   └── core/
-│       ├── rootZone.js                    # CRZ, TPZ, SRZ, multi-stem, and spatial union de-duplication
-│       ├── ordinanceEngine.js             # Declarative municipal tree protection and mitigation ledger
-│       ├── ecosystemBenefits.js           # Nowak allometrics, Xiao hydrology, and OGC GeoJSON exporter
-│       └── rcaEngine.js                   # RCA-Spec v2.0 Mattheck t/R biomechanics, dual valuation, and Sanctuary rollup
+│       ├── rootZone.js                         # CRZ, TPZ, SRZ, multi-stem, and spatial union de-duplication
+│       ├── ordinanceEngine.js                  # Declarative municipal tree protection and mitigation ledger
+│       ├── ecosystemBenefits.js                # Nowak allometrics, Xiao hydrology, and OGC GeoJSON exporter
+│       └── rcaEngine.js                        # RCA-Spec v2.0 Mattheck t/R biomechanics, dual valuation, economics, and CLI compilers
 ├── tests/
-│   └── verify_openarbor.mjs        # Deterministic zero-dependency Node.js verification suite (8 test suites)
-└── docs/                           # Architectural blueprints and practice specifications (docs/13_RCA_PRACTICE_SPECIFICATION_v1.md)
+│   └── verify_openarbor.mjs                    # Deterministic zero-dependency Node.js verification suite (9 test suites)
+└── docs/                                       # Architectural blueprints and practice specifications (docs/13_RCA_PRACTICE_SPECIFICATION_v1.md)
 ```
 
 ### 1. Root Zone & Structural Stability Engine (`src/core/rootZone.js`)
@@ -80,6 +79,15 @@ Open Arbor's core library uses standard ECMAScript Modules (`ESM`) with **zero e
 ```bash
 # Run the deterministic verification suite (Node.js >= 18)
 npm test
+
+# Compile a legal-grade 7-section RCA Evidentiary Dossier from a schema-valid JSON assessment
+node bin/openarbor-rca.mjs compile examples/ashland_oregon_white_oak_rca_v2.json --municipality or-ashland
+
+# Generate an Anti-Liquidation Preservation Counter-Notice challenging an un-evidenced removal bid
+node bin/openarbor-rca.mjs counter-notice examples/ashland_oregon_white_oak_rca_v2.json --competitor-bid 3900 --municipality or-ashland
+
+# Compare 5-year Regenerative Stewardship economics against a one-time removal bid
+node bin/openarbor-rca.mjs economics examples/ashland_oregon_white_oak_rca_v2.json --removal-bid 3911
 ```
 
 ### Example Usage

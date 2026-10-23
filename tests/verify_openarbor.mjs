@@ -2,11 +2,15 @@
  * OpenArbor Deterministic Verification Suite (Node.js native test runner)
  * Verifies CRZ, TPZ, SRZ, Multi-Stem DBH, Union Root Zone Area,
  * Municipal Ordinance Mitigation & Ascending Exemption Engine,
- * Ecosystem Benefits, and OGC GeoJSON Export.
+ * Ecosystem Benefits, OGC GeoJSON Export, RCA-Spec v2.0 Biomechanics,
+ * Dual Valuation, Sanctuary Rollup, Strict Schema Validation,
+ * Rogue Valley Oregon Ordinances, and the 100x RCA Army CLI Compiler.
  */
 
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -35,26 +39,54 @@ import {
 } from '../src/core/ecosystemBenefits.js';
 
 import {
+  validateJsonSchema,
   evaluateBiomechanicsAndRhizosphere,
   computeHolobiontValuation,
   computeSanctuaryScorecardRollup,
   lintRcaEvidentiaryReport,
-  decodePlusCode,
+  computeRegenerativePracticeEconomics,
+  compileRcaEvidentiaryMarkdown,
+  compilePreservationCounterNotice,
+  mintOpenBadgeAttestation,
 } from '../src/core/rcaEngine.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const rootDir = path.resolve(__dirname, '..');
+
 const ordinancesRaw = JSON.parse(
-  fs.readFileSync(path.join(__dirname, '../data/ordinances/central_texas_ordinances.json'), 'utf8')
+  fs.readFileSync(path.join(rootDir, 'data/ordinances/central_texas_ordinances.json'), 'utf8')
 );
 const rogueValleyOrdinancesRaw = JSON.parse(
-  fs.readFileSync(path.join(__dirname, '../data/ordinances/rogue_valley_oregon_ordinances.json'), 'utf8')
+  fs.readFileSync(path.join(rootDir, 'data/ordinances/rogue_valley_oregon_ordinances.json'), 'utf8')
 );
 const rcaAssessmentSchema = JSON.parse(
-  fs.readFileSync(path.join(__dirname, '../schemas/rca_assessment.schema.json'), 'utf8')
+  fs.readFileSync(path.join(rootDir, 'schemas/rca_assessment.schema.json'), 'utf8')
 );
 const rcaOpenBadgeSchema = JSON.parse(
-  fs.readFileSync(path.join(__dirname, '../schemas/rca_openbadge_v3.schema.json'), 'utf8')
+  fs.readFileSync(path.join(rootDir, 'schemas/rca_openbadge_v3.schema.json'), 'utf8')
 );
+const municipalOrdinanceSchema = JSON.parse(
+  fs.readFileSync(path.join(rootDir, 'schemas/municipal-ordinance.schema.json'), 'utf8')
+);
+const ashlandReferenceCase = JSON.parse(
+  fs.readFileSync(path.join(rootDir, 'examples/ashland_oregon_white_oak_rca_v2.json'), 'utf8')
+);
+
+/**
+ * Helper to clone and customize the 100% schema-valid Ashland reference case
+ * so every test fixture strictly satisfies schemas/rca_assessment.schema.json.
+ */
+function cloneValidAssessment(overrides = {}) {
+  const clone = JSON.parse(JSON.stringify(ashlandReferenceCase));
+  for (const [k, v] of Object.entries(overrides)) {
+    if (v && typeof v === 'object' && !Array.isArray(v) && clone[k] && typeof clone[k] === 'object') {
+      clone[k] = { ...clone[k], ...v };
+    } else {
+      clone[k] = v;
+    }
+  }
+  return clone;
+}
 
 console.log('=== OpenArbor v2.0 Open-Standards Verification Suite ===\n');
 
@@ -93,7 +125,7 @@ console.log('=== OpenArbor v2.0 Open-Standards Verification Suite ===\n');
       lng: -97.9250,
       condition_score: 8,
       removal: false,
-      pruning_date: '2026-04-15', // April is outside Oct-Jan window -> must flag Oak Wilt warning!
+      pruning_date: '2026-04-15', // April is outside Oct-Jan window -> must flag Oak Wilt warning in Texas!
     },
     {
       tag: 'T-102',
@@ -130,19 +162,13 @@ console.log('=== OpenArbor v2.0 Open-Standards Verification Suite ===\n');
   const rows = evaluateTreeInventory(sampleStand, libertyHill);
   assert.equal(rows.length, 4);
 
-  // T-101 is Heritage Live Oak (26 in >= 24 in) and has Oak Wilt seasonal pruning flag
   assert.equal(rows[0].protected, true);
   assert.equal(rows[0].heritage, true);
   assert.ok(rows[0].flags.some((f) => f.includes('outside permitted seasonal window')));
 
-  // T-104 Hackberry is excepted
   assert.equal(rows[3].excepted, true);
   assert.equal(rows[3].protected, false);
 
-  // Mitigation plan: Total protected inches = 26 + 9 + 15 = 50 in.
-  // 20% exemption cap = 10.0 in.
-  // T-102 (9 in) fits under 10.0 in cap -> Exempt!
-  // T-103 (15 in) exceeds remaining 1.0 in cap -> Owed (15 in * $150/in = $2,250).
   const mit = computeMitigationPlan(rows, libertyHill);
   assert.equal(mit.protected_total_inches, 50);
   assert.equal(mit.exemption_cap_inches, 10);
@@ -152,18 +178,15 @@ console.log('=== OpenArbor v2.0 Open-Standards Verification Suite ===\n');
   assert.equal(mit.lines[1].exempt, false);
   assert.equal(mit.cash_in_lieu_usd, 2250);
 
-  // Root-zone remediation estimate for retained trees (T-101)
   const remediation = estimateRootZoneRemediation(rows);
   assert.equal(remediation.retained_tree_count, 1);
   assert.ok(remediation.union_crz_area_sqft > 2000);
 
-  // Permit determination & summary
   const permit = permitDetermination(rows, libertyHill);
   assert.equal(permit.required, true);
   assert.equal(permit.removalRequired, true);
   assert.ok(permitSummary(permit).includes('Permit required'));
 
-  // Site context & SVG site map
   const siteCtx = evaluateSiteContext(rows, libertyHill, {
     survey_date: '2026-09-01',
     site_use: 'single_family',
@@ -208,27 +231,23 @@ console.log('=== OpenArbor v2.0 Open-Standards Verification Suite ===\n');
   console.log('[PASS] 3. Allometric Ecosystem Benefits (Nowak/McPherson), John White Age & GeoJSON Exporter');
 }
 
-// 4. Test RCA Biomechanics, Mattheck t/R Stability & Rhizosphere Prescription
+// 4. Test RCA Biomechanics, Mattheck t/R Stability, SGR Enum Matching & Rhizosphere Prescription
 {
-  const assessment = {
-    schema_version: 'RCA_v2',
-    assessment_mode: 'Regenerative Diagnostic',
+  const assessment = cloneValidAssessment({
     structural_baseline: {
+      ...ashlandReferenceCase.structural_baseline,
       dbh_cm: 80,
-      sound_shell_thickness_ratio_t_over_r: 0.35, // t/R >= 0.30 -> Mattheck criterion satisfied!
-      codit_wall_response_rating: 'Wall_4_Active_Barrier_Zone',
-      crown_spread_ns_m: 14,
-      crown_spread_ew_m: 16,
-      plus_code_global: '8624M38F+4X',
+      sound_shell_thickness_ratio_t_over_r: 0.35, // t/R >= 0.30 -> Mattheck criterion satisfied
     },
     rhizosphere_and_root_collar: {
+      ...ashlandReferenceCase.rhizosphere_and_root_collar,
       root_flare_diameter_cm: 110,
       root_flare_burial_depth_cm: 18,
       stem_girdling_root_count: 2,
-      stem_girdling_root_severity: 'Moderate',
+      stem_girdling_root_severity: 'Moderate_25_To_50_Pct_Circumference',
       tiz_radius_m: 12.5,
       airspade_radial_trenching_geometry: {
-        execution_status: 'Prescribed',
+        execution_status: 'Prescribed_Radial_Remediation',
         operating_pressure_psi: 150,
         trench_count: 8,
         trench_length_m: 7.0,
@@ -237,7 +256,11 @@ console.log('=== OpenArbor v2.0 Open-Standards Verification Suite ===\n');
         root_collar_excavation_radius_m: 0.75,
       },
     },
-  };
+  });
+
+  // Strict schema check on fixture
+  const schemaCheck = validateJsonSchema(assessment, rcaAssessmentSchema);
+  assert.equal(schemaCheck.valid, true, `Schema errors: ${schemaCheck.errors.join('; ')}`);
 
   const bio = evaluateBiomechanicsAndRhizosphere(assessment);
   assert.equal(bio.biomechanics.mattheck_criterion_satisfied, true);
@@ -250,310 +273,376 @@ console.log('=== OpenArbor v2.0 Open-Standards Verification Suite ===\n');
   assert.ok(bio.rhizosphere_prescription.amendments.precharged_biochar_liters > 400);
   assert.equal(bio.rhizosphere_prescription.vascular_constriction_relief_ratio, 0.35);
 
+  // Verify Severe and Minor exact schema enums also compute non-zero constriction
+  const severeSgr = cloneValidAssessment({
+    rhizosphere_and_root_collar: {
+      ...ashlandReferenceCase.rhizosphere_and_root_collar,
+      stem_girdling_root_count: 3,
+      stem_girdling_root_severity: 'Severe_Over_50_Pct_Circumference',
+    },
+  });
+  assert.equal(evaluateBiomechanicsAndRhizosphere(severeSgr).rhizosphere_prescription.vascular_constriction_relief_ratio, 0.6);
+
   // Negative test: severely thinned shell (t/R = 0.18 < 0.30)
-  const thinned = {
-    ...assessment,
+  const thinned = cloneValidAssessment({
     structural_baseline: {
-      ...assessment.structural_baseline,
+      ...ashlandReferenceCase.structural_baseline,
       sound_shell_thickness_ratio_t_over_r: 0.18,
     },
-  };
+  });
+  assert.equal(validateJsonSchema(thinned, rcaAssessmentSchema).valid, true);
   const thinnedResult = evaluateBiomechanicsAndRhizosphere(thinned);
   assert.equal(thinnedResult.biomechanics.mattheck_criterion_satisfied, false);
   assert.equal(thinnedResult.biomechanics.is_structurally_sound, false);
   assert.ok(thinnedResult.biomechanics.stability_rating.includes('Elevated Buckling Risk'));
 
-  console.log('[PASS] 4. RCA Biomechanics, Mattheck t/R Stability & Rhizosphere Prescription');
+  console.log('[PASS] 4. RCA Biomechanics, Mattheck t/R Stability, SGR Enums & Rhizosphere Prescription');
 }
 
 // 5. Test CTLA 10th Ed vs. Holobiont Biological Equity Inversion (Veteran Oak)
 {
-  // Ancient hollow Oregon White Oak (Quercus garryana), DBH 105 cm (41.3 in)
-  const veteranOak = {
-    structural_baseline: {
-      dbh_cm: 105,
-      sound_shell_thickness_ratio_t_over_r: 0.28, // Hollow heartwood, CTLA depreciates heavily
-      crown_spread_ns_m: 18,
-      crown_spread_ew_m: 20,
-    },
-    rhizosphere_and_root_collar: {
-      tiz_radius_m: 16.0,
-    },
-  };
+  assert.equal(validateJsonSchema(ashlandReferenceCase, rcaAssessmentSchema).valid, true);
 
-  const val = computeHolobiontValuation(veteranOak, {
+  const val = computeHolobiontValuation(ashlandReferenceCase, {
     unit_cost_sq_in: 75.0,
     ctla_location_factor: 0.85,
   });
 
-  // Classical CTLA heavily depreciates this ancient oak due to decayed heartwood
   assert.ok(val.ctla_10th_ed_depreciated_usd > 0);
-  // Regenerative Holobiont recognizes 200-year carbon, hydrology, CMN, and 3.5x veteran keystone habitat multiplier
   assert.equal(val.veteran_keystone_habitat_multiplier, 3.5);
   assert.ok(val.holobiont_200yr_biological_equity_usd > val.ctla_10th_ed_depreciated_usd);
   assert.ok(val.valuation_delta_usd > 0);
-  assert.ok(val.inversion_ratio >= 1.5, `Inversion ratio was ${val.inversion_ratio}`);
+  assert.ok(val.inversion_ratio >= 10.0, `Inversion ratio was ${val.inversion_ratio}`);
 
   console.log('[PASS] 5. CTLA 10th Ed vs. Holobiont Biological Equity Inversion (Veteran Oak)');
 }
 
-// 6. Test Sanctuary Scorecard Rollup & Spatial Union De-duplication
+// 6. Test Sanctuary Scorecard Rollup & Spatial Union De-duplication (100% Schema-Valid Fixtures)
 {
-  const standAssessments = [
-    {
-      structural_baseline: {
-        dbh_cm: 75,
-        plus_code_global: '8624M38F+4X', // Decodes to lat 30.665, lng -97.925 (Liberty Hill)
-        crown_spread_ns_m: 14,
-        crown_spread_ew_m: 14,
-        live_crown_ratio_pct: 75,
-        inaturalist_taxon_id: 49005, // Quercus virginiana
-      },
-      rhizosphere_and_root_collar: {
-        tiz_radius_m: 14,
-      },
-      soil_and_microbiome_baseline: {
-        bulk_density_g_cm3: 1.25,
-        organic_matter_pct: 4.8,
-        infiltration_rate_mm_hr: 45,
-        fungal_to_bacterial_biomass_ratio: 0.85,
-        dominant_fungal_taxa_inaturalist_ids: [48701, 58682],
-      },
-      understory_and_guild_prescription: {
-        native_companion_species_guild: [
-          { inaturalist_taxon_id: 51712, common_name: 'Inland Sea Oats', quantity_planted: 24 },
-          { inaturalist_taxon_id: 54784, common_name: 'Turk\'s Cap', quantity_planted: 12 },
+  const tree1 = cloneValidAssessment({
+    structural_baseline: {
+      ...ashlandReferenceCase.structural_baseline,
+      tree_tag: 'LH-QV-01',
+      species_scientific: 'Quercus virginiana',
+      species_common: 'Southern Live Oak',
+      inaturalist_taxon_id: 49005,
+      dbh_cm: 75,
+      plus_code_global: '8624M38F+4X',
+      crown_spread_ns_m: 14,
+      crown_spread_ew_m: 14,
+      live_crown_ratio_pct: 75,
+    },
+    rhizosphere_and_root_collar: {
+      ...ashlandReferenceCase.rhizosphere_and_root_collar,
+      tiz_radius_m: 14,
+    },
+    soil_and_microbiome_baseline: {
+      ...ashlandReferenceCase.soil_and_microbiome_baseline,
+      bulk_density_g_cm3: 1.25,
+      organic_matter_pct: 4.8,
+      infiltration_rate_mm_hr: 45,
+      mycorrhizal_and_fungal_observations: {
+        dominant_mycorrhizal_guild: 'Ectomycorrhizal_EM',
+        fungal_to_bacterial_biomass_ratio: 1.35,
+        hyphal_colonization_status: 'Abundant_Visible_Mycelial_Mats',
+        observed_fruiting_bodies_or_rhizomorphs: [
+          {
+            species_or_morphotype: 'Pisolithus arhizus',
+            inaturalist_taxon_id: 55259,
+            ecological_role: 'Mycorrhizal_Symbiont',
+          },
+          {
+            species_or_morphotype: 'Russula spp.',
+            inaturalist_taxon_id: 48339,
+            ecological_role: 'Mycorrhizal_Symbiont',
+          },
         ],
       },
-      outcome_monitoring_schedule: {
-        sanctuary_scorecard_targets: {
-          restoration_potential_realized_pct: 82,
-        },
-      },
     },
-    {
-      // Second tree nearby with overlapping root zone
-      structural_baseline: {
-        dbh_cm: 60,
-        plus_code_global: '8624M38F+4X', // Same location/adjacent
-        crown_spread_ns_m: 11,
-        crown_spread_ew_m: 12,
-        live_crown_ratio_pct: 70,
-        inaturalist_taxon_id: 54781, // Quercus stellata
-      },
-      rhizosphere_and_root_collar: {
-        tiz_radius_m: 12,
-      },
-      soil_and_microbiome_baseline: {
-        bulk_density_g_cm3: 1.30,
-        organic_matter_pct: 4.2,
-        infiltration_rate_mm_hr: 38,
-        fungal_to_bacterial_biomass_ratio: 0.70,
-        dominant_fungal_taxa_inaturalist_ids: [48701],
-      },
-      understory_and_guild_prescription: {
-        native_companion_species_guild: [
-          { inaturalist_taxon_id: 51712, common_name: 'Inland Sea Oats', quantity_planted: 18 },
-          { inaturalist_taxon_id: 82650, common_name: 'Texas Lantana', quantity_planted: 10 },
-        ],
-      },
-      outcome_monitoring_schedule: {
-        sanctuary_scorecard_targets: {
-          restoration_potential_realized_pct: 78,
-        },
-      },
-    },
-  ];
+  });
 
-  const rollup = computeSanctuaryScorecardRollup(standAssessments, 4047);
+  const tree2 = cloneValidAssessment({
+    structural_baseline: {
+      ...ashlandReferenceCase.structural_baseline,
+      tree_tag: 'LH-QS-02',
+      species_scientific: 'Quercus stellata',
+      species_common: 'Post Oak',
+      inaturalist_taxon_id: 54781,
+      dbh_cm: 60,
+      plus_code_global: '8624M38F+4X', // Overlapping Plus Code
+      crown_spread_ns_m: 11,
+      crown_spread_ew_m: 12,
+      live_crown_ratio_pct: 70,
+    },
+    rhizosphere_and_root_collar: {
+      ...ashlandReferenceCase.rhizosphere_and_root_collar,
+      tiz_radius_m: 12,
+    },
+  });
+
+  assert.equal(validateJsonSchema(tree1, rcaAssessmentSchema).valid, true);
+  assert.equal(validateJsonSchema(tree2, rcaAssessmentSchema).valid, true);
+
+  const rollup = computeSanctuaryScorecardRollup([tree1, tree2], 4047);
   assert.equal(rollup.total_assessed_trees, 2);
   assert.ok(rollup.spatial_coverage.union_tiz_area_sqm > 0);
-  assert.ok(rollup.spatial_coverage.overlap_deduplicated_sqm > 0); // Proves spatial de-duplication occurred!
+  assert.ok(rollup.spatial_coverage.overlap_deduplicated_sqm > 0);
 
   const sc = rollup.sanctuary_scorecard;
-  assert.ok(sc.soil_health_index >= 0 && sc.soil_health_index <= 100);
-  assert.ok(sc.canopy_coverage_index >= 0 && sc.canopy_coverage_index <= 100);
-  assert.ok(sc.water_dynamics_index >= 0 && sc.water_dynamics_index <= 100);
-  assert.ok(sc.biodiversity_baseline_index >= 0 && sc.biodiversity_baseline_index <= 100);
-  assert.ok(sc.restoration_potential_score >= 0 && sc.restoration_potential_score <= 100);
-  assert.ok(sc.composite_sanctuary_score >= 0 && sc.composite_sanctuary_score <= 100);
+  assert.ok(sc.soil_health_index > 40 && sc.soil_health_index <= 100);
+  assert.ok(sc.canopy_coverage_index > 0 && sc.canopy_coverage_index <= 100);
+  assert.ok(sc.water_dynamics_index > 0 && sc.water_dynamics_index <= 100);
+  assert.ok(sc.biodiversity_baseline_index >= 40 && sc.biodiversity_baseline_index <= 100);
+  assert.ok(sc.restoration_potential_score >= 80 && sc.restoration_potential_score <= 100);
+  assert.ok(sc.composite_sanctuary_score > 0 && sc.composite_sanctuary_score <= 100);
   assert.ok(rollup.ecological_equity.total_valuation_delta_usd > 0);
 
   console.log('[PASS] 6. Sanctuary Scorecard Parcel Rollup & Spatial Union De-duplication');
 }
 
-// 7. Test ASCA Evidentiary Linter Blocking Lazy Removal & Schema Conformance
+// 7. Test ASCA Evidentiary Linter Blocking Lazy Removal & Strict Schema Conformance
 {
-  // Test A: Bad assessment recommending removal of a tree with sound shell (t/R = 0.38 >= 0.30)
-  // without advanced resistograph/tomography proof
-  const badRemovalAssessment = {
+  const badRemovalAssessment = cloneValidAssessment({
     structural_baseline: {
-      dbh_cm: 85,
-      sound_shell_thickness_ratio_t_over_r: 0.38, // Sound shell under Mattheck!
-      plus_code_global: '8624M38F+4X',
+      ...ashlandReferenceCase.structural_baseline,
+      sound_shell_thickness_ratio_t_over_r: 0.38,
       municipal_permit_disposition: {
+        ...ashlandReferenceCase.structural_baseline.municipal_permit_disposition,
         recommended_disposition: 'Removal_Last_Resort_Unmitigable_Hazard',
-        seasonal_oak_wilt_restriction_active: false,
       },
     },
-    rhizosphere_and_root_collar: {
-      airspade_radial_trenching_geometry: {
-        execution_status: 'Prescribed',
-      },
-    },
-    soil_and_microbiome_baseline: {
-      bulk_density_g_cm3: 1.28,
-      organic_matter_pct: 4.5,
-      infiltration_rate_mm_hr: 40,
-    },
-    understory_and_guild_prescription: {},
-    outcome_monitoring_schedule: {},
-  };
+  });
+  delete badRemovalAssessment.structural_baseline.sonic_tomography_or_resistograph_uri;
+  assert.equal(validateJsonSchema(badRemovalAssessment, rcaAssessmentSchema).valid, true);
 
   const lintResult = lintRcaEvidentiaryReport(badRemovalAssessment);
   assert.equal(lintResult.valid, false);
   assert.ok(lintResult.errors.some((e) => e.includes('UNJUSTIFIED_REMOVAL')));
   assert.ok(lintResult.errors.some((e) => e.includes('EVIDENTIARY_DEFECT')));
 
-  // Test B: Compliant preservation assessment
-  const goodAssessment = {
-    structural_baseline: {
-      dbh_cm: 85,
-      sound_shell_thickness_ratio_t_over_r: 0.38,
-      plus_code_global: '8624M38F+4X',
-      municipal_permit_disposition: {
-        recommended_disposition: 'Preservation_With_Rhizosphere_Remediation',
-        seasonal_oak_wilt_restriction_active: false,
-      },
-    },
-    rhizosphere_and_root_collar: {
-      airspade_radial_trenching_geometry: {
-        execution_status: 'Prescribed',
-      },
-    },
-    soil_and_microbiome_baseline: {
-      bulk_density_g_cm3: 1.28,
-      organic_matter_pct: 4.5,
-      infiltration_rate_mm_hr: 40,
-    },
-    understory_and_guild_prescription: {},
-    outcome_monitoring_schedule: {},
-  };
-  const goodResult = lintRcaEvidentiaryReport(goodAssessment);
+  const goodResult = lintRcaEvidentiaryReport(ashlandReferenceCase);
   assert.equal(goodResult.valid, true);
 
-  // Test C: Schema checks (rca_assessment & rca_openbadge_v3)
-  assert.ok(rcaAssessmentSchema.properties.schema_version.enum.includes('RCA_v2'));
-  assert.ok(rcaAssessmentSchema.properties.structural_baseline.properties.sound_shell_thickness_ratio_t_over_r);
-  assert.ok(rcaAssessmentSchema.properties.structural_baseline.properties.dual_valuation);
-  assert.ok(rcaOpenBadgeSchema.properties.credentialSubject.required.includes('nature_first_competency_proof'));
-  assert.ok(rcaOpenBadgeSchema.properties.credentialSubject.properties.legacy_statutory_equivalencies);
+  // Sabotage check on validateJsonSchema: un-schematized property must fail!
+  const unschematized = cloneValidAssessment();
+  unschematized.soil_and_microbiome_baseline.dominant_fungal_taxa_inaturalist_ids = [12345];
+  const badSchemaCheck = validateJsonSchema(unschematized, rcaAssessmentSchema);
+  assert.equal(badSchemaCheck.valid, false);
+  assert.ok(badSchemaCheck.errors.some((e) => e.includes('additionalProperties: false')));
 
-  console.log('[PASS] 7. ASCA Evidentiary Linter Blocking Lazy Removal & Schema Conformance');
+  console.log('[PASS] 7. ASCA Evidentiary Linter Blocking Lazy Removal & Strict Schema Conformance');
 }
 
-// 8. Test Rogue Valley Oregon Bioregional Municipal Ordinances
+// 8. Test Rogue Valley Oregon Bioregional Municipal Ordinances (Ashland, Medford, Grants Pass)
 {
+  for (const muni of rogueValleyOrdinancesRaw.municipalities) {
+    const mRes = validateJsonSchema(muni, municipalOrdinanceSchema);
+    assert.equal(mRes.valid, true, `Municipality ${muni.id} failed schema: ${mRes.errors.join('; ')}`);
+    assert.equal(muni.plan_rules?.pruning?.oak_months, undefined, `${muni.id} must not have Texas oak_months`);
+  }
+
   const ashland = rogueValleyOrdinancesRaw.municipalities.find((m) => m.id === 'or-ashland');
   const medford = rogueValleyOrdinancesRaw.municipalities.find((m) => m.id === 'or-medford');
   const grantsPass = rogueValleyOrdinancesRaw.municipalities.find((m) => m.id === 'or-grants-pass');
 
-  assert.ok(ashland, 'Ashland municipality must exist');
-  assert.ok(medford, 'Medford municipality must exist');
-  assert.ok(grantsPass, 'Grants Pass municipality must exist');
-
-  // Ashland: 19-in DBH Douglas-fir on vacant residential site (threshold 18 in) -> Protected & Heritage
-  const ashlandTrees = [
-    {
-      tag: 'ASH-01',
-      species_common: 'Douglas-fir',
-      species_scientific: 'Pseudotsuga menziesii',
-      stems_inches: [19],
-      lat: 42.1946,
-      lng: -122.7095,
-      condition_score: 8,
-      removal: true,
-    },
-    {
-      tag: 'ASH-02',
-      species_common: 'Vine Maple',
-      species_scientific: 'Acer circinatum',
-      stems_inches: [4],
-      lat: 42.1947,
-      lng: -122.7096,
-      condition_score: 7,
-      removal: false,
-    },
-  ];
-  const ashlandEval = evaluateTreeInventory(ashlandTrees, ashland);
+  // Ashland: 19-in DBH Douglas-fir -> Protected & Heritage, removal triggers permit
+  const ashlandEval = evaluateTreeInventory(
+    [
+      {
+        tag: 'ASH-01',
+        species_common: 'Douglas-fir',
+        species_scientific: 'Pseudotsuga menziesii',
+        stems_inches: [19],
+        lat: 42.1946,
+        lng: -122.7095,
+        condition_score: 8,
+        removal: true,
+      },
+      {
+        tag: 'ASH-02',
+        species_common: 'Oregon White Oak',
+        species_scientific: 'Quercus garryana',
+        stems_inches: [22],
+        lat: 42.1947,
+        lng: -122.7096,
+        condition_score: 8,
+        removal: false,
+        pruning_date: '2026-05-15', // May pruning in Oregon must NOT trigger Texas Oak Wilt flag!
+      },
+    ],
+    ashland
+  );
   assert.equal(ashlandEval[0].protected, true);
   assert.equal(ashlandEval[0].heritage, true);
-  assert.equal(ashlandEval[1].protected, false); // < 6 in threshold
+  assert.equal(ashlandEval[1].flags.length, 0); // Defect 2 fix verified!
 
   const ashlandPermit = permitDetermination(ashlandEval, ashland);
   assert.equal(ashlandPermit.required, true);
   assert.equal(ashlandPermit.removalRequired, true);
   assert.ok(ashlandPermit.citation.includes('AMC'));
 
-  // Medford: Commercial development regulated at 8 in DBH threshold (heritage at 24 in)
-  const medfordCommercialTree = [
-    {
-      tag: 'MED-01',
-      species_common: 'Oregon White Oak',
-      species_scientific: 'Quercus garryana',
-      stems_inches: [12],
-      lat: 42.3265,
-      lng: -122.8756,
-      condition_score: 8,
-      removal: true,
-    },
-    {
-      tag: 'MED-02',
-      species_common: 'Oregon White Oak',
-      species_scientific: 'Quercus garryana',
-      stems_inches: [28],
-      lat: 42.3266,
-      lng: -122.8757,
-      condition_score: 8,
-      removal: false,
-    },
-  ];
-  const medfordEval = evaluateTreeInventory(medfordCommercialTree, medford);
+  // Medford: 12-in protected removal + 28-in heritage retention
+  const medfordEval = evaluateTreeInventory(
+    [
+      {
+        tag: 'MED-01',
+        species_common: 'Oregon White Oak',
+        species_scientific: 'Quercus garryana',
+        stems_inches: [12],
+        lat: 42.3265,
+        lng: -122.8756,
+        condition_score: 8,
+        removal: true,
+      },
+      {
+        tag: 'MED-02',
+        species_common: 'Oregon White Oak',
+        species_scientific: 'Quercus garryana',
+        stems_inches: [28],
+        lat: 42.3266,
+        lng: -122.8757,
+        condition_score: 8,
+        removal: false,
+      },
+    ],
+    medford
+  );
   assert.equal(medfordEval[0].protected, true);
   assert.equal(medfordEval[0].heritage, false);
   assert.equal(medfordEval[1].protected, true);
   assert.equal(medfordEval[1].heritage, true);
 
-  // Grants Pass: Regulated at 8 in DBH threshold (heritage at 20 in)
-  const gpTrees = [
-    {
-      tag: 'GP-01',
-      species_common: 'Ponderosa Pine',
-      species_scientific: 'Pinus ponderosa',
-      stems_inches: [14],
-      lat: 42.4390,
-      lng: -123.3284,
-      condition_score: 8,
-      removal: true,
-    },
-    {
-      tag: 'GP-02',
-      species_common: 'Ponderosa Pine',
-      species_scientific: 'Pinus ponderosa',
-      stems_inches: [22],
-      lat: 42.4391,
-      lng: -123.3285,
-      condition_score: 8,
-      removal: false,
-    },
-  ];
-  const gpEval = evaluateTreeInventory(gpTrees, grantsPass);
+  const medfordPermit = permitDetermination(medfordEval, medford);
+  assert.equal(medfordPermit.required, true); // Defect 1 fix verified!
+  assert.equal(medfordPermit.removalRequired, true);
+  assert.ok(medfordPermit.citation.includes('MMC'));
+
+  // Grants Pass: 14-in protected removal + 22-in heritage retention
+  const gpEval = evaluateTreeInventory(
+    [
+      {
+        tag: 'GP-01',
+        species_common: 'Ponderosa Pine',
+        species_scientific: 'Pinus ponderosa',
+        stems_inches: [14],
+        lat: 42.4390,
+        lng: -123.3284,
+        condition_score: 8,
+        removal: true,
+      },
+      {
+        tag: 'GP-02',
+        species_common: 'Ponderosa Pine',
+        species_scientific: 'Pinus ponderosa',
+        stems_inches: [22],
+        lat: 42.4391,
+        lng: -123.3285,
+        condition_score: 8,
+        removal: false,
+      },
+    ],
+    grantsPass
+  );
   assert.equal(gpEval[0].protected, true);
   assert.equal(gpEval[0].heritage, false);
   assert.equal(gpEval[1].protected, true);
   assert.equal(gpEval[1].heritage, true);
 
+  const gpPermit = permitDetermination(gpEval, grantsPass);
+  assert.equal(gpPermit.required, true); // Defect 1 fix verified!
+  assert.equal(gpPermit.removalRequired, true);
+  assert.ok(gpPermit.citation.includes('Grants Pass'));
+
   console.log('[PASS] 8. Rogue Valley Oregon Bioregional Municipal Ordinances (Ashland, Medford, Grants Pass)');
+}
+
+// 9. Test 100x RCA Army Engine & CLI (compile, counter-notice, economics, attest + sabotage checks)
+{
+  const cliPath = path.join(rootDir, 'bin/openarbor-rca.mjs');
+  const examplePath = path.join(rootDir, 'examples/ashland_oregon_white_oak_rca_v2.json');
+
+  // 9a. Test CLI compile
+  const compileOut = execFileSync(process.execPath, [cliPath, 'compile', examplePath], {
+    encoding: 'utf8',
+  });
+  assert.ok(compileOut.includes('# Open Arbor Regenerative Diagnostic & Evidentiary Report (RCA_v2)'));
+  assert.ok(compileOut.includes('Structurally Sound (t/R >= 0.30 Mattheck Criterion Satisfied)'));
+  assert.ok(compileOut.includes('<svg'));
+
+  // 9b. Test CLI counter-notice
+  const noticeOut = execFileSync(process.execPath, [cliPath, 'counter-notice', examplePath], {
+    encoding: 'utf8',
+  });
+  assert.ok(noticeOut.includes('# SCIENTIFIC PRESERVATION & BIOMECHANICAL COUNTER-NOTICE'));
+  assert.ok(noticeOut.includes('Conflict-of-Interest Disclosure'));
+
+  // 9c. Test CLI economics (--json)
+  const econJsonRaw = execFileSync(process.execPath, [cliPath, 'economics', examplePath, '--json'], {
+    encoding: 'utf8',
+  });
+  const econData = JSON.parse(econJsonRaw);
+  assert.equal(econData.comparison.is_regenerative_more_profitable, true);
+  assert.ok(econData.comparison.margin_multiplier > 3.0);
+  assert.ok(econData.regenerative_stewardship_model.five_year_gross_revenue_usd > econData.legacy_removal_model.one_time_gross_bid_usd);
+
+  // 9d. Test CLI attest (end-to-end Open Badges 3.0 minting & schema validation)
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'openarbor-rca-test-'));
+  const pracPath = path.join(tmpDir, 'practitioner.json');
+  const r2Path = path.join(tmpDir, 'report2.json');
+  const r3Path = path.join(tmpDir, 'report3.json');
+  const badgeOutPath = path.join(tmpDir, 'badge.json');
+
+  fs.writeFileSync(
+    pracPath,
+    JSON.stringify({
+      id: 'did:web:soilgrower.com:stewards:george-steward',
+      practitioner_name: 'George Steward',
+      year_1_recovery_milestone_target_date: '2027-10-23',
+      legacy_statutory_equivalencies: {
+        credential_category: 'ISA_Certified_Arborist',
+        issuing_organization: 'International Society of Arboriculture',
+        credential_identifier: 'TX-362025A',
+        verification_url: 'https://certificates.directory.isa-arbor.com/',
+      },
+    }),
+    'utf8'
+  );
+  fs.writeFileSync(r2Path, JSON.stringify(cloneValidAssessment({ structural_baseline: { ...ashlandReferenceCase.structural_baseline, tree_tag: 'MED-QG-202', dbh_cm: 92 } })), 'utf8');
+  fs.writeFileSync(r3Path, JSON.stringify(cloneValidAssessment({ structural_baseline: { ...ashlandReferenceCase.structural_baseline, tree_tag: 'GP-PP-303', dbh_cm: 88 } })), 'utf8');
+
+  execFileSync(process.execPath, [cliPath, 'attest', pracPath, examplePath, r2Path, r3Path, '--out', badgeOutPath], {
+    encoding: 'utf8',
+  });
+  const mintedBadge = JSON.parse(fs.readFileSync(badgeOutPath, 'utf8'));
+  const badgeSchemaRes = validateJsonSchema(mintedBadge, rcaOpenBadgeSchema);
+  assert.equal(badgeSchemaRes.valid, true, `Badge schema errors: ${badgeSchemaRes.errors.join('; ')}`);
+  assert.equal(mintedBadge.evidence.length, 3);
+  assert.equal(mintedBadge.credentialSubject.nature_first_competency_proof.diagnostic_report_hashes_sha256.length, 3);
+
+  // 9e. Negative-path CLI Sabotage Check: lazy removal with t/R = 0.34 must fail CLI compile!
+  const sabotagedPath = path.join(tmpDir, 'sabotaged_removal.json');
+  const sabotagedRemoval = cloneValidAssessment({
+    structural_baseline: {
+      ...ashlandReferenceCase.structural_baseline,
+      municipal_permit_disposition: {
+        ...ashlandReferenceCase.structural_baseline.municipal_permit_disposition,
+        recommended_disposition: 'Removal_Last_Resort_Unmitigable_Hazard',
+      },
+    },
+  });
+  fs.writeFileSync(sabotagedPath, JSON.stringify(sabotagedRemoval), 'utf8');
+
+  let cliFailedAsExpected = false;
+  try {
+    execFileSync(process.execPath, [cliPath, 'compile', sabotagedPath], { stdio: 'pipe' });
+  } catch (err) {
+    cliFailedAsExpected = true;
+    assert.ok(String(err.stderr).includes('UNJUSTIFIED_REMOVAL'));
+  }
+  assert.equal(cliFailedAsExpected, true, 'CLI compile must fail on unjustified removal when t/R >= 0.30');
+
+  fs.rmSync(tmpDir, { recursive: true, force: true });
+  console.log('[PASS] 9. 100x RCA Army Engine & CLI (compile, counter-notice, economics, attest & sabotage gates)');
 }
 
 console.log('\nALL OPENARBOR CORE VERIFICATION CHECKS PASSED (0 proprietary dependencies).');

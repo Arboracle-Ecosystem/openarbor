@@ -311,7 +311,9 @@ export function permitDetermination(rows, ordinance) {
   const needs = (r) => {
     const work = [r.removal && 'removal', /prun/i.test(r.actions) && 'pruning'].filter(Boolean);
     const list = r.heritage ? her : r.protected ? prot : [];
-    return work.filter((w) => list.includes(w));
+    return work.filter((w) =>
+      list.some((trigger) => trigger === w || String(trigger).toLowerCase().includes(w))
+    );
   };
   const items = rows.map((r) => ({ tag: r.tag, species: r.species, work: needs(r) })).filter((x) => x.work.length);
   const verify = rows

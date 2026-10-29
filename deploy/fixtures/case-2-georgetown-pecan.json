@@ -1,0 +1,157 @@
+{
+  "schema_version": "RCA_v2",
+  "assessment_mode": "Regenerative Diagnostic",
+  "structural_baseline": {
+    "tree_tag": "GTN-CI-204",
+    "species_scientific": "Carya illinoinensis",
+    "species_common": "Pecan",
+    "inaturalist_taxon_id": 48797,
+    "assessment_date": "2026-10-28",
+    "dbh_cm": 68.58,
+    "is_multistem": true,
+    "stem_diameters_cm": [
+      50.8,
+      35.56
+    ],
+    "multistem_aggregation_method": "largest_plus_half",
+    "height_m": 19,
+    "crown_spread_ns_m": 18,
+    "crown_spread_ew_m": 19.5,
+    "live_crown_ratio_pct": 80,
+    "plus_code_global": "8624J8MC+8Q",
+    "codit_wall_response_rating": "Wall_4_Strong_Reaction_Zone",
+    "sound_shell_thickness_ratio_t_over_r": 0.46,
+    "sonic_tomography_or_resistograph_uri": "https://soilgrower.com/diagnostics/picus/gtn-ci-204-tomogram.png",
+    "dual_valuation": {
+      "ctla_10th_ed_depreciated_usd": 13448,
+      "holobiont_200yr_biological_equity_usd": 146353,
+      "veteran_keystone_habitat_multiplier": 1.8,
+      "valuation_delta_usd": 132905
+    },
+    "isa_traq_risk": {
+      "assessment_level": "Level_2_Basic",
+      "time_frame_years": 5,
+      "target_zone_description": "Riparian parkland trail corridor and picnic area; intermittent occupancy.",
+      "primary_tree_part_of_concern": "Codominant_Union",
+      "likelihood_of_failure": "Improbable",
+      "likelihood_of_impact": "Low",
+      "likelihood_of_failure_and_impact": "Unlikely",
+      "consequences_of_failure": "Significant",
+      "overall_risk_rating": "Low",
+      "residual_risk_rating": "Low"
+    },
+    "municipal_permit_disposition": {
+      "jurisdiction_id": "tx-georgetown",
+      "ordinance_citation": "Georgetown UDC § 8.02",
+      "protection_tier": "Heritage",
+      "permit_required": true,
+      "recommended_disposition": "Preservation_Primary",
+      "seasonal_oak_wilt_restriction_active": false
+    }
+  },
+  "rhizosphere_and_root_collar": {
+    "root_flare_burial_depth_cm": 12,
+    "root_flare_diameter_cm": 86,
+    "stem_girdling_root_count": 1,
+    "stem_girdling_root_severity": "Minor_Under_25_Pct_Circumference",
+    "airspade_radial_trenching_geometry": {
+      "execution_status": "Prescribed_Radial_Remediation",
+      "operating_pressure_psi": 150,
+      "trench_count": 6,
+      "trench_length_m": 7.5,
+      "trench_width_cm": 30,
+      "trench_depth_cm": 35,
+      "root_collar_excavation_radius_m": 0.8
+    },
+    "crz_radius_m": 8.23,
+    "srz_radius_m": 3.04,
+    "tiz_radius_m": 12.34
+  },
+  "soil_and_microbiome_baseline": {
+    "bulk_density_g_cm3": 1.42,
+    "penetrometer_resistance_psi": 270,
+    "infiltration_rate_mm_hr": 24,
+    "organic_matter_pct": 3.2,
+    "soil_ph": 7.1,
+    "lab_panel_url": "https://soilgrower.com/labs/tamu-soil/sample-gtn-2026-204.pdf",
+    "lab_sample_id": "TAMU-CTX-2026-204",
+    "mycorrhizal_and_fungal_observations": {
+      "dominant_mycorrhizal_guild": "Ectomycorrhizal_EM",
+      "fungal_to_bacterial_biomass_ratio": 0.68,
+      "hyphal_colonization_status": "Moderate_Rhizosphere_Colonization",
+      "observed_fruiting_bodies_or_rhizomorphs": [
+        {
+          "species_or_morphotype": "Tuber lyonii",
+          "inaturalist_taxon_id": 352625,
+          "ecological_role": "Mycorrhizal_Symbiont"
+        }
+      ]
+    }
+  },
+  "understory_and_guild_prescription": {
+    "reference_ecosystem_name": "San Gabriel River Alluvial Pecan-Elm Bottomland Forest",
+    "biochar_volume_liters": 398,
+    "humate_mass_kg": 7.46,
+    "compost_volume_cubic_m": 0.75,
+    "compost_extract_volume_liters": 250,
+    "mulch_depth_cm": 8,
+    "mulch_coverage_area_m2": 478.4,
+    "synthetic_npk_and_fungicide_exclusion_verified": true,
+    "native_companion_species_guild": [
+      {
+        "scientific_name": "Chasmanthium latifolium",
+        "common_name": "Inland Sea Oats",
+        "inaturalist_taxon_id": 64101,
+        "open_nursery_batch_id": "ON-TX-2026-CLA-04",
+        "stratum_layer": "Herbaceous_Perennial",
+        "functional_role": "Hydrologic_Swale_Or_Infiltration_Anchor",
+        "quantity_planted": 32
+      },
+      {
+        "scientific_name": "Symphoricarpos orbiculatus",
+        "common_name": "Coralberry",
+        "inaturalist_taxon_id": 54785,
+        "open_nursery_batch_id": "ON-TX-2026-SOR-05",
+        "stratum_layer": "Shrub_Layer",
+        "functional_role": "Recalcitrant_Or_Labile_Litter_Builder",
+        "quantity_planted": 16
+      }
+    ]
+  },
+  "outcome_monitoring_schedule": {
+    "stim_hypothesis_statement": "Root collar decompression (6 radial trenches at 150 psi), minor SGR excision, and alluvial bottomland guild planting will reduce bulk density from 1.42 to <= 1.22 g/cm3 and elevate F:B biomass ratio from 0.68 to >= 1.40 within 60 months.",
+    "stim_kill_criterion": "If Year-1 terminal shoot extension drops below 10 cm or codominant union exhibits active seam separation, install non-invasive dynamic crown support per ANSI A300 Part 3.",
+    "one_year_leading_indicators": {
+      "scheduled_reinspection_date": "2027-10-28",
+      "target_canopy_dieback_max_pct": 5,
+      "target_annual_twig_extension_min_cm": 12,
+      "target_woundwood_callus_closure_mm_yr": 14,
+      "root_flare_unburied_verified": true,
+      "mulch_horizon_and_litter_incorporation_intact": true,
+      "soil_surface_crusting_or_capping_absent": true,
+      "companion_guild_survival_min_pct": 90,
+      "fixed_photopoint_azimuth_deg": 90
+    },
+    "five_year_lagging_indicators": {
+      "scheduled_audit_date": "2031-10-28",
+      "target_bulk_density_max_g_cm3": 1.22,
+      "target_infiltration_rate_min_mm_hr": 75,
+      "target_organic_matter_min_pct": 5.5,
+      "target_fungal_to_bacterial_ratio_min": 1.4,
+      "target_ser_recovery_wheel_stars": 4.5,
+      "sanctuary_scorecard_targets": {
+        "tiz_footprint_area_m2": 478.4,
+        "canopy_projection_area_m2": 275.7,
+        "soil_health_index_baseline_score": 52,
+        "soil_health_index_target_score": 88,
+        "canopy_volume_expansion_target_pct": 15,
+        "stormwater_interception_baseline_liters_yr": 33100,
+        "stormwater_interception_target_liters_yr": 45000,
+        "documented_native_biodiversity_taxa_baseline": 4,
+        "documented_native_biodiversity_taxa_min": 15,
+        "restoration_potential_baseline_pct": 55,
+        "restoration_potential_realized_pct": 90
+      }
+    }
+  }
+}

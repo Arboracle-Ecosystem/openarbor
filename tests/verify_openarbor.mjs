@@ -671,4 +671,22 @@ console.log('=== OpenArbor v2.0 Open-Standards Verification Suite ===\n');
   console.log('[PASS] 9. 100x RCA Army Engine & CLI (compile, counter-notice, economics, attest & sabotage gates)');
 }
 
+// 10. Test Static Web Field Bundle (out/) & 3/3 CLI-to-Browser Parity
+{
+  const outIndex = path.join(rootDir, 'out/index.html');
+  const outBundle = path.join(rootDir, 'out/openarbor-bundle.js');
+  const outCss = path.join(rootDir, 'out/styles.css');
+  assert.ok(fs.existsSync(outIndex), 'out/index.html must exist');
+  assert.ok(fs.existsSync(outBundle), 'out/openarbor-bundle.js must exist');
+  assert.ok(fs.existsSync(outCss), 'out/styles.css must exist');
+
+  const parityOut = execFileSync(process.execPath, [path.join(rootDir, 'deploy/verify-parity.mjs')], {
+    encoding: 'utf8',
+  });
+  assert.ok(parityOut.includes('3/3 identical'));
+  assert.ok(fs.existsSync(path.join(rootDir, 'deploy/VERIFICATION.md')), 'deploy/VERIFICATION.md must exist');
+  assert.ok(fs.existsSync(path.join(rootDir, 'deploy/DEPLOY.md')), 'deploy/DEPLOY.md must exist');
+  console.log('[PASS] 10. Static Web Field Tool Build (out/) & 3/3 CLI-to-Browser Bundle Parity');
+}
+
 console.log('\nALL OPENARBOR CORE VERIFICATION CHECKS PASSED (0 proprietary dependencies).');

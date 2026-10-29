@@ -1,0 +1,167 @@
+{
+  "schema_version": "RCA_v2",
+  "assessment_mode": "Regenerative Diagnostic",
+  "structural_baseline": {
+    "tree_tag": "ATX-QV-101",
+    "species_scientific": "Quercus virginiana",
+    "species_common": "Live Oak",
+    "inaturalist_taxon_id": 49005,
+    "assessment_date": "2026-10-28",
+    "dbh_cm": 76.2,
+    "is_multistem": false,
+    "multistem_aggregation_method": "single_stem",
+    "height_m": 16.5,
+    "crown_spread_ns_m": 22,
+    "crown_spread_ew_m": 24,
+    "live_crown_ratio_pct": 78,
+    "plus_code_global": "86247784+VP",
+    "codit_wall_response_rating": "Wall_4_Active_Barrier_Zone",
+    "sound_shell_thickness_ratio_t_over_r": 0.38,
+    "sonic_tomography_or_resistograph_uri": "https://soilgrower.com/diagnostics/picus/atx-qv-101-tomogram.png",
+    "dual_valuation": {
+      "ctla_10th_ed_depreciated_usd": 13685,
+      "holobiont_200yr_biological_equity_usd": 263956,
+      "veteran_keystone_habitat_multiplier": 2.5,
+      "valuation_delta_usd": 250271
+    },
+    "isa_traq_risk": {
+      "assessment_level": "Level_2_Basic",
+      "time_frame_years": 3,
+      "target_zone_description": "Residential driveway and primary pedestrian walkway; frequent occupancy.",
+      "primary_tree_part_of_concern": "Root_Collar",
+      "likelihood_of_failure": "Possible",
+      "likelihood_of_impact": "Medium",
+      "likelihood_of_failure_and_impact": "Somewhat Likely",
+      "consequences_of_failure": "Significant",
+      "overall_risk_rating": "Moderate",
+      "residual_risk_rating": "Low"
+    },
+    "municipal_permit_disposition": {
+      "jurisdiction_id": "tx-austin",
+      "ordinance_citation": "Austin LDC § 25-8-604 / ECM Section 3.5",
+      "protection_tier": "Heritage",
+      "permit_required": true,
+      "recommended_disposition": "Preservation_With_Rhizosphere_Remediation",
+      "seasonal_oak_wilt_restriction_active": false
+    }
+  },
+  "rhizosphere_and_root_collar": {
+    "root_flare_burial_depth_cm": 16,
+    "root_flare_diameter_cm": 98,
+    "stem_girdling_root_count": 2,
+    "stem_girdling_root_severity": "Moderate_25_To_50_Pct_Circumference",
+    "airspade_radial_trenching_geometry": {
+      "execution_status": "Prescribed_Radial_Remediation",
+      "operating_pressure_psi": 150,
+      "trench_count": 8,
+      "trench_length_m": 8.5,
+      "trench_width_cm": 30,
+      "trench_depth_cm": 35,
+      "root_collar_excavation_radius_m": 1
+    },
+    "crz_radius_m": 9.14,
+    "srz_radius_m": 3.21,
+    "tiz_radius_m": 13.71
+  },
+  "soil_and_microbiome_baseline": {
+    "bulk_density_g_cm3": 1.54,
+    "penetrometer_resistance_psi": 325,
+    "infiltration_rate_mm_hr": 16,
+    "organic_matter_pct": 2.6,
+    "soil_ph": 7.4,
+    "lab_panel_url": "https://soilgrower.com/labs/tamu-soil/sample-atx-2026-101.pdf",
+    "lab_sample_id": "TAMU-CTX-2026-101",
+    "mycorrhizal_and_fungal_observations": {
+      "dominant_mycorrhizal_guild": "Ectomycorrhizal_EM",
+      "fungal_to_bacterial_biomass_ratio": 0.48,
+      "hyphal_colonization_status": "Depleted_Bacterial_Dominated",
+      "observed_fruiting_bodies_or_rhizomorphs": [
+        {
+          "species_or_morphotype": "Pisolithus arhizus",
+          "inaturalist_taxon_id": 55259,
+          "ecological_role": "Mycorrhizal_Symbiont"
+        },
+        {
+          "species_or_morphotype": "Scleroderma citrinum",
+          "inaturalist_taxon_id": 55930,
+          "ecological_role": "Mycorrhizal_Symbiont"
+        }
+      ]
+    }
+  },
+  "understory_and_guild_prescription": {
+    "reference_ecosystem_name": "Edwards Plateau Live Oak Savanna and Woodland",
+    "biochar_volume_liters": 611,
+    "humate_mass_kg": 11.46,
+    "compost_volume_cubic_m": 1.15,
+    "compost_extract_volume_liters": 300,
+    "mulch_depth_cm": 8,
+    "mulch_coverage_area_m2": 590.5,
+    "synthetic_npk_and_fungicide_exclusion_verified": true,
+    "native_companion_species_guild": [
+      {
+        "scientific_name": "Malvaviscus arboreus var. drummondii",
+        "common_name": "Turk Cap",
+        "inaturalist_taxon_id": 52149,
+        "open_nursery_batch_id": "ON-TX-2026-MAD-01",
+        "stratum_layer": "Shrub_Layer",
+        "functional_role": "Pollinator_And_Predatory_Insect_Refuge",
+        "quantity_planted": 14
+      },
+      {
+        "scientific_name": "Carex perdentata",
+        "common_name": "Cedar Sedge",
+        "inaturalist_taxon_id": 160187,
+        "open_nursery_batch_id": "ON-TX-2026-CPD-02",
+        "stratum_layer": "Groundcover_Matrix",
+        "functional_role": "Hydrologic_Swale_Or_Infiltration_Anchor",
+        "quantity_planted": 28
+      },
+      {
+        "scientific_name": "Callicarpa americana",
+        "common_name": "American Beautyberry",
+        "inaturalist_taxon_id": 49138,
+        "open_nursery_batch_id": "ON-TX-2026-CAM-03",
+        "stratum_layer": "Shrub_Layer",
+        "functional_role": "Recalcitrant_Or_Labile_Litter_Builder",
+        "quantity_planted": 8
+      }
+    ]
+  },
+  "outcome_monitoring_schedule": {
+    "stim_hypothesis_statement": "Supersonic AirSpade radial trenching (8 spokes at 150 psi), stem-girdling root relief, pre-charged biochar/humate incorporation, and Edwards Plateau native understory guild installation will reduce top-15cm bulk density from 1.54 to <= 1.28 g/cm3 and elevate F:B biomass ratio from 0.48 to >= 1.25 within 60 months.",
+    "stim_kill_criterion": "If Year-1 terminal shoot extension remains below 6 cm or upper crown dieback exceeds 12%, re-inspect for subsurface utility trench root severance or oak wilt vascular streaking.",
+    "one_year_leading_indicators": {
+      "scheduled_reinspection_date": "2027-10-28",
+      "target_canopy_dieback_max_pct": 10,
+      "target_annual_twig_extension_min_cm": 8,
+      "target_woundwood_callus_closure_mm_yr": 10,
+      "root_flare_unburied_verified": true,
+      "mulch_horizon_and_litter_incorporation_intact": true,
+      "soil_surface_crusting_or_capping_absent": true,
+      "companion_guild_survival_min_pct": 85,
+      "fixed_photopoint_azimuth_deg": 180
+    },
+    "five_year_lagging_indicators": {
+      "scheduled_audit_date": "2031-10-28",
+      "target_bulk_density_max_g_cm3": 1.28,
+      "target_infiltration_rate_min_mm_hr": 60,
+      "target_organic_matter_min_pct": 5,
+      "target_fungal_to_bacterial_ratio_min": 1.25,
+      "target_ser_recovery_wheel_stars": 4.5,
+      "sanctuary_scorecard_targets": {
+        "tiz_footprint_area_m2": 590.5,
+        "canopy_projection_area_m2": 414.7,
+        "soil_health_index_baseline_score": 41,
+        "soil_health_index_target_score": 84,
+        "canopy_volume_expansion_target_pct": 12,
+        "stormwater_interception_baseline_liters_yr": 49800,
+        "stormwater_interception_target_liters_yr": 64000,
+        "documented_native_biodiversity_taxa_baseline": 3,
+        "documented_native_biodiversity_taxa_min": 14,
+        "restoration_potential_baseline_pct": 45,
+        "restoration_potential_realized_pct": 86
+      }
+    }
+  }
+}

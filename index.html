@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenArbor v2.0 | Mobile Field Assessment &amp; Municipal Ordinance Engine</title>
+  <meta name="description" content="Zero-dependency, open-standards arboricultural field assessment, ANSI A300 Part 5 root-zone protection, allometric valuation, RCA-Spec v2.0 biomechanics, and Central Texas municipal tree ordinance commons.">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="container header-inner">
+      <div>
+        <span class="eyebrow">AGPL-3.0 Open Standards | ANSI A300 / ISA BMP / RCA-Spec v2.0</span>
+        <h1>OpenArbor v2.0 Field Engine</h1>
+        <p class="subtitle">Central Texas Municipal Ordinance Commons, Allometric Valuation, and Regenerative Consulting Arborist Diagnostic Tool</p>
+      </div>
+      <div class="header-actions">
+        <a href="#results-section" class="btn btn-secondary">Jump to Live Verdict</a>
+        <label class="btn btn-outline" for="input-import-json">
+          Import RCA JSON
+          <input type="file" id="input-import-json" accept=".json,application/json" hidden>
+        </label>
+      </div>
+    </div>
+  </header>
+
+  <main class="container main-layout">
+    <section class="preset-section card" aria-label="Quick Field Presets">
+      <div class="section-header-compact">
+        <h2>1-Tap Central Texas Field Presets</h2>
+        <span class="hint">Load a verified Central Texas reference specimen or enter custom field measurements below.</span>
+      </div>
+      <div id="preset-buttons" class="preset-bar"></div>
+    </section>
+
+    <div id="error-banner" class="error-banner" role="alert" hidden></div>
+
+    <form id="field-assessment-form" class="form-grid" novalidate>
+      <!-- STEP A: MUNICIPAL ORDINANCE LOOKUP -->
+      <section class="card">
+        <div class="card-header">
+          <span class="step-badge">Step 1</span>
+          <h2>Municipal Tree Ordinance Lookup (Central Texas)</h2>
+        </div>
+        <div class="field">
+          <label for="input-ordinance-id">Select Municipal Jurisdiction</label>
+          <span id="hint-ordinance" class="hint">Evaluates statutory protection, heritage thresholds, Oak Wilt windows, and mitigation schedules.</span>
+          <select id="input-ordinance-id" aria-describedby="hint-ordinance" required></select>
+        </div>
+        <div id="muni-lookup-card" class="muni-lookup-box" aria-live="polite"></div>
+      </section>
+
+      <!-- STEP B: TREE & SITE BIOMETRICS -->
+      <section class="card">
+        <div class="card-header">
+          <span class="step-badge">Step 2</span>
+          <h2>Tree Biometrics, Species &amp; Condition</h2>
+        </div>
+
+        <div class="field-row field-row-3">
+          <div class="field">
+            <label for="input-tree-tag">Tree Tag / ID</label>
+            <span id="hint-tag" class="hint">Format: alphanumeric tag (e.g., ATX-QV-101)</span>
+            <input type="text" id="input-tree-tag" required minlength="1" aria-describedby="hint-tag" value="ATX-QV-101">
+            <div class="error-msg">Please enter a tree identifier tag.</div>
+          </div>
+
+          <div class="field">
+            <label for="input-assessment-date">Assessment Date</label>
+            <span id="hint-date" class="hint">ISO date (YYYY-MM-DD)</span>
+            <input type="date" id="input-assessment-date" required aria-describedby="hint-date" value="2026-10-28">
+            <div class="error-msg">Please select an assessment date.</div>
+          </div>
+
+          <div class="field">
+            <label for="input-plus-code">Global Plus Code (Location)</label>
+            <span id="hint-plus-code" class="hint">8 chars + 2 to 7 chars (e.g., 86247784+VP)</span>
+            <div class="input-with-btn">
+              <input
+                type="text"
+                id="input-plus-code"
+                required
+                pattern="[23456789CFGHJMPQRVWXcfghjmpqrvwx]{8}\+[23456789CFGHJMPQRVWXcfghjmpqrvwx]{2,7}"
+                aria-describedby="hint-plus-code"
+                value="86247784+VP"
+              >
+              <button type="button" id="btn-gps-locate" class="btn btn-gps" title="Use Phone GPS">GPS</button>
+            </div>
+            <div class="error-msg">Enter a valid Global Plus Code (e.g., 86247784+VP).</div>
+            <span id="gps-status" class="gps-status-text"></span>
+          </div>
+        </div>
+
+        <div class="field-row field-row-4">
+          <div class="field">
+            <label for="input-species-preset">Central Texas Species Preset</label>
+            <span id="hint-species-preset" class="hint">Auto-fills binomial &amp; taxon ID</span>
+            <select id="input-species-preset" aria-describedby="hint-species-preset"></select>
+          </div>
+          <div class="field">
+            <label for="input-species-common">Common Name</label>
+            <span id="hint-common" class="hint">Regional common name</span>
+            <input type="text" id="input-species-common" required aria-describedby="hint-common" value="Live Oak">
+          </div>
+          <div class="field">
+            <label for="input-species-scientific">Scientific Binomial</label>
+            <span id="hint-sci" class="hint">Genus species</span>
+            <input type="text" id="input-species-scientific" required aria-describedby="hint-sci" value="Quercus virginiana">
+          </div>
+          <div class="field">
+            <label for="input-taxon-id">iNaturalist Taxon ID</label>
+            <span id="hint-taxon" class="hint">Positive integer ID</span>
+            <input type="number" id="input-taxon-id" inputmode="numeric" min="1" step="1" required aria-describedby="hint-taxon" value="49005">
+          </div>
+        </div>
+
+        <div class="field-row field-row-4">
+          <div class="field">
+            <label for="input-multistem-mode">Stem Measurement Rule</label>
+            <span id="hint-stem-mode" class="hint">Single stem or multi-trunk aggregation</span>
+            <select id="input-multistem-mode" aria-describedby="hint-stem-mode">
+              <option value="single_stem">Single Stem (4.5 ft / 1.37 m)</option>
+              <option value="largest_plus_half">Multi-Stem: Largest + 50% Others (Municipal)</option>
+              <option value="quadratic">Multi-Stem: Quadratic Mean (ISA / CTLA)</option>
+              <option value="sum">Multi-Stem: Direct Sum</option>
+            </select>
+          </div>
+
+          <div class="field" id="singlestem-input-wrap">
+            <label for="input-dbh-inches">DBH (Inches)</label>
+            <span id="hint-dbh-in" class="hint">Diameter at 4.5 ft (0.5 to 500 in)</span>
+            <input type="number" id="input-dbh-inches" inputmode="decimal" min="0.5" max="500" step="0.1" required aria-describedby="hint-dbh-in" value="30">
+            <div class="error-msg">DBH must be between 0.5 and 500 inches.</div>
+          </div>
+
+          <div class="field" id="multistem-input-wrap" hidden>
+            <label for="input-stems-inches">Stem Diameters (Inches, comma-separated)</label>
+            <span id="hint-stems" class="hint">Example: 20, 14, 10</span>
+            <input type="text" id="input-stems-inches" aria-describedby="hint-stems" value="20, 14">
+          </div>
+
+          <div class="field">
+            <label for="input-dbh-cm">Computed DBH (cm)</label>
+            <span id="hint-dbh-cm" class="hint">Synced metric diameter (cm)</span>
+            <input type="number" id="input-dbh-cm" inputmode="decimal" min="1" max="1500" step="0.01" readonly aria-describedby="hint-dbh-cm" value="76.2">
+          </div>
+
+          <div class="field">
+            <label for="input-condition-class">Condition Class (ISA / CTLA)</label>
+            <span id="hint-cond" class="hint">Governs allometric &amp; CTLA factors</span>
+            <select id="input-condition-class" aria-describedby="hint-cond">
+              <option value="Excellent">Excellent (1.00)</option>
+              <option value="Good" selected>Good (0.85)</option>
+              <option value="Fair">Fair (0.62)</option>
+              <option value="Poor">Poor (0.37)</option>
+              <option value="Critical">Critical (0.15)</option>
+              <option value="Dead">Dead (0.00)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field-row field-row-5">
+          <div class="field">
+            <label for="input-site-condition">Site Growth Context (FCIN12 Age)</label>
+            <span id="hint-site-cond" class="hint">John White age modifier</span>
+            <select id="input-site-condition" aria-describedby="hint-site-cond">
+              <option value="Open Grown / Parkland">Open Grown / Parkland (0.85x)</option>
+              <option value="Forest / Woodland">Forest / Woodland (1.15x)</option>
+              <option value="Urban / Street Tree">Urban / Street Tree (1.10x)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="input-height-m">Height (m)</label>
+            <span id="hint-height" class="hint">Total height (0.5 to 150 m)</span>
+            <input type="number" id="input-height-m" inputmode="decimal" min="0.5" max="150" step="0.5" required aria-describedby="hint-height" value="16.5">
+          </div>
+          <div class="field">
+            <label for="input-spread-ns-m">Crown Spread N-S (m)</label>
+            <span id="hint-ns" class="hint">North-South dripline (m)</span>
+            <input type="number" id="input-spread-ns-m" inputmode="decimal" min="0.5" max="150" step="0.5" required aria-describedby="hint-ns" value="22.0">
+          </div>
+          <div class="field">
+            <label for="input-spread-ew-m">Crown Spread E-W (m)</label>
+            <span id="hint-ew" class="hint">East-West dripline (m)</span>
+            <input type="number" id="input-spread-ew-m" inputmode="decimal" min="0.5" max="150" step="0.5" required aria-describedby="hint-ew" value="24.0">
+          </div>
+          <div class="field">
+            <label for="input-lcr-pct">Live Crown Ratio (%)</label>
+            <span id="hint-lcr" class="hint">0 to 100%</span>
+            <input type="number" id="input-lcr-pct" inputmode="numeric" min="0" max="100" step="1" required aria-describedby="hint-lcr" value="78">
+          </div>
+        </div>
+      </section>
+
+      <!-- STEP C: ANSI A300 PART 5 CONSTRUCTION, OAK WILT & RCA DISPOSITION -->
+      <section class="card">
+        <div class="card-header">
+          <span class="step-badge">Step 3</span>
+          <h2>ANSI A300 Part 5 Root Zone Impacts, Oak Wilt Check &amp; RCA Flow</h2>
+        </div>
+
+        <div class="field-row field-row-3">
+          <div class="field">
+            <label for="input-disposition">Recommended RCA Disposition</label>
+            <span id="hint-disp" class="hint">Linter blocks unjustified removal when t/R &gt;= 0.30</span>
+            <select id="input-disposition" aria-describedby="hint-disp">
+              <option value="Preservation_With_Rhizosphere_Remediation">Preservation With Rhizosphere Remediation</option>
+              <option value="Preservation_Primary">Preservation Primary</option>
+              <option value="Structural_Risk_Reduction_Pruning">Structural Risk Reduction Pruning</option>
+              <option value="Monitored_Retained_Habitat_Snag">Monitored Retained Habitat Snag</option>
+              <option value="Removal_Last_Resort_Unmitigable_Hazard">Removal (Last Resort Unmitigable Hazard)</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="input-pruning-date">Proposed Pruning Date (Oak Wilt Check)</label>
+            <span id="hint-prune-date" class="hint">Flags Feb-Jun (or Feb-Sep in Liberty Hill) Oak pruning</span>
+            <input type="date" id="input-pruning-date" aria-describedby="hint-prune-date" value="2026-11-15">
+          </div>
+
+          <div class="field checkbox-field">
+            <label class="checkbox-label" for="input-proposed-removal">
+              <input type="checkbox" id="input-proposed-removal">
+              <span>Simulate Whole-Tree Removal in Municipal Ordinance Engine</span>
+            </label>
+            <span class="hint">Check to evaluate immediate permit &amp; cash-in-lieu mitigation obligation.</span>
+          </div>
+        </div>
+
+        <div class="field-row field-row-4">
+          <div class="field">
+            <label for="input-crz-disturbed-pct">CRZ Disturbed (%)</label>
+            <span id="hint-crz-dist" class="hint">Exceeding city cap triggers removal</span>
+            <input type="number" id="input-crz-disturbed-pct" inputmode="decimal" min="0" max="100" step="1" aria-describedby="hint-crz-dist" value="15">
+          </div>
+          <div class="field">
+            <label for="input-cutfill-in">Cut/Fill Depth Inside 1/2 CRZ (in)</label>
+            <span id="hint-cutfill" class="hint">Typically max 4 in allowed</span>
+            <input type="number" id="input-cutfill-in" inputmode="decimal" min="0" max="60" step="0.5" aria-describedby="hint-cutfill" value="2">
+          </div>
+          <div class="field">
+            <label for="input-impervious-pct">Impervious Cover in CRZ (%)</label>
+            <span id="hint-imp" class="hint">Typically max 20% to 25%</span>
+            <input type="number" id="input-impervious-pct" inputmode="decimal" min="0" max="100" step="1" aria-describedby="hint-imp" value="10">
+          </div>
+          <div class="field">
+            <label for="input-crown-removal-pct">Proposed Crown Removal (%)</label>
+            <span id="hint-crown-rem" class="hint">ANSI A300 max 25% per season</span>
+            <input type="number" id="input-crown-removal-pct" inputmode="decimal" min="0" max="100" step="1" aria-describedby="hint-crown-rem" value="10">
+          </div>
+        </div>
+
+        <details class="advanced-drawer" open>
+          <summary>Biomechanics (Mattheck t/R), AirSpade Rhizosphere, Soil Baseline &amp; ISA TRAQ Matrix</summary>
+          <div class="drawer-body">
+            <div class="field-row field-row-4">
+              <div class="field">
+                <label for="input-t-over-r">Mattheck Sound Shell Ratio (t/R)</label>
+                <span id="hint-tr" class="hint">0.00 to 1.00 (&gt;= 0.30 = stable shell)</span>
+                <input type="number" id="input-t-over-r" inputmode="decimal" min="0" max="1" step="0.01" required aria-describedby="hint-tr" value="0.38">
+                <div class="error-msg">Enter a ratio between 0.00 and 1.00.</div>
+              </div>
+              <div class="field">
+                <label for="input-codit">Shigo CODIT Wall Response</label>
+                <span id="hint-codit" class="hint">Compartmentalization rating</span>
+                <input type="text" id="input-codit" aria-describedby="hint-codit" value="Wall_4_Active_Barrier_Zone">
+              </div>
+              <div class="field">
+                <label for="input-root-flare-cm">Root Flare Diameter (cm)</label>
+                <span id="hint-rfd" class="hint">Basal flare for AS 4970 SRZ</span>
+                <input type="number" id="input-root-flare-cm" inputmode="decimal" min="1" max="2500" step="0.5" aria-describedby="hint-rfd" value="98.0">
+              </div>
+              <div class="field">
+                <label for="input-burial-depth-cm">Root Flare Burial Depth (cm)</label>
+                <span id="hint-burial" class="hint">Soil/mulch burial depth above flare</span>
+                <input type="number" id="input-burial-depth-cm" inputmode="decimal" min="0" max="200" step="1" aria-describedby="hint-burial" value="16">
+              </div>
+            </div>
+
+            <div class="field-row field-row-4">
+              <div class="field">
+                <label for="input-sgr-count">Stem-Girdling Root (SGR) Count</label>
+                <span id="hint-sgr-cnt" class="hint">Number of compressing roots</span>
+                <input type="number" id="input-sgr-count" inputmode="numeric" min="0" max="100" step="1" aria-describedby="hint-sgr-cnt" value="2">
+              </div>
+              <div class="field">
+                <label for="input-sgr-severity">SGR Compression Severity</label>
+                <span id="hint-sgr-sev" class="hint">Circumference compressed</span>
+                <select id="input-sgr-severity" aria-describedby="hint-sgr-sev">
+                  <option value="None">None (0%)</option>
+                  <option value="Minor_Under_25_Pct_Circumference">Minor (&lt; 25% Circumference)</option>
+                  <option value="Moderate_25_To_50_Pct_Circumference" selected>Moderate (25% to 50% Circumference)</option>
+                  <option value="Severe_Over_50_Pct_Circumference">Severe (&gt; 50% Circumference)</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="input-trench-count">AirSpade Radial Trenches</label>
+                <span id="hint-trench-cnt" class="hint">Number of decompaction spokes</span>
+                <input type="number" id="input-trench-count" inputmode="numeric" min="0" max="64" step="1" aria-describedby="hint-trench-cnt" value="8">
+              </div>
+              <div class="field">
+                <label for="input-trench-length-m">Trench Length (m)</label>
+                <span id="hint-trench-len" class="hint">Mean spoke length (m)</span>
+                <input type="number" id="input-trench-length-m" inputmode="decimal" min="0" max="50" step="0.5" aria-describedby="hint-trench-len" value="8.5">
+              </div>
+            </div>
+
+            <div class="field-row field-row-4">
+              <div class="field">
+                <label for="input-trench-width-cm">Trench Width (cm)</label>
+                <span id="hint-tw" class="hint">Default 30 cm</span>
+                <input type="number" id="input-trench-width-cm" inputmode="decimal" min="0" max="100" step="1" aria-describedby="hint-tw" value="30">
+              </div>
+              <div class="field">
+                <label for="input-trench-depth-cm">Trench Depth (cm)</label>
+                <span id="hint-td" class="hint">Default 35 cm</span>
+                <input type="number" id="input-trench-depth-cm" inputmode="decimal" min="0" max="100" step="1" aria-describedby="hint-td" value="35">
+              </div>
+              <div class="field">
+                <label for="input-rce-radius-m">Root Collar Basin Radius (m)</label>
+                <span id="hint-rce" class="hint">Excavation radius around flare</span>
+                <input type="number" id="input-rce-radius-m" inputmode="decimal" min="0" max="10" step="0.1" aria-describedby="hint-rce" value="1.0">
+              </div>
+              <div class="field">
+                <label for="input-airspade-psi">AirSpade Pressure (psi)</label>
+                <span id="hint-psi" class="hint">Supersonic nozzle pressure</span>
+                <input type="number" id="input-airspade-psi" inputmode="numeric" min="0" max="250" step="5" aria-describedby="hint-psi" value="150">
+              </div>
+            </div>
+
+            <div class="field-row field-row-3">
+              <div class="field">
+                <label for="input-bulk-density">Soil Bulk Density (g/cm3)</label>
+                <span id="hint-bd" class="hint">0 to 15 cm horizon (0.1 to 2.65)</span>
+                <input type="number" id="input-bulk-density" inputmode="decimal" min="0.1" max="2.65" step="0.01" aria-describedby="hint-bd" value="1.54">
+              </div>
+              <div class="field">
+                <label for="input-infiltration">Infiltration Rate (mm/hr)</label>
+                <span id="hint-inf" class="hint">Ring infiltrometer rate</span>
+                <input type="number" id="input-infiltration" inputmode="decimal" min="0" max="2000" step="1" aria-describedby="hint-inf" value="16">
+              </div>
+              <div class="field">
+                <label for="input-som-pct">Soil Organic Matter (%)</label>
+                <span id="hint-som" class="hint">Dry weight SOM %</span>
+                <input type="number" id="input-som-pct" inputmode="decimal" min="0" max="100" step="0.1" aria-describedby="hint-som" value="2.6">
+              </div>
+            </div>
+
+            <div class="field-row field-row-3">
+              <div class="field">
+                <label for="input-soil-ph">Rhizosphere Soil pH</label>
+                <span id="hint-ph" class="hint">pH (2.0 to 11.0)</span>
+                <input type="number" id="input-soil-ph" inputmode="decimal" min="2.0" max="11.0" step="0.1" aria-describedby="hint-ph" value="7.4">
+              </div>
+              <div class="field">
+                <label for="input-fb-ratio">Fungal-to-Bacterial Ratio (F:B)</label>
+                <span id="hint-fb" class="hint">Biomass ratio</span>
+                <input type="number" id="input-fb-ratio" inputmode="decimal" min="0" max="50" step="0.01" aria-describedby="hint-fb" value="0.48">
+              </div>
+              <div class="field">
+                <label for="input-myco-guild">Dominant Mycorrhizal Guild</label>
+                <span id="hint-guild" class="hint">Host root association</span>
+                <select id="input-myco-guild" aria-describedby="hint-guild">
+                  <option value="Ectomycorrhizal_EM">Ectomycorrhizal (EM)</option>
+                  <option value="Arbuscular_Mycorrhizal_AM">Arbuscular Mycorrhizal (AM)</option>
+                  <option value="Dual_EM_AM">Dual EM / AM</option>
+                  <option value="Unknown">Unknown</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field-row field-row-4">
+              <div class="field">
+                <label for="input-traq-level">ISA TRAQ Inspection Level</label>
+                <select id="input-traq-level">
+                  <option value="Level_1_Limited_Visual">Level 1: Limited Visual</option>
+                  <option value="Level_2_Basic" selected>Level 2: Basic</option>
+                  <option value="Level_3_Advanced">Level 3: Advanced (Tomography)</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="input-traq-part">Primary Part of Concern</label>
+                <select id="input-traq-part">
+                  <option value="Root_Collar" selected>Root Collar</option>
+                  <option value="Root_Plate">Root Plate</option>
+                  <option value="Trunk_Stem">Trunk Stem</option>
+                  <option value="Codominant_Union">Codominant Union</option>
+                  <option value="Scaffold_Branch">Scaffold Branch</option>
+                  <option value="Perimeter_Branch">Perimeter Branch</option>
+                  <option value="Whole_Tree">Whole Tree</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="input-traq-lof">Likelihood of Failure</label>
+                <select id="input-traq-lof">
+                  <option value="Improbable">Improbable</option>
+                  <option value="Possible" selected>Possible</option>
+                  <option value="Probable">Probable</option>
+                  <option value="Imminent">Imminent</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="input-traq-loi">Likelihood of Impact</label>
+                <select id="input-traq-loi">
+                  <option value="Very Low">Very Low</option>
+                  <option value="Low">Low</option>
+                  <option value="Medium" selected>Medium</option>
+                  <option value="High">High</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field-row field-row-4">
+              <div class="field">
+                <label for="input-traq-lofi">Failure &amp; Impact (Matrix 1)</label>
+                <select id="input-traq-lofi">
+                  <option value="Unlikely">Unlikely</option>
+                  <option value="Somewhat Likely" selected>Somewhat Likely</option>
+                  <option value="Likely">Likely</option>
+                  <option value="Very Likely">Very Likely</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="input-traq-cof">Consequences of Failure</label>
+                <select id="input-traq-cof">
+                  <option value="Negligible">Negligible</option>
+                  <option value="Minor">Minor</option>
+                  <option value="Significant" selected>Significant</option>
+                  <option value="Severe">Severe</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="input-traq-overall">Overall TRAQ Risk Rating</label>
+                <select id="input-traq-overall">
+                  <option value="Low">Low</option>
+                  <option value="Moderate" selected>Moderate</option>
+                  <option value="High">High</option>
+                  <option value="Extreme">Extreme</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="input-traq-residual">Post-Remediation Residual Risk</label>
+                <select id="input-traq-residual">
+                  <option value="None">None</option>
+                  <option value="Low" selected>Low</option>
+                  <option value="Moderate">Moderate</option>
+                  <option value="High">High</option>
+                  <option value="Extreme">Extreme</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <div class="form-submit-bar">
+          <button type="submit" class="btn btn-primary">Compile Field Assessment &amp; Refresh Outputs</button>
+        </div>
+      </section>
+    </form>
+
+    <!-- STEP D: LIVE OUTPUTS, VERDICTS & EXPORTS -->
+    <section id="results-section" class="results-stack" aria-live="polite">
+      <div class="card">
+        <div class="card-header">
+          <span class="step-badge">Output A</span>
+          <h2>Municipal Ordinance Verdict, Mitigation &amp; Root Protection Map</h2>
+        </div>
+        <div id="verdict-ordinance-body"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="step-badge">Output B</span>
+          <h2>Allometric Ecosystem Services, Holobiont Valuation &amp; 5-Year Practice Economics</h2>
+        </div>
+        <div id="verdict-valuation-body"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="step-badge">Output C</span>
+          <h2>GeoJSON Export, ASCA/RCA Evidentiary Report &amp; Counter-Notice</h2>
+        </div>
+        <div id="verdict-linter-header"></div>
+
+        <div class="export-action-bar">
+          <button type="button" id="btn-download-geojson" class="btn btn-primary">Download GeoJSON (.geojson)</button>
+          <button type="button" id="btn-download-report" class="btn btn-secondary">Download RCA Report (.md)</button>
+          <button type="button" id="btn-download-notice" class="btn btn-secondary">Download Counter-Notice (.md)</button>
+          <button type="button" id="btn-download-json" class="btn btn-outline">Download RCA_v2 JSON (.json)</button>
+          <button type="button" id="btn-copy-preview" class="btn btn-outline">Copy Active Output</button>
+        </div>
+
+        <div class="preview-tabs" role="tablist">
+          <button type="button" class="tab-btn active" data-preview-tab="geojson">OGC CRS84 GeoJSON</button>
+          <button type="button" class="tab-btn" data-preview-tab="report">RCA Evidentiary Report (.md)</button>
+          <button type="button" class="tab-btn" data-preview-tab="counternotice">Scientific Counter-Notice (.md)</button>
+          <button type="button" class="tab-btn" data-preview-tab="json">RCA_v2 Assessment JSON</button>
+        </div>
+
+        <pre id="export-preview-code" class="code-preview"></pre>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer container">
+    <p>OpenArbor v2.0 | Open-Source Arboricultural Engine (AGPL-3.0-only) | Zero Cloud Lock-In, 100% Local Browser Execution</p>
+  </footer>
+
+  <script type="module" src="./openarbor-bundle.js"></script>
+</body>
+</html>

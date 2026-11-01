@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      try {
+        document.querySelector('meta[name="color-scheme"]').content = localStorage.getItem('color-scheme') ?? 'light dark';
+      } catch (e) {}
+    </script>
+    <title>RCA-Spec v2.0 &amp; 200-Year Architecture Reference | Open Arbor Alliance</title>
+    <meta
+      name="description"
+      content="Canonical specification reference for Open Arbor and RCA-Spec v2.0: 10-Section Evidentiary Report Standard, Mattheck t/R and ANSI A300 mathematical foundations, 200-Year Heartwood/Cambium Vault Architecture, and interactive JSON Schema (Draft 2020-12) inspectors."
+    />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="oa-site-header">
+      <div class="oa-nav-container">
+        <a href="../index.html" class="oa-brand-link">
+          <span class="oa-brand-mark">OA</span>
+          <span class="oa-brand-text">Open Arbor <small>v2.0</small></span>
+        </a>
+        <nav class="oa-main-nav" aria-label="Primary Navigation">
+          <a href="../index.html" class="oa-nav-link">Alliance Portal</a>
+          <a href="../demo/index.html" class="oa-nav-link">Live Engine Demo</a>
+          <a href="../tools/index.html" class="oa-nav-link">41-Tool Workbench</a>
+          <a href="../ordinances/index.html" class="oa-nav-link">Ordinance Commons</a>
+          <a href="../mcp/index.html" class="oa-nav-link">MCP Playground</a>
+          <a href="../spec/index.html" class="oa-nav-link active" aria-current="page">RCA-Spec v2.0</a>
+        </nav>
+        <div class="oa-theme-control">
+          <button type="button" id="oa-theme-toggle" class="btn btn-secondary btn-sm" aria-label="Toggle color scheme">Theme: Auto</button>
+        </div>
+      </div>
+    </header>
+
+    <section class="app-header">
+      <div class="container header-inner">
+        <div>
+          <span class="eyebrow">Open Arbor Alliance Standard &middot; CC-BY-SA-4.0 / AGPL-3.0-only &middot; STIM v7.0011</span>
+          <h1>RCA-Spec v2.0 &amp; 200-Year Sovereign Architecture Reference</h1>
+          <p class="subtitle">
+            Complete technical reference for the Regenerative Consulting Arborist (`RCA-Spec v2.0`) 10-section evidentiary standard, primary mathematical formulas, the `2026` to `2226` Heartwood/Cambium Vault architecture, and Draft 2020-12 JSON Schemas.
+          </p>
+        </div>
+        <div class="header-actions">
+          <a href="../schemas/rca_assessment.schema.json" download class="btn btn-primary">Download RCA_v2 Schema (.json)</a>
+          <a href="../schemas/municipal-ordinance.schema.json" download class="btn btn-outline">Download Ordinance Schema (.json)</a>
+        </div>
+      </div>
+    </section>
+
+    <main id="spec-viewer-root" class="container main-layout">
+      <!-- Quick-jump sub-navigation -->
+      <nav class="card oa-spec-toc" aria-label="Specification Sections">
+        <span class="step-badge">Jump To Section</span>
+        <div class="oa-spec-toc-links">
+          <a href="#rca-evidentiary-section" class="btn btn-secondary btn-sm">1. 10-Section Evidentiary Standard &amp; Linter</a>
+          <a href="#math-foundations-section" class="btn btn-secondary btn-sm">2. Mathematical &amp; Primary Literature Foundations</a>
+          <a href="#heartwood-vault-section" class="btn btn-secondary btn-sm">3. 200-Year Heartwood Vault Architecture</a>
+          <a href="#schema-inspector-section" class="btn btn-secondary btn-sm">4. Interactive JSON Schema Inspector</a>
+        </div>
+      </nav>
+
+      <!-- SECTION 1: RCA-Spec v2.0 10-Section Evidentiary Standard & Hard Linter Rules -->
+      <section id="rca-evidentiary-section" class="card" aria-labelledby="sec1-heading">
+        <div class="card-header">
+          <span class="step-badge">Section 1</span>
+          <h2 id="sec1-heading">RCA-Spec v2.0 10-Section Evidentiary Report Standard &amp; Hard Linter Rules</h2>
+        </div>
+        <p class="subtitle">
+          <code>RCA-Spec v2.0</code> absorbs classical ISA (`TRAQ`, `CODIT`), ASCA (7-part evidentiary report structure), and Claus Mattheck (`t/R` hollow-shell buckling, `AS 4970` `SRZ`) rigor into open ECMAScript code while inverting the valuation polarity from tree liquidation to living holobiont equity.
+        </p>
+
+        <h3 class="sub-heading">The Five Mandatory Diagnostic Domains &amp; 10-Section Compiled Report</h3>
+        <div class="metric-grid metric-grid-2">
+          <div class="metric-box">
+            <span class="metric-label">5 Mandatory Schema Domains (`rca_assessment.schema.json`)</span>
+            <ol class="oa-spec-list">
+              <li><strong><code>structural_baseline</code>:</strong> Biometrics (`dbh_cm`, height, crown spread, `plus_code_global`), `isa_traq_risk` matrix, `municipal_permit_disposition`, Shigo `CODIT` wall response, and Mattheck `sound_shell_thickness_ratio_t_over_r`.</li>
+              <li><strong><code>rhizosphere_and_root_collar</code>:</strong> Root flare diameter (`DRF`), burial depth, stem-girdling root (`SGR`) count and severity, `airspade_radial_trenching_geometry`, and `CRZ`/`SRZ`/`TIZ` radii.</li>
+              <li><strong><code>soil_and_microbiome_baseline</code>:</strong> Dry bulk density (`g/cm3`), steady-state infiltration (`mm/hr`), organic matter (`%`), soil pH, and `mycorrhizal_and_fungal_observations` (`F:B` ratio, guild, `iNaturalist` fungal taxa).</li>
+              <li><strong><code>understory_and_guild_prescription</code>:</strong> SER reference ecosystem, engine-scaled biochar (`L`), humate (`kg`), fungal compost (`m3`), ramial woodchip mulch (`m3`), synthetic NPK/fungicide exclusion check, and native companion species guild (`open_nursery_batch_id`).</li>
+              <li><strong><code>outcome_monitoring_schedule</code>:</strong> Explicit `stim_hypothesis_statement`, `stim_kill_criterion`, 12-month leading indicators, and 60-month lagging indicators with 5-dimension Sanctuary Scorecard targets.</li>
+            </ol>
+          </div>
+
+          <div class="metric-box">
+            <span class="metric-label">10-Section Compiled Evidentiary Report (`compileRcaEvidentiaryMarkdown`)</span>
+            <ol class="oa-spec-list">
+              <li><strong>Executive Disposition &amp; Biometric Baseline</strong> (with canonical `SHA-256` cryptographic digest)</li>
+              <li><strong>Classical Biomechanics: Mattheck Shell-Wall Physics &amp; Shigo CODIT</strong></li>
+              <li><strong>Municipal Ordinance &amp; Statutory Compliance</strong> (exact code citations &amp; mitigation liability)</li>
+              <li><strong>Subterranean Rhizosphere &amp; Pneumatic Root-Collar Forensics</strong> (`150 psi` AirSpade trench volume)</li>
+              <li><strong>Soil Physics &amp; Mycorrhizal Microbiome Baseline</strong></li>
+              <li><strong>Nodal Biological Amendment &amp; Native Companion Guild Prescription</strong></li>
+              <li><strong>Dual Asset Valuation: CTLA 10th Ed. vs. 200-Year Holobiont Biological Equity</strong></li>
+              <li><strong>5-Year Practice Economics: Regenerative Stewardship vs. One-Time Liquidation</strong></li>
+              <li><strong>STIM Longitudinal Monitoring Schedule &amp; Sanctuary Scorecard Targets</strong></li>
+              <li><strong>Vector Root-Zone Protection Site Map (`SVG`) &amp; Evidentiary Verification Summary</strong></li>
+            </ol>
+          </div>
+        </div>
+
+        <h3 class="sub-heading">Hard Evidentiary Linter Gates (`lintRcaEvidentiaryReport`)</h3>
+        <div tabindex="0" role="region" aria-labelledby="linter-rules-caption" class="table-wrapper">
+          <table class="data-table oa-responsive-spec-table" style="--label-1: 'Linter Rule Code'; --label-2: 'Trigger Condition'; --label-3: 'Enforcement Action &amp; Rationale';">
+            <caption id="linter-rules-caption" class="sr-only">Hard Evidentiary Linter Rules in lintRcaEvidentiaryReport</caption>
+            <thead>
+              <tr>
+                <th scope="col">Linter Rule Code</th>
+                <th scope="col">Trigger Condition</th>
+                <th scope="col">Enforcement Action &amp; Rationale</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row"><code>MISSING_DOMAIN</code></th>
+                <td>Any of the 5 mandatory RCA domains is absent or non-object</td>
+                <td>Blocks compilation and Open Badge minting until all 5 above-ground and subterranean domains are populated.</td>
+              </tr>
+              <tr>
+                <th scope="row"><code>INVALID_BIOMETRICS</code> / <code>INVALID_GEO_LOCATION</code></th>
+                <td><code>dbh_cm &le; 0</code> or missing <code>plus_code_global</code></td>
+                <td>Requires positive metric DBH and a valid 10-to-15 character Open Location Code (Plus Code).</td>
+              </tr>
+              <tr>
+                <th scope="row"><code>UNJUSTIFIED_REMOVAL</code></th>
+                <td>Disposition is <code>Removal_Last_Resort_Unmitigable_Hazard</code> while <code>t/R &ge; 0.30</code></td>
+                <td><strong>Hard Preservation Gate:</strong> Under Mattheck (1994), a hollow shell with <code>t/R &ge; 0.30</code> retains full hollow-cylinder bending strength. Removal is blocked when rhizosphere remediation and crown reduction can mitigate risk.</td>
+              </tr>
+              <tr>
+                <th scope="row"><code>EVIDENTIARY_DEFECT</code></th>
+                <td>Removal recommended without <code>sonic_tomography_or_resistograph_uri</code></td>
+                <td>Requires acoustic tomogram (`PiCUS` / `Arbotom`) or micro-drilling resistograph evidence before condemning a mature or protected tree.</td>
+              </tr>
+              <tr>
+                <th scope="row"><code>OAK_WILT_VIOLATION</code></th>
+                <td><code>Structural_Risk_Reduction_Pruning</code> during active <code>seasonal_oak_wilt_restriction_active</code></td>
+                <td>Blocks non-emergency pruning of <em>Quercus</em> hosts during prohibited <em>Ceratocystis fagacearum</em> nitidulid beetle vector months.</td>
+              </tr>
+              <tr>
+                <th scope="row"><code>INCOMPLETE_SOIL_DATA</code></th>
+                <td>Missing <code>bulk_density_g_cm3</code>, <code>organic_matter_pct</code>, or <code>infiltration_rate_mm_hr</code></td>
+                <td>Requires quantitative soil physical baseline prior to certifying a regenerative rhizosphere prescription.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SECTION 2: Mathematical & Primary Literature Foundations -->
+      <section id="math-foundations-section" class="card" aria-labelledby="sec2-heading">
+        <div class="card-header">
+          <span class="step-badge">Section 2</span>
+          <h2 id="sec2-heading">Mathematical &amp; Primary Literature Foundations</h2>
+        </div>
+        <p class="subtitle">
+          Every number emitted by Open Arbor traces to a published standard or primary scientific paper. Zero opaque heuristics or unverified LLM approximations are permitted in the core calculation kernel.
+        </p>
+
+        <div tabindex="0" role="region" aria-labelledby="math-table-caption" class="table-wrapper">
+          <table class="data-table oa-responsive-spec-table" style="--label-1: 'Domain &amp; Module'; --label-2: 'Equation &amp; Deterministic Formula'; --label-3: 'Primary Literature / Statutory Standard';">
+            <caption id="math-table-caption" class="sr-only">Mathematical and Primary Literature Foundations of Open Arbor</caption>
+            <thead>
+              <tr>
+                <th scope="col">Domain &amp; Module</th>
+                <th scope="col">Equation &amp; Deterministic Formula</th>
+                <th scope="col">Primary Literature / Statutory Standard</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Critical Root Zone (<code>CRZ</code>) &amp; International <code>TPZ</code><br /><small><code>src/core/rootZone.js</code></small></th>
+                <td>
+                  <code>R_CRZ (ft) = max(min_radius_ft, DBH_in &times; multiplier)</code><br />
+                  <code>AS 4970 TPZ: R_m = clamp(DBH_m &times; 12, 2.0, 15.0)</code><br />
+                  <code>BS 5837 RPA: R_m = min(DBH_m &times; 12, 15.0)</code>
+                </td>
+                <td>ANSI A300 (Part 5: Management of Trees and Shrubs During Site Planning, Site Development, and Construction); ISA Best Management Practices; Australian Standard AS 4970-2009; UK BS 5837:2012.</td>
+              </tr>
+              <tr>
+                <th scope="row">Structural Root Zone (<code>SRZ</code>)<br /><small><code>src/core/rootZone.js</code></small></th>
+                <td>
+                  <code>R_SRZ (m) = max(1.5, (D_flare_m &times; 50)^0.42 &times; 0.64)</code><br />
+                  (If basal flare <code>D_flare</code> is unmeasured, estimated as <code>1.2 &times; DBH</code>)
+                </td>
+                <td>Claus Mattheck &amp; Helge Breloer (1994), <em>The Body Language of Trees: A Handbook for Failure Analysis</em>; codified in Australian Standard AS 4970-2009 § 3.3.5.</td>
+              </tr>
+              <tr>
+                <th scope="row">Multi-Stem DBH Aggregation &amp; 1-ft Grid Union<br /><small><code>src/core/rootZone.js</code></small></th>
+                <td>
+                  <code>Quadratic: sqrt(sum(d_i^2))</code><br />
+                  <code>Largest + Half: d_max + 0.5 &times; sum(d_other)</code><br />
+                  <code>Union Area: 1-ft Cartesian raster grid de-duplicating overlapping CRZ circles</code>
+                </td>
+                <td>ISA / CTLA <em>Guide for Plant Appraisal</em> (10th Ed.) quadratic mean stem area rule; Austin ECM § 3.5 / Georgetown UDC Ch. 8 / Liberty Hill UDC § 6.07.01 municipal multi-trunk rules.</td>
+              </tr>
+              <tr>
+                <th scope="row">Hollow-Shell Buckling Stability (<code>t/R</code>)<br /><small><code>src/core/rcaEngine.js</code></small></th>
+                <td>
+                  <code>t/R = t_sound_shell_cm / R_trunk_radius_cm</code><br />
+                  <code>Stable criterion: t/R &ge; 0.30</code> (retains full hollow-cylinder bending resistance)
+                </td>
+                <td>Mattheck, C., Bethge, K., &amp; Erb, D. (1993/1994), failure criteria for hollow tree trunks under bending and Brazier ovalization; Shigo, A. L. (1977) CODIT Walls 1 to 4.</td>
+              </tr>
+              <tr>
+                <th scope="row">Pneumatic Rhizosphere &amp; Amendment Scaling<br /><small><code>src/core/rcaEngine.js</code></small></th>
+                <td>
+                  <code>V_trench = N_spokes &times; L_m &times; W_m &times; D_m</code><br />
+                  <code>V_basin = &pi; &times; R_rce^2 &times; D_burial_m</code><br />
+                  <code>Biochar = 8% V_total</code>; <code>Compost = 15% V_total</code>; <code>Humate = 1.5 kg/m3</code>; <code>Mulch = 8 cm &times; A_TIZ</code>
+                </td>
+                <td>ANSI A300 Part 2 (Soil Management: Modification, Fertilization, and Drainage); ISA BMP Soil Management for Urban Trees; RCA-Spec v2.0 Domain 2 &amp; Domain 4 prescriptions.</td>
+              </tr>
+              <tr>
+                <th scope="row">Allometric Carbon, Stormwater, Air &amp; Cooling<br /><small><code>src/core/ecosystemBenefits.js</code></small></th>
+                <td>
+                  <code>AGB_kg = exp(-2.0773 + 2.3323 &times; ln(DBH_cm))</code><br />
+                  <code>Total_Biomass = AGB &times; 1.28 (root shoot ratio) &times; 0.8 (urban open-grown factor)</code><br />
+                  <code>Carbon_kg = 0.50 &times; Total_Biomass</code>; <code>CO2_eq = 3.6667 &times; Carbon</code>
+                </td>
+                <td>Nowak, D. J. (1994) urban forest carbon storage; Cairns et al. (1997) root-to-shoot biomass allocation; Xiao et al. (2000) rainfall interception; Nowak et al. (2006) dry deposition air pollution removal; McPherson &amp; Simpson (1999) shade cooling calibrated to ~80 kWh/tree baseline.</td>
+              </tr>
+              <tr>
+                <th scope="row">Veteran Tree Age Estimation<br /><small><code>src/core/ecosystemBenefits.js</code></small></th>
+                <td>
+                  <code>Age_yrs = DBH_in &times; (Base_Growth_Factor &times; Site_Modifier)</code><br />
+                  (Modifiers: Open Grown <code>0.85x</code>, Urban Street <code>1.10x</code>, Woodland <code>1.15x</code>)
+                </td>
+                <td>John White (1998), <em>Estimating the Age of Large and Veteran Trees in Britain</em>, UK Forestry Commission Information Note FCIN12, calibrated with North American species growth factors.</td>
+              </tr>
+              <tr>
+                <th scope="row">Dual Valuation: Holobiont Equity vs. CTLA 10th Ed.<br /><small><code>src/core/rcaEngine.js</code></small></th>
+                <td>
+                  <code>CTLA = (&pi;/4 &times; DBH_in^2 &times; $75) &times; f_cond &times; f_loc</code><br />
+                  <code>Holobiont = (E_carbon_200yr + E_hydrology_50yr + E_CMN_soil) &times; M_habitat</code><br />
+                  (Keystone multiplier <code>M_habitat</code>: <code>1.2x</code> up to <code>3.5x</code> for veteran hollow trees)
+                </td>
+                <td>Council of Tree and Landscape Appraisers (CTLA) <em>Guide for Plant Appraisal</em> (10th Ed., 2018) Trunk Formula Technique vs. RCA-Spec v2.0 Holobiont Biological Equity model (`STIM Axiom 7`).</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SECTION 3: 200-Year Data Sovereignty & Heartwood Vault Architecture -->
+      <section id="heartwood-vault-section" class="card" aria-labelledby="sec3-heading">
+        <div class="card-header">
+          <span class="step-badge">Section 3</span>
+          <h2 id="sec3-heading">200-Year Data Sovereignty &amp; Heartwood Vault Architecture (`2026` to `2226`)</h2>
+        </div>
+        <p class="subtitle">
+          A Live Oak, Pecan, or Oregon White Oak preserved today will stand in <code>2226</code>. Over those two centuries, every proprietary cloud SaaS database and binary lock-in format will vanish. Open Arbor enforces 200-Year Data Sovereignty (`docs/13_STRATEGIC_SPEC_2031_SOVEREIGN_ARCHITECTURE.md`, `STIM Protocol v7.0011`) through the Four-Namespace Botanical Directory Contract and the Heartwood/Cambium Dual-File Pattern.
+        </p>
+
+        <div class="metric-grid metric-grid-4">
+          <div class="metric-box">
+            <span class="metric-label">1. <code>SEEDS/</code></span>
+            <strong class="metric-value">Immutable Evidence</strong>
+            <span class="metric-sub">Write-once primary evidence: official municipal ordinance PDFs with <code>.sha256</code> sidecars, raw GPR radargrams (<code>.dzt</code>), LiDAR point clouds (<code>.copc.laz</code>), increment cores, and wild mother-tree germplasm manifests.</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-label">2. <code>ARBORETUM/</code></span>
+            <strong class="metric-value">Living Dossiers</strong>
+            <span class="metric-sub">Active cultivated projects, property Tree Preservation Plans, dual-file tree dossiers (<code>Heartwood .md</code> + <code>Cambium .jsonld/.geojson</code>), and <code>open-nursery</code> propagation batches.</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-label">3. <code>UNDERSTORY/</code></span>
+            <strong class="metric-value">Deterministic Kernel</strong>
+            <span class="metric-sub">Zero-dependency ECMAScript core modules (<code>rootZone.js</code>, <code>ordinanceEngine.js</code>, <code>ecosystemBenefits.js</code>, <code>rcaEngine.js</code>), Draft 2020-12 JSON Schemas, and the 41-tool forestry workbench catalog.</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-label">4. <code>HEARTWOOD/</code></span>
+            <strong class="metric-value">Bioregional Law</strong>
+            <span class="metric-sub">Watershed-scale growth and fire syntheses (`Open-FVS`, `LANDIS-II`, `FlamMap`), bioregional Oak Wilt epidemiology fronts, and Equinox/Solstice archival digests.</span>
+          </div>
+        </div>
+
+        <div class="citation-callout">
+          <strong>Fundamental Reconstructibility Invariant (`Cambium = compile(Heartwood, SEEDS)`):</strong> Every tree assessment is saved as human-readable UTF-8 Markdown (the <em>Heartwood</em> file, legible in <code>2226</code> with any plain-text reader) paired with its deterministic machine-executable <em>Cambium</em> companion (<code>RCA_v2 JSON</code>, <code>OGC CRS84 GeoJSON</code>, to-scale <code>SVG</code> protection map, and <code>OpenBadgeCredential JSON-LD</code>). Every artifact is sealed with a canonical sorted-key <code>SHA-256</code> digest via <code>computeCanonicalSha256</code>.
+        </div>
+      </section>
+
+      <!-- SECTION 4: Interactive Schema Inspector -->
+      <section id="schema-inspector-section" class="card" aria-labelledby="sec4-heading">
+        <div class="card-header">
+          <span class="step-badge">Section 4</span>
+          <h2 id="sec4-heading">Interactive JSON Schema (Draft 2020-12) Inspector</h2>
+        </div>
+        <p class="subtitle">
+          Inspect the property definitions, required constraints, units, and enumerations for Open Arbor's canonical schemas, or download the raw <code>.schema.json</code> files directly.
+        </p>
+
+        <div class="oa-schema-controls">
+          <div class="preview-tabs" role="tablist" aria-label="Select Schema to Inspect">
+            <button type="button" role="tab" class="tab-btn active" data-schema-tab="rca" aria-selected="true">
+              RCA-Spec v2.0 Assessment Schema (`rca_assessment.schema.json`)
+            </button>
+            <button type="button" role="tab" class="tab-btn" data-schema-tab="ordinance" aria-selected="false">
+              Municipal Tree Ordinance Schema (`municipal-ordinance.schema.json`)
+            </button>
+          </div>
+          <div class="oa-schema-filter-wrap">
+            <input
+              type="text"
+              id="schema-prop-search"
+              placeholder="Filter schema paths (e.g., t_over_r, airspade, oak_months, scorecard)..."
+              aria-label="Filter schema properties"
+            />
+          </div>
+        </div>
+
+        <div id="schema-meta-banner" class="muni-lookup-box"></div>
+
+        <div tabindex="0" role="region" aria-labelledby="schema-props-caption" class="table-wrapper">
+          <table class="data-table oa-responsive-spec-table" style="--label-1: 'JSONPath Property'; --label-2: 'Type &amp; Constraints'; --label-3: 'Required'; --label-4: 'Specification Description &amp; Unit';">
+            <caption id="schema-props-caption" class="sr-only">Flattened JSON Schema Property Definitions</caption>
+            <thead>
+              <tr>
+                <th scope="col">JSONPath Property</th>
+                <th scope="col">Type &amp; Constraints</th>
+                <th scope="col">Required</th>
+                <th scope="col">Specification Description &amp; Unit</th>
+              </tr>
+            </thead>
+            <tbody id="schema-props-tbody"></tbody>
+          </table>
+        </div>
+
+        <details class="advanced-drawer">
+          <summary>View Raw JSON Schema Source (<span id="schema-raw-filename">schemas/rca_assessment.schema.json</span>)</summary>
+          <div class="drawer-body">
+            <div class="oa-code-header">
+              <strong>Draft 2020-12 JSON Schema Source</strong>
+              <button type="button" id="btn-copy-raw-schema" class="btn btn-outline btn-xs">Copy Schema JSON</button>
+            </div>
+            <pre id="schema-raw-preview" class="code-preview"></pre>
+          </div>
+        </details>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <div class="container">
+        <p>
+          Open Arbor v2.0 &middot; RCA-Spec v2.0 &amp; 200-Year Sovereign Architecture Reference &middot; Governed by the Open Arbor Alliance &middot; AGPL-3.0-only.
+        </p>
+      </div>
+    </footer>
+
+    <script type="module" src="../openarbor-bundle.js"></script>
+  </body>
+</html>

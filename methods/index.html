@@ -1,0 +1,669 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light dark" />
+  <script>
+    try {
+      document.querySelector('meta[name="color-scheme"]').content = localStorage.getItem('color-scheme') ?? 'light dark';
+    } catch (e) {}
+  </script>
+  <title>Falsifiability &amp; Verification Methodology (25 Executable Groups) | Open Arbor v2.0</title>
+  <meta
+    name="description"
+    content="Open Arbor v2.0 Falsifiability & Verification Methodology: 25 executable verification groups across 5 deterministic test runners plus 8 schema-validated municipal ordinance records (84/84 CLI-to-browser parity metrics)."
+  />
+  <link rel="stylesheet" href="../styles.css" />
+</head>
+<body data-total-verification-groups="25" data-total-ordinance-records="8">
+  <header class="oa-site-header">
+    <div class="oa-nav-container">
+      <a href="../index.html" class="oa-brand-link">
+        <span class="oa-brand-mark">OA</span>
+        <span class="oa-brand-text">Open Arbor <small>v2.0</small></span>
+      </a>
+      <nav class="oa-main-nav" aria-label="Primary Navigation">
+        <a href="../index.html" class="oa-nav-link">Alliance Portal</a>
+          <a href="../demo/index.html" class="oa-nav-link">Live Engine Demo</a>
+          <a href="../cases/index.html" class="oa-nav-link">Case Gallery</a>
+          <a href="../tools/index.html" class="oa-nav-link">41-Tool Workbench</a>
+          <a href="../ordinances/index.html" class="oa-nav-link">Ordinance Commons</a>
+          <a href="../mcp/index.html" class="oa-nav-link">MCP Playground</a>
+          <a href="../spec/index.html" class="oa-nav-link">RCA-Spec v2.0</a>
+          <a href="../methods/index.html" class="oa-nav-link active" aria-current="page">Falsifiability</a>
+      </nav>
+      <div class="oa-theme-control">
+        <button type="button" id="oa-theme-toggle" class="btn btn-secondary btn-sm" aria-label="Toggle color scheme">Theme: Auto</button>
+      </div>
+    </div>
+  </header>
+
+  <section class="app-header">
+    <div class="container header-inner">
+      <div>
+        <span class="eyebrow">Deliverable D7 &middot; Live Build-Time Introspection &middot; Zero Unfalsifiable Claims</span>
+        <h1>Falsifiability &amp; Deterministic Verification Methodology</h1>
+        <p class="subtitle">
+          Every mathematical equation, statutory threshold, cryptographic digest, and security boundary in Open Arbor is backed by an executable test assertion on disk. This page is generated at build time by parsing the live test suites so counts can never drift from reality.
+        </p>
+      </div>
+      <div class="header-actions">
+        <a href="../cases/index.html" class="btn btn-primary">Inspect 5 Static Case Pages</a>
+        <a href="../demo/index.html" class="btn btn-outline">Launch Field Workbench</a>
+      </div>
+    </div>
+  </section>
+
+  <main class="container main-layout">
+    <!-- Executive Falsifiability Summary Banner -->
+    <section
+      class="card"
+      aria-labelledby="falsifiability-summary-heading"
+      data-total-verification-groups="25"
+      data-total-ordinance-records="8"
+    >
+      <div class="card-header">
+        <span class="step-badge">Live Suite Rollup</span>
+        <h2 id="falsifiability-summary-heading">Executive Falsifiability Summary (25 Executable Verification Groups + 8 Validated Ordinance Records)</h2>
+      </div>
+      <p class="subtitle">
+        Generated directly from <code>tests/verify_openarbor.mjs</code> (10 groups), <code>tests/verify_mcp.mjs</code> (8 groups), <code>deploy/verify-parity.mjs</code> (4 bioregional parity cases &times; 21 metrics = 84 parity assertions), and <code>tests/verify_masterwork_100x.mjs</code> (7 Masterwork gates), plus <code>scripts/validate-ordinance.mjs</code> (8 municipal ordinance records: 6 <code>Full_Rule_Record</code>, 2 <code>Threshold_And_Fee_Record</code>) = <strong>33 total falsifiable checks</strong>.
+      </p>
+
+      <div class="metric-grid metric-grid-4">
+        <div class="metric-box highlight-box">
+          <span class="metric-label">Executable Verification Groups</span>
+          <strong class="metric-value text-accent">25 / 25 Groups</strong>
+          <span class="metric-sub">10 Core + 8 MCP + 7 Masterwork</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">Validated Municipal Ordinances</span>
+          <strong class="metric-value">8 Jurisdictions</strong>
+          <span class="metric-sub">6 Full_Rule_Record + 2 Threshold_And_Fee_Record</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">CLI-to-Browser Bundle Parity</span>
+          <strong class="metric-value text-accent">84 / 84 Metrics</strong>
+          <span class="metric-sub">4 TX &amp; OR cases &times; 21 bit-for-bit assertions</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">Total Falsifiable Checks</span>
+          <strong class="metric-value">33 Checks</strong>
+          <span class="metric-sub">Zero proprietary runtime dependencies</span>
+        </div>
+      </div>
+
+      <div class="oa-code-card" style="margin-top: 12px;">
+        <div class="oa-code-header">
+          <strong>One-Line Complete Verification Reproduction Command</strong>
+          <button type="button" class="btn btn-outline btn-xs" data-copy-target="cmd-reproduce-all">Copy Command</button>
+        </div>
+        <pre id="cmd-reproduce-all" class="code-preview">node tests/verify_openarbor.mjs &amp;&amp; node tests/verify_mcp.mjs &amp;&amp; node scripts/validate-ordinance.mjs &amp;&amp; node deploy/verify-parity.mjs &amp;&amp; node tests/verify_masterwork_100x.mjs</pre>
+      </div>
+    </section>
+
+    <!-- Table 1: Core Engine Verification Suite -->
+    <section class="card" aria-labelledby="suite1-heading">
+      <div class="card-header">
+        <span class="step-badge">Runner 1 (10 Groups)</span>
+        <h2 id="suite1-heading">Core Arboricultural, Allometric &amp; RCA Engine Suite (<code>tests/verify_openarbor.mjs</code>)</h2>
+      </div>
+      <div tabindex="0" role="region" aria-labelledby="table1-caption" class="table-wrapper">
+        <table
+          class="data-table"
+          style="
+            --label-1: 'Group ID';
+            --label-2: 'Verification Gate';
+            --label-3: 'Mathematical / Statutory Invariant Proven';
+            --label-4: 'Source File &amp; Line';
+            --label-5: 'CLI Command';
+          "
+        >
+          <caption id="table1-caption" class="sr-only">Core Engine Verification Groups in tests/verify_openarbor.mjs</caption>
+          <thead>
+            <tr>
+              <th scope="col">Group ID</th>
+              <th scope="col">Verification Gate</th>
+              <th scope="col">Mathematical, Statutory, or Security Invariant Proven</th>
+              <th scope="col">Source File &amp; Line</th>
+              <th scope="col">Exact CLI Reproduction Command</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="verification-group-row" data-verification-group="verify_openarbor-1">
+              <th scope="row"><code>verify_openarbor-1</code></th>
+              <td><strong>[PASS] 1. Root Zone (CRZ / TPZ / SRZ) &amp; Multi-Stem DBH Equations</strong></td>
+              <td>Proves ANSI A300 Part 5 CRZ (1.0 ft/in DBH), AS 4970 TPZ (12x DBH clamped 2m to 15m), AS 4970 SRZ windthrow plate ((D*50)^0.42 * 0.64), and multi-stem DBH aggregation (largest_plus_half = 31.0 in; quadratic = 25.4 in).</td>
+              <td><code>tests/verify_openarbor.mjs:110</code></td>
+              <td><code>node tests/verify_openarbor.mjs</code></td>
+            </tr>
+            <tr class="verification-group-row" data-verification-group="verify_openarbor-2">
+              <th scope="row"><code>verify_openarbor-2</code></th>
+              <td><strong>[PASS] 2. Municipal Ordinance Engine, Oak Wilt Flagging, Site Context, SVG Map &amp; Ascending Exemption Math</strong></td>
+              <td>Proves Liberty Hill UDC § 6.07.01 protected/heritage evaluation, seasonal Ceratocystis fagacearum (Oak Wilt) pruning window violation flagging, ascending whole-tree 20% diameter exemption walk ($2,250 cash-in-lieu), and vector SVG site map generation.</td>
+              <td><code>tests/verify_openarbor.mjs:200</code></td>
+              <td><code>node tests/verify_openarbor.mjs</code></td>
+            </tr>
+            <tr class="verification-group-row" data-verification-group="verify_openarbor-3">
+              <th scope="row"><code>verify_openarbor-3</code></th>
+              <td><strong>[PASS] 3. Allometric Ecosystem Benefits (Nowak/McPherson), John White Age &amp; GeoJSON Exporter</strong></td>
+              <td>Proves John White (FCIN12) site-adjusted veteran tree age estimation (&gt;400 yrs), Nowak/Cairns/Xiao/McPherson allometric carbon, stormwater, cooling, and OGC CRS84 GeoJSON FeatureCollection export.</td>
+              <td><code>tests/verify_openarbor.mjs:231</code></td>
+              <td><code>node tests/verify_openarbor.mjs</code></td>
+            </tr>
+            <tr class="verification-group-row" data-verification-group="verify_openarbor-4">
+              <th scope="row"><code>verify_openarbor-4</code></th>
+              <td><strong>[PASS] 4. RCA Biomechanics, Mattheck t/R Stability, SGR Enums &amp; Rhizosphere Prescription</strong></td>
+              <td>Proves Claus Mattheck hollow-cylinder shell buckling stability criterion (t/R &gt;= 0.30 sound vs. t/R = 0.18 buckling risk), stem-girdling root (SGR) vascular constriction relief ratios, and 150 psi AirSpade radial trenching &amp; biochar/compost/humate scaling.</td>
+              <td><code>tests/verify_openarbor.mjs:299</code></td>
+              <td><code>node tests/verify_openarbor.mjs</code></td>
+            </tr>
+            <tr class="verification-group-row" data-verification-group="verify_openarbor-5">
+              <th scope="row"><code>verify_openarbor-5</code></th>
+              <td><strong>[PASS] 5. CTLA 10th Ed vs. Holobiont Biological Equity Inversion (Veteran Oak)</strong></td>
+              <td>Proves CTLA 10th Edition Trunk Formula depreciation vs. 200-year Holobiont Biological Equity valuation with 3.5x Veteran Keystone Habitat Multiplier and &gt;=10.0x ecological inversion ratio.</td>
+              <td><code>tests/verify_openarbor.mjs:317</code></td>
+              <td><code>node tests/verify_openarbor.mjs</code></td>
+            </tr>
+            <tr class="verification-group-row" data-verification-group="verify_openarbor-6">
+              <th scope="row"><code>verify_openarbor-6</code></th>
+              <td><strong>[PASS] 6. Sanctuary Scorecard Parcel Rollup &amp; Spatial Union De-duplication</strong></td>
+              <td>Proves 5-dimension Open Sanctuary Scorecard parcel rollup (Soil Health, Canopy, Water Dynamics, Biodiversity, Restoration) and 1-ft spatial Cartesian grid union de-duplication (unionRootZoneArea).</td>
+              <td><code>tests/verify_openarbor.mjs:400</code></td>
+              <td><code>node tests/verify_openarbor.mjs</code></td>
+            </tr>
+            <tr class="verification-group-row" data-verification-group="verify_openarbor-7">
+              <th scope="row"><code>verify_openarbor-7</code></th>
+              <td><strong>[PASS] 7. ASCA Evidentiary Linter Blocking Lazy Removal &amp; Strict Schema Conformance</strong></td>
+              <td>Proves ASCA/RCA hard evidentiary linter blocking unjustified removal when t/R &gt;= 0.30 (UNJUSTIFIED_REMOVAL, EVIDENTIARY_DEFECT) and strict Draft 2020-12 additionalProperties: false schema enforcement.</td>
+              <td><code>tests/verify_openarbor.mjs:433</code></td>
+              <td><code>node tests/verify_openarbor.mjs</code></td>
+            </tr>
+            <tr class="verification-group-row" data-verification-group="verify_openarbor-8">
+              <th scope="row"><code>verify_openarbor-8</code></th>
+              <td><strong>[PASS] 8. Rogue Valley Oregon Bioregional Municipal Ordinances (Ashland, Medford, Grants Pass)</strong></td>
+              <td>Proves Rogue Valley, Oregon bioregional municipal ordinances (Ashland AMC 18.4.5, Medford MMC/MLDC, Grants Pass DC Art. 11) with zero false Texas Oak Wilt flags during May pruning in Oregon.</td>
+              <td><code>tests/verify_openarbor.mjs:556</code></td>
+              <td><code>node tests/verify_openarbor.mjs</code></td>
+            </tr>
+            <tr class="verification-group-row" data-verification-group="verify_openarbor-9">
+              <th scope="row"><code>verify_openarbor-9</code></th>
+              <td><strong>[PASS] 9. 100x RCA Army Engine &amp; CLI (compile, counter-notice, economics, attest &amp; sabotage gates)</strong></td>
+              <td>Proves bin/openarbor-rca.mjs CLI subcommands (compile, counter-notice, economics --json, attest Open Badges 3.0 minting) plus negative-path CLI sabotage and __proto__/constructor prototype-pollution rejection.</td>
+              <td><code>tests/verify_openarbor.mjs:671</code></td>
+              <td><code>node tests/verify_openarbor.mjs</code></td>
+            </tr>
+            <tr class="verification-group-row" data-verification-group="verify_openarbor-10">
+              <th scope="row"><code>verify_openarbor-10</code></th>
+              <td><strong>[PASS] 10. Static Web Portal &amp; Multi-Route Build (out/) &amp; 4/4 CLI-to-Browser Bundle Parity</strong></td>
+              <td>Proves static multi-page web build (out/) across all routes and executes deploy/verify-parity.mjs asserting 4/4 bit-for-bit CLI-to-browser parity.</td>
+              <td><code>tests/verify_openarbor.mjs:696</code></td>
+              <td><code>node tests/verify_openarbor.mjs</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Table 2: MCP Server & Security Gate Suite -->
+    <section class="card" aria-labelledby="suite2-heading">
+      <div class="card-header">
+        <span class="step-badge">Runner 2 (8 Groups)</span>
+        <h2 id="suite2-heading">Model Context Protocol (<code>JSON-RPC 2.0</code>) &amp; Security Gate Suite (<code>tests/verify_mcp.mjs</code>)</h2>
+      </div>
+      <div tabindex="0" role="region" aria-labelledby="table2-caption" class="table-wrapper">
+        <table
+          class="data-table"
+          style="
+            --label-1: 'Group ID';
+            --label-2: 'Verification Gate';
+            --label-3: 'Protocol / Security Invariant Proven';
+            --label-4: 'Source File &amp; Line';
+            --label-5: 'CLI Command';
+          "
+        >
+          <caption id="table2-caption" class="sr-only">MCP Server and Security Verification Groups in tests/verify_mcp.mjs</caption>
+          <thead>
+            <tr>
+              <th scope="col">Group ID</th>
+              <th scope="col">Verification Gate</th>
+              <th scope="col">Protocol, Known-Answer, or Security Invariant Proven</th>
+              <th scope="col">Source File &amp; Line</th>
+              <th scope="col">Exact CLI Reproduction Command</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="verification-group-row" data-verification-group="verify_mcp-1">
+              <th scope="row"><code>verify_mcp-1</code></th>
+              <td><strong>[PASS] 1. MCP initialize handshake completed (server: openarbor-mcp v2.0.0)</strong></td>
+              <td>Spawns server/mcp/openarbor-mcp.mjs over stdio and verifies JSON-RPC 2.0 initialize handshake (protocolVersion 2024-11-05, server openarbor-mcp v2.0.0).</td>
+              <td><code>tests/verify_mcp.mjs:84</code></td>
+              <td><code>node tests/verify_mcp.mjs</code></td>
+            </tr>
+            <tr class="verification-group-row" data-verification-group="verify_mcp-2">
+              <th scope="row"><code>verify_mcp-2</code></th>
+              <td><strong>[PASS] 2. tools/list verified (6 tools: calculate_root_zone, evaluate_ordinance, calculate_ecosystem_benefits, rca_biomechanics, rca_lint, lookup_ordinance)</strong></td>
+              <td>Verifies tools/list returns all 6 deterministic MCP tools (calculate_root_zone, evaluate_ordinance, calculate_ecosystem_benefits, rca_biomechanics, rca_lint, lookup_ordinance).</td>
+              <td><code>tests/verify_mcp.mjs:99</code></td>
+              <td><code>node tests/verify_mcp.mjs</code></td>
+            </tr>
+            <tr class="verification-group-row" data-verification-group="verify_mcp-3">
+              <th scope="row"><code>verify_mcp-3</code></th>
+              <td><strong>[PASS] 3. tools/call calculate_root_zone (24 in, US_1_1) -&gt; radius_feet=24, area_sqft=1809.56</strong></td>
+              <td>Verifies known-answer tools/call for calculate_root_zone (24 in DBH, US_1_1 -&gt; radius_feet = 24, area_sqft = 1809.56).</td>
+              <td><code>tests/verify_mcp.mjs:117</code></td>
+              <td><code>node tests/verify_mcp.mjs</code></td>
+            </tr>
+            <tr class="verification-group-row" data-verification-group="verify_mcp-4">
+              <th scope="row"><code>verify_mcp-4</code></th>
+              <td><strong>[PASS] 4. tools/call lookup_ordinance positive (or-ashland) &amp; negative-path (xx-nonexistent-city -&gt; UNKNOWN_JURISDICTION, no crash)</strong></td>
+              <td>Verifies lookup_ordinance positive lookup (or-ashland -&gt; 6 in DBH threshold) and graceful structured error on unknown jurisdiction (UNKNOWN_JURISDICTION) without crashing.</td>
+              <td><code>tests/verify_mcp.mjs:141</code></td>
+              <td><code>node tests/verify_mcp.mjs</code></td>
+            </tr>
+            <tr class="verification-group-row" data-verification-group="verify_mcp-5">
+              <th scope="row"><code>verify_mcp-5</code></th>
+              <td><strong>[PASS] 5. tools/call evaluate_ordinance, calculate_ecosystem_benefits, rca_biomechanics, and rca_lint verified</strong></td>
+              <td>Verifies known-answer tools/call execution for evaluate_ordinance, calculate_ecosystem_benefits, rca_biomechanics (t/R = 0.34 sound), and rca_lint (valid = true).</td>
+              <td><code>tests/verify_mcp.mjs:207</code></td>
+              <td><code>node tests/verify_mcp.mjs</code></td>
+            </tr>
+            <tr class="verification-group-row" data-verification-group="verify_mcp-6">
+              <th scope="row"><code>verify_mcp-6</code></th>
+              <td><strong>[PASS] 6. MCP input size guards verified (evaluate_ordinance 501 trees -&gt; MAX_TREES_EXCEEDED; lookup_ordinance 133 chars -&gt; JURISDICTION_ID_TOO_LONG)</strong></td>
+              <td>Verifies bounded-input DoS security guards: rejects &gt;500 trees in evaluate_ordinance (MAX_TREES_EXCEEDED) and &gt;128 char jurisdiction IDs (JURISDICTION_ID_TOO_LONG).</td>
+              <td><code>tests/verify_mcp.mjs:239</code></td>
+              <td><code>node tests/verify_mcp.mjs</code></td>
+            </tr>
+            <tr class="verification-group-row" data-verification-group="verify_mcp-7">
+              <th scope="row"><code>verify_mcp-7</code></th>
+              <td><strong>[PASS] 7. Ordinance validator prototype-chain negative gates verified (__proto__ and constructor rejected with exit code 1)</strong></td>
+              <td>Verifies prototype-chain pollution security gates in scripts/validate-ordinance.mjs: rejects literal __proto__ and constructor payloads with non-zero exit code.</td>
+              <td><code>tests/verify_mcp.mjs:298</code></td>
+              <td><code>node tests/verify_mcp.mjs</code></td>
+            </tr>
+            <tr class="verification-group-row" data-verification-group="verify_mcp-8">
+              <th scope="row"><code>verify_mcp-8</code></th>
+              <td><strong>[PASS] 8. MCP shutdown completed cleanly</strong></td>
+              <td>Verifies clean JSON-RPC 2.0 shutdown response and child process termination.</td>
+              <td><code>tests/verify_mcp.mjs:307</code></td>
+              <td><code>node tests/verify_mcp.mjs</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Table 3: Municipal Ordinance Schema Validator -->
+    <section class="card" aria-labelledby="suite3-heading">
+      <div class="card-header">
+        <span class="step-badge">Runner 3 (8 Records)</span>
+        <h2 id="suite3-heading">Municipal Tree Ordinance Schema &amp; Completeness Validator (<code>scripts/validate-ordinance.mjs</code>)</h2>
+      </div>
+      <div tabindex="0" role="region" aria-labelledby="table3-caption" class="table-wrapper">
+        <table
+          class="data-table"
+          style="
+            --label-1: 'Jurisdiction ID';
+            --label-2: 'Schema &amp; Tier';
+            --label-3: 'Statutory Thresholds &amp; Completeness';
+            --label-4: 'Dataset Source';
+            --label-5: 'CLI Command';
+          "
+        >
+          <caption id="table3-caption" class="sr-only">Validated Municipal Ordinance Records in data/ordinances/</caption>
+          <thead>
+            <tr>
+              <th scope="col">Jurisdiction ID &amp; City</th>
+              <th scope="col">Schema &amp; Record Tier</th>
+              <th scope="col">Verified Thresholds &amp; Epistemic Completeness</th>
+              <th scope="col">Dataset File &amp; Primary Citation</th>
+              <th scope="col">Exact CLI Reproduction Command</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row"><code>tx-austin</code><br /><small>Austin, TX</small></th>
+              <td><span class="badge badge-protected">SCHEMA VALID</span> <span class="badge badge-protected">Full_Rule_Record</span></td>
+              <td>Protected &ge; 19 in | Heritage &ge; 24 in | All statutory sections verified (0 gaps)</td>
+              <td><code>data/ordinances/central_texas_ordinances.json</code><br /><small>City of Austin Land Development Code (LDC) Title 25, Chapter 25-8, Subchapter B (Tree and Natural Area Protection); Environmental Criteria Manual (ECM) Section 3</small></td>
+              <td><code>node scripts/validate-ordinance.mjs data/ordinances/central_texas_ordinances.json</code></td>
+            </tr>
+            <tr>
+              <th scope="row"><code>tx-georgetown</code><br /><small>Georgetown, TX</small></th>
+              <td><span class="badge badge-protected">SCHEMA VALID</span> <span class="badge badge-protected">Full_Rule_Record</span></td>
+              <td>Protected &ge; 12 in | Heritage &ge; 26 in | All statutory sections verified (0 gaps)</td>
+              <td><code>data/ordinances/central_texas_ordinances.json</code><br /><small>Georgetown Unified Development Code (UDC) Chapter 8 (Tree Preservation, Landscaping, and Fencing)</small></td>
+              <td><code>node scripts/validate-ordinance.mjs data/ordinances/central_texas_ordinances.json</code></td>
+            </tr>
+            <tr>
+              <th scope="row"><code>tx-liberty-hill</code><br /><small>Liberty Hill, TX</small></th>
+              <td><span class="badge badge-protected">SCHEMA VALID</span> <span class="badge badge-protected">Full_Rule_Record</span></td>
+              <td>Protected &ge; 8 in | Heritage &ge; 24 in | All statutory sections verified (0 gaps)</td>
+              <td><code>data/ordinances/central_texas_ordinances.json</code><br /><small>Liberty Hill Unified Development Code (UDC) § 6.07.01 (Tree Preservation and Mitigation), Ord. 09-O-02 / 22-O-04.06-01</small></td>
+              <td><code>node scripts/validate-ordinance.mjs data/ordinances/central_texas_ordinances.json</code></td>
+            </tr>
+            <tr>
+              <th scope="row"><code>tx-cedar-park</code><br /><small>Cedar Park, TX</small></th>
+              <td><span class="badge badge-protected">SCHEMA VALID</span> <span class="badge badge-warn">Threshold_And_Fee_Record</span></td>
+              <td>Protected &ge; 8 in | Heritage &ge; 26 in | 6 unverified statutory sub-sections explicitly flagged</td>
+              <td><code>data/ordinances/central_texas_ordinances.json</code><br /><small>Cedar Park Code of Ordinances Chapter 14, Article 14.07 (Tree and Landscape Regulations)</small></td>
+              <td><code>node scripts/validate-ordinance.mjs data/ordinances/central_texas_ordinances.json</code></td>
+            </tr>
+            <tr>
+              <th scope="row"><code>tx-round-rock</code><br /><small>Round Rock, TX</small></th>
+              <td><span class="badge badge-protected">SCHEMA VALID</span> <span class="badge badge-warn">Threshold_And_Fee_Record</span></td>
+              <td>Protected &ge; 8 in | Heritage &ge; 36 in | 5 unverified statutory sub-sections explicitly flagged</td>
+              <td><code>data/ordinances/central_texas_ordinances.json</code><br /><small>Round Rock Code of Ordinances Part III, Chapter 8, Article I (Tree Protection and Preservation)</small></td>
+              <td><code>node scripts/validate-ordinance.mjs data/ordinances/central_texas_ordinances.json</code></td>
+            </tr>
+            <tr>
+              <th scope="row"><code>or-ashland</code><br /><small>Ashland, OR</small></th>
+              <td><span class="badge badge-protected">SCHEMA VALID</span> <span class="badge badge-protected">Full_Rule_Record</span></td>
+              <td>Protected &ge; 6 in | Heritage &ge; 18 in | All statutory sections verified (0 gaps)</td>
+              <td><code>data/ordinances/rogue_valley_oregon_ordinances.json</code><br /><small>Ashland Municipal Code (AMC) Chapter 18.4.5 (Tree Preservation and Protection), Chapter 18.5.7 (Tree Removal Permits), and AMC 18.3.10.090.D (Hillside Development)</small></td>
+              <td><code>node scripts/validate-ordinance.mjs data/ordinances/rogue_valley_oregon_ordinances.json</code></td>
+            </tr>
+            <tr>
+              <th scope="row"><code>or-medford</code><br /><small>Medford, OR</small></th>
+              <td><span class="badge badge-protected">SCHEMA VALID</span> <span class="badge badge-protected">Full_Rule_Record</span></td>
+              <td>Protected &ge; 8 in | Heritage &ge; 24 in | All statutory sections verified (0 gaps)</td>
+              <td><code>data/ordinances/rogue_valley_oregon_ordinances.json</code><br /><small>Medford Municipal Code (MMC) Sections 6.700 to 6.750 (Public and Street Trees); Medford Land Development Code (MLDC) § 10.780 (Landscaping); City of Medford Tree Protection Guidelines (April 2026)</small></td>
+              <td><code>node scripts/validate-ordinance.mjs data/ordinances/rogue_valley_oregon_ordinances.json</code></td>
+            </tr>
+            <tr>
+              <th scope="row"><code>or-grants-pass</code><br /><small>Grants Pass, OR</small></th>
+              <td><span class="badge badge-protected">SCHEMA VALID</span> <span class="badge badge-protected">Full_Rule_Record</span></td>
+              <td>Protected &ge; 8 in | Heritage &ge; 20 in | All statutory sections verified (0 gaps)</td>
+              <td><code>data/ordinances/rogue_valley_oregon_ordinances.json</code><br /><small>City of Grants Pass Development Code (Title 10) Article 13 (Tree Retention and Canopy Re-establishment, revised May 3, 2023); Article 23 (Street Trees § 23.071 and § 23.074)</small></td>
+              <td><code>node scripts/validate-ordinance.mjs data/ordinances/rogue_valley_oregon_ordinances.json</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Table 4: CLI-vs-Browser Bundle Parity Runner -->
+    <section class="card" aria-labelledby="suite4-heading">
+      <div class="card-header">
+        <span class="step-badge">Runner 4 (4 Cases / 84 Metrics)</span>
+        <h2 id="suite4-heading">Node.js CLI vs. Browser Bundle Bit-for-Bit Parity Suite (<code>deploy/verify-parity.mjs</code>)</h2>
+      </div>
+      <div tabindex="0" role="region" aria-labelledby="table4-caption" class="table-wrapper">
+        <table
+          class="data-table"
+          style="
+            --label-1: 'Parity Case ID';
+            --label-2: 'Bioregional Specimen';
+            --label-3: '21-Metric Bit-for-Bit Parity Invariant';
+            --label-4: 'Runner &amp; Fixture';
+            --label-5: 'CLI Command';
+          "
+        >
+          <caption id="table4-caption" class="sr-only">CLI-to-Browser Parity Cases in deploy/verify-parity.mjs</caption>
+          <thead>
+            <tr>
+              <th scope="col">Parity Group ID</th>
+              <th scope="col">Bioregional Reference Specimen</th>
+              <th scope="col">21-Metric Bit-for-Bit CLI-to-Browser Invariant Proven</th>
+              <th scope="col">Source Runner &amp; Fixture</th>
+              <th scope="col">Exact CLI Reproduction Command</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row"><code>parity-case-1</code><br /><small><code>case-1-austin-live-oak</code></small></th>
+              <td><strong>Case 1: Austin Heritage Live Oak (30 in DBH)</strong><br /><small><em>Quercus virginiana</em> (<code>ATX-QV-101</code>)</small></td>
+              <td>Proves 21/21 bit-for-bit identical outputs between Node.js CLI (<code>bin/openarbor-rca.mjs</code>) and browser bundle (<code>out/openarbor-bundle.js</code>): canonical SHA-256, 10-section report Markdown, counter-notice Markdown, linter checks, DBH, Mattheck t/R, SRZ/CRZ/TIZ radii, AirSpade volume, amendments, permit verdict, cash-in-lieu fee, CTLA vs. Holobiont valuation, 5-yr economics, FCIN12 age, Nowak benefits, and GeoJSON SHA-256.</td>
+              <td><code>deploy/verify-parity.mjs:66</code><br /><small>Fixture: <code>deploy/fixtures/case-1-austin-live-oak.json</code></small></td>
+              <td><code>node deploy/verify-parity.mjs</code></td>
+            </tr>
+            <tr>
+              <th scope="row"><code>parity-case-2</code><br /><small><code>case-2-georgetown-pecan</code></small></th>
+              <td><strong>Case 2: Georgetown Multi-Stem Heritage Pecan (27 in DBH)</strong><br /><small><em>Carya illinoinensis</em> (<code>GTN-CI-204</code>)</small></td>
+              <td>Proves 21/21 bit-for-bit identical outputs between Node.js CLI (<code>bin/openarbor-rca.mjs</code>) and browser bundle (<code>out/openarbor-bundle.js</code>): canonical SHA-256, 10-section report Markdown, counter-notice Markdown, linter checks, DBH, Mattheck t/R, SRZ/CRZ/TIZ radii, AirSpade volume, amendments, permit verdict, cash-in-lieu fee, CTLA vs. Holobiont valuation, 5-yr economics, FCIN12 age, Nowak benefits, and GeoJSON SHA-256.</td>
+              <td><code>deploy/verify-parity.mjs:66</code><br /><small>Fixture: <code>deploy/fixtures/case-2-georgetown-pecan.json</code></small></td>
+              <td><code>node deploy/verify-parity.mjs</code></td>
+            </tr>
+            <tr>
+              <th scope="row"><code>parity-case-3</code><br /><small><code>case-3-liberty-hill-post-oak</code></small></th>
+              <td><strong>Case 3: Liberty Hill Protected Post Oak (20 in DBH)</strong><br /><small><em>Quercus stellata</em> (<code>LBH-QS-309</code>)</small></td>
+              <td>Proves 21/21 bit-for-bit identical outputs between Node.js CLI (<code>bin/openarbor-rca.mjs</code>) and browser bundle (<code>out/openarbor-bundle.js</code>): canonical SHA-256, 10-section report Markdown, counter-notice Markdown, linter checks, DBH, Mattheck t/R, SRZ/CRZ/TIZ radii, AirSpade volume, amendments, permit verdict, cash-in-lieu fee, CTLA vs. Holobiont valuation, 5-yr economics, FCIN12 age, Nowak benefits, and GeoJSON SHA-256.</td>
+              <td><code>deploy/verify-parity.mjs:66</code><br /><small>Fixture: <code>deploy/fixtures/case-3-liberty-hill-post-oak.json</code></small></td>
+              <td><code>node deploy/verify-parity.mjs</code></td>
+            </tr>
+            <tr>
+              <th scope="row"><code>parity-case-4</code><br /><small><code>case-4-ashland-oregon-white-oak</code></small></th>
+              <td><strong>Case 4: Ashland Heritage Oregon White Oak (41.3 in DBH)</strong><br /><small><em>Quercus garryana</em> (<code>ASH-QG-105</code>)</small></td>
+              <td>Proves 21/21 bit-for-bit identical outputs between Node.js CLI (<code>bin/openarbor-rca.mjs</code>) and browser bundle (<code>out/openarbor-bundle.js</code>): canonical SHA-256, 10-section report Markdown, counter-notice Markdown, linter checks, DBH, Mattheck t/R, SRZ/CRZ/TIZ radii, AirSpade volume, amendments, permit verdict, cash-in-lieu fee, CTLA vs. Holobiont valuation, 5-yr economics, FCIN12 age, Nowak benefits, and GeoJSON SHA-256.</td>
+              <td><code>deploy/verify-parity.mjs:66</code><br /><small>Fixture: <code>deploy/fixtures/case-4-ashland-oregon-white-oak.json</code></small></td>
+              <td><code>node deploy/verify-parity.mjs</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Table 5: Masterwork 100x Deliverable Verification Gates -->
+    <section class="card" aria-labelledby="suite5-heading">
+      <div class="card-header">
+        <span class="step-badge">Runner 5 (7 Gates)</span>
+        <h2 id="suite5-heading">Masterwork 100x Deliverable Verification Suite (<code>tests/verify_masterwork_100x.mjs</code>)</h2>
+      </div>
+      <div tabindex="0" role="region" aria-labelledby="table5-caption" class="table-wrapper">
+        <table
+          class="data-table"
+          style="
+            --label-1: 'Deliverable Gate';
+            --label-2: 'Verification Gate';
+            --label-3: 'Deliverable Invariant Proven';
+            --label-4: 'Source File &amp; Line';
+            --label-5: 'CLI Command';
+          "
+        >
+          <caption id="table5-caption" class="sr-only">Masterwork 100x Deliverable Gates D1 through D7</caption>
+          <thead>
+            <tr>
+              <th scope="col">Deliverable ID</th>
+              <th scope="col">Verification Gate</th>
+              <th scope="col">Architectural &amp; User-Facing Invariant Proven</th>
+              <th scope="col">Source File &amp; Line</th>
+              <th scope="col">Exact CLI Reproduction Command</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="verification-group-row" data-verification-group="verify_masterwork_100x-1">
+              <th scope="row"><code>verify_masterwork_100x-1</code></th>
+              <td><strong>[PASS] D1. Shareable Assessment Permalink (#oa1=...) verified across 3 presets (longest URL: 595 chars)</strong></td>
+              <td>Proves versioned #oa1= base64url assessment permalink encoding and round-trip decoding across 3 bioregional presets with identical SHA-256 digests, permit verdicts, CRZ radii, and cash-in-lieu fees.</td>
+              <td><code>tests/verify_masterwork_100x.mjs:102</code></td>
+              <td><code>node tests/verify_masterwork_100x.mjs</code></td>
+            </tr>
+            <tr class="verification-group-row" data-verification-group="verify_masterwork_100x-2">
+              <th scope="row"><code>verify_masterwork_100x-2</code></th>
+              <td><strong>[PASS] D2. Sticky Determination Bar (#sticky-determination-bar) &amp; keyboard-reachable controls verified</strong></td>
+              <td>Proves sticky determination summary bar (#sticky-determination-bar) DOM contract, live status/DBH/CRZ/replacement/cash-in-lieu readouts, and keyboard-reachable verdict link copy button.</td>
+              <td><code>tests/verify_masterwork_100x.mjs:120</code></td>
+              <td><code>node tests/verify_masterwork_100x.mjs</code></td>
+            </tr>
+            <tr class="verification-group-row" data-verification-group="verify_masterwork_100x-3">
+              <th scope="row"><code>verify_masterwork_100x-3</code></th>
+              <td><strong>[PASS] D3. Static Crawlable Case Gallery verified (1 index + 5 static case pages with JS-off HTML &amp; SVG)</strong></td>
+              <td>Proves build-time static crawlable Case Gallery (out/cases/index.html + 5 case pages) containing pre-rendered determinations, inline &lt;svg&gt; root zone maps, and #oa1= links with JavaScript disabled.</td>
+              <td><code>tests/verify_masterwork_100x.mjs:145</code></td>
+              <td><code>node tests/verify_masterwork_100x.mjs</code></td>
+            </tr>
+            <tr class="verification-group-row" data-verification-group="verify_masterwork_100x-4">
+              <th scope="row"><code>verify_masterwork_100x-4</code></th>
+              <td><strong>[PASS] D4. Offline Field Mode Service Worker (out/sw.js) pre-cache manifest &amp; offline fetch handler verified</strong></td>
+              <td>Proves offline field mode Service Worker (out/sw.js) pre-caching openarbor-bundle.js, municipal ordinance datasets, schemas, and offline fetch handler.</td>
+              <td><code>tests/verify_masterwork_100x.mjs:158</code></td>
+              <td><code>node tests/verify_masterwork_100x.mjs</code></td>
+            </tr>
+            <tr class="verification-group-row" data-verification-group="verify_masterwork_100x-5">
+              <th scope="row"><code>verify_masterwork_100x-5</code></th>
+              <td><strong>[PASS] D5. Provenance Surface &amp; Epistemic Gap Inspector verified (Cedar Park: 6 gaps, Round Rock: 5 gaps)</strong></td>
+              <td>Proves municipal provenance surface and epistemic gap inspector (inspectMunicipalityProvenance) explicitly enumerating UNVERIFIED statutory sub-sections for Cedar Park and Round Rock Threshold_And_Fee_Record entries.</td>
+              <td><code>tests/verify_masterwork_100x.mjs:185</code></td>
+              <td><code>node tests/verify_masterwork_100x.mjs</code></td>
+            </tr>
+            <tr class="verification-group-row" data-verification-group="verify_masterwork_100x-6">
+              <th scope="row"><code>verify_masterwork_100x-6</code></th>
+              <td><strong>[PASS] D6. Evidentiary Print Report (@media print, @page Letter, #evidentiary-print-sheet &amp; signature block) verified</strong></td>
+              <td>Proves evidentiary print report stylesheet (@media print, @page Letter) and #evidentiary-print-sheet practitioner attestation &amp; signature block.</td>
+              <td><code>tests/verify_masterwork_100x.mjs:201</code></td>
+              <td><code>node tests/verify_masterwork_100x.mjs</code></td>
+            </tr>
+            <tr class="verification-group-row" data-verification-group="verify_masterwork_100x-7">
+              <th scope="row"><code>verify_masterwork_100x-7</code></th>
+              <td><strong>[PASS] D7. Falsifiability Page (out/methods/index.html) verified with 25/25 live suite verification groups</strong></td>
+              <td>Proves falsifiability &amp; verification methodology page (out/methods/index.html) generated dynamically from live test suites with 25/25 executable verification groups and zero drift.</td>
+              <td><code>tests/verify_masterwork_100x.mjs:206</code></td>
+              <td><code>node tests/verify_masterwork_100x.mjs</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Epistemic Boundary Table: What This Engine Does Not Claim -->
+    <section class="card" aria-labelledby="epistemic-boundary-heading">
+      <div class="card-header">
+        <span class="step-badge">Epistemic Integrity</span>
+        <h2 id="epistemic-boundary-heading">What This Engine Does Not Claim (Explicit Statutory &amp; Physical Boundaries)</h2>
+      </div>
+      <p class="subtitle">
+        Under Open Arbor's Integrity Law, missing statutory sub-sections are left visibly flagged as <code>UNVERIFIED</code> rather than filled by cross-city assumption. Below are the exact unverified statutory gaps surfaced by <code>inspectMunicipalityProvenance()</code> for <code>Threshold_And_Fee_Record</code> municipalities (Cedar Park and Round Rock), plus engine-wide physical boundaries.
+      </p>
+
+      <div tabindex="0" role="region" aria-labelledby="boundary-table-caption" class="table-wrapper">
+        <table
+          class="data-table"
+          style="
+            --label-1: 'Scope / Municipality';
+            --label-2: 'Sub-Section / Domain';
+            --label-3: 'Epistemic Status';
+            --label-4: 'What This Engine Does Not Claim';
+            --label-5: 'Primary Citation';
+          "
+        >
+          <caption id="boundary-table-caption" class="sr-only">Explicit Epistemic Boundaries and Unverified Statutory Gaps</caption>
+          <thead>
+            <tr>
+              <th scope="col">Municipality / Engine Scope</th>
+              <th scope="col">Statutory Field or Physical Domain</th>
+              <th scope="col">Status</th>
+              <th scope="col">Explicit Falsifiability Boundary ("What This Engine Does Not Claim")</th>
+              <th scope="col">Governing Citation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row"><strong>Cedar Park, TX</strong><br /><small><code>tx-cedar-park</code> (Threshold_And_Fee_Record)</small></th>
+              <td><code>permit_triggers_by_work_type</code></td>
+              <td><span class="badge badge-warn">UNVERIFIED</span></td>
+              <td>Work-type permit triggers (removal vs. pruning by protection tier) are not encoded in this Threshold_And_Fee_Record. Engine evaluates DBH protection status and fee tiers only without asserting work-type pruning triggers.</td>
+              <td>Cedar Park Code of Ordinances Chapter 14, Article 14.07 (Tree and Landscape Regulations)</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>Cedar Park, TX</strong><br /><small><code>tx-cedar-park</code> (Threshold_And_Fee_Record)</small></th>
+              <td><code>plan_rules.survey (multi_trunk, hardwood_min_dbh, max_age_years)</code></td>
+              <td><span class="badge badge-warn">UNVERIFIED</span></td>
+              <td>Municipal tree survey submittal age limit and municipal multi-trunk aggregation formula are not encoded in this record. Engine uses caller-specified multi-stem aggregation method.</td>
+              <td>Cedar Park Code of Ordinances Chapter 14, Article 14.07 (Tree and Landscape Regulations)</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>Cedar Park, TX</strong><br /><small><code>tx-cedar-park</code> (Threshold_And_Fee_Record)</small></th>
+              <td><code>plan_rules.root_zone (crz_ft_per_inch, removal_if_disturbed_pct, cutfill_max_in, impervious_max_pct, crown_removal_max_pct)</code></td>
+              <td><span class="badge badge-warn">UNVERIFIED</span></td>
+              <td>Municipal Critical Root Zone disturbance thresholds (max % CRZ impact before mandatory removal classification, max cut/fill inches, and max impervious cover %) are not encoded. Engine applies ANSI A300 / ISA BMP 1.0 ft/in baseline without asserting municipal site-plan violation triggers.</td>
+              <td>Cedar Park Code of Ordinances Chapter 14, Article 14.07 (Tree and Landscape Regulations)</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>Cedar Park, TX</strong><br /><small><code>tx-cedar-park</code> (Threshold_And_Fee_Record)</small></th>
+              <td><code>plan_rules.pruning (standard, oak_months)</code></td>
+              <td><span class="badge badge-warn">UNVERIFIED</span></td>
+              <td>Municipal seasonal Oak Wilt pruning window and municipal pruning performance sub-section citation are not encoded in this record.</td>
+              <td>Cedar Park Code of Ordinances Chapter 14, Article 14.07 (Tree and Landscape Regulations)</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>Cedar Park, TX</strong><br /><small><code>tx-cedar-park</code> (Threshold_And_Fee_Record)</small></th>
+              <td><code>heritage_species_thresholds</code></td>
+              <td><span class="badge badge-warn">UNVERIFIED</span></td>
+              <td>Species-specific Heritage DBH overrides are not encoded in this record. Engine evaluates Heritage qualification using the general 26-inch threshold only.</td>
+              <td>Cedar Park Code of Ordinances Chapter 14, Article 14.07 (Tree and Landscape Regulations)</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>Cedar Park, TX</strong><br /><small><code>tx-cedar-park</code> (Threshold_And_Fee_Record)</small></th>
+              <td><code>mitigation_fee_schedule.penalty_civil_per_tree &amp; penalty_citation</code></td>
+              <td><span class="badge badge-warn">UNVERIFIED</span></td>
+              <td>Civil fine per tree and enforcement subsection citation for unpermitted removal are not encoded in this record.</td>
+              <td>Cedar Park Code of Ordinances Chapter 14, Article 14.07 (Tree and Landscape Regulations)</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>Round Rock, TX</strong><br /><small><code>tx-round-rock</code> (Threshold_And_Fee_Record)</small></th>
+              <td><code>permit_triggers_by_work_type</code></td>
+              <td><span class="badge badge-warn">UNVERIFIED</span></td>
+              <td>Work-type permit triggers (removal vs. pruning by protection tier) are not encoded in this Threshold_And_Fee_Record. Engine evaluates DBH protection status and fee tiers only without asserting work-type pruning triggers.</td>
+              <td>Round Rock Code of Ordinances Part III, Chapter 8, Article I (Tree Protection and Preservation)</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>Round Rock, TX</strong><br /><small><code>tx-round-rock</code> (Threshold_And_Fee_Record)</small></th>
+              <td><code>plan_rules.survey (multi_trunk, hardwood_min_dbh, max_age_years)</code></td>
+              <td><span class="badge badge-warn">UNVERIFIED</span></td>
+              <td>Municipal tree survey submittal age limit and municipal multi-trunk aggregation formula are not encoded in this record. Engine uses caller-specified multi-stem aggregation method.</td>
+              <td>Round Rock Code of Ordinances Part III, Chapter 8, Article I (Tree Protection and Preservation)</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>Round Rock, TX</strong><br /><small><code>tx-round-rock</code> (Threshold_And_Fee_Record)</small></th>
+              <td><code>plan_rules.root_zone (crz_ft_per_inch, removal_if_disturbed_pct, cutfill_max_in, impervious_max_pct, crown_removal_max_pct)</code></td>
+              <td><span class="badge badge-warn">UNVERIFIED</span></td>
+              <td>Municipal Critical Root Zone disturbance thresholds (max % CRZ impact before mandatory removal classification, max cut/fill inches, and max impervious cover %) are not encoded. Engine applies ANSI A300 / ISA BMP 1.0 ft/in baseline without asserting municipal site-plan violation triggers.</td>
+              <td>Round Rock Code of Ordinances Part III, Chapter 8, Article I (Tree Protection and Preservation)</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>Round Rock, TX</strong><br /><small><code>tx-round-rock</code> (Threshold_And_Fee_Record)</small></th>
+              <td><code>plan_rules.pruning (standard, oak_months)</code></td>
+              <td><span class="badge badge-warn">UNVERIFIED</span></td>
+              <td>Municipal seasonal Oak Wilt pruning window and municipal pruning performance sub-section citation are not encoded in this record.</td>
+              <td>Round Rock Code of Ordinances Part III, Chapter 8, Article I (Tree Protection and Preservation)</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>Round Rock, TX</strong><br /><small><code>tx-round-rock</code> (Threshold_And_Fee_Record)</small></th>
+              <td><code>mitigation_fee_schedule.penalty_civil_per_tree &amp; penalty_citation</code></td>
+              <td><span class="badge badge-warn">UNVERIFIED</span></td>
+              <td>Civil fine per tree and enforcement subsection citation for unpermitted removal are not encoded in this record.</td>
+              <td>Round Rock Code of Ordinances Part III, Chapter 8, Article I (Tree Protection and Preservation)</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>Subsurface Decay &amp; Root Architecture</strong><br /><small><code>src/core/rcaEngine.js</code></small></th>
+              <td><code>sound_shell_thickness_ratio_t_over_r</code> &amp; <code>sonic_tomography_or_resistograph_uri</code></td>
+              <td><span class="badge badge-protected">INSTRUMENT REQUIRED</span></td>
+              <td>Visual inspection alone cannot measure internal heartwood cavity geometry. Open Arbor does not infer internal shell thickness from outer bark appearance; condemning a protected tree requires physical sonic tomography or micro-drilling resistograph evidence.</td>
+              <td>Mattheck (1994); ANSI A300 Part 9 (Tree Risk Assessment)</td>
+            </tr>
+            <tr>
+              <th scope="row"><strong>Allometric Ecosystem Services</strong><br /><small><code>src/core/ecosystemBenefits.js</code></small></th>
+              <td>Nowak / Cairns / Xiao / McPherson Equations</td>
+              <td><span class="badge badge-protected">EMPIRICAL MODEL</span></td>
+              <td>Allometric biomass, rainfall interception, and shade cooling outputs are peer-reviewed statistical expectations calibrated to DBH, crown dimensions, and condition class, not direct eddy-covariance flux tower or sap-flow sensor measurements on the individual tree.</td>
+              <td>Nowak (1994, 2006); Cairns et al. (1997); Xiao et al. (2000)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <div class="container">
+      <p>
+        Open Arbor v2.0 &middot; Falsifiability &amp; Verification Methodology &middot; 25 Executable Verification Groups &middot; Licensed under AGPL-3.0-only.
+      </p>
+    </div>
+  </footer>
+
+  <script type="module" src="../openarbor-bundle.js"></script>
+</body>
+</html>

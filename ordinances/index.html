@@ -26,10 +26,12 @@
         <nav class="oa-main-nav" aria-label="Primary Navigation">
           <a href="../index.html" class="oa-nav-link">Alliance Portal</a>
           <a href="../demo/index.html" class="oa-nav-link">Live Engine Demo</a>
+          <a href="../cases/index.html" class="oa-nav-link">Case Gallery</a>
           <a href="../tools/index.html" class="oa-nav-link">41-Tool Workbench</a>
           <a href="../ordinances/index.html" class="oa-nav-link active" aria-current="page">Ordinance Commons</a>
           <a href="../mcp/index.html" class="oa-nav-link">MCP Playground</a>
           <a href="../spec/index.html" class="oa-nav-link">RCA-Spec v2.0</a>
+          <a href="../methods/index.html" class="oa-nav-link">Falsifiability</a>
         </nav>
         <div class="oa-theme-control">
           <button type="button" id="oa-theme-toggle" class="btn-secondary btn-sm" aria-label="Toggle color scheme">Theme: Auto</button>
@@ -124,6 +126,17 @@
             <tbody id="ordinance-matrix-tbody"></tbody>
           </table>
         </div>
+      </section>
+
+      <section id="ordinance-provenance-section" class="card" aria-labelledby="provenance-audit-heading">
+        <div class="card-header">
+          <span class="step-badge">Section A2 &middot; D5 Provenance</span>
+          <h2 id="provenance-audit-heading">What Each Record Does and Does Not Know (Provenance &amp; UNVERIFIED Audit)</h2>
+        </div>
+        <p class="subtitle">
+          Every municipal ordinance record is classified as either a <code>Full_Rule_Record</code> (6 jurisdictions with verified work-type permit triggers, site-plan CRZ disturbance thresholds, and pruning windows) or a <code>Threshold_And_Fee_Record</code> (2 jurisdictions: Cedar Park <code>tx-cedar-park</code> and Round Rock <code>tx-round-rock</code>, where DBH thresholds and mitigation fee schedules are verified while unencoded sub-sections are explicitly surfaced as <code>UNVERIFIED</code> so the engine never silently fabricates statutory law).
+        </p>
+        <div id="ordinance-provenance-grid" class="oa-provenance-grid"></div>
       </section>
 
       <section id="ordinance-validator-section" class="card" aria-labelledby="validator-heading">

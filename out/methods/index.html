@@ -9,14 +9,14 @@
       document.querySelector('meta[name="color-scheme"]').content = localStorage.getItem('color-scheme') ?? 'light dark';
     } catch (e) {}
   </script>
-  <title>Falsifiability &amp; Verification Methodology (29 Executable Groups) | Open Arbor v2.0</title>
+  <title>Falsifiability &amp; Verification Methodology (25 Executable Groups) | Open Arbor v2.0</title>
   <meta
     name="description"
-    content="Open Arbor v2.0 Falsifiability & Verification Methodology: 29 executable verification groups across 5 deterministic test runners plus 8 schema-validated municipal ordinance records (84/84 CLI-to-browser parity metrics)."
+    content="Open Arbor v2.0 Falsifiability & Verification Methodology: 25 executable verification groups across 5 deterministic test runners plus 8 schema-validated municipal ordinance records (84/84 CLI-to-browser parity metrics)."
   />
   <link rel="stylesheet" href="../styles.css" />
 </head>
-<body data-total-verification-groups="29" data-total-ordinance-records="8">
+<body data-total-verification-groups="25" data-total-ordinance-records="8">
   <header class="oa-site-header">
     <div class="oa-nav-container">
       <a href="../index.html" class="oa-brand-link">
@@ -60,22 +60,22 @@
     <section
       class="card"
       aria-labelledby="falsifiability-summary-heading"
-      data-total-verification-groups="29"
+      data-total-verification-groups="25"
       data-total-ordinance-records="8"
     >
       <div class="card-header">
         <span class="step-badge">Live Suite Rollup</span>
-        <h2 id="falsifiability-summary-heading">Executive Falsifiability Summary (29 Executable Verification Groups + 8 Validated Ordinance Records)</h2>
+        <h2 id="falsifiability-summary-heading">Executive Falsifiability Summary (25 Executable Verification Groups + 8 Validated Ordinance Records)</h2>
       </div>
       <p class="subtitle">
-        Generated directly from <code>tests/verify_openarbor.mjs</code> (10 groups), <code>tests/verify_mcp.mjs</code> (8 groups), <code>deploy/verify-parity.mjs</code> (4 bioregional parity cases &times; 21 metrics = 84 parity assertions), and <code>tests/verify_masterwork_100x.mjs</code> (7 Masterwork gates), plus <code>scripts/validate-ordinance.mjs</code> (8 municipal ordinance records: 6 <code>Full_Rule_Record</code>, 2 <code>Threshold_And_Fee_Record</code>) = <strong>37 total falsifiable checks</strong>.
+        Generated directly from <code>tests/verify_openarbor.mjs</code> (10 groups), <code>tests/verify_mcp.mjs</code> (8 groups), <code>deploy/verify-parity.mjs</code> (4 bioregional parity cases &times; 21 metrics = 84 parity assertions), and <code>tests/verify_masterwork_100x.mjs</code> (7 Masterwork gates), plus <code>scripts/validate-ordinance.mjs</code> (8 municipal ordinance records: 6 <code>Full_Rule_Record</code>, 2 <code>Threshold_And_Fee_Record</code>) = <strong>33 total falsifiable checks</strong>.
       </p>
 
       <div class="metric-grid metric-grid-4">
         <div class="metric-box highlight-box">
           <span class="metric-label">Executable Verification Groups</span>
-          <strong class="metric-value text-accent">29 / 29 Groups</strong>
-          <span class="metric-sub">10 Core + 8 MCP + 4 Parity + 7 Masterwork</span>
+          <strong class="metric-value text-accent">25 / 25 Groups</strong>
+          <span class="metric-sub">10 Core + 8 MCP + 7 Masterwork</span>
         </div>
         <div class="metric-box">
           <span class="metric-label">Validated Municipal Ordinances</span>
@@ -89,7 +89,7 @@
         </div>
         <div class="metric-box">
           <span class="metric-label">Total Falsifiable Checks</span>
-          <strong class="metric-value">37 Checks</strong>
+          <strong class="metric-value">33 Checks</strong>
           <span class="metric-sub">Zero proprietary runtime dependencies</span>
         </div>
       </div>
@@ -131,70 +131,70 @@
             </tr>
           </thead>
           <tbody>
-            <tr>
+            <tr class="verification-group-row" data-verification-group="verify_openarbor-1">
               <th scope="row"><code>verify_openarbor-1</code></th>
               <td><strong>[PASS] 1. Root Zone (CRZ / TPZ / SRZ) &amp; Multi-Stem DBH Equations</strong></td>
               <td>Proves ANSI A300 Part 5 CRZ (1.0 ft/in DBH), AS 4970 TPZ (12x DBH clamped 2m to 15m), AS 4970 SRZ windthrow plate ((D*50)^0.42 * 0.64), and multi-stem DBH aggregation (largest_plus_half = 31.0 in; quadratic = 25.4 in).</td>
               <td><code>tests/verify_openarbor.mjs:110</code></td>
               <td><code>node tests/verify_openarbor.mjs</code></td>
             </tr>
-            <tr>
+            <tr class="verification-group-row" data-verification-group="verify_openarbor-2">
               <th scope="row"><code>verify_openarbor-2</code></th>
               <td><strong>[PASS] 2. Municipal Ordinance Engine, Oak Wilt Flagging, Site Context, SVG Map &amp; Ascending Exemption Math</strong></td>
               <td>Proves Liberty Hill UDC § 6.07.01 protected/heritage evaluation, seasonal Ceratocystis fagacearum (Oak Wilt) pruning window violation flagging, ascending whole-tree 20% diameter exemption walk ($2,250 cash-in-lieu), and vector SVG site map generation.</td>
               <td><code>tests/verify_openarbor.mjs:200</code></td>
               <td><code>node tests/verify_openarbor.mjs</code></td>
             </tr>
-            <tr>
+            <tr class="verification-group-row" data-verification-group="verify_openarbor-3">
               <th scope="row"><code>verify_openarbor-3</code></th>
               <td><strong>[PASS] 3. Allometric Ecosystem Benefits (Nowak/McPherson), John White Age &amp; GeoJSON Exporter</strong></td>
               <td>Proves John White (FCIN12) site-adjusted veteran tree age estimation (&gt;400 yrs), Nowak/Cairns/Xiao/McPherson allometric carbon, stormwater, cooling, and OGC CRS84 GeoJSON FeatureCollection export.</td>
               <td><code>tests/verify_openarbor.mjs:231</code></td>
               <td><code>node tests/verify_openarbor.mjs</code></td>
             </tr>
-            <tr>
+            <tr class="verification-group-row" data-verification-group="verify_openarbor-4">
               <th scope="row"><code>verify_openarbor-4</code></th>
               <td><strong>[PASS] 4. RCA Biomechanics, Mattheck t/R Stability, SGR Enums &amp; Rhizosphere Prescription</strong></td>
               <td>Proves Claus Mattheck hollow-cylinder shell buckling stability criterion (t/R &gt;= 0.30 sound vs. t/R = 0.18 buckling risk), stem-girdling root (SGR) vascular constriction relief ratios, and 150 psi AirSpade radial trenching &amp; biochar/compost/humate scaling.</td>
               <td><code>tests/verify_openarbor.mjs:299</code></td>
               <td><code>node tests/verify_openarbor.mjs</code></td>
             </tr>
-            <tr>
+            <tr class="verification-group-row" data-verification-group="verify_openarbor-5">
               <th scope="row"><code>verify_openarbor-5</code></th>
               <td><strong>[PASS] 5. CTLA 10th Ed vs. Holobiont Biological Equity Inversion (Veteran Oak)</strong></td>
               <td>Proves CTLA 10th Edition Trunk Formula depreciation vs. 200-year Holobiont Biological Equity valuation with 3.5x Veteran Keystone Habitat Multiplier and &gt;=10.0x ecological inversion ratio.</td>
               <td><code>tests/verify_openarbor.mjs:317</code></td>
               <td><code>node tests/verify_openarbor.mjs</code></td>
             </tr>
-            <tr>
+            <tr class="verification-group-row" data-verification-group="verify_openarbor-6">
               <th scope="row"><code>verify_openarbor-6</code></th>
               <td><strong>[PASS] 6. Sanctuary Scorecard Parcel Rollup &amp; Spatial Union De-duplication</strong></td>
               <td>Proves 5-dimension Open Sanctuary Scorecard parcel rollup (Soil Health, Canopy, Water Dynamics, Biodiversity, Restoration) and 1-ft spatial Cartesian grid union de-duplication (unionRootZoneArea).</td>
               <td><code>tests/verify_openarbor.mjs:400</code></td>
               <td><code>node tests/verify_openarbor.mjs</code></td>
             </tr>
-            <tr>
+            <tr class="verification-group-row" data-verification-group="verify_openarbor-7">
               <th scope="row"><code>verify_openarbor-7</code></th>
               <td><strong>[PASS] 7. ASCA Evidentiary Linter Blocking Lazy Removal &amp; Strict Schema Conformance</strong></td>
               <td>Proves ASCA/RCA hard evidentiary linter blocking unjustified removal when t/R &gt;= 0.30 (UNJUSTIFIED_REMOVAL, EVIDENTIARY_DEFECT) and strict Draft 2020-12 additionalProperties: false schema enforcement.</td>
               <td><code>tests/verify_openarbor.mjs:433</code></td>
               <td><code>node tests/verify_openarbor.mjs</code></td>
             </tr>
-            <tr>
+            <tr class="verification-group-row" data-verification-group="verify_openarbor-8">
               <th scope="row"><code>verify_openarbor-8</code></th>
               <td><strong>[PASS] 8. Rogue Valley Oregon Bioregional Municipal Ordinances (Ashland, Medford, Grants Pass)</strong></td>
               <td>Proves Rogue Valley, Oregon bioregional municipal ordinances (Ashland AMC 18.4.5, Medford MMC/MLDC, Grants Pass DC Art. 11) with zero false Texas Oak Wilt flags during May pruning in Oregon.</td>
               <td><code>tests/verify_openarbor.mjs:556</code></td>
               <td><code>node tests/verify_openarbor.mjs</code></td>
             </tr>
-            <tr>
+            <tr class="verification-group-row" data-verification-group="verify_openarbor-9">
               <th scope="row"><code>verify_openarbor-9</code></th>
               <td><strong>[PASS] 9. 100x RCA Army Engine &amp; CLI (compile, counter-notice, economics, attest &amp; sabotage gates)</strong></td>
               <td>Proves bin/openarbor-rca.mjs CLI subcommands (compile, counter-notice, economics --json, attest Open Badges 3.0 minting) plus negative-path CLI sabotage and __proto__/constructor prototype-pollution rejection.</td>
               <td><code>tests/verify_openarbor.mjs:671</code></td>
               <td><code>node tests/verify_openarbor.mjs</code></td>
             </tr>
-            <tr>
+            <tr class="verification-group-row" data-verification-group="verify_openarbor-10">
               <th scope="row"><code>verify_openarbor-10</code></th>
               <td><strong>[PASS] 10. Static Web Portal &amp; Multi-Route Build (out/) &amp; 4/4 CLI-to-Browser Bundle Parity</strong></td>
               <td>Proves static multi-page web build (out/) across all routes and executes deploy/verify-parity.mjs asserting 4/4 bit-for-bit CLI-to-browser parity.</td>
@@ -234,56 +234,56 @@
             </tr>
           </thead>
           <tbody>
-            <tr>
+            <tr class="verification-group-row" data-verification-group="verify_mcp-1">
               <th scope="row"><code>verify_mcp-1</code></th>
               <td><strong>[PASS] 1. MCP initialize handshake completed (server: openarbor-mcp v2.0.0)</strong></td>
               <td>Spawns server/mcp/openarbor-mcp.mjs over stdio and verifies JSON-RPC 2.0 initialize handshake (protocolVersion 2024-11-05, server openarbor-mcp v2.0.0).</td>
               <td><code>tests/verify_mcp.mjs:84</code></td>
               <td><code>node tests/verify_mcp.mjs</code></td>
             </tr>
-            <tr>
+            <tr class="verification-group-row" data-verification-group="verify_mcp-2">
               <th scope="row"><code>verify_mcp-2</code></th>
-              <td><strong>[PASS] 2. tools/list verified (${tools.length} tools: ${toolNames.join(&#39;, &#39;)})</strong></td>
+              <td><strong>[PASS] 2. tools/list verified (6 tools: calculate_root_zone, evaluate_ordinance, calculate_ecosystem_benefits, rca_biomechanics, rca_lint, lookup_ordinance)</strong></td>
               <td>Verifies tools/list returns all 6 deterministic MCP tools (calculate_root_zone, evaluate_ordinance, calculate_ecosystem_benefits, rca_biomechanics, rca_lint, lookup_ordinance).</td>
               <td><code>tests/verify_mcp.mjs:99</code></td>
               <td><code>node tests/verify_mcp.mjs</code></td>
             </tr>
-            <tr>
+            <tr class="verification-group-row" data-verification-group="verify_mcp-3">
               <th scope="row"><code>verify_mcp-3</code></th>
-              <td><strong>[PASS] 3. tools/call calculate_root_zone (24 in, US_1_1) -&gt; radius_feet=${rzData.radius_feet}, area_sqft=${rzData.area_sqft}</strong></td>
+              <td><strong>[PASS] 3. tools/call calculate_root_zone (24 in, US_1_1) -&gt; radius_feet=24, area_sqft=1809.56</strong></td>
               <td>Verifies known-answer tools/call for calculate_root_zone (24 in DBH, US_1_1 -&gt; radius_feet = 24, area_sqft = 1809.56).</td>
               <td><code>tests/verify_mcp.mjs:117</code></td>
               <td><code>node tests/verify_mcp.mjs</code></td>
             </tr>
-            <tr>
+            <tr class="verification-group-row" data-verification-group="verify_mcp-4">
               <th scope="row"><code>verify_mcp-4</code></th>
-              <td><strong>[PASS] 4. tools/call lookup_ordinance positive (or-ashland) &amp; negative-path (xx-nonexistent-city -&gt; ${errPayload.error}, no crash)</strong></td>
+              <td><strong>[PASS] 4. tools/call lookup_ordinance positive (or-ashland) &amp; negative-path (xx-nonexistent-city -&gt; UNKNOWN_JURISDICTION, no crash)</strong></td>
               <td>Verifies lookup_ordinance positive lookup (or-ashland -&gt; 6 in DBH threshold) and graceful structured error on unknown jurisdiction (UNKNOWN_JURISDICTION) without crashing.</td>
               <td><code>tests/verify_mcp.mjs:141</code></td>
               <td><code>node tests/verify_mcp.mjs</code></td>
             </tr>
-            <tr>
+            <tr class="verification-group-row" data-verification-group="verify_mcp-5">
               <th scope="row"><code>verify_mcp-5</code></th>
               <td><strong>[PASS] 5. tools/call evaluate_ordinance, calculate_ecosystem_benefits, rca_biomechanics, and rca_lint verified</strong></td>
               <td>Verifies known-answer tools/call execution for evaluate_ordinance, calculate_ecosystem_benefits, rca_biomechanics (t/R = 0.34 sound), and rca_lint (valid = true).</td>
               <td><code>tests/verify_mcp.mjs:207</code></td>
               <td><code>node tests/verify_mcp.mjs</code></td>
             </tr>
-            <tr>
+            <tr class="verification-group-row" data-verification-group="verify_mcp-6">
               <th scope="row"><code>verify_mcp-6</code></th>
-              <td><strong>[PASS] 6. MCP input size guards verified (evaluate_ordinance 501 trees -&gt; ${capPayload.error}; lookup_ordinance 133 chars -&gt; ${longIdPayload.error})</strong></td>
+              <td><strong>[PASS] 6. MCP input size guards verified (evaluate_ordinance 501 trees -&gt; MAX_TREES_EXCEEDED; lookup_ordinance 133 chars -&gt; JURISDICTION_ID_TOO_LONG)</strong></td>
               <td>Verifies bounded-input DoS security guards: rejects &gt;500 trees in evaluate_ordinance (MAX_TREES_EXCEEDED) and &gt;128 char jurisdiction IDs (JURISDICTION_ID_TOO_LONG).</td>
               <td><code>tests/verify_mcp.mjs:239</code></td>
               <td><code>node tests/verify_mcp.mjs</code></td>
             </tr>
-            <tr>
+            <tr class="verification-group-row" data-verification-group="verify_mcp-7">
               <th scope="row"><code>verify_mcp-7</code></th>
               <td><strong>[PASS] 7. Ordinance validator prototype-chain negative gates verified (__proto__ and constructor rejected with exit code 1)</strong></td>
               <td>Verifies prototype-chain pollution security gates in scripts/validate-ordinance.mjs: rejects literal __proto__ and constructor payloads with non-zero exit code.</td>
               <td><code>tests/verify_mcp.mjs:298</code></td>
               <td><code>node tests/verify_mcp.mjs</code></td>
             </tr>
-            <tr>
+            <tr class="verification-group-row" data-verification-group="verify_mcp-8">
               <th scope="row"><code>verify_mcp-8</code></th>
               <td><strong>[PASS] 8. MCP shutdown completed cleanly</strong></td>
               <td>Verifies clean JSON-RPC 2.0 shutdown response and child process termination.</td>
@@ -473,53 +473,53 @@
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <th scope="row"><code>verify_masterwork_100x-D1</code></th>
-              <td><strong>[PASS] D1. Shareable Assessment Permalink (#oa1=...) verified across 3 presets (longest URL: ${longestUrlLength} chars)</strong></td>
+            <tr class="verification-group-row" data-verification-group="verify_masterwork_100x-1">
+              <th scope="row"><code>verify_masterwork_100x-1</code></th>
+              <td><strong>[PASS] D1. Shareable Assessment Permalink (#oa1=...) verified across 3 presets (longest URL: 595 chars)</strong></td>
               <td>Proves versioned #oa1= base64url assessment permalink encoding and round-trip decoding across 3 bioregional presets with identical SHA-256 digests, permit verdicts, CRZ radii, and cash-in-lieu fees.</td>
-              <td><code>tests/verify_masterwork_100x.mjs:101</code></td>
+              <td><code>tests/verify_masterwork_100x.mjs:102</code></td>
               <td><code>node tests/verify_masterwork_100x.mjs</code></td>
             </tr>
-            <tr>
-              <th scope="row"><code>verify_masterwork_100x-D2</code></th>
+            <tr class="verification-group-row" data-verification-group="verify_masterwork_100x-2">
+              <th scope="row"><code>verify_masterwork_100x-2</code></th>
               <td><strong>[PASS] D2. Sticky Determination Bar (#sticky-determination-bar) &amp; keyboard-reachable controls verified</strong></td>
               <td>Proves sticky determination summary bar (#sticky-determination-bar) DOM contract, live status/DBH/CRZ/replacement/cash-in-lieu readouts, and keyboard-reachable verdict link copy button.</td>
-              <td><code>tests/verify_masterwork_100x.mjs:119</code></td>
+              <td><code>tests/verify_masterwork_100x.mjs:120</code></td>
               <td><code>node tests/verify_masterwork_100x.mjs</code></td>
             </tr>
-            <tr>
-              <th scope="row"><code>verify_masterwork_100x-D3</code></th>
-              <td><strong>[PASS] D3. Static Crawlable Case Gallery verified (1 index + ${expectedSlugs.length} static case pages with JS-off HTML &amp; SVG)</strong></td>
+            <tr class="verification-group-row" data-verification-group="verify_masterwork_100x-3">
+              <th scope="row"><code>verify_masterwork_100x-3</code></th>
+              <td><strong>[PASS] D3. Static Crawlable Case Gallery verified (1 index + 5 static case pages with JS-off HTML &amp; SVG)</strong></td>
               <td>Proves build-time static crawlable Case Gallery (out/cases/index.html + 5 case pages) containing pre-rendered determinations, inline &lt;svg&gt; root zone maps, and #oa1= links with JavaScript disabled.</td>
-              <td><code>tests/verify_masterwork_100x.mjs:144</code></td>
+              <td><code>tests/verify_masterwork_100x.mjs:145</code></td>
               <td><code>node tests/verify_masterwork_100x.mjs</code></td>
             </tr>
-            <tr>
-              <th scope="row"><code>verify_masterwork_100x-D4</code></th>
+            <tr class="verification-group-row" data-verification-group="verify_masterwork_100x-4">
+              <th scope="row"><code>verify_masterwork_100x-4</code></th>
               <td><strong>[PASS] D4. Offline Field Mode Service Worker (out/sw.js) pre-cache manifest &amp; offline fetch handler verified</strong></td>
               <td>Proves offline field mode Service Worker (out/sw.js) pre-caching openarbor-bundle.js, municipal ordinance datasets, schemas, and offline fetch handler.</td>
-              <td><code>tests/verify_masterwork_100x.mjs:157</code></td>
+              <td><code>tests/verify_masterwork_100x.mjs:158</code></td>
               <td><code>node tests/verify_masterwork_100x.mjs</code></td>
             </tr>
-            <tr>
-              <th scope="row"><code>verify_masterwork_100x-D5</code></th>
-              <td><strong>[PASS] D5. Provenance Surface &amp; Epistemic Gap Inspector verified (Cedar Park: ${cpProv.unverified_gaps.length} gaps, Round Rock: ${rrProv.unverified_gaps.length} gaps)</strong></td>
+            <tr class="verification-group-row" data-verification-group="verify_masterwork_100x-5">
+              <th scope="row"><code>verify_masterwork_100x-5</code></th>
+              <td><strong>[PASS] D5. Provenance Surface &amp; Epistemic Gap Inspector verified (Cedar Park: 6 gaps, Round Rock: 5 gaps)</strong></td>
               <td>Proves municipal provenance surface and epistemic gap inspector (inspectMunicipalityProvenance) explicitly enumerating UNVERIFIED statutory sub-sections for Cedar Park and Round Rock Threshold_And_Fee_Record entries.</td>
-              <td><code>tests/verify_masterwork_100x.mjs:184</code></td>
+              <td><code>tests/verify_masterwork_100x.mjs:185</code></td>
               <td><code>node tests/verify_masterwork_100x.mjs</code></td>
             </tr>
-            <tr>
-              <th scope="row"><code>verify_masterwork_100x-D6</code></th>
+            <tr class="verification-group-row" data-verification-group="verify_masterwork_100x-6">
+              <th scope="row"><code>verify_masterwork_100x-6</code></th>
               <td><strong>[PASS] D6. Evidentiary Print Report (@media print, @page Letter, #evidentiary-print-sheet &amp; signature block) verified</strong></td>
               <td>Proves evidentiary print report stylesheet (@media print, @page Letter) and #evidentiary-print-sheet practitioner attestation &amp; signature block.</td>
-              <td><code>tests/verify_masterwork_100x.mjs:200</code></td>
+              <td><code>tests/verify_masterwork_100x.mjs:201</code></td>
               <td><code>node tests/verify_masterwork_100x.mjs</code></td>
             </tr>
-            <tr>
-              <th scope="row"><code>verify_masterwork_100x-D7</code></th>
-              <td><strong>[PASS] D7. Falsifiability Page (out/methods/index.html) verified with 29/29 live suite verification groups</strong></td>
-              <td>Proves falsifiability &amp; verification methodology page (out/methods/index.html) generated dynamically from live test suites with 29/29 executable verification groups and zero drift.</td>
-              <td><code>tests/verify_masterwork_100x.mjs:216</code></td>
+            <tr class="verification-group-row" data-verification-group="verify_masterwork_100x-7">
+              <th scope="row"><code>verify_masterwork_100x-7</code></th>
+              <td><strong>[PASS] D7. Falsifiability Page (out/methods/index.html) verified with 25/25 live suite verification groups</strong></td>
+              <td>Proves falsifiability &amp; verification methodology page (out/methods/index.html) generated dynamically from live test suites with 25/25 executable verification groups and zero drift.</td>
+              <td><code>tests/verify_masterwork_100x.mjs:206</code></td>
               <td><code>node tests/verify_masterwork_100x.mjs</code></td>
             </tr>
           </tbody>
@@ -659,7 +659,7 @@
   <footer class="app-footer">
     <div class="container">
       <p>
-        Open Arbor v2.0 &middot; Falsifiability &amp; Verification Methodology &middot; 29 Executable Verification Groups &middot; Licensed under AGPL-3.0-only.
+        Open Arbor v2.0 &middot; Falsifiability &amp; Verification Methodology &middot; 25 Executable Verification Groups &middot; Licensed under AGPL-3.0-only.
       </p>
     </div>
   </footer>

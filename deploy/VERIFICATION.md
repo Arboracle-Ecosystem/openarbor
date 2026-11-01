@@ -21,7 +21,7 @@
 | `out/demo/index.html` | `46928` | Interactive 3-mode Open Arbor engine demo (`/demo/`) |
 | `out/index.html` | `19196` | Open Arbor (`openarbor.org`) root landing and alliance portal |
 | `out/mcp/index.html` | `9030` | 6-Tool MCP Server Playground & JSON-RPC 2.0 Inspector (`/mcp/`) |
-| `out/methods/index.html` | `48403` | GitHub Pages Jekyll bypass marker |
+| `out/methods/index.html` | `50221` | GitHub Pages Jekyll bypass marker |
 | `out/openarbor-bundle.js` | `443035` | Compiled ESM browser bundle (engines + ordinances + catalog + schemas + UI) |
 | `out/ordinances/index.html` | `10936` | 8-City Municipal Ordinance Commons & Schema Validator (`/ordinances/`) |
 | `out/schemas/municipal-ordinance.schema.json` | `3630` | Published JSON Schema (Draft 2020-12) |

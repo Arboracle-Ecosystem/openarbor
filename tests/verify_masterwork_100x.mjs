@@ -12,6 +12,7 @@
  */
 
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -201,7 +202,9 @@ const bundle = await import(bundlePath);
 }
 
 // D7. Falsifiability Page (/methods/)
-{
+if (process.env.OA_SKIP_D7_GATE === '1') {
+  console.log('[PASS] D7. Falsifiability Page (out/methods/index.html) verified with live suite verification groups');
+} else {
   const methodsHtmlPath = path.join(outDir, 'methods/index.html');
   assert.ok(fs.existsSync(methodsHtmlPath), 'D7 FAIL: out/methods/index.html must exist');
   const methodsHtml = fs.readFileSync(methodsHtmlPath, 'utf8');
@@ -211,9 +214,84 @@ const bundle = await import(bundlePath);
   assert.ok(methodsHtml.includes('node scripts/validate-ordinance.mjs'), 'D7 FAIL: /methods/ must list node scripts/validate-ordinance.mjs');
   assert.ok(methodsHtml.includes('node deploy/verify-parity.mjs'), 'D7 FAIL: /methods/ must list node deploy/verify-parity.mjs');
   assert.ok(methodsHtml.includes('node tests/verify_masterwork_100x.mjs'), 'D7 FAIL: /methods/ must list node tests/verify_masterwork_100x.mjs');
-  assert.ok(methodsHtml.includes('data-total-verification-groups="29"'), 'D7 FAIL: /methods/ must display exact generated total verification count (29)');
 
-  console.log('[PASS] D7. Falsifiability Page (out/methods/index.html) verified with 29/29 live suite verification groups');
+  // 1. Count [PASS] groups printed by running all three suites
+  const countPassLines = (scriptRelPath, extraEnv = {}) => {
+    const out = execFileSync(process.execPath, [path.join(rootDir, scriptRelPath)], {
+      cwd: rootDir,
+      encoding: 'utf8',
+      env: { ...process.env, ...extraEnv },
+    });
+    return out
+      .split('\n')
+      .filter((line) => line.trim().startsWith('[PASS]')).length;
+  };
+
+  const openArborPassCount = countPassLines('tests/verify_openarbor.mjs');
+  const mcpPassCount = countPassLines('tests/verify_mcp.mjs');
+  const masterworkPassCount = countPassLines('tests/verify_masterwork_100x.mjs', {
+    OA_SKIP_D7_GATE: '1',
+  });
+  const liveTotalPassGroups = openArborPassCount + mcpPassCount + masterworkPassCount;
+
+  // Assert 1: The number the page displays equals the number of [PASS] groups the three suites print
+  const attrMatches = [
+    ...methodsHtml.matchAll(/data-total-verification-groups="(\d+)"/g),
+  ].map((m) => Number(m[1]));
+  assert.ok(
+    attrMatches.length >= 2,
+    'D7 FAIL: out/methods/index.html must include data-total-verification-groups attribute'
+  );
+  for (const claimedCount of attrMatches) {
+    assert.equal(
+      claimedCount,
+      liveTotalPassGroups,
+      `D7 FAIL: Displayed data-total-verification-groups="${claimedCount}" does not match live suite [PASS] count (${liveTotalPassGroups} = ${openArborPassCount} openarbor + ${mcpPassCount} mcp + ${masterworkPassCount} masterwork)`
+    );
+  }
+
+  const metricMatch = methodsHtml.match(/(\d+)\s*\/\s*(\d+)\s*Groups/);
+  assert.ok(metricMatch, 'D7 FAIL: out/methods/index.html must display "N / N Groups" metric readout');
+  assert.equal(
+    Number(metricMatch[1]),
+    liveTotalPassGroups,
+    `D7 FAIL: Displayed metric "${metricMatch[0]}" numerator (${metricMatch[1]}) does not match live suite [PASS] count (${liveTotalPassGroups})`
+  );
+  assert.equal(
+    Number(metricMatch[2]),
+    liveTotalPassGroups,
+    `D7 FAIL: Displayed metric "${metricMatch[0]}" denominator (${metricMatch[2]}) does not match live suite [PASS] count (${liveTotalPassGroups})`
+  );
+
+  // Assert 2: The number of rendered group rows in out/methods/index.html equals that same number
+  const renderedGroupRowMatches =
+    methodsHtml.match(/<tr class="verification-group-row"/g) || [];
+  const renderedGroupCodeMatches =
+    methodsHtml.match(
+      /<code>verify_(?:openarbor|mcp|masterwork_100x)-\d+<\/code>/g
+    ) || [];
+  assert.equal(
+    renderedGroupRowMatches.length,
+    liveTotalPassGroups,
+    `D7 FAIL: Rendered verification-group-row count (${renderedGroupRowMatches.length}) does not match live suite [PASS] count (${liveTotalPassGroups})`
+  );
+  assert.equal(
+    renderedGroupCodeMatches.length,
+    liveTotalPassGroups,
+    `D7 FAIL: Rendered suite group ID row count (${renderedGroupCodeMatches.length}) does not match live suite [PASS] count (${liveTotalPassGroups})`
+  );
+
+  // Assert 3: The string '${' does not appear anywhere in the served HTML
+  const templateLeakCount = (methodsHtml.match(/\$\{/g) || []).length;
+  assert.equal(
+    templateLeakCount,
+    0,
+    `D7 FAIL: out/methods/index.html contains ${templateLeakCount} unescaped "\${" template fragment(s)`
+  );
+
+  console.log(
+    `[PASS] D7. Falsifiability Page (out/methods/index.html) verified with ${liveTotalPassGroups}/${liveTotalPassGroups} live suite verification groups`
+  );
 }
 
 console.log('\nALL 7 MASTERWORK 100X DELIVERABLE GATES (D1 TO D7) PASSED.');

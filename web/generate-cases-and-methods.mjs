@@ -9,6 +9,8 @@
  *     test runners and municipal ordinance validators on disk with zero hardcoded drift.
  */
 
+import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -1019,18 +1021,20 @@ ${companionRowsHtml}
 }
 
 /**
- * Dynamically parse console.log('[PASS] ...') groups from a test file on disk, including line numbers.
+ * Dynamically extract [PASS] groups from a test file on disk, capturing line numbers
+ * from source and evaluated runtime [PASS] labels from executing the suite.
  */
-function extractPassGroupsFromFile(filePath, relFilePath, cliCommand, invariantDescriptions = {}) {
+function extractPassGroupsFromFile(filePath, relFilePath, cliCommand, invariantDescriptions = {}, runSuite = true) {
   const raw = fs.readFileSync(filePath, 'utf8');
   const lines = raw.split('\n');
-  const groups = [];
+  const sourceGroups = [];
 
   for (let i = 0; i < lines.length; i += 1) {
     const line = lines[i];
     if (!line.includes('[PASS]')) continue;
+    // Ignore comments so only console.log('[PASS] ...') statements (single-line or multi-line) match
+    if (line.trim().startsWith('//') || line.trim().startsWith('*')) continue;
 
-    // Extract text from [PASS] up to the closing quote or backtick on this line
     const idx = line.indexOf('[PASS]');
     let after = line.slice(idx + 6).trim();
     after = after.replace(/(\\n)?['"`]\s*\)?;?\s*$/, '').trim();
@@ -1038,24 +1042,60 @@ function extractPassGroupsFromFile(filePath, relFilePath, cliCommand, invariantD
 
     const rawTitle = after;
     const idMatch = rawTitle.match(/^([0-9]+|D[0-9]+)\.\s*(.+)$/);
-    const groupNum = idMatch ? idMatch[1] : String(groups.length + 1);
-    const title = idMatch ? idMatch[2] : rawTitle;
+    if (!idMatch) continue;
+    const groupNum = idMatch[1];
+    const title = idMatch[2];
+    if (sourceGroups.some((g) => g.groupNum === groupNum)) continue;
 
-    groups.push({
-      id: `${path.basename(filePath, '.mjs')}-${groupNum}`,
-      groupNumber: groupNum,
-      title,
-      rawLabel: `[PASS] ${rawTitle}`,
-      file: relFilePath,
+    sourceGroups.push({
+      groupNum,
       line: i + 1,
-      command: cliCommand,
-      invariant:
-        invariantDescriptions[groupNum] ||
-        `Verifies ${title} and asserts deterministic output without error.`,
+      rawTitle,
+      title,
     });
   }
 
-  return groups;
+  // Execute suite when requested to capture evaluated stdout [PASS] lines without template expressions
+  const runtimeLabelsByGroup = new Map();
+  if (runSuite) {
+    const rootDir = path.dirname(path.dirname(filePath));
+    const stdout = execFileSync(process.execPath, [filePath], {
+      cwd: rootDir,
+      encoding: 'utf8',
+      env: { ...process.env, OA_SKIP_D7_GATE: '1' },
+    });
+    for (const outLine of stdout.split('\n')) {
+      const trimmed = outLine.trim();
+      if (!trimmed.startsWith('[PASS]')) continue;
+      const after = trimmed.slice(6).trim();
+      const idMatch = after.match(/^([0-9]+|D[0-9]+)\.\s*(.+)$/);
+      if (idMatch) {
+        runtimeLabelsByGroup.set(idMatch[1], {
+          rawTitle: after,
+          title: idMatch[2],
+        });
+      }
+    }
+  }
+
+  return sourceGroups.map((sg) => {
+    const evaluated = runtimeLabelsByGroup.get(sg.groupNum);
+    const cleanRawTitle = evaluated ? evaluated.rawTitle : sg.rawTitle;
+    const cleanTitle = evaluated ? evaluated.title : sg.title;
+    const idNum = sg.groupNum.replace(/^D/i, '');
+    return {
+      id: `${path.basename(filePath, '.mjs')}-${idNum}`,
+      groupNumber: sg.groupNum,
+      title: cleanTitle,
+      rawLabel: `[PASS] ${cleanRawTitle}`,
+      file: relFilePath,
+      line: sg.line,
+      command: cliCommand,
+      invariant:
+        invariantDescriptions[sg.groupNum] ||
+        `Verifies ${cleanTitle} and asserts deterministic output without error.`,
+    };
+  });
 }
 
 /**
@@ -1086,6 +1126,33 @@ function renderMethodsHtml(rootDir, allMunicipalities) {
     '8': 'Verifies clean JSON-RPC 2.0 shutdown response and child process termination.',
   };
 
+  const coreGroups = extractPassGroupsFromFile(
+    path.join(rootDir, 'tests/verify_openarbor.mjs'),
+    'tests/verify_openarbor.mjs',
+    'node tests/verify_openarbor.mjs',
+    openArborInvariants,
+    true
+  );
+
+  const mcpGroups = extractPassGroupsFromFile(
+    path.join(rootDir, 'tests/verify_mcp.mjs'),
+    'tests/verify_mcp.mjs',
+    'node tests/verify_mcp.mjs',
+    mcpInvariants,
+    true
+  );
+
+  const rawMasterworkGroups = extractPassGroupsFromFile(
+    path.join(rootDir, 'tests/verify_masterwork_100x.mjs'),
+    'tests/verify_masterwork_100x.mjs',
+    'node tests/verify_masterwork_100x.mjs',
+    {},
+    true
+  );
+
+  const totalVerificationGroups =
+    coreGroups.length + mcpGroups.length + rawMasterworkGroups.length;
+
   const masterworkInvariants = {
     D1: 'Proves versioned #oa1= base64url assessment permalink encoding and round-trip decoding across 3 bioregional presets with identical SHA-256 digests, permit verdicts, CRZ radii, and cash-in-lieu fees.',
     D2: 'Proves sticky determination summary bar (#sticky-determination-bar) DOM contract, live status/DBH/CRZ/replacement/cash-in-lieu readouts, and keyboard-reachable verdict link copy button.',
@@ -1093,29 +1160,20 @@ function renderMethodsHtml(rootDir, allMunicipalities) {
     D4: 'Proves offline field mode Service Worker (out/sw.js) pre-caching openarbor-bundle.js, municipal ordinance datasets, schemas, and offline fetch handler.',
     D5: 'Proves municipal provenance surface and epistemic gap inspector (inspectMunicipalityProvenance) explicitly enumerating UNVERIFIED statutory sub-sections for Cedar Park and Round Rock Threshold_And_Fee_Record entries.',
     D6: 'Proves evidentiary print report stylesheet (@media print, @page Letter) and #evidentiary-print-sheet practitioner attestation & signature block.',
-    D7: 'Proves falsifiability & verification methodology page (out/methods/index.html) generated dynamically from live test suites with 29/29 executable verification groups and zero drift.',
+    D7: `Proves falsifiability & verification methodology page (out/methods/index.html) generated dynamically from live test suites with ${totalVerificationGroups}/${totalVerificationGroups} executable verification groups and zero drift.`,
   };
 
-  const coreGroups = extractPassGroupsFromFile(
-    path.join(rootDir, 'tests/verify_openarbor.mjs'),
-    'tests/verify_openarbor.mjs',
-    'node tests/verify_openarbor.mjs',
-    openArborInvariants
-  );
-
-  const mcpGroups = extractPassGroupsFromFile(
-    path.join(rootDir, 'tests/verify_mcp.mjs'),
-    'tests/verify_mcp.mjs',
-    'node tests/verify_mcp.mjs',
-    mcpInvariants
-  );
-
-  const masterworkGroups = extractPassGroupsFromFile(
-    path.join(rootDir, 'tests/verify_masterwork_100x.mjs'),
-    'tests/verify_masterwork_100x.mjs',
-    'node tests/verify_masterwork_100x.mjs',
-    masterworkInvariants
-  );
+  const masterworkGroups = rawMasterworkGroups.map((g) => {
+    const isD7 = g.groupNumber === 'D7';
+    const cleanRawLabel = isD7
+      ? `[PASS] D7. Falsifiability Page (out/methods/index.html) verified with ${totalVerificationGroups}/${totalVerificationGroups} live suite verification groups`
+      : g.rawLabel;
+    return {
+      ...g,
+      rawLabel: cleanRawLabel,
+      invariant: masterworkInvariants[g.groupNumber] || g.invariant,
+    };
+  });
 
   const schema = JSON.parse(
     fs.readFileSync(path.join(rootDir, 'schemas/municipal-ordinance.schema.json'), 'utf8')
@@ -1143,8 +1201,6 @@ function renderMethodsHtml(rootDir, allMunicipalities) {
   const parityMetricsPerCase = 21;
   const totalParityAssertions = parityCases.length * parityMetricsPerCase;
 
-  const totalVerificationGroups =
-    coreGroups.length + mcpGroups.length + parityCases.length + masterworkGroups.length;
   const totalOrdinanceRecords = ordinanceRecords.length;
   const totalFalsifiableChecks = totalVerificationGroups + totalOrdinanceRecords;
 
@@ -1156,7 +1212,7 @@ function renderMethodsHtml(rootDir, allMunicipalities) {
   const renderGroupRows = (groups) =>
     groups
       .map(
-        (g) => `            <tr>
+        (g) => `            <tr class="verification-group-row" data-verification-group="${escapeHtml(g.id)}">
               <th scope="row"><code>${escapeHtml(g.id)}</code></th>
               <td><strong>${escapeHtml(g.rawLabel)}</strong></td>
               <td>${escapeHtml(g.invariant)}</td>
@@ -1271,7 +1327,7 @@ ${renderSharedHeader('..', 'methods')}
         <div class="metric-box highlight-box">
           <span class="metric-label">Executable Verification Groups</span>
           <strong class="metric-value text-accent">${totalVerificationGroups} / ${totalVerificationGroups} Groups</strong>
-          <span class="metric-sub">${coreGroups.length} Core + ${mcpGroups.length} MCP + ${parityCases.length} Parity + ${masterworkGroups.length} Masterwork</span>
+          <span class="metric-sub">${coreGroups.length} Core + ${mcpGroups.length} MCP + ${masterworkGroups.length} Masterwork</span>
         </div>
         <div class="metric-box">
           <span class="metric-label">Validated Municipal Ordinances</span>
@@ -1582,9 +1638,14 @@ export function generateCasesAndMethods(rootDir = DEFAULT_ROOT_DIR, outDir = pat
   // 3. Write out/methods/index.html
   const methodsDir = path.join(outDir, 'methods');
   fs.mkdirSync(methodsDir, { recursive: true });
+  const methodsHtml = renderMethodsHtml(rootDir, allMunicipalities);
+  assert.ok(
+    !methodsHtml.includes('${'),
+    'Build-time gate FAIL: out/methods/index.html contains unescaped ${ template fragment'
+  );
   fs.writeFileSync(
     path.join(methodsDir, 'index.html'),
-    renderMethodsHtml(rootDir, allMunicipalities),
+    methodsHtml,
     'utf8'
   );
 

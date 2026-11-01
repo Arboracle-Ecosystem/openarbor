@@ -1,7 +1,7 @@
 /**
- * OpenArbor v2.0 Mobile-First Web Field Tool
- * Bundles the certified OpenArbor engines (rootZone, ordinanceEngine,
- * ecosystemBenefits, rcaEngine) and Central Texas municipal ordinance datasets
+ * Open Arbor v2.0 Mobile-First Web Field Tool & Multi-Page Bundle Entrypoint
+ * Bundles the certified Open Arbor engines (rootZone, ordinanceEngine,
+ * ecosystemBenefits, rcaEngine) and bioregional municipal ordinance datasets
  * without modifying any engine logic under src/ or data/.
  */
 
@@ -48,7 +48,20 @@ import {
 import txOrdinances from '../data/ordinances/central_texas_ordinances.json';
 import orOrdinances from '../data/ordinances/rogue_valley_oregon_ordinances.json';
 import rcaAssessmentSchema from '../schemas/rca_assessment.schema.json';
-import { CENTRAL_TEXAS_SPECIES, FIXED_PARITY_CASES } from './presets.js';
+import municipalOrdinanceSchema from '../schemas/municipal-ordinance.schema.json';
+import forestryToolsCatalog from '../data/catalog/forestry-tools.json';
+import {
+  CENTRAL_TEXAS_SPECIES,
+  ALL_SPECIES_PRESETS,
+  FIXED_PARITY_CASES,
+  DEFAULT_STAND_TREES,
+} from './presets.js';
+
+import { initDemoExtrasUI, initSharedThemeToggle } from './pages/demo-extras.js';
+import { initToolsCatalogUI } from './pages/tools-ui.js';
+import { initOrdinancesExplorerUI } from './pages/ordinances-ui.js';
+import { initMcpPlaygroundUI } from './pages/mcp-ui.js';
+import { initSpecViewerUI } from './pages/spec-ui.js';
 
 export {
   calculateCRZ,
@@ -82,8 +95,12 @@ export {
   txOrdinances,
   orOrdinances,
   rcaAssessmentSchema,
+  municipalOrdinanceSchema,
+  forestryToolsCatalog,
   CENTRAL_TEXAS_SPECIES,
+  ALL_SPECIES_PRESETS,
   FIXED_PARITY_CASES,
+  DEFAULT_STAND_TREES,
 };
 
 const OLC_CHARS = '23456789CFGHJMPQRVWX';
@@ -94,10 +111,43 @@ export const ALL_MUNICIPALITIES = [
 ];
 
 export const CENTRAL_TEXAS_MUNICIPALITIES = txOrdinances.municipalities || [];
+export const ROGUE_VALLEY_MUNICIPALITIES = orOrdinances.municipalities || [];
 
 export function findMunicipality(id) {
   if (!id) return null;
   return ALL_MUNICIPALITIES.find((m) => m.id === id) || null;
+}
+
+let latestAssessment = null;
+let latestResult = null;
+
+/**
+ * Expose the latest single-tree assessment and evaluation result for Mode 1, Mode 2, and Mode 3 modules.
+ */
+export function getLatestFieldState() {
+  return { latestAssessment, latestResult };
+}
+
+/**
+ * Inspect a municipal ordinance record for missing or unverified statutory fields.
+ */
+export function getOrdinanceUnverifiedNotices(muni) {
+  if (!muni) return ['Municipality record not found in verified commons.'];
+  const notices = [];
+  const rawJson = JSON.stringify(muni);
+  if (/UNVERIFIED/i.test(rawJson)) {
+    notices.push('Contains explicit UNVERIFIED statutory annotation in dataset.');
+  }
+  if (!muni.permit_triggers_by_work_type) {
+    notices.push('permit_triggers_by_work_type is UNVERIFIED / not yet codified in dataset; verify work-type permit triggers directly with municipal staff.');
+  }
+  if (!muni.plan_rules?.root_zone) {
+    notices.push('plan_rules.root_zone is UNVERIFIED / not yet codified in dataset; engine defaults to standard 1.0 ft/in DBH CRZ.');
+  }
+  if (!muni.plan_rules?.survey) {
+    notices.push('plan_rules.survey is UNVERIFIED / not yet codified in dataset; engine defaults to quadratic multi-stem rule.');
+  }
+  return notices;
 }
 
 /**
@@ -122,7 +172,7 @@ export function encodePlusCode(lat, lng) {
 }
 
 /**
- * Run the full OpenArbor v2.0 deterministic pipeline on an RCA_v2 assessment
+ * Run the full Open Arbor v2.0 deterministic pipeline on an RCA_v2 assessment
  * and municipal ordinance context. Used by both the browser UI and parity verification.
  */
 export function evaluateCompleteFieldCase(assessment, options = {}) {
@@ -146,7 +196,7 @@ export function evaluateCompleteFieldCase(assessment, options = {}) {
   const conditionClass = options.condition_class || 'Good';
   const siteCondition = options.site_condition || 'Open Grown / Parkland';
 
-  const speciesEntry = CENTRAL_TEXAS_SPECIES.find(
+  const speciesEntry = ALL_SPECIES_PRESETS.find(
     (s) => s.scientific.toLowerCase() === String(sb.species_scientific || '').toLowerCase()
   );
   const growthFactor = speciesEntry?.growth_factor || 4.5;
@@ -378,24 +428,32 @@ export function initFieldToolUI() {
 
   let activePreset = JSON.parse(JSON.stringify(FIXED_PARITY_CASES[0]));
   let activePreviewTab = 'geojson';
-  let latestResult = null;
-  let latestAssessment = null;
 
   const el = (id) => document.getElementById(id);
 
-  // Populate Municipality dropdown
+  // Populate Municipality dropdown with ALL 8 municipalities grouped by TX and OR
   const muniSelect = el('input-ordinance-id');
   if (muniSelect) {
-    muniSelect.innerHTML = CENTRAL_TEXAS_MUNICIPALITIES.map(
-      (m) => `<option value="${m.id}">${m.name}, ${m.state} (Protected >= ${m.dbh_threshold_inches} in, Heritage >= ${m.heritage_threshold_inches} in)</option>`
+    const txOptions = CENTRAL_TEXAS_MUNICIPALITIES.map(
+      (m) =>
+        `<option value="${m.id}">${m.name}, ${m.state} (Protected &gt;= ${m.dbh_threshold_inches} in, Heritage &gt;= ${m.heritage_threshold_inches} in)</option>`
     ).join('');
+    const orOptions = ROGUE_VALLEY_MUNICIPALITIES.map(
+      (m) =>
+        `<option value="${m.id}">${m.name}, ${m.state} (Protected &gt;= ${m.dbh_threshold_inches} in, Heritage &gt;= ${m.heritage_threshold_inches} in)</option>`
+    ).join('');
+
+    muniSelect.innerHTML = [
+      `<optgroup label="Central Texas (TX)">${txOptions}</optgroup>`,
+      `<optgroup label="Rogue Valley, Oregon (OR)">${orOptions}</optgroup>`,
+    ].join('');
   }
 
   // Populate Species preset dropdown
   const speciesSelect = el('input-species-preset');
   if (speciesSelect) {
     speciesSelect.innerHTML = [
-      ...CENTRAL_TEXAS_SPECIES.map(
+      ...ALL_SPECIES_PRESETS.map(
         (s) => `<option value="${s.scientific}">${s.common} (${s.scientific})</option>`
       ),
       `<option value="custom">Custom Species (Enter below)</option>`,
@@ -437,7 +495,7 @@ export function initFieldToolUI() {
     el('input-assessment-date').value = sb.assessment_date || '2026-10-28';
     el('input-plus-code').value = sb.plus_code_global || '86247784+VP';
 
-    const matchedSpecies = CENTRAL_TEXAS_SPECIES.find(
+    const matchedSpecies = ALL_SPECIES_PRESETS.find(
       (s) => s.scientific.toLowerCase() === String(sb.species_scientific || '').toLowerCase()
     );
     el('input-species-preset').value = matchedSpecies ? matchedSpecies.scientific : 'custom';
@@ -524,7 +582,7 @@ export function initFieldToolUI() {
 
   el('input-species-preset')?.addEventListener('change', () => {
     const val = el('input-species-preset').value;
-    const found = CENTRAL_TEXAS_SPECIES.find((s) => s.scientific === val);
+    const found = ALL_SPECIES_PRESETS.find((s) => s.scientific === val);
     if (found) {
       el('input-species-common').value = found.common;
       el('input-species-scientific').value = found.scientific;
@@ -680,7 +738,7 @@ export function initFieldToolUI() {
       'Municipal Tree Code';
     disp.recommended_disposition = el('input-disposition').value;
 
-    // Check if current assessment fails exact preset bit-match or if we should sync derived radii/valuation
+    // Check if current assessment matches unmodified preset
     const isUnmodifiedPreset =
       JSON.stringify({
         ordId,
@@ -784,6 +842,10 @@ export function initFieldToolUI() {
       latestAssessment = assessment;
       latestResult = res;
       renderAllOutputs(assessment, res);
+
+      if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+        window.dispatchEvent(new CustomEvent('openarbor:field-updated', { detail: { assessment, result: res } }));
+      }
     } catch (err) {
       const errBanner = el('error-banner');
       if (errBanner) {
@@ -807,12 +869,35 @@ export function initFieldToolUI() {
     const mitIfRemoved = res.mitigationIfRemoved;
     const mitActive = res.mitigationActive;
 
-    // 1. Municipal Ordinance Lookup Summary Banner
+    // 1. Municipal Ordinance Lookup Summary Banner & UNVERIFIED Check
+    const citationBannerEl = el('ordinance-citation-banner');
+    const unverifiedNotices = getOrdinanceUnverifiedNotices(muni);
+    if (citationBannerEl && muni) {
+      if (unverifiedNotices.length > 0) {
+        citationBannerEl.innerHTML = `
+          <div>
+            <span class="badge badge-warn">UNVERIFIED STATUTORY FIELDS NOTICE</span>
+            <strong>${muni.name}, ${muni.state}:</strong> ${muni.ordinance_numbers}
+          </div>
+          <ul class="flag-list" style="margin-top: 6px;">
+            ${unverifiedNotices.map((n) => `<li><strong>UNVERIFIED:</strong> ${n}</li>`).join('')}
+          </ul>
+        `;
+      } else {
+        citationBannerEl.innerHTML = `
+          <div>
+            <span class="badge badge-protected">VERIFIED STATUTORY RECORD</span>
+            <strong>${muni.name}, ${muni.state}:</strong> ${muni.ordinance_numbers}
+          </div>
+        `;
+      }
+    }
+
     if (muni) {
       const oakMonths = muni.plan_rules?.pruning?.oak_months;
       const oakWindowText = Array.isArray(oakMonths)
         ? `Permitted Oak pruning months: ${oakMonths.join(', ')} (${muni.plan_rules?.pruning?.citation || 'Oak Wilt Rule'})`
-        : 'Verify seasonal Oak Wilt window with local forester';
+        : `${muni.plan_rules?.pruning?.standard || 'ANSI A300 Part 1'} (${muni.plan_rules?.pruning?.citation || 'Verify seasonal Oak Wilt window with local forester'})`;
 
       el('muni-lookup-card').innerHTML = `
         <div class="muni-header">
@@ -838,7 +923,7 @@ export function initFieldToolUI() {
           </div>
           <div class="metric-box">
             <span class="metric-label">CRZ Disturbance Trigger</span>
-            <strong class="metric-value">${muni.plan_rules?.root_zone?.removal_if_disturbed_pct ? `>${muni.plan_rules.root_zone.removal_if_disturbed_pct}% = Removal` : '1.0 ft / in DBH'}</strong>
+            <strong class="metric-value">${muni.plan_rules?.root_zone?.removal_if_disturbed_pct ? `&gt;${muni.plan_rules.root_zone.removal_if_disturbed_pct}% = Removal` : '1.0 ft / in DBH'}</strong>
           </div>
         </div>
         <p class="muni-subtext"><strong>Oak Wilt &amp; Pruning:</strong> ${oakWindowText}</p>
@@ -861,6 +946,17 @@ export function initFieldToolUI() {
         ? `<ul class="flag-list">${row.flags.map((f) => `<li>${f}</li>`).join('')}</ul>`
         : `<p class="clean-note">Zero ordinance or seasonal Oak Wilt violations triggered for current work parameters.</p>`;
 
+    const externalSvgMapContainer = el('svg-map-container');
+    const svgMapMarkup = `
+      <div class="svg-map-wrap">
+        <div class="svg-map-header">
+          <span><strong>ANSI A300 Part 5 / ISA BMP To-Scale Root Protection Map</strong> (Fence Radius: ${row.fence_ft} ft)</span>
+          <span>Soil Invigoration Budget: <strong>$${res.soilRemediation.total_usd.toLocaleString()}</strong></span>
+        </div>
+        ${res.svgSiteMap || ''}
+      </div>
+    `;
+
     el('verdict-ordinance-body').innerHTML = `
       <div class="verdict-banner">
         <div>
@@ -872,7 +968,7 @@ export function initFieldToolUI() {
         </div>
         <div class="verdict-right">
           <span class="metric-label">Permit Verdict</span>
-          <strong>${res.permit.unknown ? 'Verify with City' : res.permit.required ? 'PERMIT REQUIRED' : 'No Permit Triggered'}</strong>
+          <strong>${res.permit.unknown ? 'Verify with City (UNVERIFIED)' : res.permit.required ? 'PERMIT REQUIRED' : 'No Permit Triggered'}</strong>
         </div>
       </div>
       <p class="citation-callout"><strong>Statutory Permit Determination:</strong> ${res.permitText} ${res.permit.citation ? `(${res.permit.citation})` : ''}</p>
@@ -925,15 +1021,12 @@ export function initFieldToolUI() {
           </tbody>
         </table>
       </div>
-
-      <div class="svg-map-wrap">
-        <div class="svg-map-header">
-          <span><strong>ANSI A300 Part 5 / ISA BMP To-Scale Root Protection Map</strong> (Fence Radius: ${row.fence_ft} ft)</span>
-          <span>Soil Invigoration Budget: <strong>$${res.soilRemediation.total_usd.toLocaleString()}</strong></span>
-        </div>
-        ${res.svgSiteMap || ''}
-      </div>
+      ${externalSvgMapContainer ? '' : svgMapMarkup}
     `;
+
+    if (externalSvgMapContainer) {
+      externalSvgMapContainer.innerHTML = svgMapMarkup;
+    }
 
     // 3. Allometric Valuation, Holobiont Equity & 5-Year Practice Economics Card
     const mattheckClass = bio.biomechanics.mattheck_criterion_satisfied ? 'badge-protected' : 'badge-danger';
@@ -957,7 +1050,7 @@ export function initFieldToolUI() {
         <div class="metric-box">
           <span class="metric-label">Mattheck Shell Stability (t/R)</span>
           <strong class="metric-value">${bio.biomechanics.sound_shell_thickness_ratio_t_over_r}</strong>
-          <span class="badge ${mattheckClass}">${bio.biomechanics.mattheck_criterion_satisfied ? 't/R >= 0.30 Sound' : 't/R < 0.30 Thinning'}</span>
+          <span class="badge ${mattheckClass}">${bio.biomechanics.mattheck_criterion_satisfied ? 't/R &gt;= 0.30 Sound' : 't/R &lt; 0.30 Thinning'}</span>
         </div>
       </div>
 
@@ -1216,10 +1309,20 @@ export function initFieldToolUI() {
   loadCaseIntoForm(FIXED_PARITY_CASES[0]);
 }
 
+function initAllOpenArborPages() {
+  initSharedThemeToggle();
+  initFieldToolUI();
+  initDemoExtrasUI();
+  initToolsCatalogUI();
+  initOrdinancesExplorerUI();
+  initMcpPlaygroundUI();
+  initSpecViewerUI();
+}
+
 if (typeof document !== 'undefined') {
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initFieldToolUI);
+    document.addEventListener('DOMContentLoaded', initAllOpenArborPages);
   } else {
-    initFieldToolUI();
+    initAllOpenArborPages();
   }
 }

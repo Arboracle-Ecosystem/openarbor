@@ -1,79 +1,80 @@
-# OpenArbor v2.0 Static Web Field Tool Deployment Guide (GitHub Pages)
+# Open Arbor v2.0 Deployment Guide: Google Cloud Run (`openarbor.org`) and GitHub Pages
 
-- **Repository:** `https://github.com/Arboracle-Ecosystem/openarbor.git`
-- **Target Public URL:** `https://arboracle-ecosystem.github.io/openarbor/`
-- **Build Target Directory:** `out/`
+- **Canonical Repository:** `https://github.com/Arboracle-Ecosystem/openarbor.git`
+- **Primary Domain Target:** `https://openarbor.org` (Google Cloud Run service `openarbor` in `us-central1`)
+- **Mirror Target:** `https://arboracle-ecosystem.github.io/openarbor/` (GitHub Pages `gh-pages` branch)
+- **Build Output Directory:** `out/`
 - **Runtime Dependencies:** Zero (`AGPL-3.0-only`, 100% client-side execution)
 
-## 1. Local Build and Parity Verification
+## 1. Local Multi-Page Build and 4/4 Bioregional Parity Verification
 
-Run the static bundler and deterministic verification suites locally before publishing:
+Run the static bundler, MCP verification suite, ordinance validator, and CLI-vs-browser parity gate locally before publishing:
 
 ```bash
 cd /home/george/Myceliate_Master/UNDERSTORY/arboracle-ecosystem/openarbor
 
-# 1. Build static browser bundle into out/
+# 1. Run core deterministic test suite, MCP stdio suite, and ordinance schema checks
+npm test
+npm run test:mcp
+npm run validate:ordinances
+
+# 2. Bundle multi-page web portal, schemas, and open datasets into out/
 npm run build:web
 
-# 2. Verify CLI vs. browser bundle 3/3 parity (writes deploy/VERIFICATION.md)
+# 3. Verify 4/4 bioregional parity (84/84 metrics across TX and OR; writes deploy/VERIFICATION.md)
 npm run verify:parity
-
-# 3. Run full OpenArbor v2.0 test suite
-npm test
 ```
 
 ### Static Build Output (`out/`)
 
-| Artifact Path | Size (Bytes) | Description |
-| :--- | :--- | :--- |
-| `out/.nojekyll` | `0` | Disables Jekyll processing on GitHub Pages |
-| `out/index.html` | `28591` | Mobile-first single-page field assessment interface |
-| `out/openarbor-bundle.js` | `219024` | Self-contained ESM bundle (`src/core/*` + Central Texas ordinances + RCA schemas) |
-| `out/styles.css` | `11304` | High-contrast sunlight-legible field stylesheet |
+| Artifact Path | Role |
+| :--- | :--- |
+| `out/index.html` | Open Arbor (`openarbor.org`) root landing and Open Arbor Alliance portal |
+| `out/demo/index.html` | Interactive 3-mode Open Arbor field engine, Sanctuary rollup, and badge minter |
+| `out/tools/index.html` | 41-tool Open-Source Forestry and Arboriculture Workbench |
+| `out/ordinances/index.html` | 8-city Municipal Ordinance Commons and live Draft 2020-12 schema validator |
+| `out/mcp/index.html` | Interactive 6-tool Model Context Protocol (`MCP`) simulator and JSON-RPC 2.0 inspector |
+| `out/spec/index.html` | `RCA-Spec v2.0` 10-section evidentiary reference and 200-year Heartwood Vault specification |
+| `out/openarbor-bundle.js` | Self-contained ESM bundle (`src/core/*` + TX/OR ordinances + 41-tool catalog + schemas + UI) |
+| `out/styles.css` | Sunlight Field (`light`) and Canopy Dark (`dark`) stylesheet using `light-dark()` |
+| `out/schemas/*.json` | Published Draft 2020-12 JSON Schemas served with `Access-Control-Allow-Origin: *` |
+| `out/data/**/*.json` | Published municipal ordinance datasets and 41-tool forestry catalog |
+| `out/.nojekyll` | Disables Jekyll processing on GitHub Pages |
 
-## 2. Exact Git Push and GitHub Pages Enable Commands (Awaiting Approval)
+## 2. Google Cloud Run Deployment (`openarbor.org`)
 
-Per governance policy, `git push` and remote state changes require explicit operator confirmation. Execute the following commands when ready to publish:
+The root `Dockerfile` performs a two-stage build. Stage 1 (`node:20-alpine`) runs `npm ci`, `npm test`, `npm run test:mcp`, `npm run validate:ordinances`, `npm run build:web`, and `npm run verify:parity`. Stage 2 (`nginx:1.27-alpine`) copies `deploy/nginx.conf` and `/app/out/` to `/usr/share/nginx/html` on port `8080`.
+
+Per governance policy, remote Cloud Run deploys require explicit operator confirmation:
 
 ```bash
 cd /home/george/Myceliate_Master/UNDERSTORY/arboracle-ecosystem/openarbor
 
-# Step 1: Stage and commit the web field tool, static build, and verification artifacts
-git add package.json package-lock.json web/ deploy/ out/ tests/verify_openarbor.mjs
-git commit -m "feat(web): add mobile-first OpenArbor v2.0 static field tool and CLI parity proof"
+# Option A: Build and deploy via Google Cloud Build (cloudbuild.yaml)
+gcloud builds submit --config cloudbuild.yaml .
 
-# Step 2: Push master branch to origin
+# Option B: Direct source deploy to Cloud Run in us-central1
+gcloud run deploy openarbor \
+  --source . \
+  --region us-central1 \
+  --platform managed \
+  --allow-unauthenticated \
+  --port 8080
+```
+
+To map or verify the custom domain `openarbor.org` on the Cloud Run service:
+
+```bash
+gcloud beta run domain-mappings list --region us-central1
+```
+
+## 3. GitHub Pages Mirror Deployment (Awaiting Approval)
+
+Per governance policy, `git push` requires explicit operator confirmation:
+
+```bash
+cd /home/george/Myceliate_Master/UNDERSTORY/arboracle-ecosystem/openarbor
+
 git push origin master
-
-# Step 3: Publish the static out/ directory to the gh-pages branch
 git subtree push --prefix out origin gh-pages
-
-# Step 4: Enable GitHub Pages on the gh-pages branch via GitHub CLI
-gh api \
-  --method POST \
-  -H "Accept: application/vnd.github+json" \
-  /repos/Arboracle-Ecosystem/openarbor/pages \
-  -f "source[branch]=gh-pages" \
-  -f "source[path]=/"
 ```
-
-If GitHub Pages is already enabled on the repository and only needs its source branch updated to `gh-pages`:
-
-```bash
-gh api \
-  --method PUT \
-  -H "Accept: application/vnd.github+json" \
-  /repos/Arboracle-Ecosystem/openarbor/pages \
-  -f "source[branch]=gh-pages" \
-  -f "source[path]=/"
-```
-
-## 3. Post-Enable Verification
-
-Once GitHub Pages finishes building (typically under 60 seconds), verify the live deployment status:
-
-```bash
-gh api /repos/Arboracle-Ecosystem/openarbor/pages --jq '{status: .status, html_url: .html_url, source: .source}'
-```
-
-Arborist candidates can then open `https://arboracle-ecosystem.github.io/openarbor/` on any mobile browser, select any of the five bundled Central Texas municipalities (`Austin`, `Georgetown`, `Liberty Hill`, `Cedar Park`, `Round Rock`), complete an ANSI A300 / RCA-Spec v2.0 tree and rhizosphere assessment in under 5 minutes, and export the OGC CRS84 GeoJSON, 10-section RCA Evidentiary Report Markdown, or Scientific Preservation Counter-Notice directly on their phone.

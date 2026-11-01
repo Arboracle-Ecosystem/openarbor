@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      try {
+        document.querySelector('meta[name="color-scheme"]').content = localStorage.getItem('color-scheme') ?? 'light dark';
+      } catch (e) {}
+    </script>
+    <title>41-Tool Forestry Workbench | Open Arbor Alliance v2.0</title>
+    <meta
+      name="description"
+      content="Open Arbor Alliance 41-Tool Forestry Workbench: 4 Core Browser/Node ESM Engines, 33 open-source forestry scientific tools, and 4 geospatial foundations mapped to RCA-Spec v2.0."
+    />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="oa-site-header">
+      <div class="oa-nav-container">
+        <a href="../index.html" class="oa-brand-link">
+          <span class="oa-brand-mark">OA</span>
+          <span class="oa-brand-text">Open Arbor <small>v2.0</small></span>
+        </a>
+        <nav class="oa-main-nav" aria-label="Primary Navigation">
+          <a href="../index.html" class="oa-nav-link">Alliance Portal</a>
+          <a href="../demo/index.html" class="oa-nav-link">Live Engine Demo</a>
+          <a href="../tools/index.html" class="oa-nav-link active" aria-current="page">41-Tool Workbench</a>
+          <a href="../ordinances/index.html" class="oa-nav-link">Ordinance Commons</a>
+          <a href="../mcp/index.html" class="oa-nav-link">MCP Playground</a>
+          <a href="../spec/index.html" class="oa-nav-link">RCA-Spec v2.0</a>
+        </nav>
+        <div class="oa-theme-control">
+          <button type="button" id="oa-theme-toggle" class="btn-secondary btn-sm" aria-label="Toggle color scheme">Theme: Auto</button>
+        </div>
+      </div>
+    </header>
+
+    <section class="app-header">
+      <div class="container header-inner">
+        <div>
+          <span class="eyebrow">Open Arbor Alliance Commons &middot; Doc-414 Verified</span>
+          <h1>41-Tool Open Forestry &amp; LiDAR Workbench</h1>
+          <p class="subtitle">
+            4 Core Browser/Node ESM Engines, 33 scientific forestry models, and 4 geospatial foundations with sovereign CLI execution recipes and deterministic bridges into <code>schemas/rca_assessment.schema.json</code>.
+          </p>
+        </div>
+        <div class="header-actions">
+          <a href="../demo/index.html" class="btn btn-primary">Launch Live Engine Demo</a>
+          <a href="../spec/index.html" class="btn btn-outline">Inspect RCA-Spec v2.0</a>
+        </div>
+      </div>
+    </section>
+
+    <main id="tools-catalog-root" class="container main-layout">
+      <section class="card" aria-labelledby="workbench-overview-heading">
+        <div class="card-header">
+          <span class="step-badge">Catalog v1.0.0</span>
+          <h2 id="workbench-overview-heading">Sovereign Toolchain Architecture &amp; Evidence Grading</h2>
+        </div>
+        <p class="subtitle">
+          Every tool in the Open Arbor Alliance catalog carries an explicit packaging tier and evidence grade. Core ESM modules execute directly in the browser or Node.js with zero external dependencies. Tier 1 CLI tools run in isolated local <code>uv</code>, Conda, or native host environments. Tier 2 GUI tools integrate via QGIS or CloudCompare desktop workflows, and Tier 3 sidecars run inside reproducible R or Fortran containers.
+        </p>
+        <div class="metric-grid metric-grid-4" id="workbench-summary-metrics">
+          <div class="metric-box highlight-box">
+            <span class="metric-label">Total Workbench Entries</span>
+            <strong class="metric-value text-accent" id="metric-total-count">41</strong>
+            <span class="metric-sub">4 Core ESM + 33 Tools + 4 Supporting</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-label">Core Browser / Node ESM</span>
+            <strong class="metric-value" id="metric-core-count">4</strong>
+            <span class="metric-sub">Zero cloud lock-in, sub-millisecond run</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-label">Host CLI &amp; Desktop Ready</span>
+            <strong class="metric-value" id="metric-qualified-count">21</strong>
+            <span class="metric-sub">Qualified local sovereign recipes</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-label">Container &amp; Research Sidecars</span>
+            <strong class="metric-value" id="metric-sidecar-count">16</strong>
+            <span class="metric-sub">Isolated renv / Docker / C++ pipelines</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="workbench-filter-heading">
+        <div class="card-header">
+          <span class="step-badge">Filter &amp; Search</span>
+          <h2 id="workbench-filter-heading">Explore 41 Open Arbor &amp; Scientific Forestry Tools</h2>
+        </div>
+
+        <div class="form-grid">
+          <div class="field-row field-row-3">
+            <div class="field">
+              <label for="tool-search-input">Free-Text Search</label>
+              <span class="hint">Filter by tool name, summary, file formats, tags, or runtime language</span>
+              <input
+                type="text"
+                id="tool-search-input"
+                placeholder="e.g., 3DFin, LiDAR, QSM, BirdNET, LAZ, dendrochronology..."
+                autocomplete="off"
+              />
+            </div>
+
+            <div class="field">
+              <label for="tool-tier-select">Packaging Tier</label>
+              <span class="hint">Filter by execution environment and deployment model</span>
+              <select id="tool-tier-select">
+                <option value="all">All Tiers</option>
+                <option value="Core Browser/Node ESM">Core Browser/Node ESM</option>
+                <option value="Tier 1: Python/R CLI (uv/conda)">Tier 1: Python/R CLI (uv/conda)</option>
+                <option value="Tier 2: Native Desktop GUI">Tier 2: Native Desktop GUI</option>
+                <option value="Tier 3: Container / Sidecar">Tier 3: Container / Sidecar</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="tool-grade-select">Evidence Grade</label>
+              <span class="hint">Honest verification status from Doc-414 governance</span>
+              <select id="tool-grade-select">
+                <option value="all">All Grades</option>
+                <option value="Workflow-qualified">Workflow-qualified</option>
+                <option value="Smoke-tested">Smoke-tested</option>
+                <option value="Installed">Installed</option>
+                <option value="Recipe available">Recipe available</option>
+                <option value="Cataloged">Cataloged</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label id="domain-tabs-label">Domain Classification Tabs</label>
+            <span class="hint">Select a forestry domain or core category to narrow the workbench</span>
+            <div
+              id="tool-domain-tabs"
+              class="preview-tabs"
+              role="tablist"
+              aria-labelledby="domain-tabs-label"
+            >
+              <button type="button" role="tab" class="tab-btn active" data-domain="all" aria-selected="true">
+                All 41 Tools
+              </button>
+              <button type="button" role="tab" class="tab-btn" data-domain="core-esm" aria-selected="false">
+                Open Arbor Core ESM (4)
+              </button>
+              <button type="button" role="tab" class="tab-btn" data-domain="growth-and-fire" aria-selected="false">
+                growth-and-fire (7)
+              </button>
+              <button type="button" role="tab" class="tab-btn" data-domain="point-clouds" aria-selected="false">
+                point-clouds (9)
+              </button>
+              <button type="button" role="tab" class="tab-btn" data-domain="rings-and-biomass" aria-selected="false">
+                rings-and-biomass (6)
+              </button>
+              <button type="button" role="tab" class="tab-btn" data-domain="canopy-imagery" aria-selected="false">
+                canopy-imagery (4)
+              </button>
+              <button type="button" role="tab" class="tab-btn" data-domain="field" aria-selected="false">
+                field (3)
+              </button>
+              <button type="button" role="tab" class="tab-btn" data-domain="canopy-photography" aria-selected="false">
+                canopy-photography (2)
+              </button>
+              <button type="button" role="tab" class="tab-btn" data-domain="audio" aria-selected="false">
+                audio (2)
+              </button>
+              <button type="button" role="tab" class="tab-btn" data-domain="supporting" aria-selected="false">
+                Supporting Apps (4)
+              </button>
+            </div>
+          </div>
+
+          <div class="linter-row">
+            <div>
+              <strong id="tools-filter-status">Showing 41 of 41 workbench entries</strong>
+              <span class="hint" id="tools-domain-description">
+                All 4 Open Arbor Core ESM engines, 33 scientific forestry models, and 4 supporting geospatial applications.
+              </span>
+            </div>
+            <button type="button" id="tools-reset-filters" class="btn btn-secondary">
+              Reset Filters
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section aria-label="Workbench Tool Cards">
+        <div id="tools-grid-container" class="results-stack"></div>
+      </section>
+
+      <dialog id="tool-detail-dialog" closedby="any" aria-labelledby="tool-dialog-title" class="card">
+        <div id="tool-dialog-content">
+          <div class="card-header">
+            <span class="step-badge" id="tool-dialog-badge">RCA_v2 Bridge</span>
+            <h2 id="tool-dialog-title">Tool Pipeline &amp; Sovereign Recipe</h2>
+          </div>
+          <div id="tool-dialog-body" class="results-stack"></div>
+          <form method="dialog" class="form-submit-bar">
+            <button type="submit" class="btn btn-primary">Close Inspector (Esc or Click Backdrop)</button>
+          </form>
+        </div>
+      </dialog>
+    </main>
+
+    <footer class="app-footer">
+      <div class="container">
+        <p>
+          Open Arbor Alliance v2.0 &middot; 41-Tool Open Forestry Workbench &middot; Zero Vendor Lock-In &middot; Grounded in ANSI A300, AS 4970, and RCA-Spec v2.0.
+        </p>
+      </div>
+    </footer>
+
+    <script type="module" src="../openarbor-bundle.js"></script>
+  </body>
+</html>

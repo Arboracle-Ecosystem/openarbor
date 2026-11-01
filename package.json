@@ -13,10 +13,12 @@
     "./root-zone": "./src/core/rootZone.js",
     "./ordinance-engine": "./src/core/ordinanceEngine.js",
     "./ecosystem-benefits": "./src/core/ecosystemBenefits.js",
-    "./rca-engine": "./src/core/rcaEngine.js"
+    "./rca-engine": "./src/core/rcaEngine.js",
+    "./mcp": "./server/mcp/openarbor-mcp.mjs"
   },
   "bin": {
-    "openarbor-rca": "./bin/openarbor-rca.mjs"
+    "openarbor-rca": "./bin/openarbor-rca.mjs",
+    "openarbor-mcp": "./server/mcp/openarbor-mcp.mjs"
   },
   "files": [
     "src/",

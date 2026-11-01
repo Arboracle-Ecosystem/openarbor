@@ -1,7 +1,7 @@
-# OpenArbor v2.0 CLI vs. Browser Bundle Parity Verification Report
+# Open Arbor v2.0 CLI vs. Browser Bundle Parity Verification Report
 
-- **Verification Date:** `2026-10-28`
-- **Parity Verdict:** **3/3 IDENTICAL (`PASS`)**
+- **Verification Date:** `2026-10-29`
+- **Parity Verdict:** **4/4 IDENTICAL (`PASS`)**
 - **Certified Engine Integrity:** Zero modifications to `src/core/*` or `data/ordinances/*`. The browser bundle (`out/openarbor-bundle.js`) imports the exact certified source modules via `esbuild`.
 
 ## 1. Static Build Artifact Inventory (`out/`)
@@ -9,17 +9,29 @@
 | File Path | Size (Bytes) | Role |
 | :--- | :--- | :--- |
 | `out/.nojekyll` | `0` | GitHub Pages Jekyll bypass marker |
-| `out/index.html` | `28591` | Mobile-first single-page field tool HTML shell |
-| `out/openarbor-bundle.js` | `219024` | Compiled ESM browser bundle (engines + ordinances + schemas + UI) |
-| `out/styles.css` | `11304` | High-contrast field stylesheet |
+| `out/data/catalog/forestry-tools.json` | `22781` | Published open dataset JSON |
+| `out/data/ordinances/central_texas_ordinances.json` | `10712` | Published open dataset JSON |
+| `out/data/ordinances/rogue_valley_oregon_ordinances.json` | `7531` | Published open dataset JSON |
+| `out/demo/index.html` | `43299` | Interactive 3-mode Open Arbor engine demo (`/demo/`) |
+| `out/index.html` | `19040` | Open Arbor (`openarbor.org`) root landing and alliance portal |
+| `out/mcp/index.html` | `8872` | 6-Tool MCP Server Playground & JSON-RPC 2.0 Inspector (`/mcp/`) |
+| `out/openarbor-bundle.js` | `405229` | Compiled ESM browser bundle (engines + ordinances + catalog + schemas + UI) |
+| `out/ordinances/index.html` | `9727` | 8-City Municipal Ordinance Commons & Schema Validator (`/ordinances/`) |
+| `out/schemas/municipal-ordinance.schema.json` | `3630` | Published JSON Schema (Draft 2020-12) |
+| `out/schemas/rca_assessment.schema.json` | `41996` | Published JSON Schema (Draft 2020-12) |
+| `out/schemas/rca_openbadge_v3.schema.json` | `26205` | Published JSON Schema (Draft 2020-12) |
+| `out/spec/index.html` | `24695` | RCA-Spec v2.0 & 200-Year Architecture Reference (`/spec/`) |
+| `out/styles.css` | `22053` | Shared Sunlight Field & Canopy Dark design system stylesheet |
+| `out/tools/index.html` | `10795` | 41-tool Open-Source Forestry & Arboriculture Workbench (`/tools/`) |
 
-## 2. Executive Summary of 3 Fixed Input Cases
+## 2. Executive Summary of 4 Fixed Bioregional Input Cases (Texas & Oregon)
 
 | Case ID | Municipality | Species & Tag | DBH | CLI vs. Browser Bundle Parity |
 | :--- | :--- | :--- | :--- | :--- |
 | `case-1-austin-live-oak` | `tx-austin` | *Quercus virginiana* (`ATX-QV-101`) | 76.2 cm / 30 in | **IDENTICAL (21/21 metrics match)** |
 | `case-2-georgetown-pecan` | `tx-georgetown` | *Carya illinoinensis* (`GTN-CI-204`) | 68.58 cm / 27 in | **IDENTICAL (21/21 metrics match)** |
 | `case-3-liberty-hill-post-oak` | `tx-liberty-hill` | *Quercus stellata* (`LBH-QS-309`) | 50.8 cm / 20 in | **IDENTICAL (21/21 metrics match)** |
+| `case-4-ashland-oregon-white-oak` | `or-ashland` | *Quercus garryana* (`ASH-QG-105`) | 105 cm / 41.34 in | **IDENTICAL (21/21 metrics match)** |
 
 ## 3.1 Case 1: Austin Heritage Live Oak (30 in DBH)
 
@@ -117,7 +129,39 @@
 | **Allometric Annual / 20-Yr Projected Benefits (USD)** | `$148.97/yr / $3218` | `$148.97/yr / $3218` | **IDENTICAL** |
 | **OGC CRS84 GeoJSON Export SHA-256** | `7d67b19a908f73102a01066fd7c8318f9829f62481921a48b1007427546ccc9e` | `7d67b19a908f73102a01066fd7c8318f9829f62481921a48b1007427546ccc9e` | **IDENTICAL** |
 
+## 3.4 Case 4: Ashland Heritage Oregon White Oak (41.3 in DBH)
+
+- **Fixture File:** `deploy/fixtures/case-4-ashland-oregon-white-oak.json`
+- **CLI Command Executed:** `node bin/openarbor-rca.mjs compile deploy/fixtures/case-4-ashland-oregon-white-oak.json --ordinance or-ashland`
+- **CLI Economics Command:** `node bin/openarbor-rca.mjs economics deploy/fixtures/case-4-ashland-oregon-white-oak.json --json`
+- **CLI Counter-Notice Command:** `node bin/openarbor-rca.mjs counter-notice deploy/fixtures/case-4-ashland-oregon-white-oak.json`
+- **Browser Bundle Call:** `evaluateCompleteFieldCase(assessment, { ordinance_id: 'or-ashland', ... })` from `out/openarbor-bundle.js`
+
+| Output Metric / Artifact | Local CLI (`bin/openarbor-rca.mjs` + Node Core) | Browser Bundle (`out/openarbor-bundle.js`) | Match |
+| :--- | :--- | :--- | :--- |
+| **RCA_v2 Canonical SHA-256 Digest** | `c87412851e02c8a64e6976840c8cac769e6c2fe17adbaf99df856f4fc4e62345` | `c87412851e02c8a64e6976840c8cac769e6c2fe17adbaf99df856f4fc4e62345` | **IDENTICAL** |
+| **CLI compile Report Markdown Length (chars)** | `6830` | `6830` | **IDENTICAL** |
+| **CLI compile Report Exact String Match** | `SHA256:0f104a801e7e684a3fa5daeef154b34681c399bed5f933a11f4f7fe54fe55a83` | `SHA256:0f104a801e7e684a3fa5daeef154b34681c399bed5f933a11f4f7fe54fe55a83` | **IDENTICAL** |
+| **CLI counter-notice Exact String Match** | `SHA256:de074f92116b89bc82149a3570ffb909c126f65668d623d64bb3b05413b7ba95` | `SHA256:de074f92116b89bc82149a3570ffb909c126f65668d623d64bb3b05413b7ba95` | **IDENTICAL** |
+| **Evidentiary Linter Status (Passed Checks)** | `true (9)` | `true (9)` | **IDENTICAL** |
+| **Evaluated DBH (cm / inches)** | `105 cm / 41.34 in` | `105 cm / 41.34 in` | **IDENTICAL** |
+| **Mattheck Sound Shell Ratio (t/R) & Stability** | `0.34 (true)` | `0.34 (true)` | **IDENTICAL** |
+| **Root Zones: SRZ / CRZ / TIZ Radius (m)** | `3.77 m / 12.6 m / 16.5 m` | `3.77 m / 12.6 m / 16.5 m` | **IDENTICAL** |
+| **AirSpade Decompacted Soil Volume (m3)** | `10.79 m3` | `10.79 m3` | **IDENTICAL** |
+| **Amendments: Biochar (L) / Compost (m3) / Mulch (m3)** | `863 L / 1.62 m3 / 68.42 m3` | `863 L / 1.62 m3 / 68.42 m3` | **IDENTICAL** |
+| **Municipal Protection Tier & Citation** | `Heritage (AMC § 18.5.7.020 / AMC § 18.4.5.030)` | `Heritage (AMC § 18.5.7.020 / AMC § 18.4.5.030)` | **IDENTICAL** |
+| **Municipal Permit Verdict** | `Permit required: ASH-QG-105 Oregon White Oak (pruning).` | `Permit required: ASH-QG-105 Oregon White Oak (pruning).` | **IDENTICAL** |
+| **Mitigation If Destroyed (Cash-in-Lieu / Inches)** | `$6201 (82.68 in)` | `$6201 (82.68 in)` | **IDENTICAL** |
+| **Classical CTLA 10th Ed. Depreciated Value (USD)** | `$23273` | `$23273` | **IDENTICAL** |
+| **200-Yr Holobiont Biological Equity (USD)** | `$427039 (18.35x)` | `$427039 (18.35x)` | **IDENTICAL** |
+| **Legacy Removal Bid Gross / Net Margin (USD)** | `$3911 / $1252` | `$3911 / $1252` | **IDENTICAL** |
+| **RCA 5-Yr Stewardship Gross / Net Margin (USD)** | `$14942 / $8218 (6.56x)` | `$14942 / $8218 (6.56x)` | **IDENTICAL** |
+| **John White (FCIN12) Estimated Tree Age** | `446 yrs (factor 4.25)` | `446 yrs (factor 4.25)` | **IDENTICAL** |
+| **Allometric Carbon Stored / Annual Runoff Avoided** | `7319.8 lbs / 14479 gal/yr` | `7319.8 lbs / 14479 gal/yr` | **IDENTICAL** |
+| **Allometric Annual / 20-Yr Projected Benefits (USD)** | `$448.99/yr / $9698` | `$448.99/yr / $9698` | **IDENTICAL** |
+| **OGC CRS84 GeoJSON Export SHA-256** | `4c880633459480625ea54b9047264829d8fab438a63f2813119bbe09f9a32873` | `4c880633459480625ea54b9047264829d8fab438a63f2813119bbe09f9a32873` | **IDENTICAL** |
+
 ## 4. Findings & Engine Observations
 
-- **Zero Engine Divergences:** All three fixed Central Texas test cases achieved 100% bit-for-bit parity across all 21 evaluated metrics, including the canonical SHA-256 digest, compiled 10-section RCA Evidentiary Markdown report, Scientific Preservation Counter-Notice Markdown, 5-year practice economics JSON, municipal ordinance permit and cash-in-lieu mitigation math, Nowak/McPherson allometric benefits, John White (FCIN12) veteran tree age, and OGC CRS84 GeoJSON FeatureCollection output.
+- **Zero Engine Divergences:** All four fixed bioregional test cases (Austin, Georgetown, and Liberty Hill in Central Texas plus Ashland in Rogue Valley, Oregon) achieved 100% bit-for-bit parity across all 21 evaluated metrics (84/84 total assertions), including the canonical SHA-256 digest, compiled 10-section RCA Evidentiary Markdown report, Scientific Preservation Counter-Notice Markdown, 5-year practice economics JSON, municipal ordinance permit and cash-in-lieu mitigation math, Nowak/McPherson allometric benefits, John White (FCIN12) veteran tree age, and OGC CRS84 GeoJSON FeatureCollection output.
 - **Browser Crypto Shim Note:** `src/core/rcaEngine.js` imports `node:crypto` exclusively for `crypto.createHash('sha256').update(payload, 'utf8').digest('hex')` inside `computeCanonicalSha256`. By aliasing `node:crypto` to `web/crypto-shim.js` at bundle time in `web/build.mjs`, the browser bundle computes identical SHA-256 digests synchronously with zero modifications to `src/core/rcaEngine.js`.

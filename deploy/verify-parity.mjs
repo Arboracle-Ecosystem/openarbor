@@ -50,9 +50,16 @@ fs.mkdirSync(fixturesDir, { recursive: true });
 const txOrdinances = JSON.parse(
   fs.readFileSync(path.join(rootDir, 'data/ordinances/central_texas_ordinances.json'), 'utf8')
 );
+const orOrdinances = JSON.parse(
+  fs.readFileSync(path.join(rootDir, 'data/ordinances/rogue_valley_oregon_ordinances.json'), 'utf8')
+);
+const allMunicipalities = [
+  ...(txOrdinances.municipalities || []),
+  ...(orOrdinances.municipalities || []),
+];
 
 const cases = browserBundle.FIXED_PARITY_CASES;
-assert.equal(cases.length, 3, 'Expected exactly 3 fixed parity cases');
+assert.equal(cases.length, 4, 'Expected exactly 4 fixed parity cases (3 TX + 1 OR)');
 
 const caseResults = [];
 
@@ -81,7 +88,7 @@ for (const c of cases) {
   const cliEcon = JSON.parse(cliEconomicsJsonStdout);
 
   // Node-side direct core engine calls for tabular comparison
-  const muni = txOrdinances.municipalities.find((m) => m.id === c.ordinance_id);
+  const muni = allMunicipalities.find((m) => m.id === c.ordinance_id);
   const nodeSha256 = computeCanonicalSha256(c.assessment);
   const nodeLint = lintRcaEvidentiaryReport(c.assessment);
   const nodeBio = evaluateBiomechanicsAndRhizosphere(c.assessment);
@@ -305,16 +312,28 @@ for (const c of cases) {
   });
 }
 
-const outFiles = fs.readdirSync(path.join(rootDir, 'out')).sort().map((f) => {
-  const s = fs.statSync(path.join(rootDir, 'out', f));
-  return { name: `out/${f}`, bytes: s.size };
-});
+function walkOutDir(dir, prefix = 'out') {
+  const results = [];
+  for (const entry of fs.readdirSync(dir).sort()) {
+    const fullPath = path.join(dir, entry);
+    const relPath = `${prefix}/${entry}`;
+    const st = fs.statSync(fullPath);
+    if (st.isDirectory()) {
+      results.push(...walkOutDir(fullPath, relPath));
+    } else {
+      results.push({ name: relPath, bytes: st.size });
+    }
+  }
+  return results;
+}
+
+const outFiles = walkOutDir(path.join(rootDir, 'out'));
 
 const mdLines = [
-  '# OpenArbor v2.0 CLI vs. Browser Bundle Parity Verification Report',
+  '# Open Arbor v2.0 CLI vs. Browser Bundle Parity Verification Report',
   '',
-  '- **Verification Date:** `2026-10-28`',
-  '- **Parity Verdict:** **3/3 IDENTICAL (`PASS`)**',
+  '- **Verification Date:** `2026-10-29`',
+  '- **Parity Verdict:** **4/4 IDENTICAL (`PASS`)**',
   '- **Certified Engine Integrity:** Zero modifications to `src/core/*` or `data/ordinances/*`. The browser bundle (`out/openarbor-bundle.js`) imports the exact certified source modules via `esbuild`.',
   '',
   '## 1. Static Build Artifact Inventory (`out/`)',
@@ -324,16 +343,30 @@ const mdLines = [
   ...outFiles.map((f) => {
     const role =
       f.name === 'out/index.html'
-        ? 'Mobile-first single-page field tool HTML shell'
+        ? 'Open Arbor (`openarbor.org`) root landing and alliance portal'
+        : f.name === 'out/demo/index.html'
+        ? 'Interactive 3-mode Open Arbor engine demo (`/demo/`)'
+        : f.name === 'out/tools/index.html'
+        ? '41-tool Open-Source Forestry & Arboriculture Workbench (`/tools/`)'
+        : f.name === 'out/ordinances/index.html'
+        ? '8-City Municipal Ordinance Commons & Schema Validator (`/ordinances/`)'
+        : f.name === 'out/mcp/index.html'
+        ? '6-Tool MCP Server Playground & JSON-RPC 2.0 Inspector (`/mcp/`)'
+        : f.name === 'out/spec/index.html'
+        ? 'RCA-Spec v2.0 & 200-Year Architecture Reference (`/spec/`)'
         : f.name === 'out/openarbor-bundle.js'
-        ? 'Compiled ESM browser bundle (engines + ordinances + schemas + UI)'
+        ? 'Compiled ESM browser bundle (engines + ordinances + catalog + schemas + UI)'
         : f.name === 'out/styles.css'
-        ? 'High-contrast field stylesheet'
+        ? 'Shared Sunlight Field & Canopy Dark design system stylesheet'
+        : f.name.startsWith('out/schemas/')
+        ? 'Published JSON Schema (Draft 2020-12)'
+        : f.name.startsWith('out/data/')
+        ? 'Published open dataset JSON'
         : 'GitHub Pages Jekyll bypass marker';
     return `| \`${f.name}\` | \`${f.bytes}\` | ${role} |`;
   }),
   '',
-  '## 2. Executive Summary of 3 Fixed Input Cases',
+  '## 2. Executive Summary of 4 Fixed Bioregional Input Cases (Texas & Oregon)',
   '',
   '| Case ID | Municipality | Species & Tag | DBH | CLI vs. Browser Bundle Parity |',
   '| :--- | :--- | :--- | :--- | :--- |',
@@ -365,9 +398,9 @@ for (const [idx, res] of caseResults.entries()) {
 mdLines.push(
   '## 4. Findings & Engine Observations',
   '',
-  '- **Zero Engine Divergences:** All three fixed Central Texas test cases achieved 100% bit-for-bit parity across all 21 evaluated metrics, including the canonical SHA-256 digest, compiled 10-section RCA Evidentiary Markdown report, Scientific Preservation Counter-Notice Markdown, 5-year practice economics JSON, municipal ordinance permit and cash-in-lieu mitigation math, Nowak/McPherson allometric benefits, John White (FCIN12) veteran tree age, and OGC CRS84 GeoJSON FeatureCollection output.',
+  '- **Zero Engine Divergences:** All four fixed bioregional test cases (Austin, Georgetown, and Liberty Hill in Central Texas plus Ashland in Rogue Valley, Oregon) achieved 100% bit-for-bit parity across all 21 evaluated metrics (84/84 total assertions), including the canonical SHA-256 digest, compiled 10-section RCA Evidentiary Markdown report, Scientific Preservation Counter-Notice Markdown, 5-year practice economics JSON, municipal ordinance permit and cash-in-lieu mitigation math, Nowak/McPherson allometric benefits, John White (FCIN12) veteran tree age, and OGC CRS84 GeoJSON FeatureCollection output.',
   '- **Browser Crypto Shim Note:** `src/core/rcaEngine.js` imports `node:crypto` exclusively for `crypto.createHash(\'sha256\').update(payload, \'utf8\').digest(\'hex\')` inside `computeCanonicalSha256`. By aliasing `node:crypto` to `web/crypto-shim.js` at bundle time in `web/build.mjs`, the browser bundle computes identical SHA-256 digests synchronously with zero modifications to `src/core/rcaEngine.js`.'
 );
 
 fs.writeFileSync(verificationMdPath, mdLines.join('\n') + '\n', 'utf8');
-console.log('Parity verification passed (3/3 identical) -> deploy/VERIFICATION.md');
+console.log('Parity verification passed (4/4 identical, 84/84 metrics) -> deploy/VERIFICATION.md');

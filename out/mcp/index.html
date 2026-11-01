@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      try {
+        document.querySelector('meta[name="color-scheme"]').content = localStorage.getItem('color-scheme') ?? 'light dark';
+      } catch (e) {}
+    </script>
+    <title>MCP Playground &amp; JSON-RPC 2.0 Inspector | Open Arbor Alliance v2.0</title>
+    <meta
+      name="description"
+      content="Interactive 6-Tool Model Context Protocol (MCP) Simulator and JSON-RPC 2.0 Inspector for Open Arbor. Execute calculate_root_zone, evaluate_ordinance, calculate_ecosystem_benefits, rca_biomechanics, rca_lint, and lookup_ordinance directly in your browser."
+    />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="oa-site-header">
+      <div class="oa-nav-container">
+        <a href="../index.html" class="oa-brand-link">
+          <span class="oa-brand-mark">OA</span>
+          <span class="oa-brand-text">Open Arbor <small>v2.0</small></span>
+        </a>
+        <nav class="oa-main-nav" aria-label="Primary Navigation">
+          <a href="../index.html" class="oa-nav-link">Alliance Portal</a>
+          <a href="../demo/index.html" class="oa-nav-link">Live Engine Demo</a>
+          <a href="../tools/index.html" class="oa-nav-link">41-Tool Workbench</a>
+          <a href="../ordinances/index.html" class="oa-nav-link">Ordinance Commons</a>
+          <a href="../mcp/index.html" class="oa-nav-link active" aria-current="page">MCP Playground</a>
+          <a href="../spec/index.html" class="oa-nav-link">RCA-Spec v2.0</a>
+        </nav>
+        <div class="oa-theme-control">
+          <button type="button" id="oa-theme-toggle" class="btn btn-secondary btn-sm" aria-label="Toggle color scheme">Theme: Auto</button>
+        </div>
+      </div>
+    </header>
+
+    <section class="app-header">
+      <div class="container header-inner">
+        <div>
+          <span class="eyebrow">Model Context Protocol (`2024-11-05`) &middot; Zero-Dependency `stdio` Server</span>
+          <h1>Open Arbor MCP Playground &amp; JSON-RPC 2.0 Simulator</h1>
+          <p class="subtitle">
+            Test all 6 deterministic Open Arbor MCP tools in real time. Every request executes the exact ECMAScript core functions wired into <code>server/mcp/openarbor-mcp.mjs</code>, including bounded-input security guards (`MAX_EVALUATE_TREES = 500`, `MAX_JURISDICTION_ID_LENGTH = 128`).
+          </p>
+        </div>
+        <div class="header-actions">
+          <a href="#mcp-config-section" class="btn btn-secondary">Agent Config Snippets</a>
+          <a href="../spec/index.html" class="btn btn-outline">RCA-Spec v2.0 Reference</a>
+        </div>
+      </div>
+    </section>
+
+    <main id="mcp-playground-root" class="container main-layout">
+      <section class="card" aria-labelledby="mcp-overview-heading">
+        <div class="card-header">
+          <span class="step-badge">Server `v2.0.0`</span>
+          <h2 id="mcp-overview-heading">6 Deterministic Arboricultural Tools over JSON-RPC 2.0</h2>
+        </div>
+        <p class="subtitle">
+          AI agents should never guess statutory tree protection thresholds, Mattheck hollow-shell buckling ratios, or Nowak carbon equations from training weights. Open Arbor exposes its verified engines as a standard Model Context Protocol server (`openarbor-mcp`). Select any tool below to inspect its JSON Schema, edit input arguments, or test the 500-tree spatial grid security guard.
+        </p>
+
+        <div id="mcp-tool-selector" class="oa-mcp-tool-bar" role="tablist" aria-label="Select MCP Tool"></div>
+      </section>
+
+      <section class="card" aria-labelledby="mcp-simulator-heading">
+        <div class="card-header">
+          <span class="step-badge">Live Simulator</span>
+          <h2 id="mcp-simulator-heading">Interactive Tool Arguments &amp; Dual-Pane JSON-RPC 2.0 Inspector</h2>
+        </div>
+
+        <div id="mcp-active-tool-meta" class="muni-lookup-box"></div>
+
+        <div class="oa-mcp-controls-bar">
+          <div class="oa-mcp-action-group">
+            <button type="button" id="btn-mcp-run" class="btn btn-primary">Execute `tools/call` Request</button>
+            <button type="button" id="btn-mcp-reset" class="btn btn-secondary">Reset Default Arguments</button>
+            <button type="button" id="btn-mcp-test-guard" class="btn btn-outline">Test &gt;500 Trees Security Guard (`501 rows`)</button>
+            <button type="button" id="btn-mcp-test-id-guard" class="btn btn-outline">Test &gt;128 Char Jurisdiction Guard</button>
+          </div>
+          <div class="oa-mcp-status-pill">
+            <span class="metric-label">Execution Latency:</span>
+            <strong id="mcp-latency-badge" class="text-accent">0.00 ms</strong>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="mcp-args-editor">Editable `params.arguments` JSON Payload</label>
+          <span class="hint">Modify the JSON arguments below and click "Execute tools/call Request" (or press Ctrl+Enter).</span>
+          <textarea id="mcp-args-editor" class="oa-json-textarea" rows="10" spellcheck="false"></textarea>
+          <div id="mcp-args-error" class="error-banner" hidden></div>
+        </div>
+
+        <div class="oa-mcp-dual-pane">
+          <div class="oa-mcp-pane">
+            <div class="oa-code-header">
+              <strong>JSON-RPC 2.0 `tools/call` Request Payload</strong>
+              <button type="button" id="btn-copy-mcp-req" class="btn btn-outline btn-xs">Copy Request</button>
+            </div>
+            <pre id="mcp-request-preview" class="code-preview"></pre>
+          </div>
+
+          <div class="oa-mcp-pane">
+            <div class="oa-code-header">
+              <strong>JSON-RPC 2.0 Deterministic Response Payload</strong>
+              <button type="button" id="btn-copy-mcp-res" class="btn btn-outline btn-xs">Copy Response</button>
+            </div>
+            <pre id="mcp-response-preview" class="code-preview" aria-live="polite"></pre>
+          </div>
+        </div>
+      </section>
+
+      <section id="mcp-config-section" class="card" aria-labelledby="mcp-config-heading">
+        <div class="card-header">
+          <span class="step-badge">Agent Integration</span>
+          <h2 id="mcp-config-heading">One-Click MCP Client Configuration Snippets</h2>
+        </div>
+        <p class="subtitle">
+          Register <code>openarbor-mcp</code> in Claude Desktop, Cursor, Windsurf, or Hermes. Because the server uses Node.js built-in modules (`node:fs`, `node:path`, `node:readline`, `node:crypto`), it starts in under 40 milliseconds with zero network calls or API keys.
+        </p>
+
+        <div class="oa-code-grid">
+          <div class="oa-code-card">
+            <div class="oa-code-header">
+              <strong>Claude Desktop (<code>claude_desktop_config.json</code>)</strong>
+              <button type="button" class="btn btn-outline btn-xs" data-copy-target="cfg-claude">Copy</button>
+            </div>
+            <pre id="cfg-claude" class="code-preview">{
+  "mcpServers": {
+    "openarbor": {
+      "command": "node",
+      "args": [
+        "/path/to/openarbor/server/mcp/openarbor-mcp.mjs"
+      ]
+    }
+  }
+}</pre>
+          </div>
+
+          <div class="oa-code-card">
+            <div class="oa-code-header">
+              <strong>Cursor / Windsurf (<code>.cursor/mcp.json</code>)</strong>
+              <button type="button" class="btn btn-outline btn-xs" data-copy-target="cfg-cursor">Copy</button>
+            </div>
+            <pre id="cfg-cursor" class="code-preview">{
+  "mcpServers": {
+    "openarbor-mcp": {
+      "command": "npx",
+      "args": ["-y", "openarbor-mcp"],
+      "env": {}
+    }
+  }
+}</pre>
+          </div>
+
+          <div class="oa-code-card">
+            <div class="oa-code-header">
+              <strong>Hermes Autonomous Fleet &amp; Stdio Test</strong>
+              <button type="button" class="btn btn-outline btn-xs" data-copy-target="cfg-hermes">Copy</button>
+            </div>
+            <pre id="cfg-hermes" class="code-preview"># Register in Hermes config.yaml under mcp_servers:
+mcp_servers:
+  openarbor:
+    command: "node"
+    args: ["/home/george/Myceliate_Master/UNDERSTORY/arboracle-ecosystem/openarbor/server/mcp/openarbor-mcp.mjs"]
+
+# Verify 11/11 stdio JSON-RPC assertions locally:
+npm run test:mcp</pre>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <div class="container">
+        <p>
+          Open Arbor v2.0 &middot; Model Context Protocol (`openarbor-mcp`) &middot; Governed by the Open Arbor Alliance &middot; AGPL-3.0-only.
+        </p>
+      </div>
+    </footer>
+
+    <script type="module" src="../openarbor-bundle.js"></script>
+  </body>
+</html>

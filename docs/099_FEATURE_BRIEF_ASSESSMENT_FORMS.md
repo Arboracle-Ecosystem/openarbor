@@ -1,3 +1,17 @@
+# SUPERSEDED, DO NOT USE
+
+> This file is an **earlier draft** of the assessment-forms brief. The canonical
+> version is [`09_FEATURE_BRIEF_ASSESSMENT_FORMS.md`](09_FEATURE_BRIEF_ASSESSMENT_FORMS.md)
+> (Document Version 3.0, 146 lines, which self-declares as the "single source of
+> truth for all data collection forms"). This draft is 140 lines and predates it.
+>
+> Two files with near-identical names and different content is an implementer
+> trap: nothing in the test suite would catch someone building from the wrong
+> one. Kept for provenance, not for use. Flagged by Hermes 2026-10-13 during the
+> OpenArbor strategic-spec review. Safe to trash after 7 days if unreferenced.
+
+---
+
 # **Feature Brief: Arborist Assessment Forms**
 
 ## **1\. Tree Assessment Fields**

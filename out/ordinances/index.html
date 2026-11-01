@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      try {
+        document.querySelector('meta[name="color-scheme"]').content = localStorage.getItem('color-scheme') ?? 'light dark';
+      } catch (e) {}
+    </script>
+    <title>Ordinance Commons | Open Arbor Alliance v2.0</title>
+    <meta
+      name="description"
+      content="Open Arbor Alliance Municipal Ordinance Commons: 8-City Statutory Matrix across Central Texas and Rogue Valley, Oregon, with Live JSON Schema Draft 2020-12 Validator and PR Generator."
+    />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="oa-site-header">
+      <div class="oa-nav-container">
+        <a href="../index.html" class="oa-brand-link">
+          <span class="oa-brand-mark">OA</span>
+          <span class="oa-brand-text">Open Arbor <small>v2.0</small></span>
+        </a>
+        <nav class="oa-main-nav" aria-label="Primary Navigation">
+          <a href="../index.html" class="oa-nav-link">Alliance Portal</a>
+          <a href="../demo/index.html" class="oa-nav-link">Live Engine Demo</a>
+          <a href="../tools/index.html" class="oa-nav-link">41-Tool Workbench</a>
+          <a href="../ordinances/index.html" class="oa-nav-link active" aria-current="page">Ordinance Commons</a>
+          <a href="../mcp/index.html" class="oa-nav-link">MCP Playground</a>
+          <a href="../spec/index.html" class="oa-nav-link">RCA-Spec v2.0</a>
+        </nav>
+        <div class="oa-theme-control">
+          <button type="button" id="oa-theme-toggle" class="btn-secondary btn-sm" aria-label="Toggle color scheme">Theme: Auto</button>
+        </div>
+      </div>
+    </header>
+
+    <section class="app-header">
+      <div class="container header-inner">
+        <div>
+          <span class="eyebrow">Open Arbor Alliance Commons &middot; Declarative Statutory Law</span>
+          <h1>Municipal Tree Ordinance Commons &amp; Live Schema Validator</h1>
+          <p class="subtitle">
+            8 encoded municipalities across Central Texas and Rogue Valley, Oregon, governed by <code>schemas/municipal-ordinance.schema.json</code> with zero hardcoded city branches.
+          </p>
+        </div>
+        <div class="header-actions">
+          <a href="#ordinance-validator-section" class="btn btn-primary">Open Live Schema Validator</a>
+          <a href="../demo/index.html" class="btn btn-outline">Test in Live Engine Demo</a>
+        </div>
+      </div>
+    </section>
+
+    <main id="ordinances-explorer-root" class="container main-layout">
+      <section class="card" aria-labelledby="commons-matrix-heading">
+        <div class="card-header">
+          <span class="step-badge">Section A</span>
+          <h2 id="commons-matrix-heading">8-City Municipal Ordinance Commons Matrix</h2>
+        </div>
+        <p class="subtitle">
+          Compare regulated DBH thresholds, heritage tree classifications, replacement ratios, cash-in-lieu mitigation fees, and seasonal <em>Ceratocystis fagacearum</em> (Oak Wilt) vector restrictions across Central Texas and Southern Oregon. Click <strong>Inspect Raw JSON</strong> on any row to load that municipality into the live validator below.
+        </p>
+
+        <div class="metric-grid metric-grid-4" id="ordinances-summary-metrics">
+          <div class="metric-box highlight-box">
+            <span class="metric-label">Encoded Jurisdictions</span>
+            <strong class="metric-value text-accent" id="metric-muni-total">8 Cities</strong>
+            <span class="metric-sub">5 Central Texas + 3 Rogue Valley, OR</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-label">Verified Full-Rule Statutes</span>
+            <strong class="metric-value" id="metric-muni-verified">6 Cities</strong>
+            <span class="metric-sub">Complete plan_rules &amp; permit triggers</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-label">Contains Unverified Fields</span>
+            <strong class="metric-value" id="metric-muni-unverified">2 Cities</strong>
+            <span class="metric-sub">Flagged for primary statutory review</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-label">Schema Conformance</span>
+            <strong class="metric-value text-accent">Draft 2020-12</strong>
+            <span class="metric-sub">Prototype-pollution hardened</span>
+          </div>
+        </div>
+
+        <div
+          tabindex="0"
+          role="region"
+          aria-labelledby="ordinance-table-caption"
+          class="table-wrapper table-scroll"
+        >
+          <table
+            id="ordinance-comparison-table"
+            class="data-table"
+            style="
+              --label-1: 'Municipality';
+              --label-2: 'Jurisdiction ID &amp; Citation';
+              --label-3: 'Regulated DBH';
+              --label-4: 'Heritage DBH';
+              --label-5: 'Replacement Ratio';
+              --label-6: 'Cash-in-Lieu Rate';
+              --label-7: 'Seasonal Pathogen Window';
+              --label-8: 'Verification &amp; Action';
+            "
+          >
+            <caption id="ordinance-table-caption">
+              Encoded Municipal Tree Ordinances Across Central Texas and Rogue Valley, Oregon
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Municipality</th>
+                <th scope="col">Jurisdiction ID &amp; Primary Statutory Citation</th>
+                <th scope="col">Regulated DBH Threshold</th>
+                <th scope="col">Heritage DBH Threshold</th>
+                <th scope="col">Replacement Ratio</th>
+                <th scope="col">Cash-in-Lieu Rate</th>
+                <th scope="col">Seasonal Pathogen Window (Oak Wilt)</th>
+                <th scope="col">Verification Status &amp; Action</th>
+              </tr>
+            </thead>
+            <tbody id="ordinance-matrix-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="ordinance-validator-section" class="card" aria-labelledby="validator-heading">
+        <div class="card-header">
+          <span class="step-badge">Section B</span>
+          <h2 id="validator-heading">Live In-Browser Municipal Ordinance Schema Validator &amp; PR Generator</h2>
+        </div>
+        <p class="subtitle">
+          Validate any municipal tree ordinance JSON record against <code>schemas/municipal-ordinance.schema.json</code> directly in your browser. Includes deterministic checks for required fields, URI format, DBH bounds, and prototype-pollution security guards (<code>__proto__</code>, <code>constructor</code>, <code>prototype</code>).
+        </p>
+
+        <div class="preset-bar" id="ordinance-preset-bar" aria-label="Validator Presets">
+          <button type="button" class="btn-preset active" id="preset-austin-btn">
+            Load Austin, TX (Verified)
+          </button>
+          <button type="button" class="btn-preset" id="preset-ashland-btn">
+            Load Ashland, OR (Verified)
+          </button>
+          <button type="button" class="btn-preset" id="preset-draft-btn">
+            Load New Municipality Draft Template
+          </button>
+          <button type="button" class="btn-preset" id="preset-proto-btn">
+            Test Prototype-Pollution Security Guard (__proto__ / constructor)
+          </button>
+        </div>
+
+        <div class="form-grid" style="margin-top: 12px;">
+          <div class="field">
+            <label for="ordinance-json-editor">Municipality Ordinance JSON Payload</label>
+            <span class="hint">
+              Edit the JSON record below. Validation runs automatically on every edit and flags any <code>UNVERIFIED</code> statutory fields for peer review.
+            </span>
+            <textarea
+              id="ordinance-json-editor"
+              rows="18"
+              class="code-preview"
+              style="width: 100%; min-height: 340px; resize: vertical;"
+              spellcheck="false"
+            ></textarea>
+          </div>
+
+          <div id="ordinance-validation-banner" class="verdict-banner" role="status" aria-live="polite">
+            <div>
+              <span class="eyebrow" id="validation-eyebrow">Schema Validation Result</span>
+              <div class="verdict-title-row">
+                <strong class="verdict-big" id="validation-headline">SCHEMA VALID (0 ERRORS)</strong>
+                <span class="badge badge-protected" id="validation-badge">VERIFIED STATUTE</span>
+              </div>
+              <p class="muni-subtext" id="validation-summary-text">
+                Conforms to Open Arbor Municipal Tree Protection Ordinance Schema v2.0.
+              </p>
+            </div>
+            <div class="header-actions">
+              <button type="button" id="run-ordinance-validate-btn" class="btn btn-secondary">
+                Re-Validate JSON
+              </button>
+              <button type="button" id="copy-pr-json-btn" class="btn btn-primary">
+                Copy GitHub Pull Request JSON
+              </button>
+            </div>
+          </div>
+
+          <div id="ordinance-validation-details"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <div class="container">
+        <p>
+          Open Arbor Alliance v2.0 &middot; Municipal Tree Ordinance Commons &middot; Declarative JSON Schema Draft 2020-12 &middot; Zero Vendor Lock-In.
+        </p>
+      </div>
+    </footer>
+
+    <script type="module" src="../openarbor-bundle.js"></script>
+  </body>
+</html>

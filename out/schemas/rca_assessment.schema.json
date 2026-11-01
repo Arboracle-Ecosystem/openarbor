@@ -1,0 +1,900 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soilgrower.com/schemas/openarbor-rca-assessment.schema.json",
+  "title": "Open Arbor Regenerative Consulting Arborist (RCA-Spec v2.0) Assessment Schema",
+  "description": "AGPL v3 JSON Schema for the Assessments.data_json column when assessment_type is 'Regenerative Diagnostic' (supporting RCA_v1 and RCA_v2). Enforces typed, unit-explicit field capture across the five mandatory diagnostic domains of Regenerative Consulting Arboriculture, absorbing Shigo CODIT, Mattheck t/R shell mechanics, and Holobiont Living Asset Equity.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "assessment_mode",
+    "structural_baseline",
+    "rhizosphere_and_root_collar",
+    "soil_and_microbiome_baseline",
+    "understory_and_guild_prescription",
+    "outcome_monitoring_schedule"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": ["RCA_v1", "RCA_v2"],
+      "description": "Identifier for the Regenerative Consulting Arborist Practice Specification version (unit: version string)."
+    },
+    "assessment_mode": {
+      "type": "string",
+      "const": "Regenerative Diagnostic",
+      "description": "Required discriminator matching Assessments.assessment_type in 09_FEATURE_BRIEF_ASSESSMENT_FORMS.md (unit: enum string)."
+    },
+    "structural_baseline": {
+      "type": "object",
+      "description": "Domain 1: Above-ground biometric inventory, ISA TRAQ risk matrix fields, and municipal tree protection ordinance disposition.",
+      "additionalProperties": false,
+      "required": [
+        "dbh_cm",
+        "is_multistem",
+        "height_m",
+        "crown_spread_ns_m",
+        "crown_spread_ew_m",
+        "live_crown_ratio_pct",
+        "plus_code_global",
+        "isa_traq_risk",
+        "municipal_permit_disposition"
+      ],
+      "properties": {
+        "dbh_cm": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 1500,
+          "description": "Final calculated Diameter at Breast Height measured at 1.37 m above grade (unit: centimeters)."
+        },
+        "is_multistem": {
+          "type": "boolean",
+          "description": "True if the tree forks below 1.37 m into multiple measurable stems (unit: boolean)."
+        },
+        "stem_diameters_cm": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 1500
+          },
+          "description": "Individual stem diameters measured at 1.37 m when is_multistem is true (unit: centimeters)."
+        },
+        "multistem_aggregation_method": {
+          "type": "string",
+          "enum": ["quadratic", "largest_plus_half", "sum", "single_stem"],
+          "description": "Formula used to aggregate stem_diameters_cm into dbh_cm per src/core/rootZone.js (unit: enum string)."
+        },
+        "height_m": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 150,
+          "description": "Total vertical tree height from root flare grade to highest live crown tip (unit: meters)."
+        },
+        "crown_spread_ns_m": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 150,
+          "description": "Canopy dripline diameter along the North-South axis (unit: meters)."
+        },
+        "crown_spread_ew_m": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 150,
+          "description": "Canopy dripline diameter along the East-West axis (unit: meters)."
+        },
+        "live_crown_ratio_pct": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Ratio of live photosynthetic crown height to total tree height (unit: percent)."
+        },
+        "plus_code_global": {
+          "type": "string",
+          "pattern": "^[23456789CFGHJMPQRVWX]{8}\\+[23456789CFGHJMPQRVWX]{2,7}$",
+          "description": "Open Location Code (Plus Code) pinpointing stem coordinates (unit: 10-to-15 character Plus Code string)."
+        },
+        "tree_tag": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Optional field tag or inventory identifier for the assessed tree (unit: tag string)."
+        },
+        "species_scientific": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Optional botanical binomial of the assessed host tree (unit: Latin binomial string)."
+        },
+        "species_common": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Optional regional common name of the assessed host tree (unit: string)."
+        },
+        "inaturalist_taxon_id": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Optional iNaturalist taxon ID of the assessed host tree (unit: integer ID)."
+        },
+        "assessment_date": {
+          "type": "string",
+          "format": "date",
+          "description": "Optional ISO 8601 date of the field diagnostic assessment (unit: YYYY-MM-DD date)."
+        },
+        "isa_traq_risk": {
+          "type": "object",
+          "description": "International Society of Arboriculture Tree Risk Assessment Qualification (TRAQ) Level 2/3 risk matrix fields.",
+          "additionalProperties": false,
+          "required": [
+            "assessment_level",
+            "time_frame_years",
+            "target_zone_description",
+            "likelihood_of_failure",
+            "likelihood_of_impact",
+            "likelihood_of_failure_and_impact",
+            "consequences_of_failure",
+            "overall_risk_rating"
+          ],
+          "properties": {
+            "assessment_level": {
+              "type": "string",
+              "enum": ["Level_1_Limited_Visual", "Level_2_Basic", "Level_3_Advanced"],
+              "description": "ANSI A300 Part 9 / ISA TRAQ inspection level (unit: enum string)."
+            },
+            "time_frame_years": {
+              "type": "number",
+              "minimum": 0.5,
+              "maximum": 10,
+              "description": "Specified period over which likelihood of failure is evaluated (unit: years)."
+            },
+            "target_zone_description": {
+              "type": "string",
+              "minLength": 1,
+              "description": "People, property, or infrastructure within striking distance and occupancy rate (unit: narrative string)."
+            },
+            "primary_tree_part_of_concern": {
+              "type": "string",
+              "enum": ["Whole_Tree", "Root_Plate", "Root_Collar", "Trunk_Stem", "Codominant_Union", "Scaffold_Branch", "Perimeter_Branch"],
+              "description": "Structural component governing the highest risk rating (unit: enum string)."
+            },
+            "likelihood_of_failure": {
+              "type": "string",
+              "enum": ["Improbable", "Possible", "Probable", "Imminent"],
+              "description": "ISA TRAQ Matrix 1 row: probability of structural failure within time_frame_years (unit: TRAQ enum)."
+            },
+            "likelihood_of_impact": {
+              "type": "string",
+              "enum": ["Very Low", "Low", "Medium", "High"],
+              "description": "ISA TRAQ Matrix 1 column: probability of impacting the target zone if failure occurs (unit: TRAQ enum)."
+            },
+            "likelihood_of_failure_and_impact": {
+              "type": "string",
+              "enum": ["Unlikely", "Somewhat Likely", "Likely", "Very Likely"],
+              "description": "ISA TRAQ Matrix 1 combined output cell (unit: TRAQ enum)."
+            },
+            "consequences_of_failure": {
+              "type": "string",
+              "enum": ["Negligible", "Minor", "Significant", "Severe"],
+              "description": "ISA TRAQ Matrix 2 column: severity of harm or damage upon impact (unit: TRAQ enum)."
+            },
+            "overall_risk_rating": {
+              "type": "string",
+              "enum": ["Low", "Moderate", "High", "Extreme"],
+              "description": "ISA TRAQ Matrix 2 final risk rating (unit: TRAQ enum)."
+            },
+            "residual_risk_rating": {
+              "type": "string",
+              "enum": ["None", "Low", "Moderate", "High", "Extreme"],
+              "description": "Projected risk rating following prescribed regenerative or structural intervention (unit: TRAQ enum)."
+            }
+          }
+        },
+        "municipal_permit_disposition": {
+          "type": "object",
+          "description": "Statutory compliance mapping aligned with schemas/municipal-ordinance.schema.json.",
+          "additionalProperties": false,
+          "required": [
+            "jurisdiction_id",
+            "ordinance_citation",
+            "protection_tier",
+            "permit_required",
+            "recommended_disposition",
+            "seasonal_oak_wilt_restriction_active"
+          ],
+          "properties": {
+            "jurisdiction_id": {
+              "type": "string",
+              "pattern": "^([a-z]{2}-[a-z0-9-]+|unincorporated)$",
+              "description": "Municipality identifier matching data/ordinances/ records or 'unincorporated' (unit: slug string)."
+            },
+            "ordinance_citation": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Statutory chapter and section governing the tree (e.g., 'Austin LDC 25-8', 'Ashland AMC 18.4.5', 'Medford Tree Protection Guidelines 2026') (unit: legal citation string)."
+            },
+            "protection_tier": {
+              "type": "string",
+              "enum": ["Unprotected", "Excepted_Species", "Protected", "Legacy", "Heritage"],
+              "description": "Ordinance classification evaluated from DBH and species (unit: enum string)."
+            },
+            "permit_required": {
+              "type": "boolean",
+              "description": "True if a municipal tree preservation, encroachment, or removal permit is required (unit: boolean)."
+            },
+            "recommended_disposition": {
+              "type": "string",
+              "enum": [
+                "Preservation_Primary",
+                "Preservation_With_Rhizosphere_Remediation",
+                "Monitored_Retained_Habitat_Snag",
+                "Structural_Risk_Reduction_Pruning",
+                "Removal_Last_Resort_Unmitigable_Hazard"
+              ],
+              "description": "Conflict-free RCA disposition prioritizing biological asset preservation over removal (unit: enum string)."
+            },
+            "seasonal_oak_wilt_restriction_active": {
+              "type": "boolean",
+              "description": "True if the tree is in genus Quercus and falls within prohibited Ceratocystis fagacearum vector months (unit: boolean)."
+            }
+          }
+        },
+        "codit_wall_response_rating": {
+          "type": "string",
+          "description": "Shigo CODIT (Compartmentalization of Decay in Trees) diagnostic response evaluation across Walls 1 to 4 (unit: rating string)."
+        },
+        "sound_shell_thickness_ratio_t_over_r": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Mattheck sound wood shell thickness to trunk radius ratio (t/R). Values >= 0.30 indicate full hollow-cylinder bending strength against windthrow (unit: dimensionless ratio 0.0 to 1.0)."
+        },
+        "sonic_tomography_or_resistograph_uri": {
+          "type": "string",
+          "format": "uri-reference",
+          "description": "URI or relative path to PiCUS sonic tomogram, IML resistograph trace, or acoustic scan image documenting internal decay (unit: URI string)."
+        },
+        "dual_valuation": {
+          "type": "object",
+          "description": "Post-ISA/ASCA dual appraisal contrasting classical CTLA 10th Edition depreciated cost against Regenerative Holobiont Biological Equity.",
+          "additionalProperties": false,
+          "required": [
+            "ctla_10th_ed_depreciated_usd",
+            "holobiont_200yr_biological_equity_usd",
+            "veteran_keystone_habitat_multiplier"
+          ],
+          "properties": {
+            "ctla_10th_ed_depreciated_usd": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Classical CTLA 10th Edition Trunk Formula depreciated valuation (unit: US dollars)."
+            },
+            "holobiont_200yr_biological_equity_usd": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Regenerative Holobiont Living Asset Equity valuing biomass carbon, vadose zone hydrology, and mycorrhizal network value with habitat multiplier (unit: US dollars)."
+            },
+            "veteran_keystone_habitat_multiplier": {
+              "type": "number",
+              "minimum": 1.0,
+              "maximum": 5.0,
+              "description": "Ecological keystone and saproxylic habitat value multiplier (1.0 = standard, 1.5-3.5 = veteran hollow keystone tree) (unit: scalar multiplier)."
+            },
+            "valuation_delta_usd": {
+              "type": "number",
+              "description": "Difference between holobiont living asset equity and CTLA depreciated value (unit: US dollars)."
+            }
+          }
+        }
+      }
+    },
+    "rhizosphere_and_root_collar": {
+      "type": "object",
+      "description": "Domain 2: Subterranean root-collar architecture, stem-girdling root forensics, pneumatic AirSpade geometry, and root zone radii.",
+      "additionalProperties": false,
+      "required": [
+        "root_flare_burial_depth_cm",
+        "root_flare_diameter_cm",
+        "stem_girdling_root_count",
+        "stem_girdling_root_severity",
+        "airspade_radial_trenching_geometry",
+        "crz_radius_m",
+        "srz_radius_m",
+        "tiz_radius_m"
+      ],
+      "properties": {
+        "root_flare_burial_depth_cm": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 200,
+          "description": "Depth of soil, fill, or excess mulch burying the primary structural root flare below grade; 0 indicates flare visible at grade (unit: centimeters)."
+        },
+        "root_flare_diameter_cm": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 2500,
+          "description": "Basal trunk diameter at the root flare (DRF) used in the AS 4970 / Mattheck SRZ equation (unit: centimeters)."
+        },
+        "stem_girdling_root_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Number of distinct stem-girdling or primary buttress-compressing roots identified during root collar inspection (unit: integer count)."
+        },
+        "stem_girdling_root_severity": {
+          "type": "string",
+          "enum": [
+            "None",
+            "Minor_Under_25_Pct_Circumference",
+            "Moderate_25_To_50_Pct_Circumference",
+            "Severe_Over_50_Pct_Circumference"
+          ],
+          "description": "Proportion of trunk circumference compressed by stem-girdling roots (unit: severity enum)."
+        },
+        "airspade_radial_trenching_geometry": {
+          "type": "object",
+          "description": "Supersonic pneumatic excavation (AirSpade) diagnostic and decompaction geometry.",
+          "additionalProperties": false,
+          "required": [
+            "execution_status",
+            "operating_pressure_psi",
+            "trench_count",
+            "trench_length_m",
+            "trench_width_cm",
+            "trench_depth_cm",
+            "root_collar_excavation_radius_m"
+          ],
+          "properties": {
+            "execution_status": {
+              "type": "string",
+              "enum": [
+                "Diagnostic_Excavation_Completed",
+                "Prescribed_Radial_Remediation",
+                "Completed_Diagnostic_And_Radial_Remediation",
+                "Not_Required_Uncompacted_Forest_Floor"
+              ],
+              "description": "Whether pneumatic excavation was executed during diagnosis, prescribed, or both (unit: enum string)."
+            },
+            "operating_pressure_psi": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 250,
+              "description": "Supersonic nozzle air pressure calibrated to avoid periderm stripping on fine roots (unit: pounds per square inch)."
+            },
+            "trench_count": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 64,
+              "description": "Number of radial decompaction spokes extending from the outer root collar toward the dripline (unit: integer count)."
+            },
+            "trench_length_m": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 50,
+              "description": "Mean radial length of each pneumatic trench (unit: meters)."
+            },
+            "trench_width_cm": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Mean width of each pneumatic trench (unit: centimeters)."
+            },
+            "trench_depth_cm": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Mean excavation depth breaking through the anaerobic compaction pan (unit: centimeters)."
+            },
+            "root_collar_excavation_radius_m": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10,
+              "description": "Radius of the circular root-collar decompaction basin around the trunk base (unit: meters)."
+            }
+          }
+        },
+        "crz_radius_m": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 100,
+          "description": "Critical Root Zone radius computed per municipal or ANSI A300 standard (unit: meters)."
+        },
+        "srz_radius_m": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 50,
+          "description": "Structural Root Zone radius computed via AS 4970 / Mattheck windthrow equation (unit: meters)."
+        },
+        "tiz_radius_m": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 200,
+          "description": "Tree Influence Zone radius encompassing the canopy dripline, lateral feeder roots, mycorrhizal network, and micro-hydrologic catchment (unit: meters)."
+        }
+      }
+    },
+    "soil_and_microbiome_baseline": {
+      "type": "object",
+      "description": "Domain 3: Quantitative physical, chemical, and biological rhizosphere metrics.",
+      "additionalProperties": false,
+      "required": [
+        "bulk_density_g_cm3",
+        "infiltration_rate_mm_hr",
+        "organic_matter_pct",
+        "soil_ph",
+        "lab_panel_url",
+        "mycorrhizal_and_fungal_observations"
+      ],
+      "properties": {
+        "bulk_density_g_cm3": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 2.65,
+          "description": "Dry soil bulk density in the top 0 to 15 cm feeder-root horizon (unit: grams per cubic centimeter)."
+        },
+        "penetrometer_resistance_psi": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "maximum": 1000,
+          "description": "Soil compaction resistance to root penetration at 15 cm depth; root-limiting threshold typically near 300 psi (unit: pounds per square inch)."
+        },
+        "infiltration_rate_mm_hr": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2000,
+          "description": "Steady-state water infiltration rate measured via ring infiltrometer inside the TIZ (unit: millimeters per hour)."
+        },
+        "organic_matter_pct": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Soil organic matter concentration by dry weight (unit: percent)."
+        },
+        "soil_ph": {
+          "type": "number",
+          "minimum": 2.0,
+          "maximum": 11.0,
+          "description": "Rhizosphere soil pH in 1:1 or 1:2 water suspension (unit: pH units)."
+        },
+        "lab_panel_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "URI pointing to the primary laboratory analysis report (e.g., TAMU / A&L Labs) (unit: URI)."
+        },
+        "lab_sample_id": {
+          "type": "string",
+          "description": "Unique chain-of-custody sample identifier assigned by the testing laboratory (unit: string identifier)."
+        },
+        "mycorrhizal_and_fungal_observations": {
+          "type": "object",
+          "description": "Field and laboratory indicators of rhizosphere fungal and mycorrhizal symbiosis.",
+          "additionalProperties": false,
+          "required": [
+            "dominant_mycorrhizal_guild",
+            "fungal_to_bacterial_biomass_ratio",
+            "hyphal_colonization_status",
+            "observed_fruiting_bodies_or_rhizomorphs"
+          ],
+          "properties": {
+            "dominant_mycorrhizal_guild": {
+              "type": "string",
+              "enum": [
+                "Ectomycorrhizal_EM",
+                "Arbuscular_Mycorrhizal_AM",
+                "Dual_EM_AM",
+                "Unknown"
+              ],
+              "description": "Primary mycorrhizal association guild of the host tree species (unit: enum string)."
+            },
+            "fungal_to_bacterial_biomass_ratio": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "maximum": 50,
+              "description": "Ratio of total fungal biomass to bacterial biomass (F:B); null if biological assay is not yet returned (unit: dimensionless mass ratio)."
+            },
+            "hyphal_colonization_status": {
+              "type": "string",
+              "enum": [
+                "Abundant_Visible_Mycelial_Mats",
+                "Moderate_Rhizosphere_Colonization",
+                "Depleted_Bacterial_Dominated",
+                "Anaerobic_Compacted_Absent"
+              ],
+              "description": "Visual and root-tip inspection rating of saprotrophic and mycorrhizal hyphae during AirSpade exposure (unit: enum string)."
+            },
+            "observed_fruiting_bodies_or_rhizomorphs": {
+              "type": "array",
+              "description": "Macrofungi sporocarps, ectomycorrhizal root tips, or rhizomorphs observed within the TIZ.",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "species_or_morphotype",
+                  "inaturalist_taxon_id",
+                  "ecological_role"
+                ],
+                "properties": {
+                  "species_or_morphotype": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Scientific name or field morphotype of the observed fungus (unit: taxon string)."
+                  },
+                  "inaturalist_taxon_id": {
+                    "type": ["integer", "null"],
+                    "minimum": 1,
+                    "description": "iNaturalist taxon ID for the fungal observation, or null if identified only to morphotype (unit: integer ID)."
+                  },
+                  "ecological_role": {
+                    "type": "string",
+                    "enum": [
+                      "Mycorrhizal_Symbiont",
+                      "Saprotrophic_Wood_Or_Litter_Decomposer",
+                      "Opportunistic_Stress_Colonizer",
+                      "Primary_Root_Or_Butt_Rot_Pathogen",
+                      "Endophyte_Or_Unknown"
+                    ],
+                    "description": "Functional guild distinguishing beneficial mycorrhizal/saprotrophic fungi from structural decay pathogens (unit: enum string)."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "understory_and_guild_prescription": {
+      "type": "object",
+      "description": "Domain 4: Bioregional organic soil amendments, arborist woodchip mulch horizon, and native companion plant guild keyed to iNaturalist and open-nursery.",
+      "additionalProperties": false,
+      "required": [
+        "reference_ecosystem_name",
+        "biochar_volume_liters",
+        "humate_mass_kg",
+        "compost_volume_cubic_m",
+        "compost_extract_volume_liters",
+        "mulch_depth_cm",
+        "mulch_coverage_area_m2",
+        "synthetic_npk_and_fungicide_exclusion_verified",
+        "native_companion_species_guild"
+      ],
+      "properties": {
+        "reference_ecosystem_name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Target local native forest/savanna reference ecosystem per SER Principle 3 (e.g., 'Rogue Valley Oregon White Oak Savanna', 'Edwards Plateau Live Oak-Ashe Juniper Woodland') (unit: ecosystem name string)."
+        },
+        "biochar_volume_liters": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 50000,
+          "description": "Volume of biologically pre-charged high-carbon biochar incorporated into radial trenches (unit: liters)."
+        },
+        "humate_mass_kg": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 5000,
+          "description": "Dry mass of humic and fulvic acid amendment prescribed for cation exchange restoration (unit: kilograms)."
+        },
+        "compost_volume_cubic_m": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 500,
+          "description": "Volume of fungal-dominant thermophilic or vermicompost topdressed or backfilled into radial trenches (unit: cubic meters)."
+        },
+        "compost_extract_volume_liters": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 50000,
+          "description": "Volume of aerated or biologically extracted liquid soil drench applied to the TIZ (unit: liters)."
+        },
+        "mulch_depth_cm": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 30,
+          "description": "Prescribed depth of coarse, un-dyed arborist ramial woodchip mulch across the TIZ, pulled back 15 cm from the root flare (unit: centimeters)."
+        },
+        "mulch_coverage_area_m2": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10000,
+          "description": "Total surface area converted from compacted turfgrass or bare pan to woodchip forest floor (unit: square meters)."
+        },
+        "synthetic_npk_and_fungicide_exclusion_verified": {
+          "type": "boolean",
+          "description": "Confirms that the prescription excludes high-salt synthetic NPK fertilizers and persistent systemic soil fungicides that suppress mycorrhizal networks (unit: boolean)."
+        },
+        "native_companion_species_guild": {
+          "type": "array",
+          "description": "Multi-layer native understory and companion guild species prescribed within the TIZ.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "scientific_name",
+              "common_name",
+              "inaturalist_taxon_id",
+              "open_nursery_batch_id",
+              "stratum_layer",
+              "functional_role",
+              "quantity_planted"
+            ],
+            "properties": {
+              "scientific_name": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Binomial scientific name of the native companion plant (unit: Latin binomial string)."
+              },
+              "common_name": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Regional common name of the companion plant (unit: string)."
+              },
+              "inaturalist_taxon_id": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Verified iNaturalist taxon identifier linking the planted guild member to biodiversity monitoring (unit: integer ID)."
+              },
+              "open_nursery_batch_id": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Seed-source and propagation batch identifier linking to Open Nursery provenance records (unit: batch ID string)."
+              },
+              "stratum_layer": {
+                "type": "string",
+                "enum": [
+                  "Canopy",
+                  "Sub_Canopy_Understory",
+                  "Shrub_Layer",
+                  "Herbaceous_Perennial",
+                  "Groundcover_Matrix",
+                  "Mycorrhizal_Inoculant_Host"
+                ],
+                "description": "Vertical forest architecture stratum occupied by the guild species (unit: enum string)."
+              },
+              "functional_role": {
+                "type": "string",
+                "enum": [
+                  "Ectomycorrhizal_Or_Endomycorrhizal_Bridge",
+                  "Symbiotic_Nitrogen_Fixer",
+                  "Deep_Root_Compaction_Breaker",
+                  "Pollinator_And_Predatory_Insect_Refuge",
+                  "Hydrologic_Swale_Or_Infiltration_Anchor",
+                  "Recalcitrant_Or_Labile_Litter_Builder"
+                ],
+                "description": "Primary ecological function contributed to the host tree holobiont (unit: enum string)."
+              },
+              "quantity_planted": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10000,
+                "description": "Number of individual plants or plugs prescribed for this guild taxon (unit: integer count)."
+              }
+            }
+          }
+        }
+      }
+    },
+    "outcome_monitoring_schedule": {
+      "type": "object",
+      "description": "Domain 5: Longitudinal verification schedule combining 1-year leading process/vigor indicators and 5-year lagging ecological outcome targets per Newton et al. (2020), Gann et al. (2019), and the STIM Protocol.",
+      "additionalProperties": false,
+      "required": [
+        "stim_hypothesis_statement",
+        "stim_kill_criterion",
+        "one_year_leading_indicators",
+        "five_year_lagging_indicators"
+      ],
+      "properties": {
+        "stim_hypothesis_statement": {
+          "type": "string",
+          "minLength": 10,
+          "description": "Explicit causal hypothesis linking the diagnosed rhizosphere stressor and prescribed nodal intervention to measurable physiological recovery (unit: narrative string)."
+        },
+        "stim_kill_criterion": {
+          "type": "string",
+          "minLength": 10,
+          "description": "Empirical threshold at which the prescribed hypothesis is falsified and requires diagnostic revision (unit: narrative string)."
+        },
+        "one_year_leading_indicators": {
+          "type": "object",
+          "description": "12-month leading indicator checklist verifying immediate physiological response and habitat establishment.",
+          "additionalProperties": false,
+          "required": [
+            "scheduled_reinspection_date",
+            "target_canopy_dieback_max_pct",
+            "target_annual_twig_extension_min_cm",
+            "target_woundwood_callus_closure_mm_yr",
+            "root_flare_unburied_verified",
+            "mulch_horizon_and_litter_incorporation_intact",
+            "soil_surface_crusting_or_capping_absent",
+            "companion_guild_survival_min_pct",
+            "fixed_photopoint_azimuth_deg"
+          ],
+          "properties": {
+            "scheduled_reinspection_date": {
+              "type": "string",
+              "format": "date",
+              "description": "Committed ISO 8601 date for the 1-year leading indicator audit (unit: YYYY-MM-DD date)."
+            },
+            "target_canopy_dieback_max_pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Maximum acceptable upper-crown branch dieback at 12 months post-intervention (unit: percent)."
+            },
+            "target_annual_twig_extension_min_cm": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 300,
+              "description": "Minimum terminal shoot extension indicating restored hydraulic conductivity and vigor (unit: centimeters)."
+            },
+            "target_woundwood_callus_closure_mm_yr": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Minimum annual radial woundwood development on pruning or SGR excision cuts (unit: millimeters per year)."
+            },
+            "root_flare_unburied_verified": {
+              "type": "boolean",
+              "description": "Checklist requirement confirming primary root flare remains exposed above mulch and soil grade (unit: boolean)."
+            },
+            "mulch_horizon_and_litter_incorporation_intact": {
+              "type": "boolean",
+              "description": "Checklist requirement confirming active saprotrophic breakdown at the soil-mulch interface without anaerobic souring (unit: boolean)."
+            },
+            "soil_surface_crusting_or_capping_absent": {
+              "type": "boolean",
+              "description": "Checklist requirement confirming absence of hydrophobic surface sealing or bare soil crusting (unit: boolean)."
+            },
+            "companion_guild_survival_min_pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Minimum required survival percentage across planted native_companion_species_guild individuals at Year 1 (unit: percent)."
+            },
+            "fixed_photopoint_azimuth_deg": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 360,
+              "description": "Compass bearing from fixed reference point to tree stem for repeatable longitudinal canopy photography (unit: degrees)."
+            }
+          }
+        },
+        "five_year_lagging_indicators": {
+          "type": "object",
+          "description": "60-month lagging outcome targets verifying soil architecture, carbon sequestration, hydrologic infiltration, and Sanctuary Scorecard rollup.",
+          "additionalProperties": false,
+          "required": [
+            "scheduled_audit_date",
+            "target_bulk_density_max_g_cm3",
+            "target_infiltration_rate_min_mm_hr",
+            "target_organic_matter_min_pct",
+            "target_fungal_to_bacterial_ratio_min",
+            "target_ser_recovery_wheel_stars",
+            "sanctuary_scorecard_targets"
+          ],
+          "properties": {
+            "scheduled_audit_date": {
+              "type": "string",
+              "format": "date",
+              "description": "Committed ISO 8601 date for the 5-year lagging outcome verification audit (unit: YYYY-MM-DD date)."
+            },
+            "target_bulk_density_max_g_cm3": {
+              "type": "number",
+              "minimum": 0.1,
+              "maximum": 2.65,
+              "description": "Target 5-year ceiling for rhizosphere dry bulk density demonstrating sustained decompaction (unit: grams per cubic centimeter)."
+            },
+            "target_infiltration_rate_min_mm_hr": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2000,
+              "description": "Target 5-year floor for steady-state water infiltration rate inside the TIZ (unit: millimeters per hour)."
+            },
+            "target_organic_matter_min_pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Target 5-year minimum soil organic matter percentage in the top 15 cm horizon (unit: percent)."
+            },
+            "target_fungal_to_bacterial_ratio_min": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 50,
+              "description": "Target 5-year minimum fungal-to-bacterial biomass ratio appropriate for woodland/forest succession (unit: dimensionless mass ratio)."
+            },
+            "target_ser_recovery_wheel_stars": {
+              "type": "number",
+              "minimum": 1.0,
+              "maximum": 5.0,
+              "description": "Target 5-year composite rating on the SER Five-Star Ecological Recovery Wheel across physical conditions, species composition, structural diversity, and ecosystem function (unit: 1.0 to 5.0 star scale)."
+            },
+            "sanctuary_scorecard_targets": {
+              "type": "object",
+              "description": "First-class rollup contract bridging tree-level Regenerative Diagnostic assessments (planned modules/arbor/) into the property-level Sanctuary Scorecard (planned modules/sanctuary/) across all five Scorecard dimensions.",
+              "additionalProperties": false,
+              "required": [
+                "tiz_footprint_area_m2",
+                "canopy_projection_area_m2",
+                "soil_health_index_baseline_score",
+                "soil_health_index_target_score",
+                "canopy_volume_expansion_target_pct",
+                "stormwater_interception_baseline_liters_yr",
+                "stormwater_interception_target_liters_yr",
+                "documented_native_biodiversity_taxa_baseline",
+                "documented_native_biodiversity_taxa_min",
+                "restoration_potential_baseline_pct",
+                "restoration_potential_realized_pct"
+              ],
+              "properties": {
+                "tiz_footprint_area_m2": {
+                  "type": "number",
+                  "minimum": 0.78,
+                  "maximum": 125664,
+                  "description": "Tree Influence Zone surface area (pi * tiz_radius_m^2) used as the spatial weighting denominator when aggregating Soil Health Index and Water Dynamics across a property stand (unit: square meters)."
+                },
+                "canopy_projection_area_m2": {
+                  "type": "number",
+                  "minimum": 0.01,
+                  "maximum": 17672,
+                  "description": "Elliptical vertical crown projection area (pi * (crown_spread_ns_m / 2) * (crown_spread_ew_m / 2)) used to aggregate Canopy Coverage across the property parcel (unit: square meters)."
+                },
+                "soil_health_index_baseline_score": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100,
+                  "description": "Baseline composite Soil Health Index score (0 to 100) derived from Domain 2 root-collar burial and Domain 3 bulk_density_g_cm3, infiltration_rate_mm_hr, organic_matter_pct, and fungal_to_bacterial_biomass_ratio (unit: index points)."
+                },
+                "soil_health_index_target_score": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100,
+                  "description": "Target 5-year composite Soil Health Index score on a 0 to 100 scale (unit: index points)."
+                },
+                "canopy_volume_expansion_target_pct": {
+                  "type": "number",
+                  "minimum": -100,
+                  "maximum": 500,
+                  "description": "Projected net change in three-dimensional photosynthetic crown volume over 5 years derived from Domain 1 height_m, crown_spread_ns_m, crown_spread_ew_m, and live_crown_ratio_pct (unit: percent)."
+                },
+                "stormwater_interception_baseline_liters_yr": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1000000,
+                  "description": "Baseline annual canopy rainfall interception (Xiao et al. 2000) plus TIZ infiltration storage prior to decompaction (unit: liters per year)."
+                },
+                "stormwater_interception_target_liters_yr": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1000000,
+                  "description": "Target 5-year combined canopy rainfall interception and TIZ soil pore storage per year after Domain 2 AirSpade trenching and Domain 4 mulch/biochar installation (unit: liters per year)."
+                },
+                "documented_native_biodiversity_taxa_baseline": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1000,
+                  "description": "Baseline count of verified native plant and fungal taxa (keyed to inaturalist_taxon_id in Domains 3 and 4) within the TIZ at assessment date (unit: integer taxon count)."
+                },
+                "documented_native_biodiversity_taxa_min": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 1000,
+                  "description": "Minimum target count of verified native species (plants, fungi, insects, birds) logged via iNaturalist within the TIZ by Year 5 (unit: integer taxon count)."
+                },
+                "restoration_potential_baseline_pct": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100,
+                  "description": "Baseline percentage of SER reference ecosystem potential currently expressed by this tree holobiont (unit: percent)."
+                },
+                "restoration_potential_realized_pct": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100,
+                  "description": "Target percentage of site-specific ecological potential achieved at the 5-year audit (unit: percent)."
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

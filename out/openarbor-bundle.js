@@ -3151,6 +3151,762 @@ var rca_assessment_schema_default = {
   }
 };
 
+// schemas/municipal-ordinance.schema.json
+var municipal_ordinance_schema_default = {
+  $schema: "https://json-schema.org/draft/2020-12/schema",
+  $id: "https://soilgrower.com/schemas/openarbor-municipal-ordinance.schema.json",
+  title: "OpenArbor Municipal Tree Protection Ordinance Schema",
+  description: "Open JSON Schema for encoding municipal tree preservation ordinances, DBH protection tiers, species exceptions, seasonal oak wilt pruning restrictions, and mitigation fee/replacement schedules.",
+  type: "object",
+  required: [
+    "id",
+    "name",
+    "state",
+    "ordinance_numbers",
+    "source_url",
+    "dbh_threshold_inches"
+  ],
+  properties: {
+    id: { type: "string", pattern: "^[a-z]{2}-[a-z0-9-]+$" },
+    name: { type: "string" },
+    state: { type: "string", minLength: 2, maxLength: 2 },
+    coordinates: {
+      type: "object",
+      required: ["lat", "lng"],
+      properties: {
+        lat: { type: "number" },
+        lng: { type: "number" }
+      }
+    },
+    ordinance_numbers: { type: "string" },
+    source_url: { type: "string", format: "uri" },
+    dbh_threshold_inches: { type: "number", minimum: 0 },
+    heritage_threshold_inches: { type: ["number", "null"], minimum: 0 },
+    heritage_species_thresholds: {
+      type: "object",
+      additionalProperties: { type: "number" }
+    },
+    excepted_species: {
+      type: "array",
+      items: { type: "string" }
+    },
+    mitigation_fee_schedule: {
+      type: "object",
+      required: ["citation", "tiers"],
+      properties: {
+        citation: { type: "string" },
+        exemption_pct: { type: "number", minimum: 0, maximum: 100 },
+        exemption_citation: { type: "string" },
+        heritage_rate_per_inch: { type: "number" },
+        heritage_replacement_ratio: { type: "number" },
+        penalty_civil_per_tree: { type: "number" },
+        penalty_citation: { type: "string" },
+        tiers: {
+          type: "array",
+          items: {
+            type: "object",
+            required: ["min_dbh", "rate_per_inch", "replacement_ratio"],
+            properties: {
+              min_dbh: { type: "number" },
+              max_dbh: { type: ["number", "null"] },
+              rate_per_inch: { type: "number" },
+              replacement_ratio: { type: "number" }
+            }
+          }
+        }
+      }
+    },
+    plan_rules: {
+      type: "object",
+      properties: {
+        survey: {
+          type: "object",
+          properties: {
+            citation: { type: "string" },
+            hardwood_min_dbh: { type: "number" },
+            max_age_years: { type: "number" },
+            multi_trunk: { type: "string", enum: ["largest_plus_half", "quadratic", "sum"] }
+          }
+        },
+        root_zone: {
+          type: "object",
+          properties: {
+            citation: { type: "string" },
+            crz_ft_per_inch: { type: "number" },
+            crz_min_ft: { type: "number" },
+            removal_if_disturbed_pct: { type: "number" },
+            cutfill_max_in: { type: "number" },
+            impervious_max_pct: { type: "number" },
+            crown_removal_max_pct: { type: "number" }
+          }
+        },
+        pruning: {
+          type: "object",
+          properties: {
+            citation: { type: "string" },
+            standard: { type: "string" },
+            oak_months: {
+              type: "array",
+              items: { type: "integer", minimum: 1, maximum: 12 }
+            }
+          }
+        }
+      }
+    }
+  }
+};
+
+// data/catalog/forestry-tools.json
+var forestry_tools_default = {
+  $schema: "http://json-schema.org/draft-07/schema#",
+  catalog_version: "1.0.0",
+  governance: "Doc-414 Compliant (Zero em dashes, strict claims discipline)",
+  groups: {
+    field: "Field inventory, mobile arborist forms, and urban canopy mapping",
+    "point-clouds": "3D LiDAR processing, stem curves, DBH, and QSM modeling",
+    "canopy-imagery": "Airborne and drone individual tree crown detection and computer vision",
+    "rings-and-biomass": "Dendrochronology, cross-dating, and allometric carbon estimation",
+    "growth-and-fire": "Stand growth-and-yield simulation, wildfire propagation, and harvest scheduling",
+    "canopy-photography": "Hemispherical fisheye photography and Leaf Area Index (LAI)",
+    audio: "Canopy bioacoustics and soundscape biodiversity analysis",
+    supporting: "Geospatial desktop visualization and point cloud manipulation foundations"
+  },
+  supporting_applications: [
+    {
+      id: "qgis",
+      name: "QGIS Desktop (Distro Package)",
+      group: "supporting",
+      domain: "Geographic Information System",
+      upstream_url: "https://qgis.org",
+      license: "GPL-2.0-or-later",
+      tier: "Tier 2 (Desktop GUI)",
+      install_method: "native-apt",
+      ubuntu_package: "qgis",
+      ubuntu_additional_packages: [
+        "python3-qgis"
+      ],
+      arch_package: "qgis",
+      readiness: "qualified",
+      constraints: "Distro-provided QGIS package from a former LTR series (3.40.15+dfsg-1 in Ubuntu universe). Upstream current LTR is 3.44.x; latest is 4.2.x. Local synthetic inventory pilot uses this package without claiming current upstream LTR support. Never force dependencies into QGIS system Python."
+    },
+    {
+      id: "gdal",
+      name: "GDAL Utilities",
+      group: "supporting",
+      domain: "Geospatial Data Abstraction",
+      upstream_url: "https://gdal.org",
+      license: "MIT / X11",
+      tier: "Tier 1 (Host CLI / Native)",
+      install_method: "native-apt",
+      ubuntu_package: "gdal-bin",
+      arch_package: "gdal",
+      readiness: "qualified",
+      constraints: "Core translation tool for vector and raster inventories."
+    },
+    {
+      id: "cloudcompare",
+      name: "CloudCompare",
+      group: "supporting",
+      domain: "3D Point Cloud Processing",
+      upstream_url: "https://www.cloudcompare.org",
+      license: "GPL-2.0-or-later",
+      tier: "Tier 2 (Desktop GUI)",
+      install_method: "native-apt",
+      ubuntu_package: "cloudcompare",
+      arch_package: "cloudcompare",
+      readiness: "qualified",
+      constraints: "Standard distro package available in Ubuntu universe (2.13.2+) and Arch extra. Flatpak alternative available."
+    },
+    {
+      id: "forest-search",
+      name: "Forest Search & Semantic Index",
+      group: "supporting",
+      domain: "Local Knowledge Infrastructure",
+      upstream_url: "https://github.com/STIM-Protocol/Forest_OS",
+      license: "MIT",
+      tier: "Tier 1 (Host CLI & MCP Stdio)",
+      install_method: "source-uv",
+      ubuntu_package: "sqlite3",
+      ubuntu_additional_packages: [
+        "ollama"
+      ],
+      arch_package: "sqlite",
+      readiness: "qualified",
+      constraints: "Requires local Ollama daemon with nomic-embed-text model and sqlite-vec extension. Read-only query execution over local vault."
+    }
+  ],
+  tools: [
+    {
+      id: "qfield",
+      name: "QField",
+      group: "field",
+      domain: "Mobile Field Inventory",
+      upstream_url: "https://github.com/opengisch/QField",
+      license: "GPL-2.0",
+      tier: "Tier 2 (Desktop / Mobile GUI)",
+      install_method: "flatpak / native-build",
+      readiness: "qualified",
+      dependencies: [
+        "qgis"
+      ],
+      constraints: "Desktop inspection client for field surveys. Packages form definitions from QGIS."
+    },
+    {
+      id: "opentreemap",
+      name: "OpenTreeMap",
+      group: "field",
+      domain: "Urban Tree Inventory Platform",
+      upstream_url: "https://github.com/OpenTreeMap/otm-core",
+      license: "GPL-3.0",
+      tier: "Tier 3 (Containerized Sidecar)",
+      install_method: "docker-compose",
+      readiness: "container-ready",
+      dependencies: [
+        "docker",
+        "docker-compose",
+        "postgresql-postgis"
+      ],
+      constraints: "Requires license clarification and dependency maintenance review. Do not start another inventory service by default."
+    },
+    {
+      id: "canopywatch",
+      name: "CanopyWatch",
+      group: "field",
+      domain: "Urban Canopy Equity Map",
+      upstream_url: "https://github.com/meyeringn/canopy-watch",
+      license: "MIT",
+      tier: "Tier 1 (Browser Static)",
+      install_method: "standalone-html",
+      readiness: "qualified",
+      dependencies: [],
+      constraints: "Single HTML file requests remote fonts. Embedded Philadelphia sample data must not be represented as local observations."
+    },
+    {
+      id: "treels",
+      name: "TreeLS",
+      group: "point-clouds",
+      domain: "TLS Stem Detection & DBH",
+      upstream_url: "https://github.com/tiagodc/TreeLS",
+      license: "GPL-3.0",
+      tier: "Tier 3 (Containerized Sidecar)",
+      install_method: "renv-container",
+      readiness: "container-ready",
+      dependencies: [
+        "r-base",
+        "lidr",
+        "rcpp",
+        "gdal"
+      ],
+      constraints: "Complex C++ compile chains in R. Upstream CRAN releases are infrequent."
+    },
+    {
+      id: "3dfin",
+      name: "3DFin",
+      group: "point-clouds",
+      domain: "Personal Laser Scanning (PLS) Inventory",
+      upstream_url: "https://github.com/3DFin/3DFin",
+      license: "GPL-3.0",
+      tier: "Tier 1 (Host CLI via uv) / Tier 2 (Desktop GUI)",
+      install_method: "uv-venv",
+      readiness: "qualified",
+      dependencies: [
+        "python3",
+        "open3d",
+        "numpy",
+        "pyqt6"
+      ],
+      constraints: "Dedicated Python virtual environment required. Relies on NumPy and Open3D compatibility windows."
+    },
+    {
+      id: "treeseg",
+      name: "TreeSeg",
+      group: "point-clouds",
+      domain: "TLS Tree Point Cloud Segmentation",
+      upstream_url: "https://github.com/apburt/treeseg",
+      license: "GPL-3.0",
+      tier: "Tier 1 (Host CLI / Native)",
+      install_method: "cmake-native",
+      readiness: "qualified",
+      dependencies: [
+        "pcl",
+        "eigen3",
+        "boost"
+      ],
+      constraints: "Requires modern PCL API tracking on rolling toolchains."
+    },
+    {
+      id: "treeqsm",
+      name: "TreeQSM",
+      group: "point-clouds",
+      domain: "Quantitative Structure Modeling",
+      upstream_url: "https://github.com/InverseTampere/TreeQSM",
+      license: "GPL-3.0",
+      tier: "Tier 3 (Containerized Sidecar)",
+      install_method: "octave-container",
+      readiness: "container-ready",
+      dependencies: [
+        "gnu-octave"
+      ],
+      constraints: "MATLAB and Octave runtime compatibility is unresolved. Do not invent a headless container recipe or assume MATLAB Runtime runs source files."
+    },
+    {
+      id: "simpleforest",
+      name: "SimpleForest",
+      group: "point-clouds",
+      domain: "CloudCompare QSM Plugin",
+      upstream_url: "https://github.com/SimpleForest",
+      license: "GPL-3.0",
+      tier: "Tier 2 (Desktop GUI via CloudCompare plugin)",
+      install_method: "cloudcompare-plugin",
+      readiness: "research-required",
+      dependencies: [
+        "cloudcompare",
+        "pcl",
+        "qt5"
+      ],
+      constraints: "Tied to specific CloudCompare plugin APIs. Recompilation required on major updates."
+    },
+    {
+      id: "pytlidar",
+      name: "PyTLidar",
+      group: "point-clouds",
+      domain: "Python QSM Extraction",
+      upstream_url: "https://github.com/Landscape-CV/PyTLidar",
+      license: "GPL-3.0",
+      tier: "Tier 1 (Host CLI via uv)",
+      install_method: "uv-venv",
+      readiness: "qualified",
+      dependencies: [
+        "python3",
+        "numba",
+        "open3d",
+        "laspy"
+      ],
+      constraints: "Licensed under GPLv3 (not MIT). Inspect exact release requirements and distribution obligations."
+    },
+    {
+      id: "rtwig",
+      name: "rTwig",
+      group: "point-clouds",
+      domain: "QSM Twig Diameter Correction",
+      upstream_url: "https://github.com/aidanmorales/rTwig",
+      license: "GPL-3.0",
+      tier: "Tier 3 (Containerized Sidecar)",
+      install_method: "renv-container",
+      readiness: "container-ready",
+      dependencies: [
+        "r-base",
+        "rcpp",
+        "data.table"
+      ],
+      constraints: "Active on CRAN. Best encapsulated with QSM pipeline sidecar."
+    },
+    {
+      id: "lidr",
+      name: "lidR",
+      group: "point-clouds",
+      domain: "Airborne LiDAR Processing & CHM",
+      upstream_url: "https://github.com/r-lidar/lidR",
+      license: "GPL-3.0",
+      tier: "Tier 3 (Containerized Sidecar)",
+      install_method: "renv-container",
+      readiness: "container-ready",
+      dependencies: [
+        "r-base",
+        "gdal",
+        "geos",
+        "proj",
+        "rcpp"
+      ],
+      constraints: "High performance R spatial engine. Host install is brittle due to rolling GDAL/PROJ dependencies; containerization recommended."
+    },
+    {
+      id: "pdal",
+      name: "PDAL",
+      group: "point-clouds",
+      domain: "Point Data Abstraction Library",
+      upstream_url: "https://github.com/PDAL/PDAL",
+      license: "Apache-2.0 / BSD",
+      tier: "Tier 1 (Host CLI / Native)",
+      install_method: "conda-forge / native-package",
+      readiness: "research-required",
+      dependencies: [
+        "gdal",
+        "geotiff",
+        "liblas"
+      ],
+      constraints: "PDAL official documentation recommends a dedicated Conda environment for compiled geospatial plugins."
+    },
+    {
+      id: "deepforest",
+      name: "DeepForest",
+      group: "canopy-imagery",
+      domain: "Individual Tree Crown Detection",
+      upstream_url: "https://github.com/weecology/DeepForest",
+      license: "MIT",
+      tier: "Tier 1 (Host CLI) / Tier 3 (Container)",
+      install_method: "uv-venv",
+      readiness: "qualified",
+      dependencies: [
+        "python3",
+        "pytorch",
+        "torchvision",
+        "rasterio"
+      ],
+      constraints: "Must not assume CUDA on the AMD Radeon 680M. CPU feasibility or a specifically documented, tested backend supported by the selected PyTorch/DeepForest release is required. A Vulkan-capable device or LLM runner does not establish a Vulkan backend for this pipeline. No GPU tuning in this batch."
+    },
+    {
+      id: "pycrown",
+      name: "PyCrown",
+      group: "canopy-imagery",
+      domain: "LiDAR & Optical Crown Delineation",
+      upstream_url: "https://github.com/manaakiwhenua/pycrown",
+      license: "GPL-3.0",
+      tier: "Tier 1 (Host CLI in isolated venv)",
+      install_method: "uv-venv",
+      readiness: "research-required",
+      dependencies: [
+        "python3",
+        "gdal",
+        "rasterio",
+        "scipy"
+      ],
+      constraints: "Infrequent upstream maintenance. Requires explicit pinning of legacy GDAL Python bindings."
+    },
+    {
+      id: "treeeyed",
+      name: "TreeEyed",
+      group: "canopy-imagery",
+      domain: "QGIS AI Crown Delineation Plugin",
+      upstream_url: "https://github.com/afruizh/TreeEyed",
+      license: "GPL-3.0",
+      tier: "Tier 2 (Desktop GUI via QGIS Plugin)",
+      install_method: "qgis-plugin",
+      readiness: "research-required",
+      dependencies: [
+        "qgis",
+        "onnxruntime"
+      ],
+      constraints: "Needs version-specific qualification with QGIS LTR. Arch QGIS generation is not automatically equivalent to Ubuntu LTR."
+    },
+    {
+      id: "rgedi",
+      name: "rGEDI",
+      group: "canopy-imagery",
+      domain: "NASA GEDI Spaceborne LiDAR Profiling",
+      upstream_url: "https://github.com/carlos-alberto-silva/rGEDI",
+      license: "GPL-3.0",
+      tier: "Tier 3 (Containerized Sidecar)",
+      install_method: "renv-container",
+      readiness: "container-ready",
+      dependencies: [
+        "r-base",
+        "hdf5",
+        "sf",
+        "lidr"
+      ],
+      constraints: "Tracks NASA Earthdata authentication and LP DAAC distribution API updates."
+    },
+    {
+      id: "dplr",
+      name: "dplR",
+      group: "rings-and-biomass",
+      domain: "Statistical Dendrochronology in R",
+      upstream_url: "https://github.com/opendendro/dplR",
+      license: "GPL-2.0-or-later",
+      tier: "Tier 3 (Containerized Sidecar) / Host R CLI",
+      install_method: "renv-container",
+      readiness: "container-ready",
+      dependencies: [
+        "r-base",
+        "lattice",
+        "matrix"
+      ],
+      constraints: "The statistical reference standard for tree-ring detrending and chronologies."
+    },
+    {
+      id: "pydendron",
+      name: "pyDendron",
+      group: "rings-and-biomass",
+      domain: "Interactive Tree Ring Cross-Dating",
+      upstream_url: "https://git-lium.univ-lemans.fr/Meignier/pyQtDendron",
+      license: "GPL-3.0",
+      tier: "Tier 1 (Host CLI) / Tier 2 (Desktop GUI)",
+      install_method: "uv-venv",
+      readiness: "qualified",
+      dependencies: [
+        "python3",
+        "pyqt6",
+        "pandas",
+        "numpy",
+        "scipy"
+      ],
+      constraints: "dplPy is separate from pyDendron and pyQtDendron. Do not combine unrelated package identities into one recipe."
+    },
+    {
+      id: "tras",
+      name: "TRAS",
+      group: "rings-and-biomass",
+      domain: "Optical Tree Ring Analyzer Suite",
+      upstream_url: "https://hmarichal93.github.io/tras/",
+      license: "GPL-3.0",
+      tier: "Tier 2 (Desktop GUI)",
+      install_method: "uv-venv",
+      readiness: "research-required",
+      dependencies: [
+        "python3",
+        "opencv",
+        "pyqt5",
+        "numpy"
+      ],
+      constraints: "Rapidly iterating UI code; needs pinned Qt/OpenCV environment."
+    },
+    {
+      id: "treeclim",
+      name: "treeclim",
+      group: "rings-and-biomass",
+      domain: "Tree-Ring Climate Calibration",
+      upstream_url: "https://github.com/chgrsz/treeclim",
+      license: "GPL-2.0-or-later",
+      tier: "Tier 3 (Containerized Sidecar)",
+      install_method: "renv-container",
+      readiness: "container-ready",
+      dependencies: [
+        "r-base",
+        "dplr",
+        "boot",
+        "rcpp"
+      ],
+      constraints: "Bootstrapped response and correlation functions against climate time series."
+    },
+    {
+      id: "biomass",
+      name: "BIOMASS",
+      group: "rings-and-biomass",
+      domain: "Pan-Tropical Allometry & Wood Density",
+      upstream_url: "https://github.com/umr-amap/BIOMASS",
+      license: "GPL-2.0",
+      tier: "Tier 3 (Containerized Sidecar)",
+      install_method: "renv-container",
+      readiness: "container-ready",
+      dependencies: [
+        "r-base",
+        "data.table",
+        "raster"
+      ],
+      constraints: "Maintained by AMAP/CIRAD. Stable pan-tropical allometric estimators."
+    },
+    {
+      id: "allodb",
+      name: "allodb",
+      group: "rings-and-biomass",
+      domain: "Standardized ForestGEO Allometries",
+      upstream_url: "https://github.com/forestgeo/allodb",
+      license: "GPL-3.0",
+      tier: "Tier 3 (Containerized Sidecar)",
+      install_method: "renv-container",
+      readiness: "container-ready",
+      dependencies: [
+        "r-base",
+        "dplyr",
+        "purrr"
+      ],
+      constraints: "Smithsonian ForestGEO global allometric equation calibration."
+    },
+    {
+      id: "fvs",
+      name: "USDA FVS / Open-FVS",
+      group: "growth-and-fire",
+      domain: "Forest Vegetation Simulator",
+      upstream_url: "https://github.com/forest-vegetation-simulator/fvs",
+      license: "Public Domain",
+      tier: "Tier 1 (CLI) / Tier 3 (Container)",
+      install_method: "docker-container / native-fortran",
+      readiness: "container-ready",
+      dependencies: [
+        "gfortran",
+        "gcc"
+      ],
+      constraints: "Core individual-tree growth simulator. Relies on legacy Fortran codebase."
+    },
+    {
+      id: "microfvs",
+      name: "microfvs",
+      group: "growth-and-fire",
+      domain: "FVS REST API Wrapper",
+      upstream_url: "https://github.com/Vibrant-Planet-Open-Science/microfvs",
+      license: "MIT",
+      tier: "Tier 3 (Containerized Sidecar)",
+      install_method: "docker-container",
+      readiness: "container-ready",
+      dependencies: [
+        "docker",
+        "python3"
+      ],
+      constraints: "Vibrant Planet microservice wrapper for batch growth runs."
+    },
+    {
+      id: "capsis",
+      name: "Capsis",
+      group: "growth-and-fire",
+      domain: "Multi-Model Stand & Agroforestry Platform",
+      upstream_url: "https://capsis.cirad.fr/",
+      license: "LGPL-2.1",
+      tier: "Tier 2 (Desktop GUI via Java)",
+      install_method: "java-desktop",
+      readiness: "container-ready",
+      dependencies: [
+        "openjdk-11",
+        "javafx"
+      ],
+      constraints: "Continuously maintained by INRAE/CIRAD. Requires Linux JavaFX runtime configuration."
+    },
+    {
+      id: "sortie-nd",
+      name: "SORTIE-ND",
+      group: "growth-and-fire",
+      domain: "Neighborhood Competition Dynamics",
+      upstream_url: "https://www.sortie-nd.org/",
+      license: "Academic Open Source",
+      tier: "Tier 1 (CLI) / Tier 2 (Java GUI)",
+      install_method: "native-cpp / java",
+      readiness: "container-ready",
+      dependencies: [
+        "g++",
+        "openjdk"
+      ],
+      constraints: "Spatially explicit light competition simulator. Headless C++ engine preferred."
+    },
+    {
+      id: "landis-ii",
+      name: "LANDIS-II",
+      group: "growth-and-fire",
+      domain: "Landscape Succession & Disturbance",
+      upstream_url: "https://github.com/LANDIS-II-Foundation",
+      license: "Apache-2.0 / BSD",
+      tier: "Tier 1 (Host CLI / .NET Core)",
+      install_method: "dotnet-tool",
+      readiness: "qualified",
+      dependencies: [
+        "dotnet-runtime-8.0"
+      ],
+      constraints: "Cross-platform .NET Core runtime execution. Extensions require matching version matrix."
+    },
+    {
+      id: "cell2fire",
+      name: "Cell2Fire",
+      group: "growth-and-fire",
+      domain: "Fast Raster Wildfire Simulator",
+      upstream_url: "https://github.com/cell2fire/Cell2Fire",
+      license: "MIT",
+      tier: "Tier 1 (Host CLI / OpenMP)",
+      install_method: "native-cpp-openmp",
+      readiness: "qualified",
+      dependencies: [
+        "g++",
+        "openmp",
+        "gdal",
+        "python3"
+      ],
+      constraints: "Canadian FBP and Scott & Burgan fuel models with parallel C++ execution."
+    },
+    {
+      id: "fmt",
+      name: "FMT (Forest Management Tool)",
+      group: "growth-and-fire",
+      domain: "Harvest Optimization Linear Programming",
+      upstream_url: "https://github.com/Bureau-du-Forestier-en-chef/FMT",
+      license: "LGPL-3.0",
+      tier: "Tier 1 (Host CLI / Native)",
+      install_method: "cmake-native",
+      readiness: "qualified",
+      dependencies: [
+        "boost",
+        "gdal",
+        "coinor-clp"
+      ],
+      constraints: "Linear and mixed-integer programming for timber harvest optimization."
+    },
+    {
+      id: "hemispher",
+      name: "hemispheR",
+      group: "canopy-photography",
+      domain: "Fisheye Canopy Photo Processing & LAI",
+      upstream_url: "https://github.com/frousseu/hemispheR",
+      license: "GPL-3.0",
+      tier: "Tier 3 (Containerized Sidecar)",
+      install_method: "renv-container",
+      readiness: "container-ready",
+      dependencies: [
+        "r-base",
+        "terra"
+      ],
+      constraints: "Automates circular masking, gap fraction, and effective Leaf Area Index."
+    },
+    {
+      id: "gaplightr",
+      name: "gaplightr",
+      group: "canopy-photography",
+      domain: "Gap Light Analyzer in R",
+      upstream_url: "https://hakaiinstitute.github.io/gaplightr/",
+      license: "MIT",
+      tier: "Tier 3 (Containerized Sidecar)",
+      install_method: "renv-container",
+      readiness: "container-ready",
+      dependencies: [
+        "r-base",
+        "terra",
+        "lidr",
+        "sf"
+      ],
+      constraints: "Processes physical hemispherical photos and virtual fisheye views synthesized from LiDAR."
+    },
+    {
+      id: "birdnet-analyzer",
+      name: "BirdNET-Analyzer",
+      group: "audio",
+      domain: "Acoustic Avian Sound Classifier",
+      upstream_url: "https://github.com/kahst/BirdNET-Analyzer",
+      license: "MIT (Code) / CC BY-NC-SA 4.0 (Model Weights)",
+      tier: "Tier 1 (Host CLI via TFLite)",
+      install_method: "uv-venv",
+      readiness: "qualified",
+      dependencies: [
+        "python3",
+        "tflite-runtime",
+        "librosa",
+        "numpy"
+      ],
+      constraints: "Code is MIT, but model weights carry CC BY-NC-SA 4.0 terms. Operator opt-in is for download consent and does not override model license restrictions. Model use and distribution permission remain separate from download consent. No default weight download."
+    },
+    {
+      id: "scikit-maad",
+      name: "scikit-maad",
+      group: "audio",
+      domain: "Quantitative Soundscape Biodiversity",
+      upstream_url: "https://github.com/scikit-maad/scikit-maad",
+      license: "BSD-3-Clause",
+      tier: "Tier 1 (Host CLI via uv)",
+      install_method: "uv-venv",
+      readiness: "qualified",
+      dependencies: [
+        "python3",
+        "numpy",
+        "scipy",
+        "scikit-learn",
+        "librosa"
+      ],
+      constraints: "Acoustic Complexity Index (ACI), ADI, and Bioacoustic Index."
+    }
+  ],
+  publication: {
+    published_in: "STIM-Protocol/Forest_OS",
+    source_project: "forest-tools planner catalog (separately maintained, not bundled in this repository)",
+    sanitized: true,
+    snapshot_note: "Snapshot copy, not a live mirror. Where this file and the workbench HTML dataset disagree, this file governs. Regenerate counts programmatically; do not trust prose totals."
+  }
+};
+
 // web/presets.js
 var CENTRAL_TEXAS_SPECIES = [
   {
@@ -3235,9 +3991,43 @@ var CENTRAL_TEXAS_SPECIES = [
     scientific: "Juniperus ashei",
     taxon_id: 49203,
     guild: "Arbuscular_Mycorrhizal_AM",
-    growth_factor: 5
+    growth_factor: 5,
+    bioregion: "Central Texas"
+  },
+  {
+    common: "Oregon White Oak",
+    scientific: "Quercus garryana",
+    taxon_id: 47851,
+    guild: "Ectomycorrhizal_EM",
+    growth_factor: 5,
+    bioregion: "Rogue Valley, Oregon"
+  },
+  {
+    common: "California Black Oak",
+    scientific: "Quercus kelloggii",
+    taxon_id: 49139,
+    guild: "Ectomycorrhizal_EM",
+    growth_factor: 4.5,
+    bioregion: "Rogue Valley, Oregon"
+  },
+  {
+    common: "Ponderosa Pine",
+    scientific: "Pinus ponderosa",
+    taxon_id: 48461,
+    guild: "Ectomycorrhizal_EM",
+    growth_factor: 4,
+    bioregion: "Rogue Valley, Oregon"
+  },
+  {
+    common: "Pacific Madrone",
+    scientific: "Arbutus menziesii",
+    taxon_id: 51046,
+    guild: "Ericoid_Arbutoid_Mycorrhizal",
+    growth_factor: 4.5,
+    bioregion: "Rogue Valley, Oregon"
   }
 ];
+var ALL_SPECIES_PRESETS = CENTRAL_TEXAS_SPECIES;
 var FIXED_PARITY_CASES = [
   {
     id: "case-1-austin-live-oak",
@@ -3751,19 +4541,3683 @@ var FIXED_PARITY_CASES = [
         }
       }
     }
+  },
+  {
+    id: "case-4-ashland-oregon-white-oak",
+    label: "Case 4: Ashland Heritage Oregon White Oak (41.3 in DBH)",
+    ordinance_id: "or-ashland",
+    condition_class: "Good",
+    site_condition: "Open Grown / Parkland",
+    proposed_removal: false,
+    pruning_date: "2026-11-10",
+    crz_disturbed_pct: 12,
+    cutfill_depth_in: 1,
+    impervious_pct: 8,
+    crown_removal_pct: 8,
+    assessment: {
+      schema_version: "RCA_v2",
+      assessment_mode: "Regenerative Diagnostic",
+      structural_baseline: {
+        tree_tag: "ASH-QG-105",
+        species_scientific: "Quercus garryana",
+        species_common: "Oregon White Oak",
+        inaturalist_taxon_id: 47851,
+        assessment_date: "2026-10-23",
+        dbh_cm: 105,
+        is_multistem: false,
+        multistem_aggregation_method: "single_stem",
+        height_m: 18.5,
+        crown_spread_ns_m: 21,
+        crown_spread_ew_m: 22.5,
+        live_crown_ratio_pct: 72,
+        plus_code_global: "84JV57VR+R6",
+        codit_wall_response_rating: "Wall_4_Active_Barrier_Zone",
+        sound_shell_thickness_ratio_t_over_r: 0.34,
+        sonic_tomography_or_resistograph_uri: "https://soilgrower.com/diagnostics/picus/ash-qg-105-tomogram.png",
+        dual_valuation: {
+          ctla_10th_ed_depreciated_usd: 24414,
+          holobiont_200yr_biological_equity_usd: 457919,
+          veteran_keystone_habitat_multiplier: 3.5,
+          valuation_delta_usd: 433505
+        },
+        isa_traq_risk: {
+          assessment_level: "Level_3_Advanced",
+          time_frame_years: 5,
+          target_zone_description: "Residential gravel courtyard and seasonal footpath; intermittent pedestrian occupancy.",
+          primary_tree_part_of_concern: "Scaffold_Branch",
+          likelihood_of_failure: "Possible",
+          likelihood_of_impact: "Low",
+          likelihood_of_failure_and_impact: "Unlikely",
+          consequences_of_failure: "Significant",
+          overall_risk_rating: "Low",
+          residual_risk_rating: "Low"
+        },
+        municipal_permit_disposition: {
+          jurisdiction_id: "or-ashland",
+          ordinance_citation: "Ashland Municipal Code (AMC) 18.4.5 & 18.5.7",
+          protection_tier: "Heritage",
+          permit_required: true,
+          recommended_disposition: "Preservation_With_Rhizosphere_Remediation",
+          seasonal_oak_wilt_restriction_active: false
+        }
+      },
+      rhizosphere_and_root_collar: {
+        root_flare_burial_depth_cm: 18,
+        root_flare_diameter_cm: 136,
+        stem_girdling_root_count: 2,
+        stem_girdling_root_severity: "Moderate_25_To_50_Pct_Circumference",
+        airspade_radial_trenching_geometry: {
+          execution_status: "Prescribed_Radial_Remediation",
+          operating_pressure_psi: 150,
+          trench_count: 10,
+          trench_length_m: 9.5,
+          trench_width_cm: 30,
+          trench_depth_cm: 35,
+          root_collar_excavation_radius_m: 1.2
+        },
+        crz_radius_m: 12.6,
+        srz_radius_m: 3.68,
+        tiz_radius_m: 16.5
+      },
+      soil_and_microbiome_baseline: {
+        bulk_density_g_cm3: 1.58,
+        penetrometer_resistance_psi: 340,
+        infiltration_rate_mm_hr: 14,
+        organic_matter_pct: 2.4,
+        soil_ph: 6.3,
+        lab_panel_url: "https://soilgrower.com/labs/osu-soil-health/sample-ash-2026-105.pdf",
+        lab_sample_id: "OSU-RV-2026-105",
+        mycorrhizal_and_fungal_observations: {
+          dominant_mycorrhizal_guild: "Ectomycorrhizal_EM",
+          fungal_to_bacterial_biomass_ratio: 0.42,
+          hyphal_colonization_status: "Depleted_Bacterial_Dominated",
+          observed_fruiting_bodies_or_rhizomorphs: [
+            {
+              species_or_morphotype: "Pisolithus arhizus",
+              inaturalist_taxon_id: 55259,
+              ecological_role: "Mycorrhizal_Symbiont"
+            },
+            {
+              species_or_morphotype: "Laccaria laccata",
+              inaturalist_taxon_id: 53287,
+              ecological_role: "Mycorrhizal_Symbiont"
+            },
+            {
+              species_or_morphotype: "Stereum hirsutum",
+              inaturalist_taxon_id: 55501,
+              ecological_role: "Saprotrophic_Wood_Or_Litter_Decomposer"
+            }
+          ]
+        }
+      },
+      understory_and_guild_prescription: {
+        reference_ecosystem_name: "Rogue Valley Oregon White Oak Savanna and Woodland",
+        biochar_volume_liters: 850,
+        humate_mass_kg: 16,
+        compost_volume_cubic_m: 1.6,
+        compost_extract_volume_liters: 400,
+        mulch_depth_cm: 8,
+        mulch_coverage_area_m2: 855.3,
+        synthetic_npk_and_fungicide_exclusion_verified: true,
+        native_companion_species_guild: [
+          {
+            scientific_name: "Mahonia aquifolium",
+            common_name: "Oregon Grape",
+            inaturalist_taxon_id: 48441,
+            open_nursery_batch_id: "ON-OR-2026-MAQ-01",
+            stratum_layer: "Shrub_Layer",
+            functional_role: "Pollinator_And_Predatory_Insect_Refuge",
+            quantity_planted: 18
+          },
+          {
+            scientific_name: "Ribes sanguineum",
+            common_name: "Red Flowering Currant",
+            inaturalist_taxon_id: 53408,
+            open_nursery_batch_id: "ON-OR-2026-RSA-04",
+            stratum_layer: "Shrub_Layer",
+            functional_role: "Pollinator_And_Predatory_Insect_Refuge",
+            quantity_planted: 12
+          },
+          {
+            scientific_name: "Polystichum munitum",
+            common_name: "Western Sword Fern",
+            inaturalist_taxon_id: 47751,
+            open_nursery_batch_id: "ON-OR-2026-PMU-09",
+            stratum_layer: "Herbaceous_Perennial",
+            functional_role: "Hydrologic_Swale_Or_Infiltration_Anchor",
+            quantity_planted: 24
+          },
+          {
+            scientific_name: "Ceanothus integerrimus",
+            common_name: "Deer Brush",
+            inaturalist_taxon_id: 50068,
+            open_nursery_batch_id: "ON-OR-2026-CIN-02",
+            stratum_layer: "Sub_Canopy_Understory",
+            functional_role: "Symbiotic_Nitrogen_Fixer",
+            quantity_planted: 8
+          }
+        ]
+      },
+      outcome_monitoring_schedule: {
+        stim_hypothesis_statement: "Supersonic AirSpade radial trenching (10 spokes at 150 psi), stem-girdling root excision, pre-charged biochar/humate backfill, and native Rogue Valley understory guild establishment will reduce top-15cm bulk density from 1.58 to <= 1.25 g/cm3 and elevate F:B biomass ratio from 0.42 to >= 1.2 within 60 months.",
+        stim_kill_criterion: "If Year-1 terminal twig extension remains below 6 cm or upper crown dieback exceeds 15%, re-evaluate for deep vadose water table restriction or secondary root pathogen colonization.",
+        one_year_leading_indicators: {
+          scheduled_reinspection_date: "2027-10-23",
+          target_canopy_dieback_max_pct: 10,
+          target_annual_twig_extension_min_cm: 8,
+          target_woundwood_callus_closure_mm_yr: 12,
+          root_flare_unburied_verified: true,
+          mulch_horizon_and_litter_incorporation_intact: true,
+          soil_surface_crusting_or_capping_absent: true,
+          companion_guild_survival_min_pct: 85,
+          fixed_photopoint_azimuth_deg: 180
+        },
+        five_year_lagging_indicators: {
+          scheduled_audit_date: "2031-10-23",
+          target_bulk_density_max_g_cm3: 1.25,
+          target_infiltration_rate_min_mm_hr: 65,
+          target_organic_matter_min_pct: 5.5,
+          target_fungal_to_bacterial_ratio_min: 1.4,
+          target_ser_recovery_wheel_stars: 4.5,
+          sanctuary_scorecard_targets: {
+            tiz_footprint_area_m2: 855.3,
+            canopy_projection_area_m2: 371.1,
+            soil_health_index_baseline_score: 38,
+            soil_health_index_target_score: 86,
+            canopy_volume_expansion_target_pct: 12,
+            stormwater_interception_baseline_liters_yr: 44600,
+            stormwater_interception_target_liters_yr: 58e3,
+            documented_native_biodiversity_taxa_baseline: 4,
+            documented_native_biodiversity_taxa_min: 16,
+            restoration_potential_baseline_pct: 42,
+            restoration_potential_realized_pct: 88
+          }
+        }
+      }
+    }
+  }
+];
+var DEFAULT_STAND_TREES = [
+  {
+    tag: "ATX-QV-101",
+    species: "Quercus virginiana (Live Oak)",
+    dbh_inches: 30,
+    x_ft: 0,
+    y_ft: 0,
+    case_id: "case-1-austin-live-oak"
+  },
+  {
+    tag: "ATX-QV-102",
+    species: "Quercus virginiana (Live Oak)",
+    dbh_inches: 26,
+    x_ft: 22,
+    y_ft: 10,
+    case_id: "case-1-austin-live-oak"
+  },
+  {
+    tag: "GTN-CI-204",
+    species: "Carya illinoinensis (Pecan)",
+    dbh_inches: 28.4,
+    x_ft: 42,
+    y_ft: -8,
+    case_id: "case-2-georgetown-pecan"
+  },
+  {
+    tag: "LHT-QS-309",
+    species: "Quercus stellata (Post Oak)",
+    dbh_inches: 20,
+    x_ft: 18,
+    y_ft: -24,
+    case_id: "case-3-liberty-hill-post-oak"
   }
 ];
 
-// web/app.js
-var OLC_CHARS2 = "23456789CFGHJMPQRVWX";
+// web/pages/demo-extras.js
+var round15 = (n) => Math.round(Number(n || 0) * 10) / 10;
+var round25 = (n) => Math.round(Number(n || 0) * 100) / 100;
+function initSharedThemeToggle() {
+  if (typeof document === "undefined" || typeof window === "undefined") return;
+  let meta = document.querySelector('meta[name="color-scheme"]');
+  if (!meta) {
+    meta = document.createElement("meta");
+    meta.name = "color-scheme";
+    meta.content = "light dark";
+    document.head.appendChild(meta);
+  }
+  const btn = document.getElementById("oa-theme-toggle");
+  const mql = typeof window.matchMedia === "function" ? window.matchMedia("(prefers-color-scheme: dark)") : { matches: true, addEventListener: null };
+  const getSystemScheme = () => mql.matches ? "dark" : "light";
+  const getStoredScheme = () => {
+    try {
+      return localStorage.getItem("color-scheme");
+    } catch {
+      return null;
+    }
+  };
+  const applyThemeState = () => {
+    const stored = getStoredScheme();
+    const sys = getSystemScheme();
+    const effective = stored === "light" || stored === "dark" ? stored : sys;
+    meta.content = stored === "light" || stored === "dark" ? stored : "light dark";
+    document.documentElement.dataset.theme = effective;
+    if (btn) {
+      if (stored === "dark") {
+        btn.textContent = "Theme: Dark";
+      } else if (stored === "light") {
+        btn.textContent = "Theme: Light";
+      } else {
+        btn.textContent = `Theme: Auto (${sys === "dark" ? "Dark" : "Light"})`;
+      }
+    }
+  };
+  applyThemeState();
+  if (typeof mql.addEventListener === "function") {
+    mql.addEventListener("change", () => applyThemeState());
+  }
+  if (btn && !btn.dataset.themeBound) {
+    btn.dataset.themeBound = "true";
+    btn.addEventListener("click", () => {
+      const stored = getStoredScheme();
+      const sys = getSystemScheme();
+      const currentEffective = stored === "light" || stored === "dark" ? stored : sys;
+      const targetScheme = currentEffective === "dark" ? "light" : "dark";
+      try {
+        if (targetScheme === sys) {
+          localStorage.removeItem("color-scheme");
+          meta.content = "light dark";
+        } else {
+          localStorage.setItem("color-scheme", targetScheme);
+          meta.content = targetScheme;
+        }
+      } catch {
+        meta.content = targetScheme;
+      }
+      applyThemeState();
+    });
+  }
+}
+function getEcologicalTier(score) {
+  const s = Number(score) || 0;
+  if (s >= 80) {
+    return { label: "Regenerative Sanctuary", badgeClass: "badge-protected" };
+  }
+  if (s >= 60) {
+    return { label: "Functional Canopy", badgeClass: "badge-heritage" };
+  }
+  if (s >= 40) {
+    return { label: "Transitional Stand", badgeClass: "badge-warn" };
+  }
+  return { label: "Degraded Site", badgeClass: "badge-danger" };
+}
+var leafletLoadPromise = null;
+function ensureLeafletLoaded() {
+  if (typeof window === "undefined") return Promise.reject(new Error("No window environment"));
+  if (window.L) return Promise.resolve(window.L);
+  if (leafletLoadPromise) return leafletLoadPromise;
+  leafletLoadPromise = new Promise((resolve, reject) => {
+    const cssId = "oa-leaflet-css";
+    if (!document.getElementById(cssId)) {
+      const link = document.createElement("link");
+      link.id = cssId;
+      link.rel = "stylesheet";
+      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+      link.crossOrigin = "";
+      document.head.appendChild(link);
+    }
+    const script = document.createElement("script");
+    script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+    script.crossOrigin = "";
+    script.onload = () => {
+      if (window.L) resolve(window.L);
+      else reject(new Error("Leaflet loaded without global L"));
+    };
+    script.onerror = () => {
+      leafletLoadPromise = null;
+      reject(new Error("Failed to load Leaflet 1.9.4 from CDN"));
+    };
+    document.head.appendChild(script);
+  });
+  return leafletLoadPromise;
+}
+function initDemoExtrasUI() {
+  if (typeof document === "undefined") return;
+  const modeSingleEl = document.getElementById("demo-mode-single");
+  const modeStandEl = document.getElementById("demo-mode-stand");
+  const modeBadgeEl = document.getElementById("demo-mode-badge");
+  const modeButtons = document.querySelectorAll("[data-demo-mode]");
+  let activeMode = "single";
+  let activeMapLayerMode = "svg";
+  let sessionGmapsApiKey = "";
+  let leafletMap = null;
+  let leafletTileLayer = null;
+  let leafletVectorGroup = null;
+  if (modeButtons.length > 0) {
+    modeButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const mode = btn.dataset.demoMode || "single";
+        activeMode = mode;
+        modeButtons.forEach((b) => {
+          const isMatch = b.dataset.demoMode === mode;
+          b.classList.toggle("active", isMatch);
+          b.setAttribute("aria-selected", isMatch ? "true" : "false");
+        });
+        if (modeSingleEl) modeSingleEl.hidden = mode !== "single";
+        if (modeStandEl) modeStandEl.hidden = mode !== "stand";
+        if (modeBadgeEl) modeBadgeEl.hidden = mode !== "badge";
+        if (mode === "stand") {
+          renderStandUnionAndScorecard();
+        } else if (mode === "badge") {
+          mintAndRenderOpenBadge();
+        } else if (mode === "single" && activeMapLayerMode === "leaflet") {
+          refreshLeafletParcelMap();
+        }
+      });
+    });
+  }
+  const btnMapSvg = document.getElementById("btn-map-mode-svg");
+  const btnMapLeaflet = document.getElementById("btn-map-mode-leaflet");
+  const svgMapContainer = document.getElementById("svg-map-container");
+  const parcelMapPanel = document.getElementById("parcel-map-panel");
+  const selectTileLayer = document.getElementById("select-parcel-tile-layer");
+  const inputGmapsKey = document.getElementById("input-gmaps-api-key");
+  const coordsReadout = document.getElementById("parcel-coords-readout");
+  const parcelStatus = document.getElementById("parcel-map-status");
+  function setSpatialMapMode(mode) {
+    activeMapLayerMode = mode;
+    if (btnMapSvg) btnMapSvg.classList.toggle("active", mode === "svg");
+    if (btnMapLeaflet) btnMapLeaflet.classList.toggle("active", mode === "leaflet");
+    if (svgMapContainer) svgMapContainer.hidden = mode !== "svg";
+    if (parcelMapPanel) parcelMapPanel.hidden = mode !== "leaflet";
+    if (mode === "leaflet") {
+      refreshLeafletParcelMap();
+    }
+  }
+  btnMapSvg?.addEventListener("click", () => setSpatialMapMode("svg"));
+  btnMapLeaflet?.addEventListener("click", () => setSpatialMapMode("leaflet"));
+  inputGmapsKey?.addEventListener("input", () => {
+    sessionGmapsApiKey = inputGmapsKey.value.trim();
+    if (activeMapLayerMode === "leaflet" && selectTileLayer?.value === "gmaps") {
+      refreshLeafletParcelMap();
+    }
+  });
+  selectTileLayer?.addEventListener("change", () => {
+    if (activeMapLayerMode === "leaflet") {
+      refreshLeafletParcelMap();
+    }
+  });
+  async function refreshLeafletParcelMap() {
+    const canvas = document.getElementById("leaflet-map-canvas");
+    if (!canvas) return;
+    const { latestAssessment: latestAssessment2, latestResult: latestResult2 } = getLatestFieldState();
+    const assessment = latestAssessment2 || FIXED_PARITY_CASES[0].assessment;
+    const sb = assessment.structural_baseline || {};
+    const rh = assessment.rhizosphere_and_root_collar || {};
+    const decoded = decodePlusCode(sb.plus_code_global) || { lat: 30.2672, lng: -97.7431 };
+    if (coordsReadout) {
+      coordsReadout.value = `${decoded.lat.toFixed(4)}, ${decoded.lng.toFixed(4)} (${sb.plus_code_global || "86247784+VP"})`;
+    }
+    try {
+      const L = await ensureLeafletLoaded();
+      if (!leafletMap) {
+        leafletMap = L.map(canvas).setView([decoded.lat, decoded.lng], 19);
+        leafletVectorGroup = L.layerGroup().addTo(leafletMap);
+      } else {
+        leafletMap.setView([decoded.lat, decoded.lng], 19);
+        setTimeout(() => leafletMap.invalidateSize(), 60);
+      }
+      if (leafletTileLayer) {
+        leafletMap.removeLayer(leafletTileLayer);
+      }
+      const layerChoice = selectTileLayer?.value || "osm";
+      if (layerChoice === "esri") {
+        leafletTileLayer = L.tileLayer(
+          "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+          {
+            maxZoom: 20,
+            attribution: "Tiles &copy; Esri, USGS, USDA NAIP"
+          }
+        ).addTo(leafletMap);
+      } else if (layerChoice === "gmaps") {
+        const keyParam = sessionGmapsApiKey ? `&key=${encodeURIComponent(sessionGmapsApiKey)}` : "";
+        leafletTileLayer = L.tileLayer(
+          `https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}${keyParam}`,
+          {
+            maxZoom: 21,
+            attribution: "Map data &copy; Google Satellite"
+          }
+        ).addTo(leafletMap);
+      } else {
+        leafletTileLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          maxZoom: 20,
+          attribution: "&copy; OpenStreetMap contributors"
+        }).addTo(leafletMap);
+      }
+      leafletVectorGroup.clearLayers();
+      const dbhIn = (Number(sb.dbh_cm) || 76.2) / 2.54;
+      const crzMeters = latestResult2?.rootZones?.crz?.radius_meters || calculateCRZ(dbhIn, 1).radius_meters;
+      const tpzMeters = latestResult2?.rootZones?.tpzUs115?.radius_meters || round25(crzMeters * 1.5);
+      const srzMeters = latestResult2?.rootZones?.srz?.radius_meters || calculateSRZ((Number(rh.root_flare_diameter_cm) || 90) / 2.54, dbhIn).radius_meters;
+      const geoFeature = latestResult2?.geojson?.features?.[0];
+      const lat = geoFeature?.geometry?.coordinates?.[1] ?? decoded.lat;
+      const lng = geoFeature?.geometry?.coordinates?.[0] ?? decoded.lng;
+      L.circle([lat, lng], {
+        radius: tpzMeters,
+        color: "#e9c46a",
+        weight: 2,
+        dashArray: "6, 4",
+        fillColor: "#e9c46a",
+        fillOpacity: 0.08
+      }).bindPopup(
+        `<strong>${sb.tree_tag || "Tree"} Tree Influence Zone (TIZ / TPZ 1.5x)</strong><br>Radius: ${tpzMeters} m (${round15(tpzMeters / 0.3048)} ft)`
+      ).addTo(leafletVectorGroup);
+      L.circle([lat, lng], {
+        radius: crzMeters,
+        color: "#52b788",
+        weight: 2.5,
+        fillColor: "#52b788",
+        fillOpacity: 0.18
+      }).bindPopup(
+        `<strong>${sb.tree_tag || "Tree"} Critical Root Zone (CRZ)</strong><br>Radius: ${crzMeters} m (${round15(crzMeters / 0.3048)} ft)<br>Species: <em>${sb.species_scientific || "Quercus virginiana"}</em>`
+      ).addTo(leafletVectorGroup);
+      L.circle([lat, lng], {
+        radius: srzMeters,
+        color: "#e63946",
+        weight: 2,
+        dashArray: "4, 4",
+        fillColor: "#e63946",
+        fillOpacity: 0.25
+      }).bindPopup(
+        `<strong>${sb.tree_tag || "Tree"} Structural Root Zone (AS 4970 SRZ)</strong><br>Radius: ${srzMeters} m (${round15(srzMeters / 0.3048)} ft)`
+      ).addTo(leafletVectorGroup);
+      L.circleMarker([lat, lng], {
+        radius: 5,
+        color: "#ffffff",
+        fillColor: "#2d6a4f",
+        fillOpacity: 1
+      }).bindPopup(
+        `<strong>${sb.tree_tag || "Tree"} (${sb.species_common || "Live Oak"})</strong><br>DBH: ${round15(dbhIn)} in (${sb.dbh_cm} cm)<br>Plus Code: <code>${sb.plus_code_global}</code>`
+      ).addTo(leafletVectorGroup);
+      if (parcelStatus) {
+        parcelStatus.textContent = `Rendered OGC CRS84 GeoJSON rings at (${lat.toFixed(4)}, ${lng.toFixed(4)}): SRZ = ${srzMeters} m, CRZ = ${crzMeters} m, TIZ/TPZ = ${tpzMeters} m.`;
+      }
+    } catch (err) {
+      if (parcelStatus) {
+        parcelStatus.textContent = `Interactive map notice: ${err.message}. Use the Deterministic SVG CAD Map for offline vector inspection.`;
+      }
+    }
+  }
+  window.addEventListener("openarbor:field-updated", () => {
+    if (activeMode === "single" && activeMapLayerMode === "leaflet") {
+      refreshLeafletParcelMap();
+    }
+  });
+  let standTrees = JSON.parse(JSON.stringify(DEFAULT_STAND_TREES));
+  const standTbody = document.getElementById("stand-builder-tbody");
+  const btnStandAdd = document.getElementById("btn-stand-add-tree");
+  const btnStandReset = document.getElementById("btn-stand-reset");
+  const inputStandParcelSqm = document.getElementById("input-stand-parcel-sqm");
+  function renderStandTableRows() {
+    if (!standTbody) return;
+    const speciesOptions = ALL_SPECIES_PRESETS.map(
+      (s) => `<option value="${s.scientific} (${s.common})">${s.common} (${s.scientific})</option>`
+    ).join("");
+    const caseOptions = FIXED_PARITY_CASES.map(
+      (c) => `<option value="${c.id}">${c.label}</option>`
+    ).join("");
+    standTbody.innerHTML = standTrees.map(
+      (t, idx) => `
+        <tr data-stand-idx="${idx}">
+          <td>
+            <input type="text" class="stand-input-tag" value="${t.tag}" aria-label="Tree Tag row ${idx + 1}">
+          </td>
+          <td>
+            <select class="stand-input-species" aria-label="Species row ${idx + 1}">
+              <option value="${t.species}">${t.species}</option>
+              ${speciesOptions}
+            </select>
+          </td>
+          <td>
+            <input type="number" class="stand-input-dbh" min="1" max="200" step="0.5" value="${t.dbh_inches}" aria-label="DBH inches row ${idx + 1}">
+          </td>
+          <td>
+            <input type="number" class="stand-input-x" min="-500" max="500" step="1" value="${t.x_ft}" aria-label="Local X feet row ${idx + 1}">
+          </td>
+          <td>
+            <input type="number" class="stand-input-y" min="-500" max="500" step="1" value="${t.y_ft}" aria-label="Local Y feet row ${idx + 1}">
+          </td>
+          <td>
+            <select class="stand-input-case" aria-label="Diagnostic template row ${idx + 1}">
+              ${caseOptions.replace(`value="${t.case_id}"`, `value="${t.case_id}" selected`)}
+            </select>
+          </td>
+          <td>
+            <button type="button" class="btn btn-outline btn-stand-remove" data-remove-idx="${idx}" ${standTrees.length <= 1 ? "disabled" : ""}>Remove</button>
+          </td>
+        </tr>
+      `
+    ).join("");
+  }
+  standTbody?.addEventListener("input", (e) => {
+    const row = e.target.closest("tr[data-stand-idx]");
+    if (!row) return;
+    const idx = Number(row.dataset.standIdx);
+    const item = standTrees[idx];
+    if (!item) return;
+    item.tag = row.querySelector(".stand-input-tag")?.value.trim() || `T-${idx + 1}`;
+    item.species = row.querySelector(".stand-input-species")?.value || item.species;
+    item.dbh_inches = Math.max(1, Number(row.querySelector(".stand-input-dbh")?.value) || 12);
+    item.x_ft = Number(row.querySelector(".stand-input-x")?.value) || 0;
+    item.y_ft = Number(row.querySelector(".stand-input-y")?.value) || 0;
+    item.case_id = row.querySelector(".stand-input-case")?.value || FIXED_PARITY_CASES[0].id;
+    renderStandUnionOutputs();
+  });
+  standTbody?.addEventListener("click", (e) => {
+    const rmBtn = e.target.closest(".btn-stand-remove");
+    if (!rmBtn) return;
+    const idx = Number(rmBtn.dataset.removeIdx);
+    if (standTrees.length > 1 && idx >= 0 && idx < standTrees.length) {
+      standTrees.splice(idx, 1);
+      renderStandUnionAndScorecard();
+    }
+  });
+  btnStandAdd?.addEventListener("click", () => {
+    const nextNum = standTrees.length + 1;
+    standTrees.push({
+      tag: `ATX-QV-10${nextNum}`,
+      species: "Quercus virginiana (Live Oak)",
+      dbh_inches: 24,
+      x_ft: (nextNum - 1) * 14,
+      y_ft: nextNum % 2 === 0 ? 12 : -10,
+      case_id: "case-1-austin-live-oak"
+    });
+    renderStandUnionAndScorecard();
+  });
+  btnStandReset?.addEventListener("click", () => {
+    standTrees = JSON.parse(JSON.stringify(DEFAULT_STAND_TREES));
+    renderStandUnionAndScorecard();
+  });
+  inputStandParcelSqm?.addEventListener("input", () => {
+    renderStandUnionOutputs();
+  });
+  function renderStandUnionAndScorecard() {
+    renderStandTableRows();
+    renderStandUnionOutputs();
+  }
+  function renderStandUnionOutputs() {
+    const metricsEl = document.getElementById("stand-union-metrics");
+    const svgWrapEl = document.getElementById("stand-union-svg");
+    const svgSummaryEl = document.getElementById("stand-svg-summary");
+    const scSummaryEl = document.getElementById("stand-scorecard-summary");
+    const scTbodyEl = document.getElementById("stand-scorecard-tbody");
+    if (!metricsEl || !svgWrapEl || !scTbodyEl) return;
+    const baseLat = 30.2672;
+    const baseLng = -97.7431;
+    const FT_PER_DEG_LAT = 364e3;
+    const ftPerDegLng = FT_PER_DEG_LAT * Math.cos(baseLat * Math.PI / 180);
+    const locatedTrees = standTrees.map((t) => {
+      const dbhIn = Math.max(1, Number(t.dbh_inches) || 12);
+      const crz = calculateCRZ(dbhIn, 1);
+      const lat = baseLat + (Number(t.y_ft) || 0) / FT_PER_DEG_LAT;
+      const lng = baseLng + (Number(t.x_ft) || 0) / ftPerDegLng;
+      return {
+        ...t,
+        dbh: dbhIn,
+        lat,
+        lng,
+        crz_ft: crz.radius_feet,
+        tpz_ft: crz.radius_feet,
+        fence_ft: crz.radius_feet,
+        crz_area: crz.area_sqft,
+        removal: false
+      };
+    });
+    const grossCrzAreaSqFt = Math.round(
+      locatedTrees.reduce((sum, r) => sum + r.crz_area, 0)
+    );
+    const unionRes = unionRootZoneArea(locatedTrees);
+    const unionCrzAreaSqFt = unionRes.area_sqft;
+    const overlapReductionSqFt = unionRes.overlap_saved_sqft;
+    const overlapPct = grossCrzAreaSqFt > 0 ? round15(overlapReductionSqFt / grossCrzAreaSqFt * 100) : 0;
+    metricsEl.innerHTML = `
+      <div class="metric-box">
+        <span class="metric-label">Gross Summed CRZ Area</span>
+        <strong class="metric-value"><span id="gross_crz_area_sq_ft">${grossCrzAreaSqFt.toLocaleString()}</span> sq ft</strong>
+        <span class="metric-sub">${round15(grossCrzAreaSqFt * 0.092903)} m2 un-deduplicated sum</span>
+      </div>
+      <div class="metric-box highlight-box">
+        <span class="metric-label">1-ft Grid De-Duplicated Union Area</span>
+        <strong class="metric-value text-accent"><span id="union_crz_area_sq_ft">${unionCrzAreaSqFt.toLocaleString()}</span> sq ft</strong>
+        <span class="metric-sub">${round15(unionCrzAreaSqFt * 0.092903)} m2 net rhizosphere footprint</span>
+      </div>
+      <div class="metric-box">
+        <span class="metric-label">Overlap Saved (De-Duplicated)</span>
+        <strong class="metric-value"><span id="overlap_reduction_sq_ft">${overlapReductionSqFt.toLocaleString()}</span> sq ft (${overlapPct}%)</strong>
+        <span class="metric-sub">Prevents double-billing mulch &amp; AirSpade work</span>
+      </div>
+      <div class="metric-box">
+        <span class="metric-label">Stand Tree Count &amp; Total DBH</span>
+        <strong class="metric-value">${locatedTrees.length} trees (${round15(locatedTrees.reduce((s, r) => s + r.dbh, 0))} in)</strong>
+        <span class="metric-sub">1-ft Cartesian grid union verified</span>
+      </div>
+    `;
+    const svgMarkup = renderSiteMapSVG(locatedTrees, { width: 680, height: 340 });
+    svgWrapEl.innerHTML = svgMarkup || '<p class="hint">Add located trees to render the SVG stand union map.</p>';
+    if (svgSummaryEl) {
+      svgSummaryEl.innerHTML = `Net Union CRZ: <strong>${unionCrzAreaSqFt.toLocaleString()} sq ft</strong> | Overlap Saved: <strong>${overlapReductionSqFt.toLocaleString()} sq ft (${overlapPct}%)</strong>`;
+    }
+    const standAssessments = locatedTrees.map((t) => {
+      const matchedCase = FIXED_PARITY_CASES.find((c) => c.id === t.case_id) || FIXED_PARITY_CASES[0];
+      const clone = JSON.parse(JSON.stringify(matchedCase.assessment));
+      clone.structural_baseline.tree_tag = t.tag;
+      clone.structural_baseline.dbh_cm = round25(t.dbh * 2.54);
+      clone.structural_baseline.lat = t.lat;
+      clone.structural_baseline.lng = t.lng;
+      const crzM = round25(t.crz_ft * 0.3048);
+      clone.rhizosphere_and_root_collar.crz_radius_m = crzM;
+      clone.rhizosphere_and_root_collar.tiz_radius_m = round25(crzM * 1.5);
+      return clone;
+    });
+    const parcelSqm = Math.max(100, Number(inputStandParcelSqm?.value) || 4047);
+    const rollup = computeSanctuaryScorecardRollup(standAssessments, parcelSqm);
+    const sc = rollup.sanctuary_scorecard;
+    const eq = rollup.ecological_equity;
+    const compositeTier = getEcologicalTier(sc.composite_sanctuary_score);
+    if (scSummaryEl) {
+      scSummaryEl.innerHTML = `
+        <div>
+          <span class="metric-label">Composite Open Sanctuary Scorecard Rating</span>
+          <div class="verdict-title-row">
+            <strong class="verdict-big">${sc.composite_sanctuary_score} / 100</strong>
+            <span class="badge ${compositeTier.badgeClass}">${compositeTier.label}</span>
+          </div>
+          <span class="metric-sub">Stand Holobiont 200-Yr Equity: <strong>$${eq.total_holobiont_200yr_equity_usd.toLocaleString()}</strong> vs. Classical CTLA: $${eq.total_ctla_depreciated_usd.toLocaleString()} (${eq.inversion_ratio}x)</span>
+        </div>
+        <div class="verdict-right">
+          <span class="metric-label">Canopy Coverage of Parcel</span>
+          <strong>${rollup.spatial_coverage.canopy_coverage_parcel_pct}% (${rollup.spatial_coverage.total_canopy_projection_sqm} m2 / ${rollup.parcel_area_sqm} m2)</strong>
+        </div>
+      `;
+    }
+    const dimensionRows = [
+      {
+        name: "Soil Health Index",
+        score: sc.soil_health_index,
+        driver: "Top-15cm bulk density (g/cm3), steady-state infiltration (mm/hr), SOM (%), and F:B fungal ratio weighted by TIZ area"
+      },
+      {
+        name: "Canopy Coverage",
+        score: sc.canopy_coverage_index,
+        driver: `Live Crown Ratio-weighted dripline projection (${rollup.spatial_coverage.total_canopy_projection_sqm} m2 across ${rollup.parcel_area_sqm} m2 parcel)`
+      },
+      {
+        name: "Water Dynamics",
+        score: sc.water_dynamics_index,
+        driver: "60% vadose zone soil infiltration capacity + 40% canopy rainfall interception (Xiao et al. 2000)"
+      },
+      {
+        name: "Biodiversity Baseline",
+        score: sc.biodiversity_baseline_index,
+        driver: "Unique iNaturalist taxa documented across host canopy trees, mycorrhizal symbionts, and understory companion guilds"
+      },
+      {
+        name: "Restoration Potential Score",
+        score: sc.restoration_potential_score,
+        driver: "60-month STIM target realization potential across SER International Principles recovery wheel"
+      }
+    ];
+    scTbodyEl.innerHTML = dimensionRows.map((d) => {
+      const tier = getEcologicalTier(d.score);
+      return `
+          <tr>
+            <td><strong>${d.name}</strong></td>
+            <td><strong>${d.score} / 100</strong></td>
+            <td><span class="badge ${tier.badgeClass}">${tier.label}</span></td>
+            <td>${d.driver}</td>
+          </tr>
+        `;
+    }).join("");
+  }
+  const inputPractitioner = document.getElementById("input-badge-practitioner");
+  const inputCredId = document.getElementById("input-badge-credential-id");
+  const inputIssuerUri = document.getElementById("input-badge-issuer-uri");
+  const inputEvidenceUri = document.getElementById("input-badge-evidence-uri");
+  const btnMintBadge = document.getElementById("btn-mint-badge");
+  const btnDownloadBadge = document.getElementById("btn-download-badge");
+  const btnCopyBadge = document.getElementById("btn-copy-badge");
+  const badgeDigestBanner = document.getElementById("badge-digest-banner");
+  const badgeJsonPreview = document.getElementById("badge-json-preview");
+  const inputTamperTest = document.getElementById("input-tamper-test");
+  const tamperBanner = document.getElementById("tamper-verification-banner");
+  const btnTamperAttack = document.getElementById("btn-tamper-simulate-attack");
+  const btnTamperRestore = document.getElementById("btn-tamper-restore");
+  let latestMintedBadge = null;
+  let anchoredPrimaryAssessment = null;
+  let anchoredPrimarySha256 = "";
+  function mintAndRenderOpenBadge() {
+    if (!badgeJsonPreview) return;
+    const { latestAssessment: latestAssessment2 } = getLatestFieldState();
+    const primaryAssessment = JSON.parse(
+      JSON.stringify(latestAssessment2 || FIXED_PARITY_CASES[0].assessment)
+    );
+    const secondAssessment = JSON.parse(JSON.stringify(FIXED_PARITY_CASES[1].assessment));
+    const thirdAssessment = JSON.parse(JSON.stringify(FIXED_PARITY_CASES[2].assessment));
+    const practitionerName = inputPractitioner?.value.trim() || "George Steward";
+    const rawCredId = inputCredId?.value.trim() || "ISA TX-362025A / RCA-001";
+    const issuerUri = inputIssuerUri?.value.trim() || "https://openarbor.org/issuers/open-arbor-alliance";
+    const evidenceBaseUri = inputEvidenceUri?.value.trim() || "https://openarbor.org/reports/rca-v2/";
+    const practitionerMeta = {
+      id: `did:web:openarbor.org:stewards:${practitionerName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+      practitioner_name: practitionerName,
+      credential_id: `https://openarbor.org/credentials/rca-verified/${encodeURIComponent(rawCredId.replace(/\s+/g, "-"))}`,
+      validFrom: "2026-10-29T00:00:00Z",
+      validUntil: "2027-10-29T00:00:00Z",
+      legacy_statutory_equivalencies: {
+        credential_category: "ISA_Certified_Arborist",
+        issuing_organization: "International Society of Arboriculture / Open Arbor Alliance",
+        credential_identifier: rawCredId,
+        verification_url: "https://openarbor.org/spec/"
+      }
+    };
+    const minted = mintOpenBadgeAttestation(
+      practitionerMeta,
+      [primaryAssessment, secondAssessment, thirdAssessment],
+      rca_assessment_schema_default
+    );
+    if (issuerUri) {
+      minted.issuer.id = issuerUri;
+    }
+    if (evidenceBaseUri && Array.isArray(minted.evidence)) {
+      const cleanBase = evidenceBaseUri.endsWith("/") ? evidenceBaseUri : `${evidenceBaseUri}/`;
+      minted.evidence.forEach((ev, idx) => {
+        ev.id = `${cleanBase}report-00${idx + 1}-${ev.report_sha256_hash.slice(0, 8)}.json`;
+      });
+    }
+    const copyWithoutProof = { ...minted };
+    delete copyWithoutProof.proof;
+    const outerProofDigest = computeCanonicalSha256(copyWithoutProof);
+    minted.proof.proofValue = `sha256:${outerProofDigest}`;
+    latestMintedBadge = minted;
+    anchoredPrimaryAssessment = primaryAssessment;
+    anchoredPrimarySha256 = minted.evidence[0].report_sha256_hash;
+    if (badgeDigestBanner) {
+      badgeDigestBanner.innerHTML = `
+        <div>
+          <strong>W3C Verifiable Credential / Open Badges 3.0 Status:</strong>
+          <span class="badge badge-protected">MINTED &amp; SCHEMA VERIFIED</span>
+          <span class="badge badge-neutral">Anchored Report #1 SHA-256: <code id="report_sha256">${anchoredPrimarySha256.slice(0, 16)}...</code></span>
+        </div>
+        <div class="sha-box">
+          <span>Credential Proof Value:</span>
+          <code>${minted.proof.proofValue}</code>
+        </div>
+      `;
+    }
+    badgeJsonPreview.textContent = JSON.stringify(minted, null, 2);
+    if (inputTamperTest) {
+      inputTamperTest.value = JSON.stringify(primaryAssessment, null, 2);
+      evaluateTamperInput();
+    }
+  }
+  function evaluateTamperInput() {
+    if (!inputTamperTest || !tamperBanner) return;
+    const rawText = inputTamperTest.value;
+    try {
+      const parsed = JSON.parse(rawText);
+      const recomputedHash = computeCanonicalSha256(parsed);
+      const isMatch = recomputedHash === anchoredPrimarySha256;
+      if (isMatch) {
+        tamperBanner.style.borderLeftColor = "var(--accent-green)";
+        tamperBanner.innerHTML = `
+          <div>
+            <span class="metric-label">Cryptographic Integrity Verification</span>
+            <div class="verdict-title-row">
+              <strong class="verdict-big text-accent">VERIFIED MATCH</strong>
+              <span class="badge badge-protected">Zero Byte Tampering Detected</span>
+            </div>
+            <span class="metric-sub">Anchored <code>report_sha256</code>: <code>${anchoredPrimarySha256}</code></span>
+          </div>
+          <div class="verdict-right">
+            <span class="metric-label">Recomputed Canonical SHA-256</span>
+            <code>${recomputedHash}</code>
+          </div>
+        `;
+      } else {
+        tamperBanner.style.borderLeftColor = "var(--danger-red)";
+        tamperBanner.innerHTML = `
+          <div>
+            <span class="metric-label">Cryptographic Integrity Verification</span>
+            <div class="verdict-title-row">
+              <strong class="verdict-big text-danger">TAMPER DETECTED: SHA-256 MISMATCH</strong>
+              <span class="badge badge-danger">Credential Evidence Invalidated</span>
+            </div>
+            <span class="metric-sub">Anchored <code>report_sha256</code>: <code>${anchoredPrimarySha256}</code></span>
+          </div>
+          <div class="verdict-right">
+            <span class="metric-label">Recomputed Tampered SHA-256</span>
+            <code class="text-danger">${recomputedHash}</code>
+          </div>
+        `;
+      }
+    } catch (err) {
+      tamperBanner.style.borderLeftColor = "var(--danger-red)";
+      tamperBanner.innerHTML = `
+        <div>
+          <span class="metric-label">Cryptographic Integrity Verification</span>
+          <div class="verdict-title-row">
+            <strong class="verdict-big text-danger">TAMPER DETECTED: MALFORMED JSON PAYLOAD</strong>
+            <span class="badge badge-danger">Syntax Error</span>
+          </div>
+          <span class="metric-sub">${err.message}</span>
+        </div>
+      `;
+    }
+  }
+  btnMintBadge?.addEventListener("click", () => mintAndRenderOpenBadge());
+  inputPractitioner?.addEventListener("input", () => mintAndRenderOpenBadge());
+  inputCredId?.addEventListener("input", () => mintAndRenderOpenBadge());
+  inputIssuerUri?.addEventListener("input", () => mintAndRenderOpenBadge());
+  inputEvidenceUri?.addEventListener("input", () => mintAndRenderOpenBadge());
+  inputTamperTest?.addEventListener("input", () => evaluateTamperInput());
+  btnTamperAttack?.addEventListener("click", () => {
+    if (!anchoredPrimaryAssessment || !inputTamperTest) return;
+    const tampered = JSON.parse(JSON.stringify(anchoredPrimaryAssessment));
+    tampered.structural_baseline.sound_shell_thickness_ratio_t_over_r = 0.18;
+    tampered.structural_baseline.municipal_permit_disposition.recommended_disposition = "Removal_Last_Resort_Unmitigable_Hazard";
+    inputTamperTest.value = JSON.stringify(tampered, null, 2);
+    evaluateTamperInput();
+  });
+  btnTamperRestore?.addEventListener("click", () => {
+    if (!anchoredPrimaryAssessment || !inputTamperTest) return;
+    inputTamperTest.value = JSON.stringify(anchoredPrimaryAssessment, null, 2);
+    evaluateTamperInput();
+  });
+  btnDownloadBadge?.addEventListener("click", () => {
+    if (!latestMintedBadge) mintAndRenderOpenBadge();
+    if (!latestMintedBadge) return;
+    const blob = new Blob([JSON.stringify(latestMintedBadge, null, 2)], {
+      type: "application/ld+json;charset=utf-8"
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "openarbor-rca-verified.ob3.json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+  btnCopyBadge?.addEventListener("click", async () => {
+    if (!latestMintedBadge) mintAndRenderOpenBadge();
+    if (navigator.clipboard && latestMintedBadge) {
+      await navigator.clipboard.writeText(JSON.stringify(latestMintedBadge, null, 2));
+      const prev = btnCopyBadge.textContent;
+      btnCopyBadge.textContent = "Copied .ob3.json to Clipboard";
+      setTimeout(() => {
+        btnCopyBadge.textContent = prev;
+      }, 1800);
+    }
+  });
+  if (standTbody) {
+    renderStandUnionAndScorecard();
+  }
+  if (badgeJsonPreview) {
+    mintAndRenderOpenBadge();
+  }
+}
+
+// web/pages/tools-ui.js
+var CORE_ESM_TOOLS = [
+  {
+    id: "openarbor-rootzone-esm",
+    name: "rootZone.js (Open Arbor Core ESM)",
+    group: "core-esm",
+    domain: "CRZ, TPZ, SRZ & Multi-Stem Geometry",
+    upstream_url: "https://github.com/Arboracle-Ecosystem/openarbor/blob/main/src/core/rootZone.js",
+    license: "AGPL-3.0-or-later",
+    language: "JavaScript (ESM)",
+    packagingTier: "Core Browser/Node ESM",
+    evidenceGrade: "Workflow-qualified",
+    isCoreEsm: true,
+    formats: ["JSON", "SVG", "GeoJSON (OGC CRS84)"],
+    tags: ["ansi-a300", "as-4970", "bs-5837", "crz", "srz", "tpz", "mattheck", "multi-stem"],
+    summary: "Deterministic Critical Root Zone (CRZ), Tree Protection Zone (TPZ), and AS 4970 / Mattheck Structural Root Zone (SRZ) calculator with multi-stem DBH aggregation and 1-ft grid union area modeling.",
+    citation: "ANSI A300 (Part 5); ISA Best Management Practices: Managing Trees During Construction; Standards Australia AS 4970-2009; British Standard BS 5837:2012; Mattheck & Breloer (1994).",
+    recipe: `# Execute directly in Node.js >= 20 or import in browser ESM
+npx openarbor-rca evaluate --dbh-in 28 --drf-in 34 --jurisdiction tx-austin
+node -e "import('./src/core/rootZone.js').then(m => console.log(m.calculateRootZones({ dbhInches: 28, rootFlareDiameterInches: 34 })))"`,
+    bridgeTargetPaths: [
+      "structural_baseline.dbh_cm",
+      "structural_baseline.multistem_aggregation_method",
+      "rhizosphere_and_root_collar.crz_radius_m",
+      "rhizosphere_and_root_collar.srz_radius_m",
+      "rhizosphere_and_root_collar.tiz_radius_m",
+      "outcome_monitoring_schedule.five_year_lagging_indicators.sanctuary_scorecard_targets.tiz_footprint_area_m2"
+    ],
+    bridgeSnippet: {
+      structural_baseline: {
+        dbh_cm: 71.1,
+        is_multistem: false,
+        multistem_aggregation_method: "single_stem"
+      },
+      rhizosphere_and_root_collar: {
+        root_flare_diameter_cm: 86.4,
+        crz_radius_m: 8.53,
+        srz_radius_m: 3.12,
+        tiz_radius_m: 11.4
+      },
+      outcome_monitoring_schedule: {
+        five_year_lagging_indicators: {
+          sanctuary_scorecard_targets: {
+            tiz_footprint_area_m2: 408.28
+          }
+        }
+      }
+    }
+  },
+  {
+    id: "openarbor-ordinance-esm",
+    name: "ordinanceEngine.js (Open Arbor Core ESM)",
+    group: "core-esm",
+    domain: "Declarative Municipal Tree Code & Oak Wilt Engine",
+    upstream_url: "https://github.com/Arboracle-Ecosystem/openarbor/blob/main/src/core/ordinanceEngine.js",
+    license: "AGPL-3.0-or-later",
+    language: "JavaScript (ESM)",
+    packagingTier: "Core Browser/Node ESM",
+    evidenceGrade: "Workflow-qualified",
+    isCoreEsm: true,
+    formats: ["JSON (municipal-ordinance.schema.json)", "Markdown Report"],
+    tags: ["ordinance", "mitigation", "oak-wilt", "austin-ldc", "ashland-amc", "heritage-tree"],
+    summary: "Data-driven municipal protection classifier, tiered mitigation fee calculator, replacement tree scheduler, and Ceratocystis fagacearum (Oak Wilt) seasonal vector restriction evaluator across Central Texas and Rogue Valley, Oregon.",
+    citation: "Austin LDC Chapter 25-8 & ECM Section 3; Georgetown UDC Chapter 8; Liberty Hill UDC Section 6.07.01; Ashland AMC 18.4.5; Medford MMC 6.700; Grants Pass Development Code Art. 13.",
+    recipe: `# Validate municipal ordinance records and run compliance audit
+npm run validate:ordinances
+node -e "import('./src/core/ordinanceEngine.js').then(m => console.log(Object.keys(m)))"`,
+    bridgeTargetPaths: [
+      "structural_baseline.municipal_permit_disposition.jurisdiction_id",
+      "structural_baseline.municipal_permit_disposition.ordinance_citation",
+      "structural_baseline.municipal_permit_disposition.protection_tier",
+      "structural_baseline.municipal_permit_disposition.permit_required",
+      "structural_baseline.municipal_permit_disposition.recommended_disposition",
+      "structural_baseline.municipal_permit_disposition.seasonal_oak_wilt_restriction_active"
+    ],
+    bridgeSnippet: {
+      structural_baseline: {
+        municipal_permit_disposition: {
+          jurisdiction_id: "tx-austin",
+          ordinance_citation: "City of Austin LDC Title 25, Chapter 25-8, Subchapter B; ECM Section 3",
+          protection_tier: "Heritage",
+          permit_required: true,
+          recommended_disposition: "Preservation_With_Rhizosphere_Remediation",
+          seasonal_oak_wilt_restriction_active: true
+        }
+      }
+    }
+  },
+  {
+    id: "openarbor-benefits-esm",
+    name: "ecosystemBenefits.js (Open Arbor Core ESM)",
+    group: "core-esm",
+    domain: "Allometric Carbon, Stormwater & John White Veteran Age",
+    upstream_url: "https://github.com/Arboracle-Ecosystem/openarbor/blob/main/src/core/ecosystemBenefits.js",
+    license: "AGPL-3.0-or-later",
+    language: "JavaScript (ESM)",
+    packagingTier: "Core Browser/Node ESM",
+    evidenceGrade: "Workflow-qualified",
+    isCoreEsm: true,
+    formats: ["GeoJSON (OGC CRS84)", "JSON", "CSV"],
+    tags: ["allometry", "nowak", "mcpherson", "xiao-stormwater", "john-white-age", "geojson"],
+    summary: "Peer-reviewed urban forestry allometrics computing biomass carbon storage, annual CO2 sequestration, rainfall interception, cooling energy savings, John White FCIN12 veteran tree age, and OGC CRS84 GeoJSON export.",
+    citation: "Nowak (1994); Cairns et al. (1997); Xiao et al. (2000); Nowak et al. (2006); McPherson & Simpson (1999); White (1998) Forestry Commission Information Note FCIN12.",
+    recipe: `# Compute ecosystem services and export OGC CRS84 GeoJSON
+node -e "import('./src/core/ecosystemBenefits.js').then(m => console.log(m.estimateEcosystemBenefits({ dbhInches: 30, species: 'Quercus virginiana' })))"`,
+    bridgeTargetPaths: [
+      "structural_baseline.dual_valuation.ctla_10th_ed_depreciated_usd",
+      "structural_baseline.dual_valuation.holobiont_200yr_biological_equity_usd",
+      "outcome_monitoring_schedule.five_year_lagging_indicators.sanctuary_scorecard_targets.canopy_projection_area_m2",
+      "outcome_monitoring_schedule.five_year_lagging_indicators.sanctuary_scorecard_targets.stormwater_interception_baseline_liters_yr",
+      "outcome_monitoring_schedule.five_year_lagging_indicators.sanctuary_scorecard_targets.stormwater_interception_target_liters_yr"
+    ],
+    bridgeSnippet: {
+      structural_baseline: {
+        dual_valuation: {
+          ctla_10th_ed_depreciated_usd: 14850,
+          holobiont_200yr_biological_equity_usd: 46200,
+          veteran_keystone_habitat_multiplier: 2.4,
+          valuation_delta_usd: 31350
+        }
+      },
+      outcome_monitoring_schedule: {
+        five_year_lagging_indicators: {
+          sanctuary_scorecard_targets: {
+            canopy_projection_area_m2: 153.94,
+            stormwater_interception_baseline_liters_yr: 11420,
+            stormwater_interception_target_liters_yr: 16850
+          }
+        }
+      }
+    }
+  },
+  {
+    id: "openarbor-rca-esm",
+    name: "rcaEngine.js (Open Arbor Core ESM)",
+    group: "core-esm",
+    domain: "RCA-Spec v2.0 Diagnostic, CODIT, Mattheck t/R & Holobiont Equity",
+    upstream_url: "https://github.com/Arboracle-Ecosystem/openarbor/blob/main/src/core/rcaEngine.js",
+    license: "AGPL-3.0-or-later",
+    language: "JavaScript (ESM)",
+    packagingTier: "Core Browser/Node ESM",
+    evidenceGrade: "Workflow-qualified",
+    isCoreEsm: true,
+    formats: ["JSON (rca_assessment.schema.json)", "Markdown Report", "SVG Site Map"],
+    tags: ["rca-v2", "codit", "shigo", "mattheck", "airspade", "soil-health-index", "sanctuary-scorecard"],
+    summary: "Regenerative Consulting Arborist (RCA-Spec v2.0) diagnostic engine evaluating Shigo CODIT wall response, Mattheck t/R shell buckling safety, pneumatic AirSpade trench geometry, soil microbiome health index, and Sanctuary Scorecard 5-year rollups.",
+    citation: "Shigo & Marx (1977) CODIT USDA Info Bulletin 405; Mattheck & Breloer (1994); Smiley (2008) AirSpade Root Collar Excavation; Gann et al. (2019) SER Standards; Newton et al. (2020).",
+    recipe: `# Run full RCA-Spec v2.0 diagnostic verification suite
+npm test
+node tests/verify_openarbor.mjs`,
+    bridgeTargetPaths: [
+      "structural_baseline.codit_wall_response_rating",
+      "structural_baseline.sound_shell_thickness_ratio_t_over_r",
+      "rhizosphere_and_root_collar.airspade_radial_trenching_geometry",
+      "soil_and_microbiome_baseline.mycorrhizal_and_fungal_observations",
+      "outcome_monitoring_schedule.five_year_lagging_indicators.sanctuary_scorecard_targets.soil_health_index_baseline_score"
+    ],
+    bridgeSnippet: {
+      schema_version: "RCA_v2",
+      assessment_mode: "Regenerative Diagnostic",
+      structural_baseline: {
+        codit_wall_response_rating: "Strong Wall 4 barrier zone formation; active woundwood roll at 8.5 mm/yr",
+        sound_shell_thickness_ratio_t_over_r: 0.36
+      },
+      rhizosphere_and_root_collar: {
+        root_flare_burial_depth_cm: 14,
+        stem_girdling_root_count: 2,
+        stem_girdling_root_severity: "Moderate_25_To_50_Pct_Circumference"
+      },
+      outcome_monitoring_schedule: {
+        five_year_lagging_indicators: {
+          sanctuary_scorecard_targets: {
+            soil_health_index_baseline_score: 54,
+            soil_health_index_target_score: 84
+          }
+        }
+      }
+    }
+  }
+];
+var TOOL_BRIDGE_METADATA = {
+  qgis: {
+    language: "C++ / Python (PyQGIS)",
+    formats: ["GeoPackage (.gpkg)", "GeoJSON", "Shapefile", "GeoTIFF", "LAZ/COPC"],
+    citation: "QGIS Development Team (2026). QGIS Geographic Information System. Open Source Geospatial Foundation Project.",
+    recipe: `# Install distro-qualified QGIS LTR package on Ubuntu / Debian
+sudo apt-get update && sudo apt-get install -y qgis python3-qgis
+# Open exported Open Arbor OGC CRS84 GeoJSON parcel layer
+qgis --project openarbor_sanctuary_parcel.qgz openarbor_trees_crs84.geojson`,
+    bridgePaths: [
+      "structural_baseline.plus_code_global",
+      "outcome_monitoring_schedule.five_year_lagging_indicators.sanctuary_scorecard_targets.tiz_footprint_area_m2",
+      "outcome_monitoring_schedule.five_year_lagging_indicators.sanctuary_scorecard_targets.canopy_projection_area_m2"
+    ],
+    sampleOutput: {
+      structural_baseline: {
+        plus_code_global: "86247784+PJ",
+        crown_spread_ns_m: 14.2,
+        crown_spread_ew_m: 13.8
+      },
+      outcome_monitoring_schedule: {
+        five_year_lagging_indicators: {
+          sanctuary_scorecard_targets: {
+            tiz_footprint_area_m2: 380.13,
+            canopy_projection_area_m2: 153.91
+          }
+        }
+      }
+    }
+  },
+  gdal: {
+    language: "C / C++ / Python CLI",
+    formats: ["GeoJSON", "GeoTIFF", "GPKG", "FlatGeobuf", "CSV"],
+    citation: "GDAL/OGR Contributors (2026). GDAL/OGR Geospatial Data Abstraction software Library. Open Source Geospatial Foundation.",
+    recipe: `# Install host GDAL utilities and verify CRS84 GeoJSON conformance
+sudo apt-get install -y gdal-bin
+ogrinfo -al -so openarbor_trees_crs84.geojson
+ogr2ogr -f "GPKG" sanctuary_inventory.gpkg openarbor_trees_crs84.geojson -nln rca_trees`,
+    bridgePaths: [
+      "structural_baseline.plus_code_global",
+      "outcome_monitoring_schedule.five_year_lagging_indicators.sanctuary_scorecard_targets.tiz_footprint_area_m2"
+    ],
+    sampleOutput: {
+      structural_baseline: {
+        plus_code_global: "86247784+PJ",
+        tree_tag: "OA-GPKG-104"
+      }
+    }
+  },
+  cloudcompare: {
+    language: "C++ (Qt Desktop & CLI)",
+    formats: ["LAS", "LAZ", "E57", "PLY", "PCD", "OBJ"],
+    citation: "Girardeau-Montaut, D. (2016). CloudCompare: 3D point cloud and mesh processing software. EDF R&D / Telecom ParisTech.",
+    recipe: `# Run CloudCompare in headless silent mode to subsample a terrestrial LiDAR scan
+sudo apt-get install -y cloudcompare
+CloudCompare -SILENT -O tree_scan_raw.laz -C_EXPORT_FMT LAS -SS SPATIAL 0.01 -SAVE_CLOUDS`,
+    bridgePaths: [
+      "structural_baseline.dbh_cm",
+      "structural_baseline.height_m",
+      "rhizosphere_and_root_collar.root_flare_diameter_cm"
+    ],
+    sampleOutput: {
+      structural_baseline: {
+        dbh_cm: 68.4,
+        height_m: 19.6
+      },
+      rhizosphere_and_root_collar: {
+        root_flare_diameter_cm: 89.2
+      }
+    }
+  },
+  "forest-search": {
+    language: "Python (uv + sqlite-vec + Ollama)",
+    formats: ["SQLite (.db)", "Markdown", "JSONL", "MCP Stdio"],
+    citation: "STIM Protocol Contributors (2026). Forest Search & Semantic Index for Local Ecological Knowledge Commons.",
+    recipe: `# Query local sovereign literature and municipal rules over stdio
+uv run --project /home/george/Myceliate_Master/UNDERSTORY/forest-search python -m forest_search query "Mattheck t/R hollow shell threshold"`,
+    bridgePaths: [
+      "outcome_monitoring_schedule.stim_hypothesis_statement",
+      "outcome_monitoring_schedule.stim_kill_criterion"
+    ],
+    sampleOutput: {
+      outcome_monitoring_schedule: {
+        stim_hypothesis_statement: "Pneumatic root collar excavation to 14 cm depth plus 8 radial biochar-compost trenches will reduce topsoil bulk density below 1.25 g/cm3 within 24 months.",
+        stim_kill_criterion: "Falsified if 12-month terminal shoot extension remains below 5 cm/yr or upper canopy dieback exceeds 15 percent."
+      }
+    }
+  },
+  qfield: {
+    language: "C++ / QML (Qt / QGIS Mobile)",
+    formats: ["QGS / QGZ", "GeoPackage (.gpkg)", "GeoJSON", "JPEG (Geotagged)"],
+    citation: "OPENGIS.ch (2025). QField: Mobile GIS data collection for QGIS. https://qfield.org",
+    recipe: `# Package QGIS project for offline tablet field collection
+flatpak install -y flathub ch.opengis.qfield
+flatpak run ch.opengis.qfield --project sanctuary_field_survey.qgz`,
+    bridgePaths: [
+      "structural_baseline.tree_tag",
+      "structural_baseline.plus_code_global",
+      "structural_baseline.assessment_date",
+      "outcome_monitoring_schedule.one_year_leading_indicators.fixed_photopoint_azimuth_deg"
+    ],
+    sampleOutput: {
+      structural_baseline: {
+        tree_tag: "QF-ASH-042",
+        plus_code_global: "84QV57VR+R6",
+        assessment_date: "2026-10-29"
+      },
+      outcome_monitoring_schedule: {
+        one_year_leading_indicators: {
+          fixed_photopoint_azimuth_deg: 185
+        }
+      }
+    }
+  },
+  opentreemap: {
+    language: "Python / Django / PostGIS",
+    formats: ["PostgreSQL / PostGIS", "CSV", "GeoJSON"],
+    citation: "Azavea & OpenTreeMap Contributors (2022). OpenTreeMap Collaborative Urban Forest Inventory Platform.",
+    recipe: `# Containerized sidecar inspection (requires license & maintenance review before launch)
+docker compose -f docker/opentreemap-sidecar.yml config
+# Export existing OTM table into Open Arbor RCA_v2 migration format
+pg_dump -t treemap_tree --csv otm_db > otm_trees_export.csv`,
+    bridgePaths: [
+      "structural_baseline.species_scientific",
+      "structural_baseline.species_common",
+      "structural_baseline.dbh_cm"
+    ],
+    sampleOutput: {
+      structural_baseline: {
+        species_scientific: "Quercus garryana",
+        species_common: "Oregon White Oak",
+        dbh_cm: 61
+      }
+    }
+  },
+  canopywatch: {
+    language: "HTML5 / JavaScript (Leaflet Static)",
+    formats: ["GeoJSON", "HTML", "CSV"],
+    citation: "Meyering, N. (2024). CanopyWatch: Open Urban Canopy Equity Visualization.",
+    recipe: `# Serve local CanopyWatch static bundle with local parcel GeoJSON overlay
+python3 -m http.server 8090 --directory ./vendor/canopy-watch`,
+    bridgePaths: [
+      "outcome_monitoring_schedule.five_year_lagging_indicators.sanctuary_scorecard_targets.canopy_projection_area_m2",
+      "outcome_monitoring_schedule.five_year_lagging_indicators.sanctuary_scorecard_targets.restoration_potential_baseline_pct"
+    ],
+    sampleOutput: {
+      outcome_monitoring_schedule: {
+        five_year_lagging_indicators: {
+          sanctuary_scorecard_targets: {
+            canopy_projection_area_m2: 142.5,
+            restoration_potential_baseline_pct: 48,
+            restoration_potential_realized_pct: 78
+          }
+        }
+      }
+    }
+  },
+  treels: {
+    language: "R / C++ (Rcpp)",
+    formats: ["LAS", "LAZ", "CSV", "RDS"],
+    citation: "de Conto, T., et al. (2017). Performance of stem denoising and stem modelling algorithms on single tree point clouds from terrestrial laser scanning. Computers and Electronics in Agriculture, 143, 165-176.",
+    recipe: `# Run TreeLS inside reproducible renv container sidecar
+docker run --rm -v "$PWD:/data" openarbor/renv-lidar:latest Rscript -e "
+  library(TreeLS); tls <- readTLS('/data/stem_scan.laz');
+  inv <- tlsInventory(tls, d_method = shapeFit(shape = 'circle', algorithm = 'ransac'));
+  write.csv(inv, '/data/treels_dbh.csv', row.names = FALSE)"`,
+    bridgePaths: [
+      "structural_baseline.dbh_cm",
+      "structural_baseline.height_m",
+      "rhizosphere_and_root_collar.root_flare_diameter_cm"
+    ],
+    sampleOutput: {
+      structural_baseline: {
+        dbh_cm: 58.2,
+        height_m: 18.4
+      },
+      rhizosphere_and_root_collar: {
+        root_flare_diameter_cm: 74.6
+      }
+    }
+  },
+  "3dfin": {
+    language: "Python (Open3D / NumPy / PyQt6)",
+    formats: ["LAS", "LAZ", "XYZ", "CSV"],
+    citation: "Laino, D., Cabo, C., et al. (2024). 3DFin: A software for automated 3D forest inventory from terrestrial and personal laser scanning point clouds. Forestry: An International Journal of Forest Research.",
+    recipe: `# Create dedicated uv virtual environment and run 3DFin CLI stem profile extraction
+uv venv .venv-3dfin --python 3.11
+uv pip install --python .venv-3dfin 3dfin open3d laspy
+.venv-3dfin/bin/3dfin cli --input plot_scan.laz --output 3dfin_inventory.csv --z-min 0.3 --z-max 15.0`,
+    bridgePaths: [
+      "structural_baseline.dbh_cm",
+      "structural_baseline.height_m",
+      "structural_baseline.stem_diameters_cm",
+      "rhizosphere_and_root_collar.root_flare_diameter_cm"
+    ],
+    sampleOutput: {
+      structural_baseline: {
+        dbh_cm: 64.8,
+        is_multistem: false,
+        height_m: 21.3,
+        live_crown_ratio_pct: 62
+      },
+      rhizosphere_and_root_collar: {
+        root_flare_diameter_cm: 83.5
+      }
+    }
+  },
+  treeseg: {
+    language: "C++ (Point Cloud Library / PCL)",
+    formats: ["PCD", "LAS", "ASCII XYZ"],
+    citation: "Burt, A., Disney, M., & Calders, K. (2019). Extracting individual trees from lidar point clouds using treeseg. Methods in Ecology and Evolution, 10(3), 438-445.",
+    recipe: `# Execute compiled native TreeSeg binary on high-density TLS plot scan
+findstems plot_slice.pcd 1.3 0.15
+segmentcrown plot_stems.pcd 12.0`,
+    bridgePaths: [
+      "structural_baseline.dbh_cm",
+      "structural_baseline.crown_spread_ns_m",
+      "structural_baseline.crown_spread_ew_m"
+    ],
+    sampleOutput: {
+      structural_baseline: {
+        dbh_cm: 72.1,
+        crown_spread_ns_m: 15.6,
+        crown_spread_ew_m: 14.9
+      }
+    }
+  },
+  treeqsm: {
+    language: "MATLAB / GNU Octave",
+    formats: ["MAT", "TXT / XYZ", "JSON (Cylinder QSM)"],
+    citation: "Raumonen, P., et al. (2013). Fast Automatic Precision Tree Models from Terrestrial Laser Scanner Data. Remote Sensing, 5(2), 491-520.",
+    recipe: `# Note: Octave/MATLAB compatibility requires verification per release; inspect source cylinder output
+octave-cli --eval "addpath(genpath('src')); create_input; QSM = treeqsm(P, inputs); save('-v7', 'qsm_out.mat', 'QSM');"`,
+    bridgePaths: [
+      "structural_baseline.dbh_cm",
+      "structural_baseline.height_m",
+      "outcome_monitoring_schedule.five_year_lagging_indicators.sanctuary_scorecard_targets.canopy_volume_expansion_target_pct"
+    ],
+    sampleOutput: {
+      structural_baseline: {
+        dbh_cm: 79.4,
+        height_m: 24.1
+      },
+      outcome_monitoring_schedule: {
+        five_year_lagging_indicators: {
+          sanctuary_scorecard_targets: {
+            canopy_volume_expansion_target_pct: 18.5
+          }
+        }
+      }
+    }
+  },
+  simpleforest: {
+    language: "C++ (CloudCompare Plugin / PCL)",
+    formats: ["PLY", "CSV (Cylinder Allometry)", "LAS"],
+    citation: "Hackenberg, J., et al. (2015). SimpleTree: An Efficient Open Source Tool to Build Tree Models from TLS Clouds. Forests, 6(11), 4245-4294.",
+    recipe: `# Launch CloudCompare with SimpleForest QSM plugin enabled for desktop cylinder inspection
+cloudcompare -O isolated_tree.ply`,
+    bridgePaths: [
+      "structural_baseline.dbh_cm",
+      "structural_baseline.isa_traq_risk.primary_tree_part_of_concern",
+      "outcome_monitoring_schedule.five_year_lagging_indicators.sanctuary_scorecard_targets.canopy_volume_expansion_target_pct"
+    ],
+    sampleOutput: {
+      structural_baseline: {
+        dbh_cm: 66,
+        isa_traq_risk: {
+          primary_tree_part_of_concern: "Scaffold_Branch"
+        }
+      }
+    }
+  },
+  pytlidar: {
+    language: "Python (Numba / Open3D / Laspy)",
+    formats: ["LAS", "LAZ", "CSV", "JSON"],
+    citation: "Landscape-CV Contributors (2024). PyTLidar: Python Quantitative Structure Modeling for Terrestrial LiDAR.",
+    recipe: `# Run PyTLidar inside isolated uv environment (GPL-3.0 licensed)
+uv venv .venv-pytlidar --python 3.11
+uv pip install --python .venv-pytlidar numba open3d laspy
+.venv-pytlidar/bin/python -m pytlidar --input single_oak.laz --output qsm_metrics.json`,
+    bridgePaths: [
+      "structural_baseline.dbh_cm",
+      "structural_baseline.height_m",
+      "structural_baseline.crown_spread_ns_m",
+      "structural_baseline.crown_spread_ew_m"
+    ],
+    sampleOutput: {
+      structural_baseline: {
+        dbh_cm: 53.7,
+        height_m: 16.8,
+        crown_spread_ns_m: 12.4,
+        crown_spread_ew_m: 11.9
+      }
+    }
+  },
+  rtwig: {
+    language: "R / C++ (Rcpp)",
+    formats: ["CSV (TreeQSM / SimpleForest / aRchi Cylinders)", "RDS"],
+    citation: "Morales, A., & MacFarlane, D. W. (2024). rTwig: Real Twig correction for over-estimated small branch cylinders in Quantitative Structure Models. CRAN.",
+    recipe: `# Apply Real Twig allometric tapering correction to raw QSM cylinder table
+docker run --rm -v "$PWD:/data" openarbor/renv-qsm:latest Rscript -e "
+  library(rTwig); cyl <- read.csv('/data/raw_qsm_cylinders.csv');
+  corrected <- run_rtwig(cyl, twig_radius = 4.2);
+  write.csv(corrected, '/data/rtwig_corrected.csv', row.names = FALSE)"`,
+    bridgePaths: [
+      "structural_baseline.dual_valuation.holobiont_200yr_biological_equity_usd",
+      "outcome_monitoring_schedule.five_year_lagging_indicators.sanctuary_scorecard_targets.canopy_volume_expansion_target_pct"
+    ],
+    sampleOutput: {
+      outcome_monitoring_schedule: {
+        five_year_lagging_indicators: {
+          sanctuary_scorecard_targets: {
+            canopy_volume_expansion_target_pct: 22
+          }
+        }
+      }
+    }
+  },
+  lidr: {
+    language: "R / C++ (Rcpp / sf / terra)",
+    formats: ["LAS", "LAZ", "COPC", "GeoTIFF (CHM)", "GeoPackage"],
+    citation: "Roussel, J.-R., et al. (2020). lidR: An R package for analysis of Airborne Laser Scanning (ALS) data. Remote Sensing of Environment, 251, 112061.",
+    recipe: `# Generate 0.5m Canopy Height Model (CHM) and segment individual tree crowns
+docker run --rm -v "$PWD:/data" openarbor/renv-lidar:latest Rscript -e "
+  library(lidR); las <- readLAS('/data/sanctuary_als.laz');
+  chm <- rasterize_canopy(las, res = 0.5, p2r());
+  ttops <- locate_trees(las, lmf(ws = 5));
+  sf::st_write(ttops, '/data/lidr_treetops.gpkg', delete_dsn = TRUE)"`,
+    bridgePaths: [
+      "structural_baseline.height_m",
+      "structural_baseline.crown_spread_ns_m",
+      "structural_baseline.crown_spread_ew_m",
+      "outcome_monitoring_schedule.five_year_lagging_indicators.sanctuary_scorecard_targets.canopy_projection_area_m2"
+    ],
+    sampleOutput: {
+      structural_baseline: {
+        height_m: 22.7,
+        crown_spread_ns_m: 16.2,
+        crown_spread_ew_m: 15.4
+      },
+      outcome_monitoring_schedule: {
+        five_year_lagging_indicators: {
+          sanctuary_scorecard_targets: {
+            canopy_projection_area_m2: 195.94
+          }
+        }
+      }
+    }
+  },
+  pdal: {
+    language: "C++ / JSON Pipeline CLI",
+    formats: ["LAS", "LAZ", "COPC", "E57", "BPF", "GeoTIFF"],
+    citation: "PDAL Contributors (2018). PDAL: The Point Data Abstraction Library. https://pdal.io",
+    recipe: `# Execute PDAL SMRF ground classification and Height Above Ground (HAG) normalization
+conda run -n pdal-env pdal pipeline pdal_hag_normalize.json   --readers.las.filename=raw_scan.laz   --writers.las.filename=normalized_hag.laz`,
+    bridgePaths: [
+      "structural_baseline.height_m",
+      "rhizosphere_and_root_collar.root_flare_burial_depth_cm"
+    ],
+    sampleOutput: {
+      structural_baseline: {
+        height_m: 20.4
+      },
+      rhizosphere_and_root_collar: {
+        root_flare_burial_depth_cm: 9.5
+      }
+    }
+  },
+  deepforest: {
+    language: "Python (PyTorch / Torchvision / Rasterio)",
+    formats: ["GeoTIFF (RGB Orthomosaic)", "GeoJSON", "CSV", "Shapefile"],
+    citation: "Weinstein, B. G., et al. (2020). Cross-site learning in deep learning RGB tree crown detection. Ecological Informatics, 56, 101061.",
+    recipe: `# Run CPU-verified DeepForest crown detection on drone orthomosaic tile
+uv venv .venv-deepforest --python 3.11
+uv pip install --python .venv-deepforest deepforest rasterio geopandas
+.venv-deepforest/bin/python -c "
+from deepforest import main
+m = main.deepforest(); m.load_model(model_name='weecology/deepforest-tree', revision='main')
+boxes = m.predict_tile(path='orthomosaic_rgb.tif', patch_size=400, patch_overlap=0.15)
+boxes.to_file('predicted_crowns.geojson', driver='GeoJSON')"`,
+    bridgePaths: [
+      "structural_baseline.crown_spread_ns_m",
+      "structural_baseline.crown_spread_ew_m",
+      "outcome_monitoring_schedule.five_year_lagging_indicators.sanctuary_scorecard_targets.canopy_projection_area_m2"
+    ],
+    sampleOutput: {
+      structural_baseline: {
+        crown_spread_ns_m: 13.4,
+        crown_spread_ew_m: 12.8
+      },
+      outcome_monitoring_schedule: {
+        five_year_lagging_indicators: {
+          sanctuary_scorecard_targets: {
+            canopy_projection_area_m2: 134.71
+          }
+        }
+      }
+    }
+  },
+  pycrown: {
+    language: "Python / Cython (GDAL / Rasterio / SciPy)",
+    formats: ["GeoTIFF (CHM / DSM / DTM)", "LAS/LAZ", "Shapefile / GeoJSON"],
+    citation: "Z\xF6rner, J., et al. (2018). PyCrown: Fast raster-based individual tree segmentation for LiDAR data. Landcare Research NZ Ltd.",
+    recipe: `# Run watershed/Dalponte crown delineation in isolated pinned GDAL environment
+uv run --python .venv-pycrown python run_pycrown_delineation.py --chm chm_05m.tif --out crowns_polygons.geojson`,
+    bridgePaths: [
+      "structural_baseline.height_m",
+      "outcome_monitoring_schedule.five_year_lagging_indicators.sanctuary_scorecard_targets.canopy_projection_area_m2"
+    ],
+    sampleOutput: {
+      structural_baseline: {
+        height_m: 23.1
+      },
+      outcome_monitoring_schedule: {
+        five_year_lagging_indicators: {
+          sanctuary_scorecard_targets: {
+            canopy_projection_area_m2: 168.2
+          }
+        }
+      }
+    }
+  },
+  treeeyed: {
+    language: "Python (QGIS Plugin / ONNX Runtime)",
+    formats: ["GeoTIFF", "GeoPackage", "Shapefile"],
+    citation: "Ruiz, A. F., et al. (2023). TreeEyed: AI-powered tree crown delineation plugin for QGIS.",
+    recipe: `# Launch inside qualified QGIS LTR desktop profile with ONNX Runtime CPU provider
+qgis --profile openarbor-treeeyed parcel_ortho.tif`,
+    bridgePaths: [
+      "outcome_monitoring_schedule.five_year_lagging_indicators.sanctuary_scorecard_targets.canopy_projection_area_m2"
+    ],
+    sampleOutput: {
+      outcome_monitoring_schedule: {
+        five_year_lagging_indicators: {
+          sanctuary_scorecard_targets: {
+            canopy_projection_area_m2: 149
+          }
+        }
+      }
+    }
+  },
+  rgedi: {
+    language: "R (HDF5 / sf / lidR)",
+    formats: ["HDF5 (.h5 GEDI L1B/L2A/L2B/L4A)", "GeoPackage", "CSV"],
+    citation: "Silva, C. A., et al. (2020). rGEDI: An R Package for NASA Global Ecosystem Dynamics Investigation (GEDI) Data Visualizing and Processing.",
+    recipe: `# Extract GEDI L2A relative height metrics and L2B Plant Area Index (PAI) profile
+docker run --rm -v "$PWD:/data" openarbor/renv-lidar:latest Rscript -e "
+  library(rGEDI); l2a <- readLevel2A('/data/GEDI02_A_sample.h5');
+  metrics <- getLevel2AM(l2a); write.csv(metrics, '/data/gedi_rh_metrics.csv', row.names = FALSE)"`,
+    bridgePaths: [
+      "structural_baseline.height_m",
+      "structural_baseline.live_crown_ratio_pct"
+    ],
+    sampleOutput: {
+      structural_baseline: {
+        height_m: 26.4,
+        live_crown_ratio_pct: 68
+      }
+    }
+  },
+  dplr: {
+    language: "R / C (Dendrochronology Program Library in R)",
+    formats: ["Tucson (.rwl)", "Heidelberg (.fh)", "Compact", "CSV"],
+    citation: "Bunn, A. G. (2008). A dendrochronology program library in R (dplR). Dendrochronologia, 26(2), 115-124.",
+    recipe: `# Detrend ring-width series and compute Basal Area Increment (BAI) in R
+docker run --rm -v "$PWD:/data" openarbor/renv-dendro:latest Rscript -e "
+  library(dplR); rwl <- read.rwl('/data/oak_cores.rwl');
+  bai <- bai.out(rwl); write.csv(bai, '/data/basal_area_increment.csv')"`,
+    bridgePaths: [
+      "structural_baseline.codit_wall_response_rating",
+      "outcome_monitoring_schedule.one_year_leading_indicators.target_woundwood_callus_closure_mm_yr"
+    ],
+    sampleOutput: {
+      structural_baseline: {
+        codit_wall_response_rating: "Post-drought basal area increment recovery verified via dplR; mean radial ring width 3.8 mm/yr over last 5 years."
+      },
+      outcome_monitoring_schedule: {
+        one_year_leading_indicators: {
+          target_woundwood_callus_closure_mm_yr: 7.5
+        }
+      }
+    }
+  },
+  pydendron: {
+    language: "Python (PyQt6 / Pandas / SciPy)",
+    formats: ["JSON", "RWL (Tucson)", "CSV", "Excel"],
+    citation: "Meignier, S., et al. (2024). pyDendron: Interactive Python application for tree-ring cross-dating and chronology management. LIUM, Le Mans Universite.",
+    recipe: `# Launch pyDendron cross-dating environment inside dedicated uv virtualenv
+uv venv .venv-pydendron --python 3.11
+uv pip install --python .venv-pydendron pyqt6 pandas numpy scipy
+.venv-pydendron/bin/python -m pydendron`,
+    bridgePaths: [
+      "structural_baseline.codit_wall_response_rating",
+      "structural_baseline.dual_valuation.veteran_keystone_habitat_multiplier"
+    ],
+    sampleOutput: {
+      structural_baseline: {
+        codit_wall_response_rating: "Cross-dated 168-year ring chronology confirmed; release event observed post-1985.",
+        dual_valuation: {
+          veteran_keystone_habitat_multiplier: 2.6
+        }
+      }
+    }
+  },
+  tras: {
+    language: "Python (OpenCV / PyQt5 / NumPy)",
+    formats: ["TIFF / PNG (High-Res Core Scan)", "RWL", "CSV", "JSON"],
+    citation: "Marichal, H., et al. (2024). TRAS: Tree Ring Analyzer Suite with Deep Learning Pith and Ring Boundary Detection (CS-TRD / DeepDendro).",
+    recipe: `# Measure radial increment widths from flatbed core scan image
+uv run --python .venv-tras python -m tras.cli --image core_scan_1200dpi.tif --output core_rings.rwl`,
+    bridgePaths: [
+      "outcome_monitoring_schedule.one_year_leading_indicators.target_woundwood_callus_closure_mm_yr",
+      "outcome_monitoring_schedule.one_year_leading_indicators.target_annual_twig_extension_min_cm"
+    ],
+    sampleOutput: {
+      outcome_monitoring_schedule: {
+        one_year_leading_indicators: {
+          target_annual_twig_extension_min_cm: 12,
+          target_woundwood_callus_closure_mm_yr: 8
+        }
+      }
+    }
+  },
+  treeclim: {
+    language: "R / C++ (Rcpp / dplR)",
+    formats: ["RWL", "CSV (Monthly PRISM / NOAA Climate Series)", "RDS"],
+    citation: "Zang, C., & Biondi, F. (2015). treeclim: an R package for the numerical calibration of proxy-climate relationships. Ecography, 38(4), 431-436.",
+    recipe: `# Calibrate ring-width chronology against monthly precipitation and VPD
+docker run --rm -v "$PWD:/data" openarbor/renv-dendro:latest Rscript -e "
+  library(treeclim); library(dplR);
+  chrono <- read.crn('/data/quercus_crn.crn'); clim <- read.csv('/data/prism_monthly.csv');
+  resp <- dcc(chrono, clim, selection = -6:9, method = 'response');
+  write.csv(resp\\$coef, '/data/climate_sensitivity.csv')"`,
+    bridgePaths: [
+      "outcome_monitoring_schedule.stim_hypothesis_statement",
+      "outcome_monitoring_schedule.five_year_lagging_indicators.sanctuary_scorecard_targets.stormwater_interception_target_liters_yr"
+    ],
+    sampleOutput: {
+      outcome_monitoring_schedule: {
+        stim_hypothesis_statement: "treeclim bootstrapped response identifies May-July soil moisture deficit as the primary radial growth bottleneck; TIZ woodchip mulch and swale catchment directly buffer summer drought stress."
+      }
+    }
+  },
+  biomass: {
+    language: "R (AMAP / CIRAD Allometric Engine)",
+    formats: ["CSV", "GeoJSON", "RDS"],
+    citation: "Rejou-Mechain, M., et al. (2017). BIOMASS: an R package for estimating above-ground biomass and its uncertainty in tropical forests. Methods in Ecology and Evolution, 8(9), 1163-1167.",
+    recipe: `# Compute above-ground biomass (AGB) with Monte Carlo wood density uncertainty propagation
+docker run --rm -v "$PWD:/data" openarbor/renv-dendro:latest Rscript -e "
+  library(BIOMASS); inv <- read.csv('/data/stand_inventory.csv');
+  wd <- getWoodDensity(genus = inv\\$genus, species = inv\\$species);
+  agb <- computeAGB(D = inv\\$dbh_cm, WD = wd\\$meanWD, H = inv\\$height_m);
+  write.csv(data.frame(id = inv\\$id, agb_Mg = agb), '/data/biomass_out.csv', row.names = FALSE)"`,
+    bridgePaths: [
+      "structural_baseline.dual_valuation.holobiont_200yr_biological_equity_usd",
+      "outcome_monitoring_schedule.five_year_lagging_indicators.sanctuary_scorecard_targets.canopy_volume_expansion_target_pct"
+    ],
+    sampleOutput: {
+      structural_baseline: {
+        dual_valuation: {
+          ctla_10th_ed_depreciated_usd: 11200,
+          holobiont_200yr_biological_equity_usd: 34900,
+          veteran_keystone_habitat_multiplier: 2.1
+        }
+      }
+    }
+  },
+  allodb: {
+    language: "R (Smithsonian ForestGEO)",
+    formats: ["CSV", "RDS", "JSON"],
+    citation: "Gonzalez-Akre, E., et al. (2022). allodb: An R package for biomass estimation at globally distributed extratropical forest plots. Methods in Ecology and Evolution, 13(2), 330-338.",
+    recipe: `# Run extratropical species-calibrated biomass equations from Smithsonian ForestGEO allodb
+docker run --rm -v "$PWD:/data" openarbor/renv-dendro:latest Rscript -e "
+  library(allodb); trees <- read.csv('/data/temperate_trees.csv');
+  trees\\$agb_kg <- get_biomass(dbh = trees\\$dbh_cm, genus = trees\\$genus, species = trees\\$species, coords = c(-122.71, 42.19));
+  write.csv(trees, '/data/allodb_biomass.csv', row.names = FALSE)"`,
+    bridgePaths: [
+      "structural_baseline.dual_valuation.holobiont_200yr_biological_equity_usd",
+      "structural_baseline.dbh_cm"
+    ],
+    sampleOutput: {
+      structural_baseline: {
+        dbh_cm: 62.5,
+        dual_valuation: {
+          ctla_10th_ed_depreciated_usd: 12400,
+          holobiont_200yr_biological_equity_usd: 38750,
+          veteran_keystone_habitat_multiplier: 2.2
+        }
+      }
+    }
+  },
+  fvs: {
+    language: "Fortran / C / SQLite (USDA Forest Service)",
+    formats: ["FVS Keyword (.key)", "SQLite (.db)", "CSV"],
+    citation: "Dixon, G. E. (2002, rev. 2024). Essential FVS: A user guide to the Forest Vegetation Simulator. Internal Rep. Fort Collins, CO: U.S. Department of Agriculture, Forest Service, Forest Management Service Center.",
+    recipe: `# Run Pacific Northwest (FVS-PN) or Southern (FVS-SN) variant inside container sidecar
+docker run --rm -v "$PWD:/work" openarbor/open-fvs:latest FVSie --keywordfile=/work/sanctuary_stand.key`,
+    bridgePaths: [
+      "outcome_monitoring_schedule.five_year_lagging_indicators.sanctuary_scorecard_targets.canopy_volume_expansion_target_pct",
+      "outcome_monitoring_schedule.five_year_lagging_indicators.sanctuary_scorecard_targets.restoration_potential_realized_pct"
+    ],
+    sampleOutput: {
+      outcome_monitoring_schedule: {
+        five_year_lagging_indicators: {
+          sanctuary_scorecard_targets: {
+            canopy_volume_expansion_target_pct: 19.4,
+            restoration_potential_realized_pct: 82
+          }
+        }
+      }
+    }
+  },
+  microfvs: {
+    language: "Python / FastAPI / Docker (Vibrant Planet)",
+    formats: ["JSON", "Parquet", "SQLite"],
+    citation: "Vibrant Planet Open Science (2024). microfvs: Cloud-native and local container REST wrapper for USDA Forest Vegetation Simulator.",
+    recipe: `# Launch local microfvs container service for batch 5-year stand growth projections
+docker run --rm -p 8005:8000 ghcr.io/vibrant-planet-open-science/microfvs:latest`,
+    bridgePaths: [
+      "outcome_monitoring_schedule.five_year_lagging_indicators.sanctuary_scorecard_targets.canopy_volume_expansion_target_pct"
+    ],
+    sampleOutput: {
+      outcome_monitoring_schedule: {
+        five_year_lagging_indicators: {
+          sanctuary_scorecard_targets: {
+            canopy_volume_expansion_target_pct: 21
+          }
+        }
+      }
+    }
+  },
+  capsis: {
+    language: "Java (INRAE / CIRAD Multi-Model Platform)",
+    formats: ["Capsis Inventory (.inv)", "CSV", "XML"],
+    citation: "Dufour-Kowalski, S., et al. (2012). Capsis: an open software framework and community for forest growth modelling. Annals of Forest Science, 69(2), 221-233.",
+    recipe: `# Execute Capsis in script mode for uneven-aged mixed stand agroforestry simulation
+sh capsis.sh -p script HetereScenario stand_input.inv 5`,
+    bridgePaths: [
+      "understory_and_guild_prescription.reference_ecosystem_name",
+      "outcome_monitoring_schedule.five_year_lagging_indicators.target_ser_recovery_wheel_stars"
+    ],
+    sampleOutput: {
+      understory_and_guild_prescription: {
+        reference_ecosystem_name: "Rogue Valley Oregon White Oak Savanna"
+      },
+      outcome_monitoring_schedule: {
+        five_year_lagging_indicators: {
+          target_ser_recovery_wheel_stars: 4.2
+        }
+      }
+    }
+  },
+  "sortie-nd": {
+    language: "C++ / Java (Spatially Explicit Neighborhood Model)",
+    formats: ["XML Parameter File", "Tab-Delimited Output (.out)", "GZ Tarball"],
+    citation: "Canham, C. D., Murphy, L., & Papaik, M. J. (2005). SORTIE-ND: Spatially Explicit Simulation of Forest Dynamics. Cary Institute of Ecosystem Studies.",
+    recipe: `# Run headless C++ SORTIE-ND core engine on neighborhood light competition XML
+./coremodel sanctuary_understory_light_competition.xml`,
+    bridgePaths: [
+      "understory_and_guild_prescription.native_companion_species_guild",
+      "outcome_monitoring_schedule.one_year_leading_indicators.companion_guild_survival_min_pct"
+    ],
+    sampleOutput: {
+      outcome_monitoring_schedule: {
+        one_year_leading_indicators: {
+          companion_guild_survival_min_pct: 85
+        }
+      }
+    }
+  },
+  "landis-ii": {
+    language: "C# / .NET Core 8.0",
+    formats: ["TXT Scenario Files", "GeoTIFF", "CSV"],
+    citation: "Scheller, R. M., et al. (2007). Design, development, and application of LANDIS-II, a spatial landscape simulation model with flexible temporal and spatial resolutions. Ecological Modelling, 201(3-4), 409-419.",
+    recipe: `# Run LANDIS-II succession and disturbance scenario via .NET 8 CLI
+dotnet landis-ii-console scenario_necnsuccession.txt`,
+    bridgePaths: [
+      "soil_and_microbiome_baseline.organic_matter_pct",
+      "outcome_monitoring_schedule.five_year_lagging_indicators.target_organic_matter_min_pct"
+    ],
+    sampleOutput: {
+      soil_and_microbiome_baseline: {
+        organic_matter_pct: 3.4
+      },
+      outcome_monitoring_schedule: {
+        five_year_lagging_indicators: {
+          target_organic_matter_min_pct: 5.2
+        }
+      }
+    }
+  },
+  cell2fire: {
+    language: "C++ (OpenMP) / Python",
+    formats: ["ASCII Grid (.asc)", "GeoTIFF", "CSV (Weather & Fuel Grids)"],
+    citation: "Pais, C., et al. (2021). Cell2Fire: A Cell-Based Forest Fire Growth Model to Support Strategic Landscape Management Planning. Frontiers in Forests and Global Change, 4, 692706.",
+    recipe: `# Simulate crown and surface fire spread reduction after understory fuel ladder pruning
+./Cell2Fire --input-instance-folder ./fuel_grid_sanctuary/ --output-folder ./fire_results/ --sim-years 1 --nsims 50`,
+    bridgePaths: [
+      "structural_baseline.municipal_permit_disposition.recommended_disposition",
+      "structural_baseline.isa_traq_risk.overall_risk_rating",
+      "structural_baseline.isa_traq_risk.residual_risk_rating"
+    ],
+    sampleOutput: {
+      structural_baseline: {
+        isa_traq_risk: {
+          overall_risk_rating: "Moderate",
+          residual_risk_rating: "Low"
+        },
+        municipal_permit_disposition: {
+          recommended_disposition: "Structural_Risk_Reduction_Pruning"
+        }
+      }
+    }
+  },
+  fmt: {
+    language: "C++ / Python / R (COIN-OR CLP Linear Programming)",
+    formats: ["Woodstock (.pri, .are, .yld, .act)", "CSV", "JSON"],
+    citation: "Bureau du Forestier en chef du Quebec (2022). FMT (Forest Management Tool): Open-source spatial forest planning library.",
+    recipe: `# Solve multi-objective ecological retention schedule using FMT and COIN-OR CLP
+python3 -c "import FMT; parser = FMT.Parser.FMTmodelparser(); model = parser.readproject('sanctuary.pri', ['sanctuary.seq'])"`,
+    bridgePaths: [
+      "outcome_monitoring_schedule.five_year_lagging_indicators.sanctuary_scorecard_targets.restoration_potential_realized_pct"
+    ],
+    sampleOutput: {
+      outcome_monitoring_schedule: {
+        five_year_lagging_indicators: {
+          sanctuary_scorecard_targets: {
+            restoration_potential_baseline_pct: 52,
+            restoration_potential_realized_pct: 86
+          }
+        }
+      }
+    }
+  },
+  hemispher: {
+    language: "R (terra / Digital Hemispherical Photography)",
+    formats: ["JPEG / TIFF (Fisheye Hemispherical Photo)", "CSV"],
+    citation: "Chianucci, F., & Macek, M. (2023). hemispheR: an R package for fisheye canopy image analysis. Agricultural and Forest Meteorology, 336, 109470.",
+    recipe: `# Compute canopy gap fraction and effective Leaf Area Index (LAI) from upward fisheye photo
+docker run --rm -v "$PWD:/data" openarbor/renv-canopy:latest Rscript -e "
+  library(hemispheR); img <- import_fisheye('/data/canopy_azimuth180.jpg', circular = TRUE);
+  bw <- binarize_fisheye(img); gf <- gapfrac_fisheye(bw, lens = 'equidistant');
+  lai <- canopy_fisheye(gf); write.csv(lai, '/data/hemispher_lai.csv', row.names = FALSE)"`,
+    bridgePaths: [
+      "structural_baseline.live_crown_ratio_pct",
+      "outcome_monitoring_schedule.one_year_leading_indicators.target_canopy_dieback_max_pct",
+      "outcome_monitoring_schedule.one_year_leading_indicators.fixed_photopoint_azimuth_deg"
+    ],
+    sampleOutput: {
+      structural_baseline: {
+        live_crown_ratio_pct: 71
+      },
+      outcome_monitoring_schedule: {
+        one_year_leading_indicators: {
+          target_canopy_dieback_max_pct: 5,
+          fixed_photopoint_azimuth_deg: 180
+        }
+      }
+    }
+  },
+  gaplightr: {
+    language: "R (terra / lidR / sf)",
+    formats: ["JPEG / TIFF", "LAS / LAZ (Synthetic Hemispherical Views)", "CSV"],
+    citation: "Hakai Institute Contributors (2024). gaplightr: Gap Light Analyzer workflows in R for physical and LiDAR-synthesized hemispherical views.",
+    recipe: `# Calculate Direct and Diffuse Site Factors (% Transmitted PAR) for understory guild placement
+docker run --rm -v "$PWD:/data" openarbor/renv-canopy:latest Rscript -e "
+  library(gaplightr); res <- analyze_hemiphoto('/data/understory_north.tif', lat = 30.2672);
+  write.csv(res, '/data/understory_light_par.csv', row.names = FALSE)"`,
+    bridgePaths: [
+      "understory_and_guild_prescription.native_companion_species_guild",
+      "outcome_monitoring_schedule.one_year_leading_indicators.companion_guild_survival_min_pct"
+    ],
+    sampleOutput: {
+      understory_and_guild_prescription: {
+        native_companion_species_guild: [
+          {
+            scientific_name: "Chasmanthium latifolium",
+            common_name: "Inland Sea Oats",
+            inaturalist_taxon_id: 129047,
+            open_nursery_batch_id: "ON-EDW-2026-019",
+            stratum_layer: "Herbaceous_Perennial",
+            functional_role: "Hydrologic_Swale_Or_Infiltration_Anchor",
+            quantity_planted: 24
+          }
+        ]
+      }
+    }
+  },
+  "birdnet-analyzer": {
+    language: "Python (TFLite / Librosa / NumPy)",
+    formats: ["WAV / FLAC / MP3", "Raven Selection Table (.txt)", "CSV", "JSON"],
+    citation: "Kahl, S., Wood, C. M., Eibl, M., & Klinck, H. (2021). BirdNET: A deep learning solution for avian diversity monitoring. Ecological Informatics, 61, 101236.",
+    recipe: `# Note: Code is MIT; model weights carry CC BY-NC-SA 4.0 terms (explicit operator opt-in required)
+uv run --python .venv-birdnet python -m birdnet_analyzer.analyze /data/tiz_dawn_chorus.wav   --o /data/birdnet_detections/ --lat 30.2672 --lon -97.7431 --min_conf 0.75 --rtype csv`,
+    bridgePaths: [
+      "outcome_monitoring_schedule.five_year_lagging_indicators.sanctuary_scorecard_targets.documented_native_biodiversity_taxa_baseline",
+      "outcome_monitoring_schedule.five_year_lagging_indicators.sanctuary_scorecard_targets.documented_native_biodiversity_taxa_min"
+    ],
+    sampleOutput: {
+      outcome_monitoring_schedule: {
+        five_year_lagging_indicators: {
+          sanctuary_scorecard_targets: {
+            documented_native_biodiversity_taxa_baseline: 14,
+            documented_native_biodiversity_taxa_min: 28
+          }
+        }
+      }
+    }
+  },
+  "scikit-maad": {
+    language: "Python (SciPy / Scikit-Learn / Librosa)",
+    formats: ["WAV", "CSV", "JSON"],
+    citation: "Ulloa, J. S., et al. (2021). scikit-maad: An open-source and modular toolbox for quantitative soundscape analysis in Python. Methods in Ecology and Evolution, 12(12), 2334-2340.",
+    recipe: `# Compute Acoustic Complexity Index (ACI) and Acoustic Diversity Index (ADI) across TIZ recordings
+uv venv .venv-maad --python 3.11
+uv pip install --python .venv-maad scikit-maad
+.venv-maad/bin/python -c "
+from maad import sound, features
+s, fs = sound.load('tiz_dawn_chorus.wav')
+Sxx, tn, fn, ext = sound.spectrogram(s, fs)
+aci_xx, aci_per_bin, aci_sum = features.acoustic_complexity_index(Sxx)
+print({'ACI_total': round(float(aci_sum), 2)})"`,
+    bridgePaths: [
+      "outcome_monitoring_schedule.five_year_lagging_indicators.target_ser_recovery_wheel_stars",
+      "outcome_monitoring_schedule.five_year_lagging_indicators.sanctuary_scorecard_targets.documented_native_biodiversity_taxa_min"
+    ],
+    sampleOutput: {
+      outcome_monitoring_schedule: {
+        five_year_lagging_indicators: {
+          target_ser_recovery_wheel_stars: 4.5,
+          sanctuary_scorecard_targets: {
+            documented_native_biodiversity_taxa_baseline: 14,
+            documented_native_biodiversity_taxa_min: 30
+          }
+        }
+      }
+    }
+  }
+};
+function normalizePackagingTier(rawTier) {
+  if (!rawTier) return "Tier 1: Python/R CLI (uv/conda)";
+  if (rawTier === "Core Browser/Node ESM") return "Core Browser/Node ESM";
+  if (rawTier.includes("Tier 3")) return "Tier 3: Container / Sidecar";
+  if (rawTier.startsWith("Tier 2")) return "Tier 2: Native Desktop GUI";
+  return "Tier 1: Python/R CLI (uv/conda)";
+}
+function resolveEvidenceGrade(rawEntry) {
+  if (rawEntry.isCoreEsm) return "Workflow-qualified";
+  const id = rawEntry.id;
+  const readiness = rawEntry.readiness || "";
+  if (["qgis", "gdal", "cloudcompare", "forest-search", "3dfin", "deepforest", "birdnet-analyzer", "scikit-maad"].includes(id)) {
+    return "Workflow-qualified";
+  }
+  if (["qfield", "treeseg", "pytlidar", "pydendron", "landis-ii", "cell2fire", "fmt"].includes(id)) {
+    return "Smoke-tested";
+  }
+  if (["canopywatch", "lidr", "dplr", "hemispher"].includes(id)) {
+    return "Installed";
+  }
+  if (readiness === "container-ready") {
+    return "Recipe available";
+  }
+  return "Cataloged";
+}
+function buildUnifiedWorkbenchCatalog() {
+  const coreEntries = CORE_ESM_TOOLS.map((item) => ({
+    ...item,
+    rawTier: item.packagingTier
+  }));
+  const rawTools = Array.isArray(forestry_tools_default.tools) ? forestry_tools_default.tools : [];
+  const rawSupporting = Array.isArray(forestry_tools_default.supporting_applications) ? forestry_tools_default.supporting_applications : [];
+  const mapCatalogEntry = (entry, isSupporting = false) => {
+    const meta = TOOL_BRIDGE_METADATA[entry.id] || {};
+    const groupKey = isSupporting ? "supporting" : entry.group;
+    const packagingTier = normalizePackagingTier(entry.tier);
+    const evidenceGrade = resolveEvidenceGrade(entry);
+    const deps = Array.isArray(entry.dependencies) ? entry.dependencies : [entry.ubuntu_package, ...entry.ubuntu_additional_packages || []].filter(Boolean);
+    return {
+      id: entry.id,
+      name: entry.name,
+      group: groupKey,
+      domain: entry.domain,
+      upstream_url: entry.upstream_url,
+      license: entry.license,
+      language: meta.language || (deps.includes("r-base") ? "R" : deps.includes("python3") ? "Python" : "Native / CLI"),
+      rawTier: entry.tier,
+      packagingTier,
+      evidenceGrade,
+      installMethod: entry.install_method || "native",
+      isCoreEsm: false,
+      formats: meta.formats || ["CSV", "JSON", "GeoJSON"],
+      tags: [entry.id, groupKey, entry.install_method, ...deps].filter(Boolean),
+      summary: `${entry.domain}. ${entry.constraints || ""}`.trim(),
+      citation: meta.citation || `${entry.name} upstream documentation (${entry.upstream_url}).`,
+      recipe: meta.recipe || `# Local sovereign execution recipe (${entry.install_method})
+# Upstream: ${entry.upstream_url}`,
+      bridgeTargetPaths: meta.bridgePaths || ["structural_baseline.dbh_cm"],
+      bridgeSnippet: meta.sampleOutput || {
+        schema_version: "RCA_v2",
+        assessment_mode: "Regenerative Diagnostic"
+      }
+    };
+  };
+  const toolEntries = rawTools.map((t) => mapCatalogEntry(t, false));
+  const supportingEntries = rawSupporting.map((s) => mapCatalogEntry(s, true));
+  return [...coreEntries, ...toolEntries, ...supportingEntries];
+}
+function getGradeBadgeClass(grade) {
+  switch (grade) {
+    case "Workflow-qualified":
+      return "badge badge-protected";
+    case "Smoke-tested":
+      return "badge badge-heritage";
+    case "Installed":
+      return "badge badge-neutral";
+    case "Recipe available":
+      return "badge badge-warn";
+    default:
+      return "badge badge-neutral";
+  }
+}
+function escapeHtml(str) {
+  return String(str ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function initToolsCatalogUI() {
+  const root = document.getElementById("tools-catalog-root");
+  if (!root) return;
+  const allEntries = buildUnifiedWorkbenchCatalog();
+  const groupDescriptions = {
+    all: "All 4 Open Arbor Core ESM engines, 33 scientific forestry models, and 4 supporting geospatial applications.",
+    "core-esm": "Zero-dependency ECMAScript Modules running natively in the browser and Node.js for root zones, municipal ordinances, ecosystem benefits, and RCA-Spec v2.0 diagnostics.",
+    ...forestry_tools_default.groups || {}
+  };
+  const searchInput = document.getElementById("tool-search-input");
+  const tierSelect = document.getElementById("tool-tier-select");
+  const gradeSelect = document.getElementById("tool-grade-select");
+  const domainTabsContainer = document.getElementById("tool-domain-tabs");
+  const statusEl = document.getElementById("tools-filter-status");
+  const domainDescEl = document.getElementById("tools-domain-description");
+  const resetBtn = document.getElementById("tools-reset-filters");
+  const gridContainer = document.getElementById("tools-grid-container");
+  const dialog = document.getElementById("tool-detail-dialog");
+  const dialogTitle = document.getElementById("tool-dialog-title");
+  const dialogBadge = document.getElementById("tool-dialog-badge");
+  const dialogBody = document.getElementById("tool-dialog-body");
+  if (dialog && !("closedBy" in HTMLDialogElement.prototype)) {
+    dialog.addEventListener("click", (event) => {
+      if (event.target !== dialog) return;
+      const rect = dialog.getBoundingClientRect();
+      const isDialogContent = rect.top <= event.clientY && event.clientY <= rect.top + rect.height && rect.left <= event.clientX && event.clientX <= rect.left + rect.width;
+      if (isDialogContent) return;
+      dialog.close();
+    });
+  }
+  let activeDomain = "all";
+  function openToolDialog(tool) {
+    if (!dialog || !dialogTitle || !dialogBody) return;
+    dialogTitle.textContent = `${tool.name} (${tool.domain})`;
+    if (dialogBadge) {
+      dialogBadge.textContent = tool.evidenceGrade;
+    }
+    const snippetJson = JSON.stringify(tool.bridgeSnippet, null, 2);
+    const pathsHtml = tool.bridgeTargetPaths.map((p) => `<li><code>${escapeHtml(p)}</code></li>`).join("");
+    dialogBody.innerHTML = `
+      <div class="muni-lookup-box">
+        <div class="muni-header">
+          <strong>Upstream Repository &amp; Provenance</strong>
+          <a href="${escapeHtml(tool.upstream_url)}" target="_blank" rel="noopener noreferrer" class="muni-link">
+            ${escapeHtml(tool.upstream_url)}
+          </a>
+        </div>
+        <p class="muni-citation">
+          <strong>Literature &amp; Standard Citation:</strong> ${escapeHtml(tool.citation)}
+        </p>
+        <div class="metric-grid metric-grid-4">
+          <div class="metric-box">
+            <span class="metric-label">Packaging Tier</span>
+            <strong class="metric-value">${escapeHtml(tool.packagingTier)}</strong>
+            <span class="metric-sub">${escapeHtml(tool.rawTier)}</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-label">Runtime &amp; License</span>
+            <strong class="metric-value">${escapeHtml(tool.language)}</strong>
+            <span class="metric-sub">License: ${escapeHtml(tool.license)}</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-label">Evidence Grade</span>
+            <strong class="metric-value text-accent">${escapeHtml(tool.evidenceGrade)}</strong>
+            <span class="metric-sub">Doc-414 Governance</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-label">Supported I/O Formats</span>
+            <strong class="metric-value">${escapeHtml(tool.formats.join(", "))}</strong>
+            <span class="metric-sub">Sovereign local files</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="svg-map-header">
+          <strong>1. Local Sovereign Execution Recipe</strong>
+          <button type="button" class="btn-secondary tab-btn" data-copy-target="dialog-recipe-code">
+            Copy CLI Recipe
+          </button>
+        </div>
+        <pre id="dialog-recipe-code" class="code-preview">${escapeHtml(tool.recipe)}</pre>
+      </div>
+
+      <div>
+        <h3 class="sub-heading">2. Open Arbor <code>RCA_v2</code> Schema Pipeline Bridge</h3>
+        <p class="subtitle">
+          Outputs from <strong>${escapeHtml(tool.name)}</strong> map deterministically into the following JSON paths inside <code>schemas/rca_assessment.schema.json</code>:
+        </p>
+        <ul class="muni-subtext">${pathsHtml}</ul>
+      </div>
+
+      <div>
+        <div class="svg-map-header">
+          <strong>3. Sample <code>RCA_v2</code> Bridge Payload Snippet</strong>
+          <button type="button" class="btn-secondary tab-btn" data-copy-target="dialog-bridge-code">
+            Copy RCA_v2 JSON Snippet
+          </button>
+        </div>
+        <pre id="dialog-bridge-code" class="code-preview">${escapeHtml(snippetJson)}</pre>
+      </div>
+    `;
+    dialogBody.querySelectorAll("[data-copy-target]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const targetId = btn.getAttribute("data-copy-target");
+        const codeEl = targetId ? document.getElementById(targetId) : null;
+        if (!codeEl) return;
+        const originalLabel = btn.textContent;
+        try {
+          await navigator.clipboard.writeText(codeEl.textContent || "");
+          btn.textContent = "Copied to Clipboard";
+        } catch {
+          btn.textContent = "Copy Ready";
+        }
+        setTimeout(() => {
+          btn.textContent = originalLabel;
+        }, 1800);
+      });
+    });
+    dialog.showModal();
+  }
+  function renderCards() {
+    if (!gridContainer) return;
+    const query = (searchInput?.value || "").trim().toLowerCase();
+    const selectedTier = tierSelect?.value || "all";
+    const selectedGrade = gradeSelect?.value || "all";
+    const filtered = allEntries.filter((entry) => {
+      if (activeDomain !== "all" && entry.group !== activeDomain) {
+        return false;
+      }
+      if (selectedTier !== "all" && entry.packagingTier !== selectedTier) {
+        return false;
+      }
+      if (selectedGrade !== "all" && entry.evidenceGrade !== selectedGrade) {
+        return false;
+      }
+      if (query.length > 0) {
+        const haystack = [
+          entry.name,
+          entry.id,
+          entry.domain,
+          entry.group,
+          entry.language,
+          entry.license,
+          entry.summary,
+          entry.formats.join(" "),
+          entry.tags.join(" "),
+          entry.bridgeTargetPaths.join(" ")
+        ].join(" ").toLowerCase();
+        if (!haystack.includes(query)) {
+          return false;
+        }
+      }
+      return true;
+    });
+    if (statusEl) {
+      statusEl.textContent = `Showing ${filtered.length} of ${allEntries.length} workbench entries`;
+    }
+    if (domainDescEl) {
+      domainDescEl.textContent = groupDescriptions[activeDomain] || groupDescriptions.all;
+    }
+    if (filtered.length === 0) {
+      gridContainer.innerHTML = `
+        <div class="card">
+          <p class="subtitle">No tools matched the current filter combination. Click <strong>Reset Filters</strong> to restore all 41 workbench entries.</p>
+        </div>
+      `;
+      return;
+    }
+    gridContainer.innerHTML = filtered.map((tool) => {
+      const gradeBadgeClass = getGradeBadgeClass(tool.evidenceGrade);
+      const coreActionHtml = tool.isCoreEsm ? `<a href="../demo/index.html" class="btn btn-primary">Launch in Live Engine Demo</a>` : "";
+      return `
+          <article class="card" data-tool-id="${escapeHtml(tool.id)}">
+            <div class="muni-header">
+              <div>
+                <span class="eyebrow">${escapeHtml(tool.group)} &middot; ${escapeHtml(tool.domain)}</span>
+                <h2>${escapeHtml(tool.name)}</h2>
+              </div>
+              <div class="header-actions">
+                <span class="${gradeBadgeClass}">${escapeHtml(tool.evidenceGrade)}</span>
+                <span class="badge badge-neutral">${escapeHtml(tool.packagingTier)}</span>
+                <span class="badge badge-neutral">${escapeHtml(tool.language)} &middot; ${escapeHtml(tool.license)}</span>
+              </div>
+            </div>
+
+            <p class="muni-citation">${escapeHtml(tool.summary)}</p>
+
+            <div class="metric-grid">
+              <div class="metric-box">
+                <span class="metric-label">Supported File Formats &amp; I/O</span>
+                <strong class="metric-value">${escapeHtml(tool.formats.join(", "))}</strong>
+              </div>
+              <div class="metric-box">
+                <span class="metric-label">Primary <code>RCA_v2</code> Schema Target</span>
+                <strong class="metric-value text-accent"><code>${escapeHtml(tool.bridgeTargetPaths[0] || "structural_baseline")}</code></strong>
+              </div>
+            </div>
+
+            <div class="header-actions">
+              ${coreActionHtml}
+              <button
+                type="button"
+                class="btn ${tool.isCoreEsm ? "btn-outline" : "btn-secondary"}"
+                data-inspect-tool="${escapeHtml(tool.id)}"
+              >
+                Inspect CLI Recipe, Sample I/O &amp; RCA_v2 Pipeline Bridge
+              </button>
+            </div>
+          </article>
+        `;
+    }).join("");
+    gridContainer.querySelectorAll("[data-inspect-tool]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const toolId = btn.getAttribute("data-inspect-tool");
+        const found = allEntries.find((item) => item.id === toolId);
+        if (found) openToolDialog(found);
+      });
+    });
+  }
+  searchInput?.addEventListener("input", renderCards);
+  tierSelect?.addEventListener("change", renderCards);
+  gradeSelect?.addEventListener("change", renderCards);
+  domainTabsContainer?.querySelectorAll("[data-domain]").forEach((tabBtn) => {
+    tabBtn.addEventListener("click", () => {
+      activeDomain = tabBtn.getAttribute("data-domain") || "all";
+      domainTabsContainer.querySelectorAll("[data-domain]").forEach((b) => {
+        const isActive = b === tabBtn;
+        b.classList.toggle("active", isActive);
+        b.setAttribute("aria-selected", isActive ? "true" : "false");
+      });
+      renderCards();
+    });
+  });
+  resetBtn?.addEventListener("click", () => {
+    if (searchInput) searchInput.value = "";
+    if (tierSelect) tierSelect.value = "all";
+    if (gradeSelect) gradeSelect.value = "all";
+    activeDomain = "all";
+    domainTabsContainer?.querySelectorAll("[data-domain]").forEach((b) => {
+      const isAll = b.getAttribute("data-domain") === "all";
+      b.classList.toggle("active", isAll);
+      b.setAttribute("aria-selected", isAll ? "true" : "false");
+    });
+    renderCards();
+  });
+  renderCards();
+}
+
+// web/pages/ordinances-ui.js
+var MONTH_ABBR = [
+  "",
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec"
+];
+var PROTO_KEYS = /* @__PURE__ */ new Set(["__proto__", "constructor", "prototype"]);
+function validateAgainstSchema(instance, schema, jsonPath = "$") {
+  const errors = [];
+  if (!schema || typeof schema !== "object") {
+    return { valid: true, errors };
+  }
+  if (schema.type !== void 0) {
+    const allowed = Array.isArray(schema.type) ? schema.type : [schema.type];
+    const matchesType = (val, t) => {
+      if (t === "null") return val === null;
+      if (t === "array") return Array.isArray(val);
+      if (t === "object") return typeof val === "object" && val !== null && !Array.isArray(val);
+      if (t === "integer") return typeof val === "number" && Number.isInteger(val);
+      if (t === "number") return typeof val === "number" && !Number.isNaN(val);
+      return typeof val === t;
+    };
+    if (!allowed.some((t) => matchesType(instance, t))) {
+      const actual = instance === null ? "null" : Array.isArray(instance) ? "array" : typeof instance;
+      errors.push(`${jsonPath}: expected type ${allowed.join("|")}, got ${actual}`);
+      return { valid: false, errors };
+    }
+  }
+  if (instance === null || instance === void 0) {
+    return { valid: errors.length === 0, errors };
+  }
+  if (schema.const !== void 0 && instance !== schema.const) {
+    errors.push(
+      `${jsonPath}: expected const ${JSON.stringify(schema.const)}, got ${JSON.stringify(instance)}`
+    );
+  }
+  if (Array.isArray(schema.enum) && !schema.enum.includes(instance)) {
+    errors.push(
+      `${jsonPath}: value ${JSON.stringify(instance)} not in enum [${schema.enum.join(", ")}]`
+    );
+  }
+  if (typeof instance === "number") {
+    if (schema.minimum !== void 0 && instance < schema.minimum) {
+      errors.push(`${jsonPath}: value ${instance} is below minimum ${schema.minimum}`);
+    }
+    if (schema.maximum !== void 0 && instance > schema.maximum) {
+      errors.push(`${jsonPath}: value ${instance} exceeds maximum ${schema.maximum}`);
+    }
+  }
+  if (typeof instance === "string") {
+    if (schema.minLength !== void 0 && instance.length < schema.minLength) {
+      errors.push(
+        `${jsonPath}: string length ${instance.length} is below minLength ${schema.minLength}`
+      );
+    }
+    if (schema.maxLength !== void 0 && instance.length > schema.maxLength) {
+      errors.push(
+        `${jsonPath}: string length ${instance.length} exceeds maxLength ${schema.maxLength}`
+      );
+    }
+    if (schema.pattern !== void 0) {
+      const re = new RegExp(schema.pattern);
+      if (!re.test(instance)) {
+        errors.push(`${jsonPath}: value "${instance}" does not match pattern ${schema.pattern}`);
+      }
+    }
+    if (schema.format === "uri") {
+      if (!/^https?:\/\/\S+$/i.test(instance)) {
+        errors.push(`${jsonPath}: value "${instance}" is not a valid HTTP/HTTPS URI`);
+      }
+    }
+  }
+  if (Array.isArray(instance)) {
+    if (schema.items && typeof schema.items === "object") {
+      instance.forEach((item, idx) => {
+        const sub = validateAgainstSchema(item, schema.items, `${jsonPath}[${idx}]`);
+        errors.push(...sub.errors);
+      });
+    }
+  }
+  if (typeof instance === "object" && !Array.isArray(instance)) {
+    if (Array.isArray(schema.required)) {
+      for (const reqKey of schema.required) {
+        if (!Object.hasOwn(instance, reqKey) || instance[reqKey] === void 0 || instance[reqKey] === "") {
+          errors.push(`${jsonPath}: missing required field '${reqKey}'`);
+        }
+      }
+    }
+    const props = schema.properties || {};
+    for (const key of Object.keys(instance)) {
+      if (PROTO_KEYS.has(key)) {
+        errors.push(
+          `${jsonPath}: additional property '${key}' is not allowed (prototype-chain key rejected; additionalProperties: false)`
+        );
+      } else if (Object.hasOwn(props, key)) {
+        const sub = validateAgainstSchema(instance[key], props[key], `${jsonPath}.${key}`);
+        errors.push(...sub.errors);
+      } else if (schema.additionalProperties === false) {
+        errors.push(
+          `${jsonPath}: additional property '${key}' is not allowed (additionalProperties: false)`
+        );
+      } else if (schema.additionalProperties && typeof schema.additionalProperties === "object") {
+        const sub = validateAgainstSchema(
+          instance[key],
+          schema.additionalProperties,
+          `${jsonPath}.${key}`
+        );
+        errors.push(...sub.errors);
+      }
+    }
+  }
+  return { valid: errors.length === 0, errors };
+}
+function detectRawPrototypePollutionKeys(rawText) {
+  const securityErrors = [];
+  const keyRegex = /"\s*(__proto__|constructor|prototype)\s*"\s*:/g;
+  let match = keyRegex.exec(rawText);
+  while (match !== null) {
+    const keyName = match[1];
+    securityErrors.push(
+      `$: additional property '${keyName}' is not allowed (prototype-chain key rejected; additionalProperties: false)`
+    );
+    match = keyRegex.exec(rawText);
+  }
+  return securityErrors;
+}
+function collectUnverifiedFields(record) {
+  const flagged = [];
+  if (!record || typeof record !== "object") return flagged;
+  const hasPermitTriggers = record.permit_triggers_by_work_type && Object.keys(record.permit_triggers_by_work_type).length > 0;
+  if (!hasPermitTriggers) {
+    flagged.push("permit_triggers_by_work_type (UNVERIFIED statutory work-type triggers)");
+  }
+  const hasPlanRules = record.plan_rules && Object.keys(record.plan_rules).length > 0;
+  if (!hasPlanRules) {
+    flagged.push("plan_rules (UNVERIFIED survey, root_zone, and pruning rules)");
+  }
+  const walk = (obj, currentPath) => {
+    if (!obj || typeof obj !== "object") return;
+    for (const [k, v] of Object.entries(obj)) {
+      const nextPath = `${currentPath}.${k}`;
+      if (typeof v === "string" && v.toUpperCase().includes("UNVERIFIED")) {
+        flagged.push(`${nextPath}: "${v}"`);
+      } else if (v && typeof v === "object") {
+        walk(v, nextPath);
+      }
+    }
+  };
+  walk(record, "$");
+  return flagged;
+}
+function formatReplacementRatio(muni) {
+  const sched = muni.mitigation_fee_schedule;
+  if (!sched || !Array.isArray(sched.tiers) || sched.tiers.length === 0) {
+    return "UNVERIFIED";
+  }
+  const ratios = sched.tiers.map((t) => `${t.replacement_ratio}:1`);
+  const uniqueRatios = [...new Set(ratios)];
+  return `${uniqueRatios.join(" to ")} (Heritage ${sched.heritage_replacement_ratio ?? 3}:1)`;
+}
+function formatCashInLieuRate(muni) {
+  const sched = muni.mitigation_fee_schedule;
+  if (!sched || !Array.isArray(sched.tiers) || sched.tiers.length === 0) {
+    return "UNVERIFIED";
+  }
+  const rates = sched.tiers.map((t) => `$${t.rate_per_inch}/in`);
+  const uniqueRates = [...new Set(rates)];
+  const penalty = sched.penalty_civil_per_tree ? ` (Civil penalty $${sched.penalty_civil_per_tree}/tree)` : "";
+  return `${uniqueRates.join(" to ")}${penalty}`;
+}
+function formatPathogenWindow(muni) {
+  const pruning = muni.plan_rules?.pruning;
+  if (!pruning) {
+    return "UNVERIFIED (No plan_rules.pruning encoded)";
+  }
+  if (Array.isArray(pruning.oak_months) && pruning.oak_months.length > 0) {
+    const allowedMonths = pruning.oak_months.map((m) => MONTH_ABBR[m] || m).join(", ");
+    return `Allowed: ${allowedMonths} (Restricted Feb 1 to Jun 30 for Ceratocystis fagacearum)`;
+  }
+  return `${pruning.standard || "ANSI A300 Part 1"} (No Oak Wilt vector restriction window)`;
+}
+function escapeHtml2(str) {
+  return String(str ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+var NEW_MUNICIPALITY_DRAFT_TEMPLATE = {
+  id: "tx-san-marcos",
+  name: "San Marcos",
+  state: "TX",
+  coordinates: {
+    lat: 29.8833,
+    lng: -97.9414
+  },
+  ordinance_numbers: "San Marcos Development Code Chapter 6, Article 1, Division 2 (Tree and Habitat Protection) [UNVERIFIED]",
+  source_url: "https://library.municode.com/tx/san_marcos/codes/development_code",
+  dbh_threshold_inches: 9,
+  heritage_threshold_inches: 24,
+  heritage_species_thresholds: {
+    "Quercus virginiana (Live Oak)": 24,
+    "Carya illinoinensis (Pecan)": 24
+  },
+  excepted_species: ["Celtis occidentalis (Hackberry)", "Melia azedarach (Chinaberry)"],
+  permit_triggers_by_work_type: {
+    protected: ["removal"],
+    heritage: ["removal", "pruning"],
+    citation: "UNVERIFIED: Requires primary statutory section confirmation"
+  },
+  mitigation_fee_schedule: {
+    citation: "San Marcos Development Code Section 6.1.2.3 [UNVERIFIED]",
+    exemption_pct: 0,
+    heritage_rate_per_inch: 300,
+    heritage_replacement_ratio: 2,
+    tiers: [
+      { min_dbh: 9, max_dbh: 23.9, rate_per_inch: 150, replacement_ratio: 1 },
+      { min_dbh: 24, max_dbh: null, rate_per_inch: 300, replacement_ratio: 2 }
+    ]
+  },
+  plan_rules: {
+    survey: {
+      citation: "UNVERIFIED: Check San Marcos Engineering Manual",
+      hardwood_min_dbh: 9,
+      max_age_years: 3,
+      multi_trunk: "largest_plus_half"
+    },
+    root_zone: {
+      citation: "UNVERIFIED",
+      crz_ft_per_inch: 1,
+      crz_min_ft: 10,
+      removal_if_disturbed_pct: 30,
+      cutfill_max_in: 4,
+      impervious_max_pct: 25,
+      crown_removal_max_pct: 25
+    },
+    pruning: {
+      citation: "UNVERIFIED",
+      standard: "ANSI A300 Part 1",
+      oak_months: [7, 8, 9, 10, 11, 12, 1]
+    }
+  }
+};
+var PROTOTYPE_POLLUTION_TEST_PAYLOAD = `{
+  "id": "tx-test-pollution",
+  "name": "Prototype Pollution Security Test",
+  "state": "TX",
+  "ordinance_numbers": "Security Audit Test Vector",
+  "source_url": "https://example.org/ordinance",
+  "dbh_threshold_inches": 12,
+  "__proto__": {
+    "polluted": true,
+    "isAdmin": true
+  },
+  "constructor": {
+    "prototype": {
+      "compromised": true
+    }
+  }
+}`;
+function initOrdinancesExplorerUI() {
+  const root = document.getElementById("ordinances-explorer-root");
+  if (!root) return;
+  const txList = Array.isArray(central_texas_ordinances_default.municipalities) ? central_texas_ordinances_default.municipalities : [];
+  const orList = Array.isArray(rogue_valley_oregon_ordinances_default.municipalities) ? rogue_valley_oregon_ordinances_default.municipalities : [];
+  const allMunicipalities = [...txList, ...orList];
+  const tbody = document.getElementById("ordinance-matrix-tbody");
+  const editor = document.getElementById("ordinance-json-editor");
+  const banner = document.getElementById("ordinance-validation-banner");
+  const headlineEl = document.getElementById("validation-headline");
+  const badgeEl = document.getElementById("validation-badge");
+  const summaryEl = document.getElementById("validation-summary-text");
+  const detailsEl = document.getElementById("ordinance-validation-details");
+  const validateBtn = document.getElementById("run-ordinance-validate-btn");
+  const copyPrBtn = document.getElementById("copy-pr-json-btn");
+  const presetAustinBtn = document.getElementById("preset-austin-btn");
+  const presetAshlandBtn = document.getElementById("preset-ashland-btn");
+  const presetDraftBtn = document.getElementById("preset-draft-btn");
+  const presetProtoBtn = document.getElementById("preset-proto-btn");
+  const presetBar = document.getElementById("ordinance-preset-bar");
+  if (tbody) {
+    tbody.innerHTML = allMunicipalities.map((muni) => {
+      const unverifiedList = collectUnverifiedFields(muni);
+      const isFullyVerified = unverifiedList.length === 0;
+      const statusBadge = isFullyVerified ? `<span class="badge badge-protected">VERIFIED STATUTE</span>` : `<span class="badge badge-warn">CONTAINS UNVERIFIED FIELDS (${unverifiedList.length})</span>`;
+      const cityLabel = `${muni.name}, ${muni.state}`;
+      const regDbh = `${muni.dbh_threshold_inches}" DBH`;
+      const heritageDbh = muni.heritage_threshold_inches !== null && muni.heritage_threshold_inches !== void 0 ? `${muni.heritage_threshold_inches}" DBH` : "N/A";
+      return `
+          <tr data-muni-row="${escapeHtml2(muni.id)}">
+            <th scope="row">${escapeHtml2(cityLabel)}</th>
+            <td>
+              <strong><code>${escapeHtml2(muni.id)}</code></strong><br />
+              <span class="hint">${escapeHtml2(muni.ordinance_numbers)}</span>
+              <a href="${escapeHtml2(muni.source_url)}" target="_blank" rel="noopener noreferrer" class="muni-link">
+                Primary Statute Source
+              </a>
+            </td>
+            <td><strong>${escapeHtml2(regDbh)}</strong></td>
+            <td><strong>${escapeHtml2(heritageDbh)}</strong></td>
+            <td>${escapeHtml2(formatReplacementRatio(muni))}</td>
+            <td>${escapeHtml2(formatCashInLieuRate(muni))}</td>
+            <td>${escapeHtml2(formatPathogenWindow(muni))}</td>
+            <td>
+              <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start;">
+                ${statusBadge}
+                <button
+                  type="button"
+                  class="btn-secondary tab-btn"
+                  data-load-muni="${escapeHtml2(muni.id)}"
+                >
+                  Inspect Raw JSON
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+    }).join("");
+    tbody.querySelectorAll("[data-load-muni]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-load-muni");
+        const found = allMunicipalities.find((m) => m.id === id);
+        if (found && editor) {
+          setActivePresetButton(null);
+          editor.value = JSON.stringify(found, null, 2);
+          runLiveValidation();
+          document.getElementById("ordinance-validator-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      });
+    });
+  }
+  function setActivePresetButton(activeBtn) {
+    presetBar?.querySelectorAll(".btn-preset").forEach((btn) => {
+      btn.classList.toggle("active", btn === activeBtn);
+    });
+  }
+  function runLiveValidation() {
+    if (!editor || !headlineEl || !badgeEl || !summaryEl || !detailsEl) return;
+    const rawText = editor.value.trim();
+    if (!rawText) {
+      headlineEl.textContent = "EMPTY PAYLOAD (1 ERROR)";
+      badgeEl.className = "badge badge-danger";
+      badgeEl.textContent = "INVALID JSON";
+      summaryEl.textContent = "Paste or load a municipal ordinance JSON object to validate.";
+      detailsEl.innerHTML = "";
+      return;
+    }
+    const rawSecurityErrors = detectRawPrototypePollutionKeys(rawText);
+    let parsed;
+    try {
+      parsed = JSON.parse(rawText);
+    } catch (err) {
+      headlineEl.textContent = "JSON SYNTAX ERROR";
+      badgeEl.className = "badge badge-danger";
+      badgeEl.textContent = "PARSE FAILED";
+      summaryEl.textContent = err.message;
+      detailsEl.innerHTML = `<div class="error-banner">${escapeHtml2(err.message)}</div>`;
+      return;
+    }
+    const records = Array.isArray(parsed?.municipalities) ? parsed.municipalities : Array.isArray(parsed) ? parsed : parsed && typeof parsed === "object" ? [parsed] : [];
+    const allErrors = [...rawSecurityErrors];
+    const allUnverified = [];
+    if (records.length === 0) {
+      allErrors.push('$: payload must be a municipality JSON object or { "municipalities": [...] }');
+    } else {
+      records.forEach((rec, idx) => {
+        const pathPrefix = records.length === 1 ? "$" : `$.municipalities[${rec?.id || idx}]`;
+        const res = validateAgainstSchema(rec, municipal_ordinance_schema_default, pathPrefix);
+        for (const err of res.errors) {
+          if (!allErrors.includes(err)) {
+            allErrors.push(err);
+          }
+        }
+        const unverified = collectUnverifiedFields(rec);
+        allUnverified.push(...unverified);
+      });
+    }
+    if (allErrors.length === 0) {
+      headlineEl.textContent = "SCHEMA VALID (0 ERRORS)";
+      if (banner) {
+        banner.style.borderLeftColor = "var(--accent-green)";
+      }
+      if (allUnverified.length === 0) {
+        badgeEl.className = "badge badge-protected";
+        badgeEl.textContent = "VERIFIED STATUTE (0 UNVERIFIED FIELDS)";
+        summaryEl.textContent = `Validated ${records.length} municipality record(s) against schemas/municipal-ordinance.schema.json with full statutory completeness.`;
+        detailsEl.innerHTML = `
+          <p class="clean-note">
+            All required statutory fields, mitigation fee tiers, permit triggers, and plan rules are present and verified. Ready for GitHub Pull Request submission.
+          </p>
+        `;
+      } else {
+        badgeEl.className = "badge badge-warn";
+        badgeEl.textContent = `${allUnverified.length} UNVERIFIED FIELD(S) FLAGGED`;
+        summaryEl.textContent = `Schema structure is valid (0 errors), with ${allUnverified.length} field(s) marked UNVERIFIED for primary municipal code review prior to merge.`;
+        const itemsHtml = allUnverified.map((u) => `<li>${escapeHtml2(u)}</li>`).join("");
+        detailsEl.innerHTML = `
+          <div class="citation-callout">
+            <strong>Primary Statutory Review Queue (${allUnverified.length} UNVERIFIED fields):</strong>
+            <ul class="muni-subtext">${itemsHtml}</ul>
+          </div>
+        `;
+      }
+    } else {
+      headlineEl.textContent = `SCHEMA INVALID (${allErrors.length} ERROR${allErrors.length === 1 ? "" : "S"})`;
+      badgeEl.className = "badge badge-danger";
+      badgeEl.textContent = rawSecurityErrors.length > 0 ? "SECURITY GUARD REJECTED" : "VALIDATION FAILED";
+      if (banner) {
+        banner.style.borderLeftColor = "var(--danger-red)";
+      }
+      summaryEl.textContent = rawSecurityErrors.length > 0 ? "Prototype-pollution key (__proto__, constructor, or prototype) detected and blocked by security guard." : "One or more fields failed Draft 2020-12 schema validation.";
+      const errItems = allErrors.map((e) => `<li><code>${escapeHtml2(e)}</code></li>`).join("");
+      detailsEl.innerHTML = `
+        <ul class="flag-list">${errItems}</ul>
+      `;
+    }
+  }
+  presetAustinBtn?.addEventListener("click", () => {
+    const austin = allMunicipalities.find((m) => m.id === "tx-austin") || allMunicipalities[0];
+    if (editor && austin) {
+      setActivePresetButton(presetAustinBtn);
+      editor.value = JSON.stringify(austin, null, 2);
+      runLiveValidation();
+    }
+  });
+  presetAshlandBtn?.addEventListener("click", () => {
+    const ashland = allMunicipalities.find((m) => m.id === "or-ashland");
+    if (editor && ashland) {
+      setActivePresetButton(presetAshlandBtn);
+      editor.value = JSON.stringify(ashland, null, 2);
+      runLiveValidation();
+    }
+  });
+  presetDraftBtn?.addEventListener("click", () => {
+    if (editor) {
+      setActivePresetButton(presetDraftBtn);
+      editor.value = JSON.stringify(NEW_MUNICIPALITY_DRAFT_TEMPLATE, null, 2);
+      runLiveValidation();
+    }
+  });
+  presetProtoBtn?.addEventListener("click", () => {
+    if (editor) {
+      setActivePresetButton(presetProtoBtn);
+      editor.value = PROTOTYPE_POLLUTION_TEST_PAYLOAD;
+      runLiveValidation();
+    }
+  });
+  editor?.addEventListener("input", runLiveValidation);
+  validateBtn?.addEventListener("click", runLiveValidation);
+  copyPrBtn?.addEventListener("click", async () => {
+    if (!editor) return;
+    const originalText = copyPrBtn.textContent;
+    try {
+      await navigator.clipboard.writeText(editor.value);
+      copyPrBtn.textContent = "Copied Pull Request JSON";
+    } catch {
+      copyPrBtn.textContent = "Copy Ready in Editor";
+    }
+    setTimeout(() => {
+      copyPrBtn.textContent = originalText;
+    }, 1800);
+  });
+  const defaultMuni = allMunicipalities.find((m) => m.id === "tx-austin") || allMunicipalities[0];
+  if (editor && defaultMuni) {
+    editor.value = JSON.stringify(defaultMuni, null, 2);
+    runLiveValidation();
+  }
+}
+
+// web/pages/mcp-ui.js
+var MAX_EVALUATE_TREES = 500;
+var MAX_JURISDICTION_ID_LENGTH = 128;
+var ALL_ORDINANCE_ENTRIES = [
+  ...(central_texas_ordinances_default.municipalities || []).map((m) => ({
+    record: m,
+    file: "data/ordinances/central_texas_ordinances.json",
+    region: central_texas_ordinances_default.region || "Central Texas"
+  })),
+  ...(rogue_valley_oregon_ordinances_default.municipalities || []).map((m) => ({
+    record: m,
+    file: "data/ordinances/rogue_valley_oregon_ordinances.json",
+    region: rogue_valley_oregon_ordinances_default.region || "Rogue Valley, Oregon"
+  }))
+];
+var ORDINANCE_CATALOG = new Map(
+  ALL_ORDINANCE_ENTRIES.map((entry) => [entry.record.id.toLowerCase(), entry])
+);
+var MCP_TOOLS = [
+  {
+    name: "calculate_root_zone",
+    module: "src/core/rootZone.js",
+    description: "Calculate Critical Root Zone (CRZ), international Tree Protection Zone (TPZ), and Mattheck/AS 4970 Structural Root Zone (SRZ) radii and areas in imperial (ft, sq ft) and metric (m, sq m) units.",
+    inputSchema: {
+      type: "object",
+      required: ["dbh"],
+      properties: {
+        dbh: { type: "number", description: "Diameter at Breast Height (4.5 ft / 1.37 m) in inches or cm." },
+        unit: { type: "string", enum: ["inches", "cm"], default: "inches" },
+        standard: {
+          type: "string",
+          enum: ["US_1_1", "US_1_1.5", "US_1_18", "Australian_AS4970", "UK_BS5837", "Custom"],
+          default: "US_1_1"
+        },
+        multiplier: { type: "number", default: 1 },
+        min_radius_feet: { type: "number", default: 0 },
+        drf_inches: { type: "number", description: "Optional Diameter at Root Flare in inches for AS 4970 SRZ." },
+        stems_inches: { type: "array", items: { type: "number" } },
+        multistem_method: { type: "string", enum: ["quadratic", "largest_plus_half", "sum"], default: "quadratic" }
+      }
+    },
+    defaultArgs: {
+      dbh: 30,
+      unit: "inches",
+      standard: "US_1_1",
+      multiplier: 1,
+      drf_inches: 38.58
+    }
+  },
+  {
+    name: "evaluate_ordinance",
+    module: "src/core/ordinanceEngine.js",
+    description: "Evaluate a tree inventory against a municipal tree protection ordinance, returning protected/heritage flags, CRZ encroachment triggers, seasonal Oak Wilt flags, permit determinations, and mitigation fee/replacement plans.",
+    inputSchema: {
+      type: "object",
+      required: ["trees"],
+      properties: {
+        trees: {
+          type: "array",
+          maxItems: MAX_EVALUATE_TREES,
+          description: "Array of tree inventory rows (max 500 rows per call).",
+          items: { type: "object" }
+        },
+        jurisdiction_id: {
+          type: "string",
+          maxLength: MAX_JURISDICTION_ID_LENGTH,
+          description: "Jurisdiction ID in data/ordinances/ (e.g., tx-austin, tx-georgetown, tx-liberty-hill, or-ashland)."
+        },
+        ordinance: { type: "object" }
+      }
+    },
+    defaultArgs: {
+      jurisdiction_id: "tx-austin",
+      trees: [
+        {
+          tag: "ATX-QV-101",
+          species_common: "Live Oak",
+          species_scientific: "Quercus virginiana",
+          dbh_inches: 30,
+          lat: 30.2672,
+          lng: -97.7431,
+          condition_score: 8,
+          removal: false,
+          pruning_date: "2026-11-15",
+          crz_disturbed_pct: 15,
+          cutfill_within_half_crz: true,
+          cutfill_depth_in: 2,
+          impervious_pct: 10,
+          crown_removal_pct: 10,
+          actions: ["pruning"]
+        }
+      ]
+    }
+  },
+  {
+    name: "calculate_ecosystem_benefits",
+    module: "src/core/ecosystemBenefits.js",
+    description: "Compute annual and 20-year allometric ecosystem services (Nowak carbon storage/sequestration, Xiao stormwater interception, dry deposition air pollution removal, McPherson shade cooling kWh, CTLA structural value) and John White (FCIN12) veteran tree age.",
+    inputSchema: {
+      type: "object",
+      required: ["dbh_inches"],
+      properties: {
+        dbh_inches: { type: "number" },
+        species: { type: "string" },
+        condition: { type: "string", enum: ["Excellent", "Good", "Fair", "Poor", "Critical", "Dead"], default: "Good" },
+        land_use: { type: "string", enum: ["Residential", "Commercial", "Street", "Park"], default: "Residential" },
+        height_feet: { type: "number" },
+        canopy_spread_feet: { type: "number" },
+        crown_light_exposure: { type: "number", default: 4 },
+        annual_rainfall_inches: { type: "number", default: 35 },
+        projection_years: { type: "number", default: 20 },
+        base_growth_factor: { type: "number", default: 4.5 },
+        site_condition: {
+          type: "string",
+          enum: ["Open Grown / Parkland", "Forest / Woodland", "Urban / Street Tree"],
+          default: "Open Grown / Parkland"
+        }
+      }
+    },
+    defaultArgs: {
+      dbh_inches: 30,
+      species: "Quercus virginiana",
+      condition: "Good",
+      land_use: "Residential",
+      height_feet: 54.1,
+      canopy_spread_feet: 75.5,
+      base_growth_factor: 4.5,
+      site_condition: "Open Grown / Parkland"
+    }
+  },
+  {
+    name: "rca_biomechanics",
+    module: "src/core/rcaEngine.js",
+    description: "Run RCA-Spec v2.0 biomechanical and rhizosphere evaluation (Mattheck t/R hollow-shell buckling safety factor, AS 4970 SRZ, Shigo CODIT wall response, pneumatic AirSpade trench volume, and biochar/compost/humate/mulch amendment quantities).",
+    inputSchema: {
+      type: "object",
+      required: ["assessment"],
+      properties: {
+        assessment: {
+          type: "object",
+          description: "RCA assessment object conforming to schemas/rca_assessment.schema.json."
+        }
+      }
+    },
+    defaultArgs: {
+      assessment: FIXED_PARITY_CASES[0].assessment
+    }
+  },
+  {
+    name: "rca_lint",
+    module: "src/core/rcaEngine.js",
+    description: "Validate an RCA assessment object with the ASCA-grade and Nature-First Evidentiary Linter, blocking un-evidenced removals when Mattheck t/R >= 0.30 and rhizosphere remediation is viable.",
+    inputSchema: {
+      type: "object",
+      required: ["assessment"],
+      properties: {
+        assessment: {
+          type: "object",
+          description: "RCA assessment object conforming to schemas/rca_assessment.schema.json."
+        }
+      }
+    },
+    defaultArgs: {
+      assessment: FIXED_PARITY_CASES[0].assessment
+    }
+  },
+  {
+    name: "lookup_ordinance",
+    module: "data/ordinances/*.json",
+    description: "Retrieve the verified municipal tree protection ordinance record for a jurisdiction ID from data/ordinances/.",
+    inputSchema: {
+      type: "object",
+      required: ["jurisdiction_id"],
+      properties: {
+        jurisdiction_id: {
+          type: "string",
+          maxLength: MAX_JURISDICTION_ID_LENGTH,
+          description: "Municipality identifier (max 128 chars; tx-austin, tx-georgetown, tx-liberty-hill, tx-cedar-park, tx-round-rock, or-ashland, or-medford, or-grants-pass)."
+        }
+      }
+    },
+    defaultArgs: {
+      jurisdiction_id: "tx-austin"
+    }
+  }
+];
+function formatToolResult(payload, isError = false) {
+  return {
+    content: [
+      {
+        type: "text",
+        text: JSON.stringify(payload, null, 2)
+      }
+    ],
+    structuredContent: payload,
+    isError
+  };
+}
+function executeMcpToolInBrowser(name, args = {}) {
+  switch (name) {
+    case "calculate_root_zone": {
+      const unit = args.unit || "inches";
+      const standard = args.standard || "US_1_1";
+      const multiplier = args.multiplier != null ? Number(args.multiplier) : 1;
+      const minRadiusFeet = args.min_radius_feet != null ? Number(args.min_radius_feet) : 0;
+      let rawDbh = Number(args.dbh ?? args.dbh_inches ?? 0);
+      if ((!rawDbh || rawDbh <= 0) && Array.isArray(args.stems_inches) && args.stems_inches.length > 0) {
+        rawDbh = calculateMultiStemDBH(args.stems_inches, args.multistem_method || "quadratic");
+      }
+      if (!rawDbh || rawDbh <= 0) {
+        return formatToolResult(
+          {
+            error: "INVALID_DBH",
+            message: "dbh must be a positive number (or supply non-empty stems_inches)."
+          },
+          true
+        );
+      }
+      const dbhInches = unit === "cm" ? rawDbh / 2.54 : rawDbh;
+      const dbhCm = unit === "inches" ? rawDbh * 2.54 : rawDbh;
+      const tpz = calculateTPZ(rawDbh, unit, standard, multiplier);
+      const crz = calculateCRZ(dbhInches, multiplier, minRadiusFeet);
+      const srz = calculateSRZ(
+        args.drf_inches != null ? Number(args.drf_inches) : null,
+        dbhInches
+      );
+      return formatToolResult({
+        dbh_input: rawDbh,
+        unit,
+        dbh_inches: Math.round(dbhInches * 100) / 100,
+        dbh_cm: Math.round(dbhCm * 100) / 100,
+        standard,
+        radius_feet: tpz.radius_feet,
+        radius_meters: tpz.radius_meters,
+        area_sqft: tpz.area_sqft,
+        area_sqm: tpz.area_sqm,
+        formula_used: tpz.formula_used,
+        crz,
+        tpz,
+        srz
+      });
+    }
+    case "evaluate_ordinance": {
+      const trees = Array.isArray(args.trees) ? args.trees : Array.isArray(args.tree_rows) ? args.tree_rows : null;
+      if (!trees) {
+        return formatToolResult(
+          {
+            error: "INVALID_TREES_INPUT",
+            message: "evaluate_ordinance requires a trees array."
+          },
+          true
+        );
+      }
+      if (trees.length > MAX_EVALUATE_TREES) {
+        return formatToolResult(
+          {
+            error: "MAX_TREES_EXCEEDED",
+            max_trees: MAX_EVALUATE_TREES,
+            received_trees: trees.length,
+            message: `evaluate_ordinance accepts at most ${MAX_EVALUATE_TREES} tree rows per call (received ${trees.length}) to bound 1-ft spatial grid union evaluation.`
+          },
+          true
+        );
+      }
+      if (args.jurisdiction_id && String(args.jurisdiction_id).length > MAX_JURISDICTION_ID_LENGTH) {
+        return formatToolResult(
+          {
+            error: "JURISDICTION_ID_TOO_LONG",
+            max_length: MAX_JURISDICTION_ID_LENGTH,
+            received_length: String(args.jurisdiction_id).length,
+            message: `jurisdiction_id exceeds maximum length of ${MAX_JURISDICTION_ID_LENGTH} characters.`
+          },
+          true
+        );
+      }
+      let ordinanceRecord = args.ordinance || null;
+      let sourceMeta = null;
+      if (!ordinanceRecord && args.jurisdiction_id) {
+        const found = ORDINANCE_CATALOG.get(String(args.jurisdiction_id).toLowerCase().trim());
+        if (!found) {
+          return formatToolResult(
+            {
+              error: "UNKNOWN_JURISDICTION",
+              message: `No ordinance record found for jurisdiction_id '${args.jurisdiction_id}'.`,
+              available_jurisdictions: Array.from(ORDINANCE_CATALOG.keys())
+            },
+            true
+          );
+        }
+        ordinanceRecord = found.record;
+        sourceMeta = { file: found.file, region: found.region };
+      }
+      if (!ordinanceRecord) {
+        return formatToolResult(
+          {
+            error: "MISSING_ORDINANCE",
+            message: "Provide either jurisdiction_id or an inline ordinance object."
+          },
+          true
+        );
+      }
+      const evaluatedRows = evaluateTreeInventory(trees, ordinanceRecord);
+      const permit = permitDetermination(evaluatedRows, ordinanceRecord);
+      const summaryText = permitSummary(permit);
+      const mitigationPlan = computeMitigationPlan(evaluatedRows, ordinanceRecord);
+      const remediationEstimate = estimateRootZoneRemediation(evaluatedRows);
+      return formatToolResult({
+        jurisdiction: {
+          id: ordinanceRecord.id,
+          name: ordinanceRecord.name,
+          state: ordinanceRecord.state,
+          ordinance_numbers: ordinanceRecord.ordinance_numbers,
+          source_url: ordinanceRecord.source_url,
+          ...sourceMeta || {}
+        },
+        evaluated_trees: evaluatedRows,
+        permit_determination: permit,
+        permit_summary: summaryText,
+        mitigation_plan: mitigationPlan,
+        remediation_estimate: remediationEstimate
+      });
+    }
+    case "calculate_ecosystem_benefits": {
+      const dbhInches = Number(args.dbh_inches ?? args.dbh ?? 0);
+      if (!dbhInches || dbhInches <= 0) {
+        return formatToolResult(
+          {
+            error: "INVALID_DBH",
+            message: "dbh_inches must be a positive number."
+          },
+          true
+        );
+      }
+      const speciesName = args.species || args.species_name || "Quercus virginiana";
+      const commonName = args.common_name || args.species || "";
+      const conditionClass = args.condition || args.condition_class || "Good";
+      const landUse = args.land_use || "Residential";
+      const benefits = calculateTreeEcosystemBenefits({
+        species_name: speciesName,
+        common_name: commonName,
+        dbh_inches: dbhInches,
+        height_feet: args.height_feet ?? null,
+        canopy_spread_feet: args.canopy_spread_feet ?? null,
+        condition_class: conditionClass,
+        crown_light_exposure: args.crown_light_exposure ?? 4,
+        land_use: landUse,
+        annual_rainfall_inches: args.annual_rainfall_inches ?? 35,
+        projection_years: args.projection_years ?? 20
+      });
+      const ageEstimate = estimateTreeAge({
+        dbh_inches: dbhInches,
+        base_growth_factor: args.base_growth_factor ?? 4.5,
+        site_condition: args.site_condition || "Open Grown / Parkland"
+      });
+      return formatToolResult({
+        ...benefits,
+        age_estimate: ageEstimate
+      });
+    }
+    case "rca_biomechanics": {
+      const assessment = args.assessment || (args.structural_baseline ? args : null);
+      if (!assessment || typeof assessment !== "object") {
+        return formatToolResult(
+          {
+            error: "INVALID_ASSESSMENT",
+            message: "rca_biomechanics requires an assessment object with structural_baseline."
+          },
+          true
+        );
+      }
+      try {
+        const result = evaluateBiomechanicsAndRhizosphere(assessment);
+        return formatToolResult(result);
+      } catch (err) {
+        return formatToolResult(
+          {
+            error: "RCA_BIOMECHANICS_ERROR",
+            message: err.message
+          },
+          true
+        );
+      }
+    }
+    case "rca_lint": {
+      const assessment = args.assessment || (args.structural_baseline ? args : null);
+      if (!assessment || typeof assessment !== "object") {
+        return formatToolResult(
+          {
+            error: "INVALID_ASSESSMENT",
+            message: "rca_lint requires an assessment object."
+          },
+          true
+        );
+      }
+      const lintResult = lintRcaEvidentiaryReport(assessment);
+      return formatToolResult(lintResult);
+    }
+    case "lookup_ordinance": {
+      const rawInput = String(args.jurisdiction_id || "");
+      if (rawInput.length > MAX_JURISDICTION_ID_LENGTH) {
+        return formatToolResult(
+          {
+            error: "JURISDICTION_ID_TOO_LONG",
+            max_length: MAX_JURISDICTION_ID_LENGTH,
+            received_length: rawInput.length,
+            message: `jurisdiction_id exceeds maximum length of ${MAX_JURISDICTION_ID_LENGTH} characters.`
+          },
+          true
+        );
+      }
+      const rawId = rawInput.toLowerCase().trim();
+      if (!rawId) {
+        return formatToolResult(
+          {
+            error: "MISSING_JURISDICTION_ID",
+            message: "jurisdiction_id is required.",
+            available_jurisdictions: Array.from(ORDINANCE_CATALOG.keys())
+          },
+          true
+        );
+      }
+      const entry = ORDINANCE_CATALOG.get(rawId);
+      if (!entry) {
+        return formatToolResult(
+          {
+            error: "UNKNOWN_JURISDICTION",
+            message: `Unknown jurisdiction '${args.jurisdiction_id}'.`,
+            available_jurisdictions: Array.from(ORDINANCE_CATALOG.keys())
+          },
+          true
+        );
+      }
+      return formatToolResult({
+        dataset_file: entry.file,
+        dataset_region: entry.region,
+        ordinance: entry.record
+      });
+    }
+    default:
+      return formatToolResult(
+        {
+          error: "UNKNOWN_TOOL",
+          message: `Unknown tool '${name}'.`,
+          available_tools: MCP_TOOLS.map((t) => t.name)
+        },
+        true
+      );
+  }
+}
+function initMcpPlaygroundUI() {
+  if (typeof document === "undefined") return;
+  const root = document.getElementById("mcp-playground-root");
+  if (!root) return;
+  let activeToolName = MCP_TOOLS[0].name;
+  let requestCounter = 1;
+  const selectorEl = document.getElementById("mcp-tool-selector");
+  const metaEl = document.getElementById("mcp-active-tool-meta");
+  const argsEditor = document.getElementById("mcp-args-editor");
+  const argsError = document.getElementById("mcp-args-error");
+  const reqPreview = document.getElementById("mcp-request-preview");
+  const resPreview = document.getElementById("mcp-response-preview");
+  const latencyBadge = document.getElementById("mcp-latency-badge");
+  function getActiveTool() {
+    return MCP_TOOLS.find((t) => t.name === activeToolName) || MCP_TOOLS[0];
+  }
+  function renderToolSelector() {
+    if (!selectorEl) return;
+    selectorEl.innerHTML = MCP_TOOLS.map(
+      (t) => `
+      <button
+        type="button"
+        role="tab"
+        aria-selected="${t.name === activeToolName}"
+        class="oa-mcp-tool-btn ${t.name === activeToolName ? "active" : ""}"
+        data-mcp-tool="${t.name}"
+      >
+        <span class="oa-mcp-tool-name">${t.name}</span>
+        <span class="oa-mcp-tool-mod">${t.module}</span>
+      </button>
+    `
+    ).join("");
+    selectorEl.querySelectorAll("[data-mcp-tool]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        activeToolName = btn.dataset.mcpTool;
+        renderToolSelector();
+        loadToolDefaults();
+        runCurrentToolCall();
+      });
+    });
+  }
+  function loadToolDefaults() {
+    const tool = getActiveTool();
+    if (metaEl) {
+      const reqFields = (tool.inputSchema.required || []).join(", ") || "None";
+      const propNames = Object.keys(tool.inputSchema.properties || {}).join(", ");
+      metaEl.innerHTML = `
+        <div class="muni-header">
+          <div>
+            <strong><code>${tool.name}</code></strong>
+            <span class="badge badge-protected">${tool.module}</span>
+          </div>
+          <span class="badge badge-neutral">Required: ${reqFields}</span>
+        </div>
+        <p class="muni-citation">${tool.description}</p>
+        <p class="muni-subtext"><strong>Schema Properties:</strong> <code>${propNames}</code></p>
+      `;
+    }
+    if (argsEditor) {
+      argsEditor.value = JSON.stringify(tool.defaultArgs, null, 2);
+    }
+    if (argsError) {
+      argsError.hidden = true;
+    }
+  }
+  function runCurrentToolCall(overrideArgs = null) {
+    const tool = getActiveTool();
+    let parsedArgs = overrideArgs;
+    if (!parsedArgs) {
+      try {
+        parsedArgs = JSON.parse(argsEditor?.value || "{}");
+        if (argsError) argsError.hidden = true;
+      } catch (err) {
+        if (argsError) {
+          argsError.hidden = false;
+          argsError.textContent = `Invalid JSON in arguments editor: ${err.message}`;
+        }
+        return;
+      }
+    }
+    const reqId = requestCounter++;
+    const rpcRequest = {
+      jsonrpc: "2.0",
+      id: reqId,
+      method: "tools/call",
+      params: {
+        name: tool.name,
+        arguments: parsedArgs
+      }
+    };
+    const t0 = typeof performance !== "undefined" ? performance.now() : Date.now();
+    const result = executeMcpToolInBrowser(tool.name, parsedArgs);
+    const t1 = typeof performance !== "undefined" ? performance.now() : Date.now();
+    const elapsedMs = Math.max(0.01, t1 - t0).toFixed(2);
+    const rpcResponse = {
+      jsonrpc: "2.0",
+      id: reqId,
+      result
+    };
+    if (reqPreview) {
+      reqPreview.textContent = JSON.stringify(rpcRequest, null, 2);
+    }
+    if (resPreview) {
+      resPreview.textContent = JSON.stringify(rpcResponse, null, 2);
+    }
+    if (latencyBadge) {
+      latencyBadge.textContent = `${elapsedMs} ms (${result.isError ? "Guard/Error Returned" : "OK"})`;
+    }
+  }
+  document.getElementById("btn-mcp-run")?.addEventListener("click", () => {
+    runCurrentToolCall();
+  });
+  document.getElementById("btn-mcp-reset")?.addEventListener("click", () => {
+    loadToolDefaults();
+    runCurrentToolCall();
+  });
+  document.getElementById("btn-mcp-test-guard")?.addEventListener("click", () => {
+    activeToolName = "evaluate_ordinance";
+    renderToolSelector();
+    loadToolDefaults();
+    const oversizedTrees = Array.from({ length: 501 }, (_, idx) => ({
+      tag: `T-${idx + 1}`,
+      species_common: "Live Oak",
+      species_scientific: "Quercus virginiana",
+      dbh_inches: 24
+    }));
+    const guardArgs = {
+      jurisdiction_id: "tx-austin",
+      trees: oversizedTrees
+    };
+    if (argsEditor) {
+      argsEditor.value = JSON.stringify(
+        {
+          jurisdiction_id: "tx-austin",
+          _note: "Simulating 501 tree rows to test MAX_EVALUATE_TREES = 500 guard",
+          trees_count: 501
+        },
+        null,
+        2
+      );
+    }
+    runCurrentToolCall(guardArgs);
+  });
+  document.getElementById("btn-mcp-test-id-guard")?.addEventListener("click", () => {
+    activeToolName = "lookup_ordinance";
+    renderToolSelector();
+    const overlongId = "tx-austin-" + "x".repeat(130);
+    const guardArgs = { jurisdiction_id: overlongId };
+    if (argsEditor) {
+      argsEditor.value = JSON.stringify(guardArgs, null, 2);
+    }
+    runCurrentToolCall(guardArgs);
+  });
+  argsEditor?.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      e.preventDefault();
+      runCurrentToolCall();
+    }
+  });
+  function bindCopyBtn(btnEl, getTextFn) {
+    if (!btnEl) return;
+    btnEl.addEventListener("click", async () => {
+      const txt = getTextFn();
+      if (navigator.clipboard && txt) {
+        await navigator.clipboard.writeText(txt);
+        const orig = btnEl.textContent;
+        btnEl.textContent = "Copied";
+        setTimeout(() => {
+          btnEl.textContent = orig;
+        }, 1600);
+      }
+    });
+  }
+  bindCopyBtn(document.getElementById("btn-copy-mcp-req"), () => reqPreview?.textContent || "");
+  bindCopyBtn(document.getElementById("btn-copy-mcp-res"), () => resPreview?.textContent || "");
+  root.querySelectorAll("[data-copy-target]").forEach((btn) => {
+    const targetId = btn.getAttribute("data-copy-target");
+    bindCopyBtn(btn, () => document.getElementById(targetId)?.textContent || "");
+  });
+  renderToolSelector();
+  loadToolDefaults();
+  runCurrentToolCall();
+}
+
+// web/pages/spec-ui.js
 var ALL_MUNICIPALITIES = [
   ...central_texas_ordinances_default.municipalities || [],
   ...rogue_valley_oregon_ordinances_default.municipalities || []
 ];
+function findMuni(id) {
+  return ALL_MUNICIPALITIES.find((m) => m.id === id) || ALL_MUNICIPALITIES[0];
+}
+function initSharedChromeAndCopy() {
+  if (typeof document === "undefined") return;
+  document.querySelectorAll("[data-copy-target]").forEach((btn) => {
+    if (btn.dataset.copyBound === "true") return;
+    btn.dataset.copyBound = "true";
+    btn.addEventListener("click", async () => {
+      const targetId = btn.getAttribute("data-copy-target");
+      const targetEl = document.getElementById(targetId);
+      const text = targetEl?.textContent || "";
+      if (navigator.clipboard && text) {
+        await navigator.clipboard.writeText(text);
+        const orig = btn.textContent;
+        btn.textContent = "Copied";
+        setTimeout(() => {
+          btn.textContent = orig;
+        }, 1600);
+      }
+    });
+  });
+}
+function initLandingQuickCalculator() {
+  if (typeof document === "undefined") return;
+  const qcRoot = document.getElementById("landing-quick-calc");
+  if (!qcRoot) return;
+  const slider = document.getElementById("qc-dbh-slider");
+  const select = document.getElementById("qc-jurisdiction-select");
+  const dbhDisplay = document.getElementById("qc-dbh-display");
+  const dbhCmDisplay = document.getElementById("qc-dbh-cm-display");
+  const crzVal = document.getElementById("qc-crz-val");
+  const tpzVal = document.getElementById("qc-tpz-val");
+  const srzVal = document.getElementById("qc-srz-val");
+  const statusVal = document.getElementById("qc-status-val");
+  const holobiontVal = document.getElementById("qc-holobiont-val");
+  const ctlaVal = document.getElementById("qc-ctla-val");
+  const citationLine = document.getElementById("qc-citation-line");
+  const openDemoLink = document.getElementById("qc-open-demo-link");
+  function updateQuickCalc() {
+    const dbhIn = Math.max(6, Math.min(60, Number(slider?.value) || 30));
+    const dbhCm = Math.round(dbhIn * 2.54 * 10) / 10;
+    const muniId = select?.value || "tx-austin";
+    const muni = findMuni(muniId);
+    if (dbhDisplay) dbhDisplay.textContent = `${dbhIn} in`;
+    if (dbhCmDisplay) dbhCmDisplay.textContent = `${dbhCm} cm`;
+    const crzMultiplier = Number(muni?.plan_rules?.root_zone?.crz_ft_per_inch) || 1;
+    const crzMinFt = Number(muni?.plan_rules?.root_zone?.crz_min_ft) || 0;
+    const crz = calculateCRZ(dbhIn, crzMultiplier, crzMinFt);
+    const tpz = calculateTPZ(dbhIn, "inches", "US_1_1", crzMultiplier);
+    const srz = calculateSRZ(dbhIn * 1.25, dbhIn);
+    const speciesSci = muni?.state === "OR" ? "Quercus garryana" : "Quercus virginiana";
+    const speciesCommon = muni?.state === "OR" ? "Oregon White Oak" : "Live Oak";
+    const evalRows = evaluateTreeInventory(
+      [
+        {
+          tag: "QC-01",
+          species_common: speciesCommon,
+          species_scientific: speciesSci,
+          dbh_inches: dbhIn,
+          removal: false
+        }
+      ],
+      muni
+    );
+    const permit = permitDetermination(evalRows, muni);
+    const mitIfRemoved = computeMitigationPlan(
+      evaluateTreeInventory(
+        [
+          {
+            tag: "QC-01",
+            species_common: speciesCommon,
+            species_scientific: speciesSci,
+            dbh_inches: dbhIn,
+            removal: true
+          }
+        ],
+        muni
+      ),
+      muni
+    );
+    const spreadM = Math.max(6, Math.round(dbhIn * 0.75 * 10) / 10);
+    const holobiont = computeHolobiontValuation({
+      structural_baseline: {
+        dbh_cm: dbhCm,
+        crown_spread_ns_m: spreadM,
+        crown_spread_ew_m: spreadM,
+        sound_shell_thickness_ratio_t_over_r: 0.38
+      },
+      rhizosphere_and_root_collar: {
+        tiz_radius_m: Math.round(crz.radius_meters * 1.5 * 100) / 100
+      }
+    });
+    const benefits = calculateTreeEcosystemBenefits({
+      species_name: speciesSci,
+      common_name: speciesCommon,
+      dbh_inches: dbhIn,
+      condition_class: "Good"
+    });
+    if (crzVal) {
+      crzVal.textContent = `${crz.radius_feet} ft (${crz.radius_meters} m)`;
+    }
+    if (tpzVal) {
+      tpzVal.textContent = `${tpz.area_sqft.toLocaleString()} sq ft (${tpz.area_sqm} m2) CRZ`;
+    }
+    if (srzVal) {
+      srzVal.textContent = `${srz.radius_feet} ft (${srz.radius_meters} m)`;
+    }
+    if (statusVal) {
+      const label = statusLabel(evalRows[0]);
+      const fee = mitIfRemoved?.cash_in_lieu_usd || 0;
+      statusVal.textContent = `${label} (${permit.required ? "Permit Req." : "No Permit"} | Removal Fee: $${fee.toLocaleString()})`;
+    }
+    if (holobiontVal) {
+      holobiontVal.textContent = `$${holobiont.holobiont_200yr_biological_equity_usd.toLocaleString()}`;
+    }
+    if (ctlaVal) {
+      ctlaVal.textContent = `CTLA: $${holobiont.ctla_10th_ed_depreciated_usd.toLocaleString()} | Nowak: $${benefits.total_annual_benefits_usd}/yr`;
+    }
+    if (citationLine) {
+      citationLine.textContent = `Authority: ${muni.name}, ${muni.state} (${muni.ordinance_numbers}) | Species: ${speciesCommon}`;
+    }
+    if (openDemoLink) {
+      openDemoLink.href = `./demo/index.html?jurisdiction=${encodeURIComponent(muniId)}&dbh=${encodeURIComponent(dbhIn)}`;
+    }
+  }
+  slider?.addEventListener("input", updateQuickCalc);
+  select?.addEventListener("change", updateQuickCalc);
+  updateQuickCalc();
+}
+function flattenSchemaProperties(schema, prefix = "$", parentRequired = []) {
+  const rows = [];
+  if (!schema || typeof schema !== "object") return rows;
+  const reqSet = new Set(Array.isArray(schema.required) ? schema.required : parentRequired);
+  const props = schema.properties || {};
+  for (const [key, propSchema] of Object.entries(props)) {
+    const path = `${prefix}.${key}`;
+    const isReq = reqSet.has(key);
+    const typeStr = Array.isArray(propSchema.type) ? propSchema.type.join(" | ") : propSchema.type || "object";
+    const constraints = [];
+    if (propSchema.const !== void 0) constraints.push(`const: "${propSchema.const}"`);
+    if (Array.isArray(propSchema.enum)) constraints.push(`enum: [${propSchema.enum.join(", ")}]`);
+    if (propSchema.minimum !== void 0) constraints.push(`min: ${propSchema.minimum}`);
+    if (propSchema.maximum !== void 0) constraints.push(`max: ${propSchema.maximum}`);
+    if (propSchema.minLength !== void 0) constraints.push(`minLength: ${propSchema.minLength}`);
+    if (propSchema.maxLength !== void 0) constraints.push(`maxLength: ${propSchema.maxLength}`);
+    if (propSchema.pattern) constraints.push(`pattern: ${propSchema.pattern}`);
+    rows.push({
+      path,
+      type: typeStr,
+      constraints: constraints.join("; ") || "Standard type validation",
+      required: isReq ? "Required" : "Optional",
+      description: propSchema.description || "Structured schema property."
+    });
+    if (propSchema.properties) {
+      rows.push(...flattenSchemaProperties(propSchema, path, propSchema.required || []));
+    } else if (propSchema.items && propSchema.items.properties) {
+      rows.push(
+        ...flattenSchemaProperties(
+          propSchema.items,
+          `${path}[]`,
+          propSchema.items.required || []
+        )
+      );
+    }
+  }
+  return rows;
+}
+function initSpecViewerUI() {
+  initSharedChromeAndCopy();
+  initLandingQuickCalculator();
+  if (typeof document === "undefined") return;
+  const specRoot = document.getElementById("spec-viewer-root");
+  if (!specRoot) return;
+  let activeSchemaKey = "rca";
+  const searchInput = document.getElementById("schema-prop-search");
+  const tbody = document.getElementById("schema-props-tbody");
+  const metaBanner = document.getElementById("schema-meta-banner");
+  const rawFilename = document.getElementById("schema-raw-filename");
+  const rawPreview = document.getElementById("schema-raw-preview");
+  const rcaRows = flattenSchemaProperties(rca_assessment_schema_default);
+  const ordRows = flattenSchemaProperties(municipal_ordinance_schema_default);
+  function renderSchemaInspector() {
+    const isRca = activeSchemaKey === "rca";
+    const activeSchema = isRca ? rca_assessment_schema_default : municipal_ordinance_schema_default;
+    const allRows = isRca ? rcaRows : ordRows;
+    const filePath = isRca ? "schemas/rca_assessment.schema.json" : "schemas/municipal-ordinance.schema.json";
+    const downloadHref = isRca ? "../schemas/rca_assessment.schema.json" : "../schemas/municipal-ordinance.schema.json";
+    const query = (searchInput?.value || "").trim().toLowerCase();
+    const filteredRows = query ? allRows.filter(
+      (r) => r.path.toLowerCase().includes(query) || r.type.toLowerCase().includes(query) || r.constraints.toLowerCase().includes(query) || r.description.toLowerCase().includes(query)
+    ) : allRows;
+    if (metaBanner) {
+      metaBanner.innerHTML = `
+        <div class="muni-header">
+          <div>
+            <strong>${activeSchema.title}</strong>
+            <span class="badge badge-protected">Draft 2020-12</span>
+            <span class="badge badge-neutral">${filteredRows.length} of ${allRows.length} properties</span>
+          </div>
+          <a href="${downloadHref}" download class="muni-link">Download ${filePath}</a>
+        </div>
+        <p class="muni-citation">${activeSchema.description}</p>
+        <p class="muni-subtext"><strong>Schema ID:</strong> <code>${activeSchema.$id}</code></p>
+      `;
+    }
+    if (tbody) {
+      tbody.innerHTML = filteredRows.map(
+        (r) => `
+          <tr>
+            <th scope="row"><code>${r.path}</code></th>
+            <td><strong>${r.type}</strong><br /><span class="hint">${r.constraints}</span></td>
+            <td><span class="badge ${r.required === "Required" ? "badge-protected" : "badge-neutral"}">${r.required}</span></td>
+            <td>${r.description}</td>
+          </tr>
+        `
+      ).join("");
+    }
+    if (rawFilename) {
+      rawFilename.textContent = filePath;
+    }
+    if (rawPreview) {
+      rawPreview.textContent = JSON.stringify(activeSchema, null, 2);
+    }
+  }
+  specRoot.querySelectorAll("[data-schema-tab]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      specRoot.querySelectorAll("[data-schema-tab]").forEach((b) => {
+        b.classList.remove("active");
+        b.setAttribute("aria-selected", "false");
+      });
+      btn.classList.add("active");
+      btn.setAttribute("aria-selected", "true");
+      activeSchemaKey = btn.dataset.schemaTab;
+      renderSchemaInspector();
+    });
+  });
+  searchInput?.addEventListener("input", renderSchemaInspector);
+  const copyRawBtn = document.getElementById("btn-copy-raw-schema");
+  copyRawBtn?.addEventListener("click", async () => {
+    const text = rawPreview?.textContent || "";
+    if (navigator.clipboard && text) {
+      await navigator.clipboard.writeText(text);
+      const orig = copyRawBtn.textContent;
+      copyRawBtn.textContent = "Copied Schema JSON";
+      setTimeout(() => {
+        copyRawBtn.textContent = orig;
+      }, 1600);
+    }
+  });
+  renderSchemaInspector();
+}
+
+// web/app.js
+var OLC_CHARS2 = "23456789CFGHJMPQRVWX";
+var ALL_MUNICIPALITIES2 = [
+  ...central_texas_ordinances_default.municipalities || [],
+  ...rogue_valley_oregon_ordinances_default.municipalities || []
+];
 var CENTRAL_TEXAS_MUNICIPALITIES = central_texas_ordinances_default.municipalities || [];
+var ROGUE_VALLEY_MUNICIPALITIES = rogue_valley_oregon_ordinances_default.municipalities || [];
 function findMunicipality(id) {
   if (!id) return null;
-  return ALL_MUNICIPALITIES.find((m) => m.id === id) || null;
+  return ALL_MUNICIPALITIES2.find((m) => m.id === id) || null;
+}
+var latestAssessment = null;
+var latestResult = null;
+function getLatestFieldState() {
+  return { latestAssessment, latestResult };
+}
+function getOrdinanceUnverifiedNotices(muni) {
+  if (!muni) return ["Municipality record not found in verified commons."];
+  const notices = [];
+  const rawJson = JSON.stringify(muni);
+  if (/UNVERIFIED/i.test(rawJson)) {
+    notices.push("Contains explicit UNVERIFIED statutory annotation in dataset.");
+  }
+  if (!muni.permit_triggers_by_work_type) {
+    notices.push("permit_triggers_by_work_type is UNVERIFIED / not yet codified in dataset; verify work-type permit triggers directly with municipal staff.");
+  }
+  if (!muni.plan_rules?.root_zone) {
+    notices.push("plan_rules.root_zone is UNVERIFIED / not yet codified in dataset; engine defaults to standard 1.0 ft/in DBH CRZ.");
+  }
+  if (!muni.plan_rules?.survey) {
+    notices.push("plan_rules.survey is UNVERIFIED / not yet codified in dataset; engine defaults to quadratic multi-stem rule.");
+  }
+  return notices;
 }
 function encodePlusCode(lat, lng) {
   let cleanLat = Math.max(-90, Math.min(89.9999, Number(lat) + 90));
@@ -3794,7 +8248,7 @@ function evaluateCompleteFieldCase(assessment, options = {}) {
   const coords = decodePlusCode(sb.plus_code_global) || municipality?.coordinates || { lat: 30.2672, lng: -97.7431 };
   const conditionClass = options.condition_class || "Good";
   const siteCondition = options.site_condition || "Open Grown / Parkland";
-  const speciesEntry = CENTRAL_TEXAS_SPECIES.find(
+  const speciesEntry = ALL_SPECIES_PRESETS.find(
     (s) => s.scientific.toLowerCase() === String(sb.species_scientific || "").toLowerCase()
   );
   const growthFactor = speciesEntry?.growth_factor || 4.5;
@@ -3986,19 +8440,24 @@ function initFieldToolUI() {
   UserInvalidFallback.init(form);
   let activePreset = JSON.parse(JSON.stringify(FIXED_PARITY_CASES[0]));
   let activePreviewTab = "geojson";
-  let latestResult = null;
-  let latestAssessment = null;
   const el = (id) => document.getElementById(id);
   const muniSelect = el("input-ordinance-id");
   if (muniSelect) {
-    muniSelect.innerHTML = CENTRAL_TEXAS_MUNICIPALITIES.map(
-      (m) => `<option value="${m.id}">${m.name}, ${m.state} (Protected >= ${m.dbh_threshold_inches} in, Heritage >= ${m.heritage_threshold_inches} in)</option>`
+    const txOptions = CENTRAL_TEXAS_MUNICIPALITIES.map(
+      (m) => `<option value="${m.id}">${m.name}, ${m.state} (Protected &gt;= ${m.dbh_threshold_inches} in, Heritage &gt;= ${m.heritage_threshold_inches} in)</option>`
     ).join("");
+    const orOptions = ROGUE_VALLEY_MUNICIPALITIES.map(
+      (m) => `<option value="${m.id}">${m.name}, ${m.state} (Protected &gt;= ${m.dbh_threshold_inches} in, Heritage &gt;= ${m.heritage_threshold_inches} in)</option>`
+    ).join("");
+    muniSelect.innerHTML = [
+      `<optgroup label="Central Texas (TX)">${txOptions}</optgroup>`,
+      `<optgroup label="Rogue Valley, Oregon (OR)">${orOptions}</optgroup>`
+    ].join("");
   }
   const speciesSelect = el("input-species-preset");
   if (speciesSelect) {
     speciesSelect.innerHTML = [
-      ...CENTRAL_TEXAS_SPECIES.map(
+      ...ALL_SPECIES_PRESETS.map(
         (s) => `<option value="${s.scientific}">${s.common} (${s.scientific})</option>`
       ),
       `<option value="custom">Custom Species (Enter below)</option>`
@@ -4033,7 +8492,7 @@ function initFieldToolUI() {
     el("input-tree-tag").value = sb.tree_tag || "ATX-QV-101";
     el("input-assessment-date").value = sb.assessment_date || "2026-10-28";
     el("input-plus-code").value = sb.plus_code_global || "86247784+VP";
-    const matchedSpecies = CENTRAL_TEXAS_SPECIES.find(
+    const matchedSpecies = ALL_SPECIES_PRESETS.find(
       (s) => s.scientific.toLowerCase() === String(sb.species_scientific || "").toLowerCase()
     );
     el("input-species-preset").value = matchedSpecies ? matchedSpecies.scientific : "custom";
@@ -4106,7 +8565,7 @@ function initFieldToolUI() {
   }
   el("input-species-preset")?.addEventListener("change", () => {
     const val = el("input-species-preset").value;
-    const found = CENTRAL_TEXAS_SPECIES.find((s) => s.scientific === val);
+    const found = ALL_SPECIES_PRESETS.find((s) => s.scientific === val);
     if (found) {
       el("input-species-common").value = found.common;
       el("input-species-scientific").value = found.scientific;
@@ -4317,6 +8776,9 @@ function initFieldToolUI() {
       latestAssessment = assessment;
       latestResult = res;
       renderAllOutputs(assessment, res);
+      if (typeof window !== "undefined" && typeof window.dispatchEvent === "function") {
+        window.dispatchEvent(new CustomEvent("openarbor:field-updated", { detail: { assessment, result: res } }));
+      }
     } catch (err) {
       const errBanner = el("error-banner");
       if (errBanner) {
@@ -4337,9 +8799,31 @@ function initFieldToolUI() {
     const age = res.ageEstimate;
     const mitIfRemoved = res.mitigationIfRemoved;
     const mitActive = res.mitigationActive;
+    const citationBannerEl = el("ordinance-citation-banner");
+    const unverifiedNotices = getOrdinanceUnverifiedNotices(muni);
+    if (citationBannerEl && muni) {
+      if (unverifiedNotices.length > 0) {
+        citationBannerEl.innerHTML = `
+          <div>
+            <span class="badge badge-warn">UNVERIFIED STATUTORY FIELDS NOTICE</span>
+            <strong>${muni.name}, ${muni.state}:</strong> ${muni.ordinance_numbers}
+          </div>
+          <ul class="flag-list" style="margin-top: 6px;">
+            ${unverifiedNotices.map((n) => `<li><strong>UNVERIFIED:</strong> ${n}</li>`).join("")}
+          </ul>
+        `;
+      } else {
+        citationBannerEl.innerHTML = `
+          <div>
+            <span class="badge badge-protected">VERIFIED STATUTORY RECORD</span>
+            <strong>${muni.name}, ${muni.state}:</strong> ${muni.ordinance_numbers}
+          </div>
+        `;
+      }
+    }
     if (muni) {
       const oakMonths = muni.plan_rules?.pruning?.oak_months;
-      const oakWindowText = Array.isArray(oakMonths) ? `Permitted Oak pruning months: ${oakMonths.join(", ")} (${muni.plan_rules?.pruning?.citation || "Oak Wilt Rule"})` : "Verify seasonal Oak Wilt window with local forester";
+      const oakWindowText = Array.isArray(oakMonths) ? `Permitted Oak pruning months: ${oakMonths.join(", ")} (${muni.plan_rules?.pruning?.citation || "Oak Wilt Rule"})` : `${muni.plan_rules?.pruning?.standard || "ANSI A300 Part 1"} (${muni.plan_rules?.pruning?.citation || "Verify seasonal Oak Wilt window with local forester"})`;
       el("muni-lookup-card").innerHTML = `
         <div class="muni-header">
           <div>
@@ -4364,7 +8848,7 @@ function initFieldToolUI() {
           </div>
           <div class="metric-box">
             <span class="metric-label">CRZ Disturbance Trigger</span>
-            <strong class="metric-value">${muni.plan_rules?.root_zone?.removal_if_disturbed_pct ? `>${muni.plan_rules.root_zone.removal_if_disturbed_pct}% = Removal` : "1.0 ft / in DBH"}</strong>
+            <strong class="metric-value">${muni.plan_rules?.root_zone?.removal_if_disturbed_pct ? `&gt;${muni.plan_rules.root_zone.removal_if_disturbed_pct}% = Removal` : "1.0 ft / in DBH"}</strong>
           </div>
         </div>
         <p class="muni-subtext"><strong>Oak Wilt &amp; Pruning:</strong> ${oakWindowText}</p>
@@ -4374,6 +8858,16 @@ function initFieldToolUI() {
     const statusText = statusLabel(row);
     const statusClass = row.heritage ? "badge-heritage" : row.protected ? "badge-protected" : row.excepted ? "badge-neutral" : "badge-warn";
     const flagsHtml = row.flags && row.flags.length > 0 ? `<ul class="flag-list">${row.flags.map((f) => `<li>${f}</li>`).join("")}</ul>` : `<p class="clean-note">Zero ordinance or seasonal Oak Wilt violations triggered for current work parameters.</p>`;
+    const externalSvgMapContainer = el("svg-map-container");
+    const svgMapMarkup = `
+      <div class="svg-map-wrap">
+        <div class="svg-map-header">
+          <span><strong>ANSI A300 Part 5 / ISA BMP To-Scale Root Protection Map</strong> (Fence Radius: ${row.fence_ft} ft)</span>
+          <span>Soil Invigoration Budget: <strong>$${res.soilRemediation.total_usd.toLocaleString()}</strong></span>
+        </div>
+        ${res.svgSiteMap || ""}
+      </div>
+    `;
     el("verdict-ordinance-body").innerHTML = `
       <div class="verdict-banner">
         <div>
@@ -4385,7 +8879,7 @@ function initFieldToolUI() {
         </div>
         <div class="verdict-right">
           <span class="metric-label">Permit Verdict</span>
-          <strong>${res.permit.unknown ? "Verify with City" : res.permit.required ? "PERMIT REQUIRED" : "No Permit Triggered"}</strong>
+          <strong>${res.permit.unknown ? "Verify with City (UNVERIFIED)" : res.permit.required ? "PERMIT REQUIRED" : "No Permit Triggered"}</strong>
         </div>
       </div>
       <p class="citation-callout"><strong>Statutory Permit Determination:</strong> ${res.permitText} ${res.permit.citation ? `(${res.permit.citation})` : ""}</p>
@@ -4438,15 +8932,11 @@ function initFieldToolUI() {
           </tbody>
         </table>
       </div>
-
-      <div class="svg-map-wrap">
-        <div class="svg-map-header">
-          <span><strong>ANSI A300 Part 5 / ISA BMP To-Scale Root Protection Map</strong> (Fence Radius: ${row.fence_ft} ft)</span>
-          <span>Soil Invigoration Budget: <strong>$${res.soilRemediation.total_usd.toLocaleString()}</strong></span>
-        </div>
-        ${res.svgSiteMap || ""}
-      </div>
+      ${externalSvgMapContainer ? "" : svgMapMarkup}
     `;
+    if (externalSvgMapContainer) {
+      externalSvgMapContainer.innerHTML = svgMapMarkup;
+    }
     const mattheckClass = bio.biomechanics.mattheck_criterion_satisfied ? "badge-protected" : "badge-danger";
     el("verdict-valuation-body").innerHTML = `
       <div class="metric-grid metric-grid-4">
@@ -4468,7 +8958,7 @@ function initFieldToolUI() {
         <div class="metric-box">
           <span class="metric-label">Mattheck Shell Stability (t/R)</span>
           <strong class="metric-value">${bio.biomechanics.sound_shell_thickness_ratio_t_over_r}</strong>
-          <span class="badge ${mattheckClass}">${bio.biomechanics.mattheck_criterion_satisfied ? "t/R >= 0.30 Sound" : "t/R < 0.30 Thinning"}</span>
+          <span class="badge ${mattheckClass}">${bio.biomechanics.mattheck_criterion_satisfied ? "t/R &gt;= 0.30 Sound" : "t/R &lt; 0.30 Thinning"}</span>
         </div>
       </div>
 
@@ -4694,19 +9184,31 @@ function initFieldToolUI() {
   });
   loadCaseIntoForm(FIXED_PARITY_CASES[0]);
 }
+function initAllOpenArborPages() {
+  initSharedThemeToggle();
+  initFieldToolUI();
+  initDemoExtrasUI();
+  initToolsCatalogUI();
+  initOrdinancesExplorerUI();
+  initMcpPlaygroundUI();
+  initSpecViewerUI();
+}
 if (typeof document !== "undefined") {
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initFieldToolUI);
+    document.addEventListener("DOMContentLoaded", initAllOpenArborPages);
   } else {
-    initFieldToolUI();
+    initAllOpenArborPages();
   }
 }
 export {
-  ALL_MUNICIPALITIES,
+  ALL_MUNICIPALITIES2 as ALL_MUNICIPALITIES,
+  ALL_SPECIES_PRESETS,
   CENTRAL_TEXAS_MUNICIPALITIES,
   CENTRAL_TEXAS_SPECIES,
   CONDITION_FACTORS,
+  DEFAULT_STAND_TREES,
   FIXED_PARITY_CASES,
+  ROGUE_VALLEY_MUNICIPALITIES,
   calculateCRZ,
   calculateMultiStemDBH,
   calculateSRZ,
@@ -4728,9 +9230,13 @@ export {
   evaluateSiteContext,
   evaluateTreeInventory,
   findMunicipality,
+  forestry_tools_default as forestryToolsCatalog,
+  getLatestFieldState,
+  getOrdinanceUnverifiedNotices,
   initFieldToolUI,
   lintRcaEvidentiaryReport,
   mintOpenBadgeAttestation,
+  municipal_ordinance_schema_default as municipalOrdinanceSchema,
   rogue_valley_oregon_ordinances_default as orOrdinances,
   permitDetermination,
   permitSummary,

@@ -1,0 +1,9 @@
+.git
+.gitignore
+node_modules
+out
+deploy/fixtures
+*.bak*
+*.backup*
+**/.trash/
+.DS_Store

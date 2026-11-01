@@ -1,0 +1,269 @@
+{
+  "dataset_version": "2.0.0",
+  "region": "Central Texas (Edwards Plateau & Blackland Prairie Corridors)",
+  "standard": "OpenArbor Municipal Tree Protection Ordinance Schema v2.0",
+  "municipalities": [
+    {
+      "id": "tx-austin",
+      "name": "Austin",
+      "state": "TX",
+      "coordinates": { "lat": 30.2672, "lng": -97.7431 },
+      "ordinance_numbers": "City of Austin Land Development Code (LDC) Title 25, Chapter 25-8, Subchapter B (Tree and Natural Area Protection); Environmental Criteria Manual (ECM) Section 3",
+      "source_url": "https://library.municode.com/tx/austin/codes/code_of_ordinances?nodeId=TIT25LADE_CH25-8EN",
+      "dbh_threshold_inches": 19,
+      "heritage_threshold_inches": 24,
+      "heritage_species_thresholds": {
+        "Quercus virginiana (Live Oak)": 24,
+        "Quercus buckleyi (Texas Red Oak)": 24,
+        "Carya illinoinensis (Pecan)": 24,
+        "Ulmus americana (American Elm)": 24,
+        "Ulmus crassifolia (Cedar Elm)": 24,
+        "Taxodium distichum (Bald Cypress)": 24,
+        "Acer grandidentatum (Bigtooth Maple)": 24
+      },
+      "excepted_species": [
+        "Celtis occidentalis (Hackberry)",
+        "Melia azedarach (Chinaberry)",
+        "Triadica sebifera (Chinese Tallow)",
+        "Ligustrum lucidum (Glossy Privet)",
+        "Ailanthus altissima (Tree of Heaven)"
+      ],
+      "permit_triggers_by_work_type": {
+        "protected": ["removal", "pruning"],
+        "heritage": ["removal", "pruning"],
+        "citation": "Austin LDC § 25-8-604 / ECM Section 3.5"
+      },
+      "mitigation_fee_schedule": {
+        "citation": "Austin LDC § 25-8-643 / ECM Appendix P-6",
+        "exemption_pct": 0,
+        "heritage_rate_per_inch": 600,
+        "heritage_replacement_ratio": 3,
+        "penalty_civil_per_tree": 500,
+        "penalty_citation": "Austin LDC § 25-8-644",
+        "tiers": [
+          { "min_dbh": 8, "max_dbh": 18.9, "rate_per_inch": 100, "replacement_ratio": 0.5 },
+          { "min_dbh": 19, "max_dbh": 23.9, "rate_per_inch": 200, "replacement_ratio": 1 },
+          { "min_dbh": 24, "max_dbh": null, "rate_per_inch": 600, "replacement_ratio": 3 }
+        ]
+      },
+      "plan_rules": {
+        "survey": {
+          "citation": "Austin ECM § 3.3.2",
+          "hardwood_min_dbh": 8,
+          "max_age_years": 5,
+          "multi_trunk": "largest_plus_half",
+          "multi_trunk_text": "Multi-trunk DBH is calculated as the diameter of the largest stem plus 50% of each additional stem."
+        },
+        "root_zone": {
+          "citation": "Austin ECM § 3.5.2",
+          "crz_ft_per_inch": 1.0,
+          "crz_min_ft": 10,
+          "removal_if_disturbed_pct": 50,
+          "cutfill_max_in": 4,
+          "impervious_max_pct": 25,
+          "crown_removal_max_pct": 25
+        },
+        "pruning": {
+          "citation": "Austin ECM § 3.5.4 (Oak Wilt Prevention)",
+          "standard": "ANSI A300 Part 1",
+          "oak_months": [7, 8, 9, 10, 11, 12, 1],
+          "oak_text": "To prevent spread of Ceratocystis fagacearum (Oak Wilt), non-emergency pruning of Live Oaks and Red Oaks is restricted from February 1 through June 30; all wounds must be painted immediately."
+        }
+      }
+    },
+    {
+      "id": "tx-georgetown",
+      "name": "Georgetown",
+      "state": "TX",
+      "coordinates": { "lat": 30.6333, "lng": -97.6780 },
+      "ordinance_numbers": "Georgetown Unified Development Code (UDC) Chapter 8 (Tree Preservation, Landscaping, and Fencing)",
+      "source_url": "https://library.municode.com/tx/georgetown/codes/unified_development_code?nodeId=UNDECO_CH8TRPRLAFE",
+      "dbh_threshold_inches": 12,
+      "heritage_threshold_inches": 26,
+      "heritage_species_thresholds": {
+        "Quercus virginiana (Live Oak)": 26,
+        "Quercus macrocarpa (Bur Oak)": 26,
+        "Quercus muehlenbergii (Chinquapin Oak)": 26,
+        "Quercus stellata (Post Oak)": 26,
+        "Carya illinoinensis (Pecan)": 26,
+        "Ulmus crassifolia (Cedar Elm)": 26,
+        "Taxodium distichum (Bald Cypress)": 26
+      },
+      "excepted_species": [
+        "Celtis laevigata (Sugarberry / Hackberry)",
+        "Juniperus ashei (Ashe Juniper)",
+        "Melia azedarach (Chinaberry)",
+        "Prosopis glandulosa (Honey Mesquite)"
+      ],
+      "permit_triggers_by_work_type": {
+        "protected": ["removal"],
+        "heritage": ["removal", "pruning"],
+        "citation": "Georgetown UDC § 8.02"
+      },
+      "mitigation_fee_schedule": {
+        "citation": "Georgetown UDC § 8.02.050",
+        "exemption_pct": 0,
+        "heritage_rate_per_inch": 300,
+        "heritage_replacement_ratio": 3,
+        "penalty_civil_per_tree": 500,
+        "penalty_citation": "Georgetown UDC § 8.02.070",
+        "tiers": [
+          { "min_dbh": 12, "max_dbh": 25.9, "rate_per_inch": 150, "replacement_ratio": 1 },
+          { "min_dbh": 26, "max_dbh": null, "rate_per_inch": 300, "replacement_ratio": 3 }
+        ]
+      },
+      "plan_rules": {
+        "survey": {
+          "citation": "Georgetown UDC § 8.02.020",
+          "hardwood_min_dbh": 12,
+          "max_age_years": 3,
+          "multi_trunk": "largest_plus_half"
+        },
+        "root_zone": {
+          "citation": "Georgetown UDC § 8.02.040",
+          "crz_ft_per_inch": 1.0,
+          "crz_min_ft": 12,
+          "removal_if_disturbed_pct": 50,
+          "cutfill_max_in": 4,
+          "impervious_max_pct": 25,
+          "crown_removal_max_pct": 25
+        },
+        "pruning": {
+          "citation": "Georgetown UDC § 8.02.040 (Oak Wilt Prevention)",
+          "standard": "ANSI A300 Part 1",
+          "oak_months": [7, 8, 9, 10, 11, 12, 1]
+        }
+      }
+    },
+    {
+      "id": "tx-liberty-hill",
+      "name": "Liberty Hill",
+      "state": "TX",
+      "coordinates": { "lat": 30.6653, "lng": -97.9250 },
+      "ordinance_numbers": "Liberty Hill Unified Development Code (UDC) § 6.07.01 (Tree Preservation and Mitigation), Ord. 09-O-02 / 22-O-04.06-01",
+      "source_url": "https://ecode360.com/42969054",
+      "dbh_threshold_inches": 8,
+      "heritage_threshold_inches": 24,
+      "heritage_species_thresholds": {
+        "Quercus virginiana (Live Oak)": 24,
+        "Quercus buckleyi (Red Oak)": 24,
+        "Quercus macrocarpa (Bur Oak)": 24,
+        "Carya illinoinensis (Pecan)": 24,
+        "Ulmus crassifolia (Cedar Elm)": 24
+      },
+      "excepted_species": [
+        "Celtis occidentalis (Hackberry)",
+        "Juniperus ashei (Ashe Juniper / Mountain Cedar)",
+        "Melia azedarach (Chinaberry)",
+        "Prosopis glandulosa (Mesquite)",
+        "Ailanthus altissima (Tree of Heaven)"
+      ],
+      "permit_triggers_by_work_type": {
+        "protected": ["removal"],
+        "heritage": ["removal", "pruning"],
+        "citation": "Liberty Hill UDC § 6.07.01(c)"
+      },
+      "mitigation_fee_schedule": {
+        "citation": "Liberty Hill UDC § 6.07.01(c)(5)",
+        "exemption_pct": 20,
+        "exemption_citation": "Liberty Hill UDC § 6.07.01(c)(5)(B)",
+        "heritage_rate_per_inch": 300,
+        "heritage_replacement_ratio": 3,
+        "penalty_civil_per_tree": 1000,
+        "penalty_citation": "Liberty Hill UDC § 6.07.01(d)",
+        "tiers": [
+          { "min_dbh": 8, "max_dbh": 18.9, "rate_per_inch": 150, "replacement_ratio": 1 },
+          { "min_dbh": 19, "max_dbh": 23.9, "rate_per_inch": 225, "replacement_ratio": 2 },
+          { "min_dbh": 24, "max_dbh": null, "rate_per_inch": 300, "replacement_ratio": 3 }
+        ]
+      },
+      "plan_rules": {
+        "survey": {
+          "citation": "Liberty Hill UDC § 6.07.01(b)",
+          "hardwood_min_dbh": 8,
+          "max_age_years": 2,
+          "multi_trunk": "largest_plus_half"
+        },
+        "root_zone": {
+          "citation": "Liberty Hill UDC § 6.07.01(c)(3)",
+          "crz_ft_per_inch": 1.0,
+          "crz_min_ft": 10,
+          "removal_if_disturbed_pct": 30,
+          "cutfill_max_in": 4,
+          "impervious_max_pct": 20,
+          "crown_removal_max_pct": 25
+        },
+        "mitigation": {
+          "retained_credit": {
+            "citation": "Liberty Hill UDC § 6.07.01(c)(5)(D)",
+            "min_dbh": 6,
+            "max_dbh": 7.9,
+            "ratio": 0.5
+          }
+        },
+        "pruning": {
+          "citation": "Liberty Hill UDC § 6.07.01(c)(4)",
+          "standard": "ANSI A300 Part 1",
+          "oak_months": [10, 11, 12, 1]
+        }
+      }
+    },
+    {
+      "id": "tx-cedar-park",
+      "name": "Cedar Park",
+      "state": "TX",
+      "coordinates": { "lat": 30.5052, "lng": -97.8203 },
+      "ordinance_numbers": "Cedar Park Code of Ordinances Chapter 14, Article 14.07 (Tree and Landscape Regulations)",
+      "source_url": "https://ecode360.com/38618389",
+      "dbh_threshold_inches": 8,
+      "heritage_threshold_inches": 26,
+      "excepted_species": [
+        "Celtis occidentalis (Hackberry)",
+        "Juniperus ashei (Ashe Juniper)",
+        "Melia azedarach (Chinaberry)"
+      ],
+      "mitigation_fee_schedule": {
+        "citation": "Cedar Park Code § 14.07.006",
+        "exemption_pct": 0,
+        "heritage_rate_per_inch": 450,
+        "heritage_replacement_ratio": 3,
+        "tiers": [
+          { "min_dbh": 8, "max_dbh": 18.9, "rate_per_inch": 150, "replacement_ratio": 1 },
+          { "min_dbh": 19, "max_dbh": 25.9, "rate_per_inch": 300, "replacement_ratio": 2 },
+          { "min_dbh": 26, "max_dbh": null, "rate_per_inch": 450, "replacement_ratio": 3 }
+        ]
+      }
+    },
+    {
+      "id": "tx-round-rock",
+      "name": "Round Rock",
+      "state": "TX",
+      "coordinates": { "lat": 30.5083, "lng": -97.6789 },
+      "ordinance_numbers": "Round Rock Code of Ordinances Part III, Chapter 8, Article I (Tree Protection and Preservation)",
+      "source_url": "https://library.municode.com/tx/round_rock/codes/code_of_ordinances",
+      "dbh_threshold_inches": 8,
+      "heritage_threshold_inches": 36,
+      "heritage_species_thresholds": {
+        "Quercus virginiana (Live Oak)": 36,
+        "Carya illinoinensis (Pecan)": 36,
+        "Ulmus crassifolia (Cedar Elm)": 30
+      },
+      "excepted_species": [
+        "Celtis laevigata (Hackberry)",
+        "Juniperus ashei (Ashe Juniper)",
+        "Melia azedarach (Chinaberry)",
+        "Prosopis glandulosa (Mesquite)"
+      ],
+      "mitigation_fee_schedule": {
+        "citation": "Round Rock Code § 8-19",
+        "exemption_pct": 0,
+        "heritage_rate_per_inch": 300,
+        "heritage_replacement_ratio": 3,
+        "tiers": [
+          { "min_dbh": 8, "max_dbh": 19.9, "rate_per_inch": 150, "replacement_ratio": 1 },
+          { "min_dbh": 20, "max_dbh": null, "rate_per_inch": 300, "replacement_ratio": 3 }
+        ]
+      }
+    }
+  ]
+}

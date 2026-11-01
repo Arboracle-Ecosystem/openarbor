@@ -1,0 +1,649 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "catalog_version": "1.0.0",
+  "governance": "Doc-414 Compliant (Zero em dashes, strict claims discipline)",
+  "groups": {
+    "field": "Field inventory, mobile arborist forms, and urban canopy mapping",
+    "point-clouds": "3D LiDAR processing, stem curves, DBH, and QSM modeling",
+    "canopy-imagery": "Airborne and drone individual tree crown detection and computer vision",
+    "rings-and-biomass": "Dendrochronology, cross-dating, and allometric carbon estimation",
+    "growth-and-fire": "Stand growth-and-yield simulation, wildfire propagation, and harvest scheduling",
+    "canopy-photography": "Hemispherical fisheye photography and Leaf Area Index (LAI)",
+    "audio": "Canopy bioacoustics and soundscape biodiversity analysis",
+    "supporting": "Geospatial desktop visualization and point cloud manipulation foundations"
+  },
+  "supporting_applications": [
+    {
+      "id": "qgis",
+      "name": "QGIS Desktop (Distro Package)",
+      "group": "supporting",
+      "domain": "Geographic Information System",
+      "upstream_url": "https://qgis.org",
+      "license": "GPL-2.0-or-later",
+      "tier": "Tier 2 (Desktop GUI)",
+      "install_method": "native-apt",
+      "ubuntu_package": "qgis",
+      "ubuntu_additional_packages": [
+        "python3-qgis"
+      ],
+      "arch_package": "qgis",
+      "readiness": "qualified",
+      "constraints": "Distro-provided QGIS package from a former LTR series (3.40.15+dfsg-1 in Ubuntu universe). Upstream current LTR is 3.44.x; latest is 4.2.x. Local synthetic inventory pilot uses this package without claiming current upstream LTR support. Never force dependencies into QGIS system Python."
+    },
+    {
+      "id": "gdal",
+      "name": "GDAL Utilities",
+      "group": "supporting",
+      "domain": "Geospatial Data Abstraction",
+      "upstream_url": "https://gdal.org",
+      "license": "MIT / X11",
+      "tier": "Tier 1 (Host CLI / Native)",
+      "install_method": "native-apt",
+      "ubuntu_package": "gdal-bin",
+      "arch_package": "gdal",
+      "readiness": "qualified",
+      "constraints": "Core translation tool for vector and raster inventories."
+    },
+    {
+      "id": "cloudcompare",
+      "name": "CloudCompare",
+      "group": "supporting",
+      "domain": "3D Point Cloud Processing",
+      "upstream_url": "https://www.cloudcompare.org",
+      "license": "GPL-2.0-or-later",
+      "tier": "Tier 2 (Desktop GUI)",
+      "install_method": "native-apt",
+      "ubuntu_package": "cloudcompare",
+      "arch_package": "cloudcompare",
+      "readiness": "qualified",
+      "constraints": "Standard distro package available in Ubuntu universe (2.13.2+) and Arch extra. Flatpak alternative available."
+    },
+    {
+      "id": "forest-search",
+      "name": "Forest Search & Semantic Index",
+      "group": "supporting",
+      "domain": "Local Knowledge Infrastructure",
+      "upstream_url": "https://github.com/STIM-Protocol/Forest_OS",
+      "license": "MIT",
+      "tier": "Tier 1 (Host CLI & MCP Stdio)",
+      "install_method": "source-uv",
+      "ubuntu_package": "sqlite3",
+      "ubuntu_additional_packages": [
+        "ollama"
+      ],
+      "arch_package": "sqlite",
+      "readiness": "qualified",
+      "constraints": "Requires local Ollama daemon with nomic-embed-text model and sqlite-vec extension. Read-only query execution over local vault."
+    }
+  ],
+  "tools": [
+    {
+      "id": "qfield",
+      "name": "QField",
+      "group": "field",
+      "domain": "Mobile Field Inventory",
+      "upstream_url": "https://github.com/opengisch/QField",
+      "license": "GPL-2.0",
+      "tier": "Tier 2 (Desktop / Mobile GUI)",
+      "install_method": "flatpak / native-build",
+      "readiness": "qualified",
+      "dependencies": [
+        "qgis"
+      ],
+      "constraints": "Desktop inspection client for field surveys. Packages form definitions from QGIS."
+    },
+    {
+      "id": "opentreemap",
+      "name": "OpenTreeMap",
+      "group": "field",
+      "domain": "Urban Tree Inventory Platform",
+      "upstream_url": "https://github.com/OpenTreeMap/otm-core",
+      "license": "GPL-3.0",
+      "tier": "Tier 3 (Containerized Sidecar)",
+      "install_method": "docker-compose",
+      "readiness": "container-ready",
+      "dependencies": [
+        "docker",
+        "docker-compose",
+        "postgresql-postgis"
+      ],
+      "constraints": "Requires license clarification and dependency maintenance review. Do not start another inventory service by default."
+    },
+    {
+      "id": "canopywatch",
+      "name": "CanopyWatch",
+      "group": "field",
+      "domain": "Urban Canopy Equity Map",
+      "upstream_url": "https://github.com/meyeringn/canopy-watch",
+      "license": "MIT",
+      "tier": "Tier 1 (Browser Static)",
+      "install_method": "standalone-html",
+      "readiness": "qualified",
+      "dependencies": [],
+      "constraints": "Single HTML file requests remote fonts. Embedded Philadelphia sample data must not be represented as local observations."
+    },
+    {
+      "id": "treels",
+      "name": "TreeLS",
+      "group": "point-clouds",
+      "domain": "TLS Stem Detection & DBH",
+      "upstream_url": "https://github.com/tiagodc/TreeLS",
+      "license": "GPL-3.0",
+      "tier": "Tier 3 (Containerized Sidecar)",
+      "install_method": "renv-container",
+      "readiness": "container-ready",
+      "dependencies": [
+        "r-base",
+        "lidr",
+        "rcpp",
+        "gdal"
+      ],
+      "constraints": "Complex C++ compile chains in R. Upstream CRAN releases are infrequent."
+    },
+    {
+      "id": "3dfin",
+      "name": "3DFin",
+      "group": "point-clouds",
+      "domain": "Personal Laser Scanning (PLS) Inventory",
+      "upstream_url": "https://github.com/3DFin/3DFin",
+      "license": "GPL-3.0",
+      "tier": "Tier 1 (Host CLI via uv) / Tier 2 (Desktop GUI)",
+      "install_method": "uv-venv",
+      "readiness": "qualified",
+      "dependencies": [
+        "python3",
+        "open3d",
+        "numpy",
+        "pyqt6"
+      ],
+      "constraints": "Dedicated Python virtual environment required. Relies on NumPy and Open3D compatibility windows."
+    },
+    {
+      "id": "treeseg",
+      "name": "TreeSeg",
+      "group": "point-clouds",
+      "domain": "TLS Tree Point Cloud Segmentation",
+      "upstream_url": "https://github.com/apburt/treeseg",
+      "license": "GPL-3.0",
+      "tier": "Tier 1 (Host CLI / Native)",
+      "install_method": "cmake-native",
+      "readiness": "qualified",
+      "dependencies": [
+        "pcl",
+        "eigen3",
+        "boost"
+      ],
+      "constraints": "Requires modern PCL API tracking on rolling toolchains."
+    },
+    {
+      "id": "treeqsm",
+      "name": "TreeQSM",
+      "group": "point-clouds",
+      "domain": "Quantitative Structure Modeling",
+      "upstream_url": "https://github.com/InverseTampere/TreeQSM",
+      "license": "GPL-3.0",
+      "tier": "Tier 3 (Containerized Sidecar)",
+      "install_method": "octave-container",
+      "readiness": "container-ready",
+      "dependencies": [
+        "gnu-octave"
+      ],
+      "constraints": "MATLAB and Octave runtime compatibility is unresolved. Do not invent a headless container recipe or assume MATLAB Runtime runs source files."
+    },
+    {
+      "id": "simpleforest",
+      "name": "SimpleForest",
+      "group": "point-clouds",
+      "domain": "CloudCompare QSM Plugin",
+      "upstream_url": "https://github.com/SimpleForest",
+      "license": "GPL-3.0",
+      "tier": "Tier 2 (Desktop GUI via CloudCompare plugin)",
+      "install_method": "cloudcompare-plugin",
+      "readiness": "research-required",
+      "dependencies": [
+        "cloudcompare",
+        "pcl",
+        "qt5"
+      ],
+      "constraints": "Tied to specific CloudCompare plugin APIs. Recompilation required on major updates."
+    },
+    {
+      "id": "pytlidar",
+      "name": "PyTLidar",
+      "group": "point-clouds",
+      "domain": "Python QSM Extraction",
+      "upstream_url": "https://github.com/Landscape-CV/PyTLidar",
+      "license": "GPL-3.0",
+      "tier": "Tier 1 (Host CLI via uv)",
+      "install_method": "uv-venv",
+      "readiness": "qualified",
+      "dependencies": [
+        "python3",
+        "numba",
+        "open3d",
+        "laspy"
+      ],
+      "constraints": "Licensed under GPLv3 (not MIT). Inspect exact release requirements and distribution obligations."
+    },
+    {
+      "id": "rtwig",
+      "name": "rTwig",
+      "group": "point-clouds",
+      "domain": "QSM Twig Diameter Correction",
+      "upstream_url": "https://github.com/aidanmorales/rTwig",
+      "license": "GPL-3.0",
+      "tier": "Tier 3 (Containerized Sidecar)",
+      "install_method": "renv-container",
+      "readiness": "container-ready",
+      "dependencies": [
+        "r-base",
+        "rcpp",
+        "data.table"
+      ],
+      "constraints": "Active on CRAN. Best encapsulated with QSM pipeline sidecar."
+    },
+    {
+      "id": "lidr",
+      "name": "lidR",
+      "group": "point-clouds",
+      "domain": "Airborne LiDAR Processing & CHM",
+      "upstream_url": "https://github.com/r-lidar/lidR",
+      "license": "GPL-3.0",
+      "tier": "Tier 3 (Containerized Sidecar)",
+      "install_method": "renv-container",
+      "readiness": "container-ready",
+      "dependencies": [
+        "r-base",
+        "gdal",
+        "geos",
+        "proj",
+        "rcpp"
+      ],
+      "constraints": "High performance R spatial engine. Host install is brittle due to rolling GDAL/PROJ dependencies; containerization recommended."
+    },
+    {
+      "id": "pdal",
+      "name": "PDAL",
+      "group": "point-clouds",
+      "domain": "Point Data Abstraction Library",
+      "upstream_url": "https://github.com/PDAL/PDAL",
+      "license": "Apache-2.0 / BSD",
+      "tier": "Tier 1 (Host CLI / Native)",
+      "install_method": "conda-forge / native-package",
+      "readiness": "research-required",
+      "dependencies": [
+        "gdal",
+        "geotiff",
+        "liblas"
+      ],
+      "constraints": "PDAL official documentation recommends a dedicated Conda environment for compiled geospatial plugins."
+    },
+    {
+      "id": "deepforest",
+      "name": "DeepForest",
+      "group": "canopy-imagery",
+      "domain": "Individual Tree Crown Detection",
+      "upstream_url": "https://github.com/weecology/DeepForest",
+      "license": "MIT",
+      "tier": "Tier 1 (Host CLI) / Tier 3 (Container)",
+      "install_method": "uv-venv",
+      "readiness": "qualified",
+      "dependencies": [
+        "python3",
+        "pytorch",
+        "torchvision",
+        "rasterio"
+      ],
+      "constraints": "Must not assume CUDA on the AMD Radeon 680M. CPU feasibility or a specifically documented, tested backend supported by the selected PyTorch/DeepForest release is required. A Vulkan-capable device or LLM runner does not establish a Vulkan backend for this pipeline. No GPU tuning in this batch."
+    },
+    {
+      "id": "pycrown",
+      "name": "PyCrown",
+      "group": "canopy-imagery",
+      "domain": "LiDAR & Optical Crown Delineation",
+      "upstream_url": "https://github.com/manaakiwhenua/pycrown",
+      "license": "GPL-3.0",
+      "tier": "Tier 1 (Host CLI in isolated venv)",
+      "install_method": "uv-venv",
+      "readiness": "research-required",
+      "dependencies": [
+        "python3",
+        "gdal",
+        "rasterio",
+        "scipy"
+      ],
+      "constraints": "Infrequent upstream maintenance. Requires explicit pinning of legacy GDAL Python bindings."
+    },
+    {
+      "id": "treeeyed",
+      "name": "TreeEyed",
+      "group": "canopy-imagery",
+      "domain": "QGIS AI Crown Delineation Plugin",
+      "upstream_url": "https://github.com/afruizh/TreeEyed",
+      "license": "GPL-3.0",
+      "tier": "Tier 2 (Desktop GUI via QGIS Plugin)",
+      "install_method": "qgis-plugin",
+      "readiness": "research-required",
+      "dependencies": [
+        "qgis",
+        "onnxruntime"
+      ],
+      "constraints": "Needs version-specific qualification with QGIS LTR. Arch QGIS generation is not automatically equivalent to Ubuntu LTR."
+    },
+    {
+      "id": "rgedi",
+      "name": "rGEDI",
+      "group": "canopy-imagery",
+      "domain": "NASA GEDI Spaceborne LiDAR Profiling",
+      "upstream_url": "https://github.com/carlos-alberto-silva/rGEDI",
+      "license": "GPL-3.0",
+      "tier": "Tier 3 (Containerized Sidecar)",
+      "install_method": "renv-container",
+      "readiness": "container-ready",
+      "dependencies": [
+        "r-base",
+        "hdf5",
+        "sf",
+        "lidr"
+      ],
+      "constraints": "Tracks NASA Earthdata authentication and LP DAAC distribution API updates."
+    },
+    {
+      "id": "dplr",
+      "name": "dplR",
+      "group": "rings-and-biomass",
+      "domain": "Statistical Dendrochronology in R",
+      "upstream_url": "https://github.com/opendendro/dplR",
+      "license": "GPL-2.0-or-later",
+      "tier": "Tier 3 (Containerized Sidecar) / Host R CLI",
+      "install_method": "renv-container",
+      "readiness": "container-ready",
+      "dependencies": [
+        "r-base",
+        "lattice",
+        "matrix"
+      ],
+      "constraints": "The statistical reference standard for tree-ring detrending and chronologies."
+    },
+    {
+      "id": "pydendron",
+      "name": "pyDendron",
+      "group": "rings-and-biomass",
+      "domain": "Interactive Tree Ring Cross-Dating",
+      "upstream_url": "https://git-lium.univ-lemans.fr/Meignier/pyQtDendron",
+      "license": "GPL-3.0",
+      "tier": "Tier 1 (Host CLI) / Tier 2 (Desktop GUI)",
+      "install_method": "uv-venv",
+      "readiness": "qualified",
+      "dependencies": [
+        "python3",
+        "pyqt6",
+        "pandas",
+        "numpy",
+        "scipy"
+      ],
+      "constraints": "dplPy is separate from pyDendron and pyQtDendron. Do not combine unrelated package identities into one recipe."
+    },
+    {
+      "id": "tras",
+      "name": "TRAS",
+      "group": "rings-and-biomass",
+      "domain": "Optical Tree Ring Analyzer Suite",
+      "upstream_url": "https://hmarichal93.github.io/tras/",
+      "license": "GPL-3.0",
+      "tier": "Tier 2 (Desktop GUI)",
+      "install_method": "uv-venv",
+      "readiness": "research-required",
+      "dependencies": [
+        "python3",
+        "opencv",
+        "pyqt5",
+        "numpy"
+      ],
+      "constraints": "Rapidly iterating UI code; needs pinned Qt/OpenCV environment."
+    },
+    {
+      "id": "treeclim",
+      "name": "treeclim",
+      "group": "rings-and-biomass",
+      "domain": "Tree-Ring Climate Calibration",
+      "upstream_url": "https://github.com/chgrsz/treeclim",
+      "license": "GPL-2.0-or-later",
+      "tier": "Tier 3 (Containerized Sidecar)",
+      "install_method": "renv-container",
+      "readiness": "container-ready",
+      "dependencies": [
+        "r-base",
+        "dplr",
+        "boot",
+        "rcpp"
+      ],
+      "constraints": "Bootstrapped response and correlation functions against climate time series."
+    },
+    {
+      "id": "biomass",
+      "name": "BIOMASS",
+      "group": "rings-and-biomass",
+      "domain": "Pan-Tropical Allometry & Wood Density",
+      "upstream_url": "https://github.com/umr-amap/BIOMASS",
+      "license": "GPL-2.0",
+      "tier": "Tier 3 (Containerized Sidecar)",
+      "install_method": "renv-container",
+      "readiness": "container-ready",
+      "dependencies": [
+        "r-base",
+        "data.table",
+        "raster"
+      ],
+      "constraints": "Maintained by AMAP/CIRAD. Stable pan-tropical allometric estimators."
+    },
+    {
+      "id": "allodb",
+      "name": "allodb",
+      "group": "rings-and-biomass",
+      "domain": "Standardized ForestGEO Allometries",
+      "upstream_url": "https://github.com/forestgeo/allodb",
+      "license": "GPL-3.0",
+      "tier": "Tier 3 (Containerized Sidecar)",
+      "install_method": "renv-container",
+      "readiness": "container-ready",
+      "dependencies": [
+        "r-base",
+        "dplyr",
+        "purrr"
+      ],
+      "constraints": "Smithsonian ForestGEO global allometric equation calibration."
+    },
+    {
+      "id": "fvs",
+      "name": "USDA FVS / Open-FVS",
+      "group": "growth-and-fire",
+      "domain": "Forest Vegetation Simulator",
+      "upstream_url": "https://github.com/forest-vegetation-simulator/fvs",
+      "license": "Public Domain",
+      "tier": "Tier 1 (CLI) / Tier 3 (Container)",
+      "install_method": "docker-container / native-fortran",
+      "readiness": "container-ready",
+      "dependencies": [
+        "gfortran",
+        "gcc"
+      ],
+      "constraints": "Core individual-tree growth simulator. Relies on legacy Fortran codebase."
+    },
+    {
+      "id": "microfvs",
+      "name": "microfvs",
+      "group": "growth-and-fire",
+      "domain": "FVS REST API Wrapper",
+      "upstream_url": "https://github.com/Vibrant-Planet-Open-Science/microfvs",
+      "license": "MIT",
+      "tier": "Tier 3 (Containerized Sidecar)",
+      "install_method": "docker-container",
+      "readiness": "container-ready",
+      "dependencies": [
+        "docker",
+        "python3"
+      ],
+      "constraints": "Vibrant Planet microservice wrapper for batch growth runs."
+    },
+    {
+      "id": "capsis",
+      "name": "Capsis",
+      "group": "growth-and-fire",
+      "domain": "Multi-Model Stand & Agroforestry Platform",
+      "upstream_url": "https://capsis.cirad.fr/",
+      "license": "LGPL-2.1",
+      "tier": "Tier 2 (Desktop GUI via Java)",
+      "install_method": "java-desktop",
+      "readiness": "container-ready",
+      "dependencies": [
+        "openjdk-11",
+        "javafx"
+      ],
+      "constraints": "Continuously maintained by INRAE/CIRAD. Requires Linux JavaFX runtime configuration."
+    },
+    {
+      "id": "sortie-nd",
+      "name": "SORTIE-ND",
+      "group": "growth-and-fire",
+      "domain": "Neighborhood Competition Dynamics",
+      "upstream_url": "https://www.sortie-nd.org/",
+      "license": "Academic Open Source",
+      "tier": "Tier 1 (CLI) / Tier 2 (Java GUI)",
+      "install_method": "native-cpp / java",
+      "readiness": "container-ready",
+      "dependencies": [
+        "g++",
+        "openjdk"
+      ],
+      "constraints": "Spatially explicit light competition simulator. Headless C++ engine preferred."
+    },
+    {
+      "id": "landis-ii",
+      "name": "LANDIS-II",
+      "group": "growth-and-fire",
+      "domain": "Landscape Succession & Disturbance",
+      "upstream_url": "https://github.com/LANDIS-II-Foundation",
+      "license": "Apache-2.0 / BSD",
+      "tier": "Tier 1 (Host CLI / .NET Core)",
+      "install_method": "dotnet-tool",
+      "readiness": "qualified",
+      "dependencies": [
+        "dotnet-runtime-8.0"
+      ],
+      "constraints": "Cross-platform .NET Core runtime execution. Extensions require matching version matrix."
+    },
+    {
+      "id": "cell2fire",
+      "name": "Cell2Fire",
+      "group": "growth-and-fire",
+      "domain": "Fast Raster Wildfire Simulator",
+      "upstream_url": "https://github.com/cell2fire/Cell2Fire",
+      "license": "MIT",
+      "tier": "Tier 1 (Host CLI / OpenMP)",
+      "install_method": "native-cpp-openmp",
+      "readiness": "qualified",
+      "dependencies": [
+        "g++",
+        "openmp",
+        "gdal",
+        "python3"
+      ],
+      "constraints": "Canadian FBP and Scott & Burgan fuel models with parallel C++ execution."
+    },
+    {
+      "id": "fmt",
+      "name": "FMT (Forest Management Tool)",
+      "group": "growth-and-fire",
+      "domain": "Harvest Optimization Linear Programming",
+      "upstream_url": "https://github.com/Bureau-du-Forestier-en-chef/FMT",
+      "license": "LGPL-3.0",
+      "tier": "Tier 1 (Host CLI / Native)",
+      "install_method": "cmake-native",
+      "readiness": "qualified",
+      "dependencies": [
+        "boost",
+        "gdal",
+        "coinor-clp"
+      ],
+      "constraints": "Linear and mixed-integer programming for timber harvest optimization."
+    },
+    {
+      "id": "hemispher",
+      "name": "hemispheR",
+      "group": "canopy-photography",
+      "domain": "Fisheye Canopy Photo Processing & LAI",
+      "upstream_url": "https://github.com/frousseu/hemispheR",
+      "license": "GPL-3.0",
+      "tier": "Tier 3 (Containerized Sidecar)",
+      "install_method": "renv-container",
+      "readiness": "container-ready",
+      "dependencies": [
+        "r-base",
+        "terra"
+      ],
+      "constraints": "Automates circular masking, gap fraction, and effective Leaf Area Index."
+    },
+    {
+      "id": "gaplightr",
+      "name": "gaplightr",
+      "group": "canopy-photography",
+      "domain": "Gap Light Analyzer in R",
+      "upstream_url": "https://hakaiinstitute.github.io/gaplightr/",
+      "license": "MIT",
+      "tier": "Tier 3 (Containerized Sidecar)",
+      "install_method": "renv-container",
+      "readiness": "container-ready",
+      "dependencies": [
+        "r-base",
+        "terra",
+        "lidr",
+        "sf"
+      ],
+      "constraints": "Processes physical hemispherical photos and virtual fisheye views synthesized from LiDAR."
+    },
+    {
+      "id": "birdnet-analyzer",
+      "name": "BirdNET-Analyzer",
+      "group": "audio",
+      "domain": "Acoustic Avian Sound Classifier",
+      "upstream_url": "https://github.com/kahst/BirdNET-Analyzer",
+      "license": "MIT (Code) / CC BY-NC-SA 4.0 (Model Weights)",
+      "tier": "Tier 1 (Host CLI via TFLite)",
+      "install_method": "uv-venv",
+      "readiness": "qualified",
+      "dependencies": [
+        "python3",
+        "tflite-runtime",
+        "librosa",
+        "numpy"
+      ],
+      "constraints": "Code is MIT, but model weights carry CC BY-NC-SA 4.0 terms. Operator opt-in is for download consent and does not override model license restrictions. Model use and distribution permission remain separate from download consent. No default weight download."
+    },
+    {
+      "id": "scikit-maad",
+      "name": "scikit-maad",
+      "group": "audio",
+      "domain": "Quantitative Soundscape Biodiversity",
+      "upstream_url": "https://github.com/scikit-maad/scikit-maad",
+      "license": "BSD-3-Clause",
+      "tier": "Tier 1 (Host CLI via uv)",
+      "install_method": "uv-venv",
+      "readiness": "qualified",
+      "dependencies": [
+        "python3",
+        "numpy",
+        "scipy",
+        "scikit-learn",
+        "librosa"
+      ],
+      "constraints": "Acoustic Complexity Index (ACI), ADI, and Bioacoustic Index."
+    }
+  ],
+  "publication": {
+    "published_in": "STIM-Protocol/Forest_OS",
+    "source_project": "forest-tools planner catalog (separately maintained, not bundled in this repository)",
+    "sanitized": true,
+    "snapshot_note": "Snapshot copy, not a live mirror. Where this file and the workbench HTML dataset disagree, this file governs. Regenerate counts programmatically; do not trust prose totals."
+  }
+}

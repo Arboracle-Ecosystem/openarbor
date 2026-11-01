@@ -2,13 +2,15 @@
 /**
  * Open Arbor v2.0 Static Multi-Page Web Builder (esbuild)
  * Bundles certified src/core engines, municipal ordinance commons, 41-tool catalog,
- * JSON Schemas, and multi-page UI modules into a self-contained static artifact in out/.
+ * JSON Schemas, multi-page UI modules, static crawlable Case Gallery (D3),
+ * Service Worker (D4), and Falsifiability Page (D7) into a self-contained static artifact in out/.
  */
 
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
+import { generateCasesAndMethods } from './generate-cases-and-methods.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
@@ -29,9 +31,13 @@ await esbuild.build({
   legalComments: 'inline',
 });
 
-// 1. Copy root portal HTML, shared stylesheet, and .nojekyll
+// 1. Copy root portal HTML, shared stylesheet, offline Service Worker (if present), and .nojekyll
 fs.copyFileSync(path.join(rootDir, 'web/index.html'), path.join(outDir, 'index.html'));
 fs.copyFileSync(path.join(rootDir, 'web/styles.css'), path.join(outDir, 'styles.css'));
+const swSrcPath = path.join(rootDir, 'web/sw.js');
+if (fs.existsSync(swSrcPath)) {
+  fs.copyFileSync(swSrcPath, path.join(outDir, 'sw.js'));
+}
 fs.writeFileSync(path.join(outDir, '.nojekyll'), '', 'utf8');
 
 // 2. Copy route index.html pages (/demo/, /tools/, /ordinances/, /mcp/, /spec/)
@@ -71,6 +77,9 @@ for (const sub of dataSubdirs) {
     }
   }
 }
+
+// 5. Generate Deliverable D3 (/cases/ + 5 static case pages) and Deliverable D7 (/methods/)
+generateCasesAndMethods(rootDir, outDir);
 
 function listOutFiles(dir, prefix = 'out') {
   const items = [];

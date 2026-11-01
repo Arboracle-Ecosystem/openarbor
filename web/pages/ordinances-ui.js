@@ -10,6 +10,7 @@
 import txOrdinances from '../../data/ordinances/central_texas_ordinances.json';
 import orOrdinances from '../../data/ordinances/rogue_valley_oregon_ordinances.json';
 import municipalOrdinanceSchema from '../../schemas/municipal-ordinance.schema.json';
+import { inspectMunicipalityProvenance } from './masterwork-core.js';
 
 const MONTH_ABBR = [
   '',
@@ -453,6 +454,68 @@ export function initOrdinancesExplorerUI() {
         }
       });
     });
+  }
+
+  // Render Section A2 (D5): Provenance & "What Each Record Does and Does Not Know" Audit
+  const provenanceGrid = document.getElementById('ordinance-provenance-grid');
+  if (provenanceGrid) {
+    provenanceGrid.innerHTML = allMunicipalities
+      .map((muni) => {
+        const prov = inspectMunicipalityProvenance(muni);
+        const isFullRule = prov.record_tier === 'Full_Rule_Record';
+        const tierBadgeClass = isFullRule
+          ? 'oa-provenance-tier-full'
+          : 'oa-provenance-tier-threshold';
+
+        const verifiedHtml = prov.verified_sections
+          .map(
+            (s) =>
+              `<li><strong><code>${escapeHtml(s.field)}</code>:</strong> ${escapeHtml(s.value)} <span class="hint">(${escapeHtml(s.citation)})</span></li>`
+          )
+          .join('');
+
+        const unverifiedHtml =
+          prov.unverified_gaps.length === 0
+            ? `<p class="clean-note">Zero unverified statutory gaps: complete work-type triggers, survey rules, root-zone caps, and pruning windows are encoded.</p>`
+            : `
+              <div class="oa-provenance-unverified">
+                <strong>What this record does not know (${prov.unverified_gaps.length} UNVERIFIED sub-sections):</strong>
+                <ul>
+                  ${prov.unverified_gaps
+                    .map(
+                      (g) =>
+                        `<li><strong><code>${escapeHtml(g.field)}</code> [${escapeHtml(g.status)}]:</strong> ${escapeHtml(g.description)}</li>`
+                    )
+                    .join('')}
+                </ul>
+              </div>
+            `;
+
+        return `
+          <article class="oa-provenance-panel" data-provenance-muni="${escapeHtml(prov.record_id)}">
+            <div class="oa-provenance-meta">
+              <div>
+                <strong>${escapeHtml(prov.municipality_name)}</strong>
+                <code>(${escapeHtml(prov.record_id)})</code>
+              </div>
+              <span class="${tierBadgeClass}">${escapeHtml(prov.record_tier)}</span>
+            </div>
+            <p class="muni-citation">
+              <strong>Primary Citation:</strong> ${escapeHtml(prov.primary_citation)} &middot;
+              <strong>Dataset:</strong> v${escapeHtml(prov.dataset_version)} (Verified ${escapeHtml(prov.last_verified)}) &middot;
+              <a href="${escapeHtml(prov.source_url)}" target="_blank" rel="noopener noreferrer" class="muni-link">Primary Code Link</a>
+            </p>
+            <div>
+              <strong style="font-size: 0.84rem;">Verified Statutory Sections (${prov.verified_sections.length}):</strong>
+              <ul class="oa-pillar-list" style="margin-top: 6px;">
+                ${verifiedHtml}
+              </ul>
+            </div>
+            ${unverifiedHtml}
+          </article>
+        `;
+      })
+      .join('');
   }
 
   function setActivePresetButton(activeBtn) {

@@ -62,6 +62,17 @@ import { initToolsCatalogUI } from './pages/tools-ui.js';
 import { initOrdinancesExplorerUI } from './pages/ordinances-ui.js';
 import { initMcpPlaygroundUI } from './pages/mcp-ui.js';
 import { initSpecViewerUI } from './pages/spec-ui.js';
+import {
+  ENGINE_VERSION,
+  DATASET_VERSION,
+  DATASET_LAST_VERIFIED,
+  MEDFORD_PONDEROSA_CASE,
+  GALLERY_CASES,
+  encodeAssessmentPermalink,
+  decodeAssessmentPermalink,
+  formatStickyDeterminationSummary,
+  inspectMunicipalityProvenance,
+} from './pages/masterwork-core.js';
 
 export {
   calculateCRZ,
@@ -101,6 +112,15 @@ export {
   ALL_SPECIES_PRESETS,
   FIXED_PARITY_CASES,
   DEFAULT_STAND_TREES,
+  ENGINE_VERSION,
+  DATASET_VERSION,
+  DATASET_LAST_VERIFIED,
+  MEDFORD_PONDEROSA_CASE,
+  GALLERY_CASES,
+  encodeAssessmentPermalink,
+  decodeAssessmentPermalink,
+  formatStickyDeterminationSummary,
+  inspectMunicipalityProvenance,
 };
 
 const OLC_CHARS = '23456789CFGHJMPQRVWX';
@@ -460,10 +480,10 @@ export function initFieldToolUI() {
     ].join('');
   }
 
-  // Populate Preset quick buttons
+  // Populate Preset quick buttons with all 5 GALLERY_CASES
   const presetBar = el('preset-buttons');
   if (presetBar) {
-    presetBar.innerHTML = FIXED_PARITY_CASES.map(
+    presetBar.innerHTML = GALLERY_CASES.map(
       (c, idx) =>
         `<button type="button" class="btn-preset ${idx === 0 ? 'active' : ''}" data-case-id="${c.id}">${c.label}</button>`
     ).join('');
@@ -471,12 +491,31 @@ export function initFieldToolUI() {
     presetBar.addEventListener('click', (e) => {
       const btn = e.target.closest('[data-case-id]');
       if (!btn) return;
-      const found = FIXED_PARITY_CASES.find((c) => c.id === btn.dataset.caseId);
+      const found = GALLERY_CASES.find((c) => c.id === btn.dataset.caseId);
       if (!found) return;
       document.querySelectorAll('.btn-preset').forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
       loadCaseIntoForm(found);
     });
+  }
+
+  let currentPermalinkHash = '';
+
+  function getCurrentCaseStateFromForm() {
+    return {
+      id: activePreset?.id || 'field-case',
+      label: activePreset?.label || 'Field Assessment',
+      ordinance_id: el('input-ordinance-id')?.value || 'tx-austin',
+      condition_class: el('input-condition-class')?.value || 'Good',
+      site_condition: el('input-site-condition')?.value || 'Open Grown / Parkland',
+      proposed_removal: Boolean(el('input-proposed-removal')?.checked),
+      pruning_date: el('input-pruning-date')?.value || '',
+      crz_disturbed_pct: Number(el('input-crz-disturbed-pct')?.value) || 0,
+      cutfill_depth_in: Number(el('input-cutfill-in')?.value) || 0,
+      impervious_pct: Number(el('input-impervious-pct')?.value) || 0,
+      crown_removal_pct: Number(el('input-crown-removal-pct')?.value) || 0,
+      assessment: latestAssessment,
+    };
   }
 
   function loadCaseIntoForm(caseObj) {
@@ -868,6 +907,200 @@ export function initFieldToolUI() {
     const age = res.ageEstimate;
     const mitIfRemoved = res.mitigationIfRemoved;
     const mitActive = res.mitigationActive;
+
+    // 0. D1 Permalink & D2 Sticky Determination Bar Updates
+    currentPermalinkHash = encodeAssessmentPermalink(getCurrentCaseStateFromForm());
+    const fullShareUrl =
+      typeof window !== 'undefined' && window.location
+        ? `${window.location.origin}${window.location.pathname}${currentPermalinkHash}`
+        : `https://openarbor.org/demo/${currentPermalinkHash}`;
+
+    const permalinkDisplayEl = el('permalink-url-display');
+    if (permalinkDisplayEl) {
+      if ('value' in permalinkDisplayEl) {
+        permalinkDisplayEl.value = fullShareUrl;
+      } else {
+        permalinkDisplayEl.textContent = fullShareUrl;
+      }
+    }
+
+    const sticky = formatStickyDeterminationSummary(res);
+    if (sticky) {
+      const stStatus = el('sticky-status-val');
+      const stDbh = el('sticky-dbh-val');
+      const stCrz = el('sticky-crz-val');
+      const stRep = el('sticky-replacement-val');
+      const stCash = el('sticky-cash-val');
+      if (stStatus) stStatus.textContent = `${sticky.status} (${sticky.permit_required})`;
+      if (stDbh) stDbh.textContent = sticky.dbh;
+      if (stCrz) stCrz.textContent = sticky.crz;
+      if (stRep) stRep.textContent = sticky.replacement_owed;
+      if (stCash) stCash.textContent = sticky.cash_in_lieu;
+    }
+
+    // D5. Provenance Surface & "What this record does not know" Panel
+    const prov = inspectMunicipalityProvenance(muni);
+    const provMetaStrip = el('provenance-meta-strip');
+    const provUnverifiedPanel = el('provenance-unverified-panel');
+    if (prov && provMetaStrip && provUnverifiedPanel) {
+      provMetaStrip.innerHTML = `
+        <span><strong>Dataset Version:</strong> ${prov.dataset_version}</span>
+        <span><strong>Record ID:</strong> <code>${prov.record_id}</code></span>
+        <span><strong>Record Tier:</strong> <span class="badge ${prov.record_tier === 'Full_Rule_Record' ? 'badge-protected' : 'badge-warn'}">${prov.record_tier}</span></span>
+        <span><strong>Last Verified:</strong> ${prov.last_verified}</span>
+        <span><strong>Primary Citation:</strong> <a href="${prov.source_url}" target="_blank" rel="noopener noreferrer">${prov.primary_citation}</a></span>
+      `;
+
+      if (prov.unverified_gaps.length === 0) {
+        provUnverifiedPanel.innerHTML = `
+          <div class="oa-prov-title"><strong>What this record does not know (<code>UNVERIFIED</code> statutory boundaries)</strong></div>
+          <p class="clean-note" style="margin: 4px 0 0;"><code>Full_Rule_Record</code>: All 6 schema rule domains (DBH thresholds, species overrides, work-type permit triggers, survey rules, root-zone impact limits, and pruning standards) are encoded and cited.</p>
+        `;
+      } else {
+        provUnverifiedPanel.innerHTML = `
+          <div class="oa-prov-title"><strong>What this record does not know (<code>UNVERIFIED</code> statutory boundaries)</strong></div>
+          <p class="muni-subtext" style="margin: 4px 0 6px;">This municipality is currently encoded at the <code>${prov.record_tier}</code> tier (${prov.unverified_gaps.length} unverified statutory sub-sections):</p>
+          <ul class="flag-list">
+            ${prov.unverified_gaps
+              .map(
+                (g) =>
+                  `<li><strong><code>${g.field}</code> (status: <code>${g.status}</code>):</strong> ${g.description}</li>`
+              )
+              .join('')}
+          </ul>
+        `;
+      }
+    }
+
+    // D6. Evidentiary Print Report (#evidentiary-print-sheet)
+    const printBodyEl = el('print-report-dynamic-body');
+    if (printBodyEl && prov) {
+      const sb = assessment.structural_baseline || {};
+      const rh = assessment.rhizosphere_and_root_collar || {};
+      const provPrintHtml =
+        prov.unverified_gaps.length === 0
+          ? `<p><strong>Full_Rule_Record:</strong> All 6 schema rule domains (DBH thresholds, species overrides, work-type permit triggers, survey rules, root-zone impact limits, and pruning standards) are encoded and cited.</p>`
+          : `<ul>${prov.unverified_gaps
+              .map(
+                (g) =>
+                  `<li><strong>${g.field} (${g.status}):</strong> ${g.description}</li>`
+              )
+              .join('')}</ul>`;
+
+      printBodyEl.innerHTML = `
+        <header class="oa-print-header">
+          <h1>Open Arbor Evidentiary Determination Report</h1>
+          <p class="oa-print-subtitle">
+            <strong>Tree Tag:</strong> ${sb.tree_tag || 'T-01'} |
+            <strong>Species:</strong> ${sb.species_common || 'Live Oak'} (<em>${sb.species_scientific || 'Quercus virginiana'}</em>) |
+            <strong>Jurisdiction:</strong> ${prov.municipality_name} (<code>${prov.record_id}</code>)
+          </p>
+          <p class="oa-print-meta">
+            <strong>Ordinance Citation:</strong> ${prov.primary_citation} |
+            <strong>Dataset Version:</strong> ${prov.dataset_version} |
+            <strong>Last Verified:</strong> ${prov.last_verified} |
+            <strong>Record Tier:</strong> ${prov.record_tier}
+          </p>
+          <p class="oa-print-meta">
+            <strong>Canonical SHA-256 Digest:</strong> <code>${res.compiledReport.sha256}</code><br>
+            <strong>Shareable Permalink Address:</strong> <code>${fullShareUrl}</code>
+          </p>
+        </header>
+
+        <section class="oa-print-section">
+          <h2>Table 1. Tree Structural &amp; Biomechanical Baseline</h2>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>DBH &amp; Method</th>
+                <th>Height &amp; Crown Spread</th>
+                <th>Global Plus Code</th>
+                <th>Mattheck t/R &amp; Stability</th>
+                <th>Root Flare Burial</th>
+                <th>Protection Zone Radii (SRZ / CRZ / TIZ)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>${bio.dbh_inches} in (${bio.dbh_cm} cm) [${sb.multistem_aggregation_method || 'single_stem'}]</td>
+                <td>H: ${sb.height_m} m | N-S: ${sb.crown_spread_ns_m} m | E-W: ${sb.crown_spread_ew_m} m</td>
+                <td><code>${sb.plus_code_global}</code></td>
+                <td>t/R = ${bio.biomechanics.sound_shell_thickness_ratio_t_over_r} (${bio.biomechanics.mattheck_criterion_satisfied ? 'Stable >= 0.30' : 'Thinning < 0.30'})</td>
+                <td>${rh.root_flare_burial_depth_cm ?? 0} cm burial (Flare: ${rh.root_flare_diameter_cm} cm)</td>
+                <td>SRZ: ${res.rootZones.srz.radius_feet} ft (${res.rootZones.srz.radius_meters} m) | CRZ: ${res.rootZones.crz.radius_feet} ft (${res.rootZones.crz.radius_meters} m) | TIZ: ${bio.root_zones.tiz_radius_meters} m</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="oa-print-section">
+          <h2>Table 2. Municipal Ordinance Determination, Mitigation Schedule &amp; Epistemic Boundaries</h2>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Protection Status</th>
+                <th>Permit Verdict</th>
+                <th>Replacement Inches Owed (If Removed)</th>
+                <th>Cash-in-Lieu Obligation (If Removed)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>${statusLabel(row)}</strong></td>
+                <td><strong>${res.permit.unknown ? 'Verify with City (UNVERIFIED)' : res.permit.required ? 'PERMIT REQUIRED' : 'No Permit Triggered'}</strong> (${res.permitText})</td>
+                <td>${mitIfRemoved ? `${mitIfRemoved.replacement_inches_owed} in (${mitIfRemoved.replacement_trees_owed} trees)` : '0 in'}</td>
+                <td><strong>$${Number(mitIfRemoved?.cash_in_lieu_usd || 0).toLocaleString()}</strong></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="oa-print-epistemic">
+            <strong>What this record does not know (Epistemic &amp; Statutory Boundaries):</strong>
+            ${provPrintHtml}
+          </div>
+        </section>
+
+        <section class="oa-print-section">
+          <h2>Figure 1. Deterministic Root Protection Zone Map (ANSI A300 Part 5 / AS 4970)</h2>
+          <div id="print-svg-map-holder" class="oa-print-map">${res.svgSiteMap || ''}</div>
+        </section>
+
+        <section class="oa-print-section">
+          <h2>Table 3. Dual Valuation &amp; Allometric Ecosystem Services</h2>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>CTLA 10th Ed. Depreciated Value</th>
+                <th>200-Yr Holobiont Biological Equity</th>
+                <th>John White (FCIN12) Est. Age</th>
+                <th>Annual Stormwater / Energy / Carbon Flow</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>$${val.ctla_10th_ed_depreciated_usd.toLocaleString()}</td>
+                <td><strong>$${val.holobiont_200yr_biological_equity_usd.toLocaleString()}</strong> (${val.veteran_keystone_habitat_multiplier}x Keystone)</td>
+                <td>${age.estimated_age_years} yrs (${age.site_condition})</td>
+                <td>${eco.avoided_runoff_gallons_yr.toLocaleString()} gal/yr | ${eco.cooling_savings_kwh_yr} kWh/yr | ${eco.carbon_storage_lbs.toLocaleString()} lbs C ($${eco.total_annual_benefits_usd}/yr)</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="oa-print-signature-block">
+          <h2>Practitioner Evidentiary Attestation &amp; Signature Block</h2>
+          <p>
+            <strong>Practitioner Name:</strong> George Steward &nbsp;|&nbsp;
+            <strong>Credential:</strong> ISA Certified Arborist TX-362025A / Oak Wilt Qualified &nbsp;|&nbsp;
+            <strong>Assessment Date:</strong> ${sb.assessment_date || '2026-10-28'}
+          </p>
+          <p><strong>Canonical Evidence SHA-256:</strong> <code>${res.compiledReport.sha256}</code></p>
+          <p style="margin-top: 18px;">
+            <strong>Practitioner Signature:</strong> ___________________________ &nbsp;&nbsp;&nbsp;&nbsp;
+            <strong>Date Signed:</strong> _______________
+          </p>
+        </section>
+      `;
+    }
 
     // 1. Municipal Ordinance Lookup Summary Banner & UNVERIFIED Check
     const citationBannerEl = el('ordinance-citation-banner');
@@ -1305,8 +1538,71 @@ export function initFieldToolUI() {
     el('results-section')?.scrollIntoView({ behavior: 'smooth' });
   });
 
-  // Load initial preset (Case 1: Austin Live Oak)
-  loadCaseIntoForm(FIXED_PARITY_CASES[0]);
+  // Wire Copy Verdict Link & Export Print Report controls (D1, D2, D6)
+  async function handleCopyVerdictLink(btnEl) {
+    if (!currentPermalinkHash) {
+      currentPermalinkHash = encodeAssessmentPermalink(getCurrentCaseStateFromForm());
+    }
+    if (typeof window !== 'undefined' && window.history && typeof window.history.replaceState === 'function') {
+      window.history.replaceState(null, '', currentPermalinkHash);
+    }
+    const fullUrl =
+      typeof window !== 'undefined' && window.location
+        ? `${window.location.origin}${window.location.pathname}${currentPermalinkHash}`
+        : `https://openarbor.org/demo/${currentPermalinkHash}`;
+    if (typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      try {
+        await navigator.clipboard.writeText(fullUrl);
+      } catch {
+        // Fallback when clipboard permission is unavailable
+      }
+    }
+    if (btnEl) {
+      const prev = btnEl.textContent;
+      btnEl.textContent = 'Verdict Link Copied';
+      setTimeout(() => {
+        btnEl.textContent = prev;
+      }, 1800);
+    }
+  }
+
+  el('btn-copy-verdict-link')?.addEventListener('click', (e) => handleCopyVerdictLink(e.currentTarget));
+  el('btn-copy-verdict-link-secondary')?.addEventListener('click', (e) => handleCopyVerdictLink(e.currentTarget));
+
+  el('btn-export-print-report')?.addEventListener('click', () => {
+    if (typeof window !== 'undefined' && typeof window.print === 'function') {
+      window.print();
+    }
+  });
+
+  function tryRestoreFromUrlHash() {
+    if (typeof window === 'undefined' || !window.location || !window.location.hash) return false;
+    if (!window.location.hash.startsWith('#oa1=')) return false;
+    try {
+      const decoded = decodeAssessmentPermalink(window.location.hash);
+      if (decoded && decoded.assessment) {
+        document.querySelectorAll('.btn-preset').forEach((b) => {
+          b.classList.toggle('active', b.dataset.caseId === decoded.id);
+        });
+        loadCaseIntoForm(decoded);
+        return true;
+      }
+    } catch {
+      // Ignore malformed hash and fall back to default preset
+    }
+    return false;
+  }
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('hashchange', () => {
+      tryRestoreFromUrlHash();
+    });
+  }
+
+  // Load initial state from #oa1= permalink if present, otherwise Case 1: Austin Live Oak
+  if (!tryRestoreFromUrlHash()) {
+    loadCaseIntoForm(FIXED_PARITY_CASES[0]);
+  }
 }
 
 function initAllOpenArborPages() {

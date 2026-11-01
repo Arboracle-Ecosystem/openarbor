@@ -1204,3 +1204,325 @@ dialog::backdrop {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* ============================================================================
+ * Masterwork 100x Deliverable D2: Sticky Determination Bar (.oa-sticky-verdict-bar)
+ * ============================================================================ */
+.oa-sticky-verdict-bar {
+  position: sticky;
+  top: 0;
+  z-index: 90;
+  background: light-dark(#eef4ee, #112416);
+  border-bottom: 2px solid var(--oa-fern-green, #7EA172);
+  padding: 0.55rem 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
+}
+
+.oa-sticky-verdict-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem 1rem;
+}
+
+.oa-sticky-verdict-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  font-size: 0.86rem;
+}
+
+.oa-sticky-metric-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3rem;
+}
+
+.oa-sticky-metric-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.oa-sticky-metric-value {
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.oa-sticky-verdict-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.oa-sticky-verdict-bar button:focus-visible,
+.oa-sticky-verdict-bar a:focus-visible,
+.btn:focus-visible,
+.oa-nav-link:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--oa-heartwood-gold, #D4B86A);
+  outline-offset: 2px;
+}
+
+@media (max-width: 768px) {
+  .oa-sticky-verdict-bar {
+    white-space: nowrap;
+    overflow-x: auto;
+    font-size: 0.82rem;
+    padding: 0.4rem 0.65rem;
+  }
+
+  .oa-sticky-verdict-inner,
+  .oa-sticky-verdict-metrics {
+    flex-wrap: nowrap;
+    gap: 0.55rem;
+  }
+}
+
+/* ============================================================================
+ * Masterwork 100x Deliverable D5: Provenance Surface & Epistemic Boundary Panel
+ * ============================================================================ */
+.oa-provenance-panel {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-main);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  margin-top: 12px;
+}
+
+.oa-provenance-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 14px;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 0.84rem;
+}
+
+.oa-provenance-tier-full {
+  background: var(--accent-green);
+  color: var(--btn-primary-text);
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.oa-provenance-tier-threshold {
+  background: var(--accent-amber);
+  color: #1d1604;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.oa-provenance-unverified {
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-red);
+  color: var(--danger-text);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-top: 10px;
+  font-size: 0.84rem;
+}
+
+.oa-provenance-unverified ul {
+  margin: 6px 0 0 0;
+  padding-left: 18px;
+}
+
+.oa-provenance-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+@media (min-width: 720px) {
+  .oa-provenance-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ============================================================================
+ * Masterwork 100x Deliverable D6: Evidentiary Print Report (#evidentiary-print-sheet)
+ * ============================================================================ */
+.oa-print-sheet {
+  background: var(--bg-card);
+  border: 1px solid var(--border-main);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  margin-top: 16px;
+}
+
+.oa-print-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  border-bottom: 2px solid var(--border-main);
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+}
+
+.oa-print-section {
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.oa-signature-block {
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px solid var(--border-main);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+}
+
+.oa-signature-lines {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+  margin-top: 22px;
+}
+
+.oa-signature-line {
+  border-top: 1px solid var(--text-main);
+  padding-top: 4px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+@page {
+  size: letter portrait;
+  margin: 0.4in;
+}
+
+@media print {
+  :root,
+  html,
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    color-scheme: light !important;
+    font-size: 9pt;
+    line-height: 1.25;
+  }
+
+  .oa-site-header,
+  .oa-sticky-verdict-bar,
+  #sticky-determination-bar,
+  .no-print,
+  #field-assessment-form,
+  .demo-mode-switcher,
+  .demo-mode-switcher-card,
+  .preset-section,
+  #demo-mode-stand,
+  #demo-mode-badge,
+  .oa-footer,
+  .app-footer,
+  .header-actions,
+  .export-action-bar,
+  .preview-tabs {
+    display: none !important;
+  }
+
+  body:has(#evidentiary-print-sheet) .app-header,
+  body:has(#evidentiary-print-sheet) #results-section {
+    display: none !important;
+  }
+
+  #evidentiary-print-sheet,
+  .oa-print-sheet {
+    display: block !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .card,
+  .metric-box,
+  .verdict-banner,
+  .citation-callout,
+  .oa-signature-block,
+  .oa-provenance-panel,
+  .data-table th,
+  .data-table td {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border-color: #333333 !important;
+    box-shadow: none !important;
+  }
+
+  table,
+  tr,
+  figure,
+  svg,
+  .oa-signature-block,
+  .oa-print-signature-block,
+  .oa-print-section,
+  .metric-grid {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .oa-print-header h1 {
+    font-size: 12pt;
+    margin: 0 0 2pt 0;
+  }
+
+  .oa-print-section h2,
+  .oa-print-signature-block h2 {
+    font-size: 9.5pt;
+    margin: 3pt 0 2pt 0;
+  }
+
+  .oa-print-sheet p,
+  .oa-print-sheet ul,
+  .oa-print-sheet li {
+    margin: 2pt 0;
+    font-size: 8pt;
+  }
+
+  .oa-print-sheet code {
+    overflow-wrap: anywhere;
+    word-break: break-all;
+    font-size: 7.5pt;
+  }
+
+  .oa-print-section,
+  .oa-print-header {
+    margin-bottom: 4pt;
+    padding-bottom: 3pt;
+  }
+
+  .oa-print-sheet .data-table th,
+  .oa-print-sheet .data-table td {
+    padding: 2pt 4pt;
+    font-size: 8pt;
+  }
+
+  .svg-map-wrap svg,
+  .oa-print-map svg {
+    max-height: 1.55in;
+    width: auto;
+    max-width: 100%;
+    display: block;
+    margin: 0 auto;
+  }
+}

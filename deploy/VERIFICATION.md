@@ -9,20 +9,28 @@
 | File Path | Size (Bytes) | Role |
 | :--- | :--- | :--- |
 | `out/.nojekyll` | `0` | GitHub Pages Jekyll bypass marker |
+| `out/cases/ashland-oregon-white-oak/index.html` | `33256` | GitHub Pages Jekyll bypass marker |
+| `out/cases/austin-heritage-live-oak/index.html` | `32744` | GitHub Pages Jekyll bypass marker |
+| `out/cases/georgetown-multistem-pecan/index.html` | `32070` | GitHub Pages Jekyll bypass marker |
+| `out/cases/index.html` | `29129` | GitHub Pages Jekyll bypass marker |
+| `out/cases/liberty-hill-post-oak/index.html` | `32187` | GitHub Pages Jekyll bypass marker |
+| `out/cases/medford-ponderosa-pine/index.html` | `32598` | GitHub Pages Jekyll bypass marker |
 | `out/data/catalog/forestry-tools.json` | `22781` | Published open dataset JSON |
 | `out/data/ordinances/central_texas_ordinances.json` | `10712` | Published open dataset JSON |
 | `out/data/ordinances/rogue_valley_oregon_ordinances.json` | `7531` | Published open dataset JSON |
-| `out/demo/index.html` | `43299` | Interactive 3-mode Open Arbor engine demo (`/demo/`) |
-| `out/index.html` | `19040` | Open Arbor (`openarbor.org`) root landing and alliance portal |
-| `out/mcp/index.html` | `8872` | 6-Tool MCP Server Playground & JSON-RPC 2.0 Inspector (`/mcp/`) |
-| `out/openarbor-bundle.js` | `405229` | Compiled ESM browser bundle (engines + ordinances + catalog + schemas + UI) |
-| `out/ordinances/index.html` | `9727` | 8-City Municipal Ordinance Commons & Schema Validator (`/ordinances/`) |
+| `out/demo/index.html` | `46928` | Interactive 3-mode Open Arbor engine demo (`/demo/`) |
+| `out/index.html` | `19196` | Open Arbor (`openarbor.org`) root landing and alliance portal |
+| `out/mcp/index.html` | `9030` | 6-Tool MCP Server Playground & JSON-RPC 2.0 Inspector (`/mcp/`) |
+| `out/methods/index.html` | `48403` | GitHub Pages Jekyll bypass marker |
+| `out/openarbor-bundle.js` | `443035` | Compiled ESM browser bundle (engines + ordinances + catalog + schemas + UI) |
+| `out/ordinances/index.html` | `10936` | 8-City Municipal Ordinance Commons & Schema Validator (`/ordinances/`) |
 | `out/schemas/municipal-ordinance.schema.json` | `3630` | Published JSON Schema (Draft 2020-12) |
 | `out/schemas/rca_assessment.schema.json` | `41996` | Published JSON Schema (Draft 2020-12) |
 | `out/schemas/rca_openbadge_v3.schema.json` | `26205` | Published JSON Schema (Draft 2020-12) |
-| `out/spec/index.html` | `24695` | RCA-Spec v2.0 & 200-Year Architecture Reference (`/spec/`) |
-| `out/styles.css` | `22053` | Shared Sunlight Field & Canopy Dark design system stylesheet |
-| `out/tools/index.html` | `10795` | 41-tool Open-Source Forestry & Arboriculture Workbench (`/tools/`) |
+| `out/spec/index.html` | `24853` | RCA-Spec v2.0 & 200-Year Architecture Reference (`/spec/`) |
+| `out/styles.css` | `28752` | Shared Sunlight Field & Canopy Dark design system stylesheet |
+| `out/sw.js` | `4347` | GitHub Pages Jekyll bypass marker |
+| `out/tools/index.html` | `10953` | 41-tool Open-Source Forestry & Arboriculture Workbench (`/tools/`) |
 
 ## 2. Executive Summary of 4 Fixed Bioregional Input Cases (Texas & Oregon)
 

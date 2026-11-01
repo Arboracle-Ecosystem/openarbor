@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light dark" />
+  <script>
+    try {
+      document.querySelector('meta[name="color-scheme"]').content = localStorage.getItem('color-scheme') ?? 'light dark';
+    } catch (e) {}
+  </script>
+  <title>Static Crawlable Case Gallery (5 Bioregional Reference Determinations) | Open Arbor v2.0</title>
+  <meta
+    name="description"
+    content="Five pre-rendered, crawlable arboricultural evidentiary case determinations across Central Texas (Austin, Georgetown, Liberty Hill) and Rogue Valley, Oregon (Ashland, Medford). 100% readable with JavaScript disabled."
+  />
+  <link rel="stylesheet" href="../styles.css" />
+</head>
+<body>
+  <header class="oa-site-header">
+    <div class="oa-nav-container">
+      <a href="../index.html" class="oa-brand-link">
+        <span class="oa-brand-mark">OA</span>
+        <span class="oa-brand-text">Open Arbor <small>v2.0</small></span>
+      </a>
+      <nav class="oa-main-nav" aria-label="Primary Navigation">
+        <a href="../index.html" class="oa-nav-link">Alliance Portal</a>
+          <a href="../demo/index.html" class="oa-nav-link">Live Engine Demo</a>
+          <a href="../cases/index.html" class="oa-nav-link active" aria-current="page">Case Gallery</a>
+          <a href="../tools/index.html" class="oa-nav-link">41-Tool Workbench</a>
+          <a href="../ordinances/index.html" class="oa-nav-link">Ordinance Commons</a>
+          <a href="../mcp/index.html" class="oa-nav-link">MCP Playground</a>
+          <a href="../spec/index.html" class="oa-nav-link">RCA-Spec v2.0</a>
+          <a href="../methods/index.html" class="oa-nav-link">Falsifiability</a>
+      </nav>
+      <div class="oa-theme-control">
+        <button type="button" id="oa-theme-toggle" class="btn btn-secondary btn-sm" aria-label="Toggle color scheme">Theme: Auto</button>
+      </div>
+    </div>
+  </header>
+
+  <section class="app-header">
+    <div class="container header-inner">
+      <div>
+        <span class="eyebrow">Deliverable D3 &middot; Zero-JS Crawlable Evidentiary Determinations &middot; RCA-Spec v2.0</span>
+        <h1>Bioregional Reference Case Gallery (Central Texas &amp; Rogue Valley, Oregon)</h1>
+        <p class="subtitle">
+          Five benchmark municipal tree determinations pre-rendered at build time directly from the certified ECMAScript core engines. Every case page includes full statutory citations, inline vector <code>&lt;svg&gt;</code> root protection maps, provenance boundaries, and cryptographic <code>SHA-256</code> digests with JavaScript disabled.
+        </p>
+      </div>
+      <div class="header-actions">
+        <a href="../demo/index.html" class="btn btn-primary">Launch Interactive Field Workbench</a>
+        <a href="../methods/index.html" class="btn btn-outline">Inspect Falsifiability Suite</a>
+      </div>
+    </div>
+  </section>
+
+  <main class="container main-layout">
+    <section class="card" aria-labelledby="comparison-matrix-heading">
+      <div class="card-header">
+        <span class="step-badge">5 Benchmark Cases</span>
+        <h2 id="comparison-matrix-heading">Cross-Jurisdictional Evidentiary Comparison Matrix</h2>
+      </div>
+      <p class="subtitle">
+        Compare municipal protection tiers, ANSI A300 and AS 4970 root zone radii, permit determinations, replacement mitigation liabilities, and 200-year Holobiont Biological Equity across Austin, Georgetown, Liberty Hill, Ashland, and Medford.
+      </p>
+
+      <div tabindex="0" role="region" aria-labelledby="cases-table-caption" class="table-wrapper table-scroll">
+        <table
+          class="data-table"
+          style="
+            --label-1: 'Specimen &amp; Tag';
+            --label-2: 'Jurisdiction &amp; Citation';
+            --label-3: 'Status &amp; DBH';
+            --label-4: 'Root Zones &amp; Shell';
+            --label-5: 'Permit &amp; Mitigation';
+            --label-6: 'Holobiont vs. CTLA';
+            --label-7: 'Evidentiary Links';
+          "
+        >
+          <caption id="cases-table-caption" class="sr-only">
+            Five Bioregional Reference Determinations in the Open Arbor Static Case Gallery
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Specimen &amp; Tag</th>
+              <th scope="col">Jurisdiction &amp; Primary Citation</th>
+              <th scope="col">Protection Status &amp; DBH</th>
+              <th scope="col">CRZ / SRZ &amp; Mattheck t/R</th>
+              <th scope="col">Permit Verdict &amp; Liability</th>
+              <th scope="col">200-Yr Holobiont vs. CTLA</th>
+              <th scope="col">Inspect or Hydrate</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">
+                <a href="./austin-heritage-live-oak/index.html"><strong>ATX-QV-101</strong></a><br />
+                <small><em>Quercus virginiana</em> (Live Oak)</small>
+              </th>
+              <td>
+                <strong>Austin, TX</strong><br />
+                <small><code>tx-austin</code> &middot; City of Austin Land Development Code (LDC) Title 25, Chapter 25-8, Subchapter B (Tree and Natural Area Protection); Environmental Criteria Manual (ECM) Section 3</small>
+              </td>
+              <td>
+                <span class="badge badge-heritage">Heritage</span><br />
+                <small>30 in (76.2 cm)</small>
+              </td>
+              <td>
+                <strong>CRZ:</strong> 30 ft (9.14 m)<br />
+                <small><strong>SRZ:</strong> 10.77 ft (3.28 m) &middot; <strong>t/R:</strong> 0.38</small>
+              </td>
+              <td>
+                <strong>Permit Required</strong><br />
+                <small>If destroyed: $18,000 (90 in)</small>
+              </td>
+              <td>
+                <strong class="text-accent">$218,609</strong><br />
+                <small>CTLA: $13,699 (15.96x)</small>
+              </td>
+              <td>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                  <a href="./austin-heritage-live-oak/index.html" class="btn btn-primary btn-xs">Static Evidentiary Page</a>
+                  <a href="../demo/index.html#oa1=eyJ2IjoiMi4wLjAiLCJqIjoidHgtYXVzdGluIiwic3AiOlsiUXVlcmN1cyB2aXJnaW5pYW5hIiwiTGl2ZSBPYWsiLDQ5MDA1LCJFY3RvbXljb3JyaGl6YWxfRU0iXSwiZGJoIjpbNzYuMixmYWxzZSwic2luZ2xlX3N0ZW0iLG51bGxdLCJ3dCI6W2ZhbHNlLCIyMDI2LTExLTE1IiwiUHJlc2VydmF0aW9uX1dpdGhfUmhpem9zcGhlcmVfUmVtZWRpYXRpb24iXSwiZGlzdCI6WzE1LDIsMTAsMTBdLCJjdHgiOlsiR29vZCIsIk9wZW4gR3Jvd24gLyBQYXJrbGFuZCIsMTYuNSwyMiwyNCw3OCwiODYyNDc3ODQrVlAiLCJBVFgtUVYtMTAxIiwiMjAyNi0xMC0yOCJdLCJiIjowLCJpZCI6ImNhc2UtMS1hdXN0aW4tbGl2ZS1vYWsiLCJsYmwiOiJDYXNlIDE6IEF1c3RpbiBIZXJpdGFnZSBMaXZlIE9hayAoMzAgaW4gREJIKSJ9" class="btn btn-outline btn-xs">Open in Field Workbench</a>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">
+                <a href="./georgetown-multistem-pecan/index.html"><strong>GTN-CI-204</strong></a><br />
+                <small><em>Carya illinoinensis</em> (Pecan)</small>
+              </th>
+              <td>
+                <strong>Georgetown, TX</strong><br />
+                <small><code>tx-georgetown</code> &middot; Georgetown Unified Development Code (UDC) Chapter 8 (Tree Preservation, Landscaping, and Fencing)</small>
+              </td>
+              <td>
+                <span class="badge badge-heritage">Heritage</span><br />
+                <small>27 in (68.58 cm)</small>
+              </td>
+              <td>
+                <strong>CRZ:</strong> 27 ft (8.23 m)<br />
+                <small><strong>SRZ:</strong> 10.19 ft (3.11 m) &middot; <strong>t/R:</strong> 0.46</small>
+              </td>
+              <td>
+                <strong>Permit Required</strong><br />
+                <small>If destroyed: $8,100 (81 in)</small>
+              </td>
+              <td>
+                <strong class="text-accent">$124,448</strong><br />
+                <small>CTLA: $13,432 (9.27x)</small>
+              </td>
+              <td>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                  <a href="./georgetown-multistem-pecan/index.html" class="btn btn-primary btn-xs">Static Evidentiary Page</a>
+                  <a href="../demo/index.html#oa1=eyJ2IjoiMi4wLjAiLCJqIjoidHgtZ2VvcmdldG93biIsInNwIjpbIkNhcnlhIGlsbGlub2luZW5zaXMiLCJQZWNhbiIsNDg3OTcsIkVjdG9teWNvcnJoaXphbF9FTSJdLCJkYmgiOls2OC41OCx0cnVlLCJsYXJnZXN0X3BsdXNfaGFsZiIsWzUwLjgsMzUuNTZdXSwid3QiOltmYWxzZSwiMjAyNi0xMi0wMSIsIlByZXNlcnZhdGlvbl9QcmltYXJ5Il0sImRpc3QiOlsxMCwxLDgsNV0sImN0eCI6WyJFeGNlbGxlbnQiLCJGb3Jlc3QgLyBXb29kbGFuZCIsMTksMTgsMTkuNSw4MCwiODYyNEo4TUMrOFEiLCJHVE4tQ0ktMjA0IiwiMjAyNi0xMC0yOCJdLCJiIjoxLCJpZCI6ImNhc2UtMi1nZW9yZ2V0b3duLXBlY2FuIiwibGJsIjoiQ2FzZSAyOiBHZW9yZ2V0b3duIE11bHRpLVN0ZW0gSGVyaXRhZ2UgUGVjYW4gKDI3IGluIERCSCkifQ" class="btn btn-outline btn-xs">Open in Field Workbench</a>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">
+                <a href="./liberty-hill-post-oak/index.html"><strong>LBH-QS-309</strong></a><br />
+                <small><em>Quercus stellata</em> (Post Oak)</small>
+              </th>
+              <td>
+                <strong>Liberty Hill, TX</strong><br />
+                <small><code>tx-liberty-hill</code> &middot; Liberty Hill Unified Development Code (UDC) § 6.07.01 (Tree Preservation and Mitigation), Ord. 09-O-02 / 22-O-04.06-01</small>
+              </td>
+              <td>
+                <span class="badge badge-protected">Protected</span><br />
+                <small>20 in (50.8 cm)</small>
+              </td>
+              <td>
+                <strong>CRZ:</strong> 20 ft (6.1 m)<br />
+                <small><strong>SRZ:</strong> 9 ft (2.74 m) &middot; <strong>t/R:</strong> 0.32</small>
+              </td>
+              <td>
+                <strong>No Permit Triggered</strong><br />
+                <small>If destroyed: $4,500 (40 in)</small>
+              </td>
+              <td>
+                <strong class="text-accent">$69,172</strong><br />
+                <small>CTLA: $5,127 (13.49x)</small>
+              </td>
+              <td>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                  <a href="./liberty-hill-post-oak/index.html" class="btn btn-primary btn-xs">Static Evidentiary Page</a>
+                  <a href="../demo/index.html#oa1=eyJ2IjoiMi4wLjAiLCJqIjoidHgtbGliZXJ0eS1oaWxsIiwic3AiOlsiUXVlcmN1cyBzdGVsbGF0YSIsIlBvc3QgT2FrIiw1NDc4MSwiRWN0b215Y29ycmhpemFsX0VNIl0sImRiaCI6WzUwLjgsZmFsc2UsInNpbmdsZV9zdGVtIixudWxsXSwid3QiOltmYWxzZSwiMjAyNi0xMS0yMCIsIlByZXNlcnZhdGlvbl9XaXRoX1JoaXpvc3BoZXJlX1JlbWVkaWF0aW9uIl0sImRpc3QiOlsyMiwzLDE4LDE1XSwiY3R4IjpbIkZhaXIiLCJVcmJhbiAvIFN0cmVldCBUcmVlIiwxMy41LDE0LjUsMTUsNjUsIjg2MjRNMzhGKzRYIiwiTEJILVFTLTMwOSIsIjIwMjYtMTAtMjgiXSwiYiI6MiwiaWQiOiJjYXNlLTMtbGliZXJ0eS1oaWxsLXBvc3Qtb2FrIiwibGJsIjoiQ2FzZSAzOiBMaWJlcnR5IEhpbGwgUHJvdGVjdGVkIFBvc3QgT2FrICgyMCBpbiBEQkgpIn0" class="btn btn-outline btn-xs">Open in Field Workbench</a>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">
+                <a href="./ashland-oregon-white-oak/index.html"><strong>ASH-QG-105</strong></a><br />
+                <small><em>Quercus garryana</em> (Oregon White Oak)</small>
+              </th>
+              <td>
+                <strong>Ashland, OR</strong><br />
+                <small><code>or-ashland</code> &middot; Ashland Municipal Code (AMC) Chapter 18.4.5 (Tree Preservation and Protection), Chapter 18.5.7 (Tree Removal Permits), and AMC 18.3.10.090.D (Hillside Development)</small>
+              </td>
+              <td>
+                <span class="badge badge-heritage">Heritage</span><br />
+                <small>41.34 in (105 cm)</small>
+              </td>
+              <td>
+                <strong>CRZ:</strong> 41.34 ft (12.6 m)<br />
+                <small><strong>SRZ:</strong> 12.35 ft (3.77 m) &middot; <strong>t/R:</strong> 0.34</small>
+              </td>
+              <td>
+                <strong>Permit Required</strong><br />
+                <small>If destroyed: $6,201 (82.68 in)</small>
+              </td>
+              <td>
+                <strong class="text-accent">$427,039</strong><br />
+                <small>CTLA: $23,273 (18.35x)</small>
+              </td>
+              <td>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                  <a href="./ashland-oregon-white-oak/index.html" class="btn btn-primary btn-xs">Static Evidentiary Page</a>
+                  <a href="../demo/index.html#oa1=eyJ2IjoiMi4wLjAiLCJqIjoib3ItYXNobGFuZCIsInNwIjpbIlF1ZXJjdXMgZ2FycnlhbmEiLCJPcmVnb24gV2hpdGUgT2FrIiw0Nzg1MSwiRWN0b215Y29ycmhpemFsX0VNIl0sImRiaCI6WzEwNSxmYWxzZSwic2luZ2xlX3N0ZW0iLG51bGxdLCJ3dCI6W2ZhbHNlLCIyMDI2LTExLTEwIiwiUHJlc2VydmF0aW9uX1dpdGhfUmhpem9zcGhlcmVfUmVtZWRpYXRpb24iXSwiZGlzdCI6WzEyLDEsOCw4XSwiY3R4IjpbIkdvb2QiLCJPcGVuIEdyb3duIC8gUGFya2xhbmQiLDE4LjUsMjEsMjIuNSw3MiwiODRKVjU3VlIrUjYiLCJBU0gtUUctMTA1IiwiMjAyNi0xMC0yMyJdLCJiIjozLCJpZCI6ImNhc2UtNC1hc2hsYW5kLW9yZWdvbi13aGl0ZS1vYWsiLCJsYmwiOiJDYXNlIDQ6IEFzaGxhbmQgSGVyaXRhZ2UgT3JlZ29uIFdoaXRlIE9hayAoNDEuMyBpbiBEQkgpIn0" class="btn btn-outline btn-xs">Open in Field Workbench</a>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">
+                <a href="./medford-ponderosa-pine/index.html"><strong>MFD-PP-208</strong></a><br />
+                <small><em>Pinus ponderosa</em> (Ponderosa Pine)</small>
+              </th>
+              <td>
+                <strong>Medford, OR</strong><br />
+                <small><code>or-medford</code> &middot; Medford Municipal Code (MMC) Sections 6.700 to 6.750 (Public and Street Trees); Medford Land Development Code (MLDC) § 10.780 (Landscaping); City of Medford Tree Protection Guidelines (April 2026)</small>
+              </td>
+              <td>
+                <span class="badge badge-heritage">Heritage</span><br />
+                <small>26 in (66.04 cm)</small>
+              </td>
+              <td>
+                <strong>CRZ:</strong> 26 ft (7.92 m)<br />
+                <small><strong>SRZ:</strong> 10.19 ft (3.11 m) &middot; <strong>t/R:</strong> 0.41</small>
+              </td>
+              <td>
+                <strong>Permit Required</strong><br />
+                <small>If destroyed: $2,600 (52 in)</small>
+              </td>
+              <td>
+                <strong class="text-accent">$111,332</strong><br />
+                <small>CTLA: $11,102 (10.03x)</small>
+              </td>
+              <td>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                  <a href="./medford-ponderosa-pine/index.html" class="btn btn-primary btn-xs">Static Evidentiary Page</a>
+                  <a href="../demo/index.html#oa1=eyJ2IjoiMi4wLjAiLCJqIjoib3ItbWVkZm9yZCIsInNwIjpbIlBpbnVzIHBvbmRlcm9zYSIsIlBvbmRlcm9zYSBQaW5lIiw0ODQ2MSwiRWN0b215Y29ycmhpemFsX0VNIl0sImRiaCI6WzY2LjA0LGZhbHNlLCJzaW5nbGVfc3RlbSIsbnVsbF0sInd0IjpbZmFsc2UsIjIwMjYtMTEtMTIiLCJQcmVzZXJ2YXRpb25fV2l0aF9SaGl6b3NwaGVyZV9SZW1lZGlhdGlvbiJdLCJkaXN0IjpbMTQsMiwxMCwxMF0sImN0eCI6WyJHb29kIiwiT3BlbiBHcm93biAvIFBhcmtsYW5kIiwyNCwxNC41LDE1LDY4LCI4NEpWODRHRytKUSIsIk1GRC1QUC0yMDgiLCIyMDI2LTEwLTI4Il0sImIiOjQsImlkIjoiY2FzZS01LW1lZGZvcmQtcG9uZGVyb3NhLXBpbmUiLCJsYmwiOiJDYXNlIDU6IE1lZGZvcmQgSGVyaXRhZ2UgUG9uZGVyb3NhIFBpbmUgKDI2IGluIERCSCkifQ" class="btn btn-outline btn-xs">Open in Field Workbench</a>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="gallery-cards-heading">
+      <div class="card-header">
+        <span class="step-badge">Case Dossiers</span>
+        <h2 id="gallery-cards-heading">Individual Pre-Rendered Evidentiary Dossiers</h2>
+      </div>
+      <div class="oa-pillars-grid">
+        <article class="oa-pillar-card">
+          <div>
+            <div class="oa-pillar-top">
+              <div>
+                <span class="badge badge-heritage">Case 1 &middot; Heritage Tree</span>
+                <span class="badge badge-neutral">Austin, TX</span>
+              </div>
+              <h3><a href="./austin-heritage-live-oak/index.html" style="color: inherit; text-decoration: none;">Case 1: Austin Heritage Live Oak (30 in DBH)</a></h3>
+            </div>
+            <p style="margin-top: 8px;">
+              <strong>Specimen:</strong> <code>ATX-QV-101</code> (<em>Quercus virginiana</em>, Live Oak) at Plus Code <code>86247784+VP</code>.<br />
+              <strong>Statutory Authority:</strong> City of Austin Land Development Code (LDC) Title 25, Chapter 25-8, Subchapter B (Tree and Natural Area Protection); Environmental Criteria Manual (ECM) Section 3 (Full_Rule_Record).
+            </p>
+            <ul class="oa-pillar-list" style="margin-top: 10px;">
+              <li><strong>Evaluated DBH &amp; Shell Stability:</strong> 30 in (76.2 cm) | Mattheck <code>t/R = 0.38</code> (Stable)</li>
+              <li><strong>Protection Zones:</strong> CRZ 30 ft (9.14 m) | AS 4970 SRZ 10.77 ft (3.28 m)</li>
+              <li><strong>Permit &amp; Mitigation Liability:</strong> Permit required: ATX-QV-101 Live Oak (pruning). | Cash-in-lieu if removed: $18,000</li>
+              <li><strong>Holobiont Equity vs. CTLA:</strong> $218,609 vs. $13,699 (15.96x) | John White Age: 291 yrs</li>
+              <li><strong>Canonical SHA-256:</strong> <code>035bccca002d2569205cfad3...</code></li>
+            </ul>
+          </div>
+          <div class="oa-pillar-actions">
+            <a href="./austin-heritage-live-oak/index.html" class="btn btn-primary btn-sm">Read Static HTML Evidentiary Page</a>
+            <a href="../demo/index.html#oa1=eyJ2IjoiMi4wLjAiLCJqIjoidHgtYXVzdGluIiwic3AiOlsiUXVlcmN1cyB2aXJnaW5pYW5hIiwiTGl2ZSBPYWsiLDQ5MDA1LCJFY3RvbXljb3JyaGl6YWxfRU0iXSwiZGJoIjpbNzYuMixmYWxzZSwic2luZ2xlX3N0ZW0iLG51bGxdLCJ3dCI6W2ZhbHNlLCIyMDI2LTExLTE1IiwiUHJlc2VydmF0aW9uX1dpdGhfUmhpem9zcGhlcmVfUmVtZWRpYXRpb24iXSwiZGlzdCI6WzE1LDIsMTAsMTBdLCJjdHgiOlsiR29vZCIsIk9wZW4gR3Jvd24gLyBQYXJrbGFuZCIsMTYuNSwyMiwyNCw3OCwiODYyNDc3ODQrVlAiLCJBVFgtUVYtMTAxIiwiMjAyNi0xMC0yOCJdLCJiIjowLCJpZCI6ImNhc2UtMS1hdXN0aW4tbGl2ZS1vYWsiLCJsYmwiOiJDYXNlIDE6IEF1c3RpbiBIZXJpdGFnZSBMaXZlIE9hayAoMzAgaW4gREJIKSJ9" class="btn btn-secondary btn-sm">Open in Interactive Field Workbench (#oa1=)</a>
+          </div>
+        </article>
+
+        <article class="oa-pillar-card">
+          <div>
+            <div class="oa-pillar-top">
+              <div>
+                <span class="badge badge-heritage">Case 2 &middot; Heritage Tree</span>
+                <span class="badge badge-neutral">Georgetown, TX</span>
+              </div>
+              <h3><a href="./georgetown-multistem-pecan/index.html" style="color: inherit; text-decoration: none;">Case 2: Georgetown Multi-Stem Heritage Pecan (27 in DBH)</a></h3>
+            </div>
+            <p style="margin-top: 8px;">
+              <strong>Specimen:</strong> <code>GTN-CI-204</code> (<em>Carya illinoinensis</em>, Pecan) at Plus Code <code>8624J8MC+8Q</code>.<br />
+              <strong>Statutory Authority:</strong> Georgetown Unified Development Code (UDC) Chapter 8 (Tree Preservation, Landscaping, and Fencing) (Full_Rule_Record).
+            </p>
+            <ul class="oa-pillar-list" style="margin-top: 10px;">
+              <li><strong>Evaluated DBH &amp; Shell Stability:</strong> 27 in (68.58 cm) | Mattheck <code>t/R = 0.46</code> (Stable)</li>
+              <li><strong>Protection Zones:</strong> CRZ 27 ft (8.23 m) | AS 4970 SRZ 10.19 ft (3.11 m)</li>
+              <li><strong>Permit &amp; Mitigation Liability:</strong> Permit required: GTN-CI-204 Pecan (pruning). | Cash-in-lieu if removed: $8,100</li>
+              <li><strong>Holobiont Equity vs. CTLA:</strong> $124,448 vs. $13,432 (9.27x) | John White Age: 315 yrs</li>
+              <li><strong>Canonical SHA-256:</strong> <code>5e52af5dfc4ff7755ae424d0...</code></li>
+            </ul>
+          </div>
+          <div class="oa-pillar-actions">
+            <a href="./georgetown-multistem-pecan/index.html" class="btn btn-primary btn-sm">Read Static HTML Evidentiary Page</a>
+            <a href="../demo/index.html#oa1=eyJ2IjoiMi4wLjAiLCJqIjoidHgtZ2VvcmdldG93biIsInNwIjpbIkNhcnlhIGlsbGlub2luZW5zaXMiLCJQZWNhbiIsNDg3OTcsIkVjdG9teWNvcnJoaXphbF9FTSJdLCJkYmgiOls2OC41OCx0cnVlLCJsYXJnZXN0X3BsdXNfaGFsZiIsWzUwLjgsMzUuNTZdXSwid3QiOltmYWxzZSwiMjAyNi0xMi0wMSIsIlByZXNlcnZhdGlvbl9QcmltYXJ5Il0sImRpc3QiOlsxMCwxLDgsNV0sImN0eCI6WyJFeGNlbGxlbnQiLCJGb3Jlc3QgLyBXb29kbGFuZCIsMTksMTgsMTkuNSw4MCwiODYyNEo4TUMrOFEiLCJHVE4tQ0ktMjA0IiwiMjAyNi0xMC0yOCJdLCJiIjoxLCJpZCI6ImNhc2UtMi1nZW9yZ2V0b3duLXBlY2FuIiwibGJsIjoiQ2FzZSAyOiBHZW9yZ2V0b3duIE11bHRpLVN0ZW0gSGVyaXRhZ2UgUGVjYW4gKDI3IGluIERCSCkifQ" class="btn btn-secondary btn-sm">Open in Interactive Field Workbench (#oa1=)</a>
+          </div>
+        </article>
+
+        <article class="oa-pillar-card">
+          <div>
+            <div class="oa-pillar-top">
+              <div>
+                <span class="badge badge-protected">Case 3 &middot; Protected Tree</span>
+                <span class="badge badge-neutral">Liberty Hill, TX</span>
+              </div>
+              <h3><a href="./liberty-hill-post-oak/index.html" style="color: inherit; text-decoration: none;">Case 3: Liberty Hill Protected Post Oak (20 in DBH)</a></h3>
+            </div>
+            <p style="margin-top: 8px;">
+              <strong>Specimen:</strong> <code>LBH-QS-309</code> (<em>Quercus stellata</em>, Post Oak) at Plus Code <code>8624M38F+4X</code>.<br />
+              <strong>Statutory Authority:</strong> Liberty Hill Unified Development Code (UDC) § 6.07.01 (Tree Preservation and Mitigation), Ord. 09-O-02 / 22-O-04.06-01 (Full_Rule_Record).
+            </p>
+            <ul class="oa-pillar-list" style="margin-top: 10px;">
+              <li><strong>Evaluated DBH &amp; Shell Stability:</strong> 20 in (50.8 cm) | Mattheck <code>t/R = 0.32</code> (Stable)</li>
+              <li><strong>Protection Zones:</strong> CRZ 20 ft (6.1 m) | AS 4970 SRZ 9 ft (2.74 m)</li>
+              <li><strong>Permit &amp; Mitigation Liability:</strong> No permit-triggering work on protected trees. | Cash-in-lieu if removed: $4,500</li>
+              <li><strong>Holobiont Equity vs. CTLA:</strong> $69,172 vs. $5,127 (13.49x) | John White Age: 279 yrs</li>
+              <li><strong>Canonical SHA-256:</strong> <code>2bd6bb1783a760e3b44b99e3...</code></li>
+            </ul>
+          </div>
+          <div class="oa-pillar-actions">
+            <a href="./liberty-hill-post-oak/index.html" class="btn btn-primary btn-sm">Read Static HTML Evidentiary Page</a>
+            <a href="../demo/index.html#oa1=eyJ2IjoiMi4wLjAiLCJqIjoidHgtbGliZXJ0eS1oaWxsIiwic3AiOlsiUXVlcmN1cyBzdGVsbGF0YSIsIlBvc3QgT2FrIiw1NDc4MSwiRWN0b215Y29ycmhpemFsX0VNIl0sImRiaCI6WzUwLjgsZmFsc2UsInNpbmdsZV9zdGVtIixudWxsXSwid3QiOltmYWxzZSwiMjAyNi0xMS0yMCIsIlByZXNlcnZhdGlvbl9XaXRoX1JoaXpvc3BoZXJlX1JlbWVkaWF0aW9uIl0sImRpc3QiOlsyMiwzLDE4LDE1XSwiY3R4IjpbIkZhaXIiLCJVcmJhbiAvIFN0cmVldCBUcmVlIiwxMy41LDE0LjUsMTUsNjUsIjg2MjRNMzhGKzRYIiwiTEJILVFTLTMwOSIsIjIwMjYtMTAtMjgiXSwiYiI6MiwiaWQiOiJjYXNlLTMtbGliZXJ0eS1oaWxsLXBvc3Qtb2FrIiwibGJsIjoiQ2FzZSAzOiBMaWJlcnR5IEhpbGwgUHJvdGVjdGVkIFBvc3QgT2FrICgyMCBpbiBEQkgpIn0" class="btn btn-secondary btn-sm">Open in Interactive Field Workbench (#oa1=)</a>
+          </div>
+        </article>
+
+        <article class="oa-pillar-card">
+          <div>
+            <div class="oa-pillar-top">
+              <div>
+                <span class="badge badge-heritage">Case 4 &middot; Heritage Tree</span>
+                <span class="badge badge-neutral">Ashland, OR</span>
+              </div>
+              <h3><a href="./ashland-oregon-white-oak/index.html" style="color: inherit; text-decoration: none;">Case 4: Ashland Heritage Oregon White Oak (41.3 in DBH)</a></h3>
+            </div>
+            <p style="margin-top: 8px;">
+              <strong>Specimen:</strong> <code>ASH-QG-105</code> (<em>Quercus garryana</em>, Oregon White Oak) at Plus Code <code>84JV57VR+R6</code>.<br />
+              <strong>Statutory Authority:</strong> Ashland Municipal Code (AMC) Chapter 18.4.5 (Tree Preservation and Protection), Chapter 18.5.7 (Tree Removal Permits), and AMC 18.3.10.090.D (Hillside Development) (Full_Rule_Record).
+            </p>
+            <ul class="oa-pillar-list" style="margin-top: 10px;">
+              <li><strong>Evaluated DBH &amp; Shell Stability:</strong> 41.34 in (105 cm) | Mattheck <code>t/R = 0.34</code> (Stable)</li>
+              <li><strong>Protection Zones:</strong> CRZ 41.34 ft (12.6 m) | AS 4970 SRZ 12.35 ft (3.77 m)</li>
+              <li><strong>Permit &amp; Mitigation Liability:</strong> Permit required: ASH-QG-105 Oregon White Oak (pruning). | Cash-in-lieu if removed: $6,201</li>
+              <li><strong>Holobiont Equity vs. CTLA:</strong> $427,039 vs. $23,273 (18.35x) | John White Age: 446 yrs</li>
+              <li><strong>Canonical SHA-256:</strong> <code>c87412851e02c8a64e697684...</code></li>
+            </ul>
+          </div>
+          <div class="oa-pillar-actions">
+            <a href="./ashland-oregon-white-oak/index.html" class="btn btn-primary btn-sm">Read Static HTML Evidentiary Page</a>
+            <a href="../demo/index.html#oa1=eyJ2IjoiMi4wLjAiLCJqIjoib3ItYXNobGFuZCIsInNwIjpbIlF1ZXJjdXMgZ2FycnlhbmEiLCJPcmVnb24gV2hpdGUgT2FrIiw0Nzg1MSwiRWN0b215Y29ycmhpemFsX0VNIl0sImRiaCI6WzEwNSxmYWxzZSwic2luZ2xlX3N0ZW0iLG51bGxdLCJ3dCI6W2ZhbHNlLCIyMDI2LTExLTEwIiwiUHJlc2VydmF0aW9uX1dpdGhfUmhpem9zcGhlcmVfUmVtZWRpYXRpb24iXSwiZGlzdCI6WzEyLDEsOCw4XSwiY3R4IjpbIkdvb2QiLCJPcGVuIEdyb3duIC8gUGFya2xhbmQiLDE4LjUsMjEsMjIuNSw3MiwiODRKVjU3VlIrUjYiLCJBU0gtUUctMTA1IiwiMjAyNi0xMC0yMyJdLCJiIjozLCJpZCI6ImNhc2UtNC1hc2hsYW5kLW9yZWdvbi13aGl0ZS1vYWsiLCJsYmwiOiJDYXNlIDQ6IEFzaGxhbmQgSGVyaXRhZ2UgT3JlZ29uIFdoaXRlIE9hayAoNDEuMyBpbiBEQkgpIn0" class="btn btn-secondary btn-sm">Open in Interactive Field Workbench (#oa1=)</a>
+          </div>
+        </article>
+
+        <article class="oa-pillar-card">
+          <div>
+            <div class="oa-pillar-top">
+              <div>
+                <span class="badge badge-heritage">Case 5 &middot; Heritage Tree</span>
+                <span class="badge badge-neutral">Medford, OR</span>
+              </div>
+              <h3><a href="./medford-ponderosa-pine/index.html" style="color: inherit; text-decoration: none;">Case 5: Medford Heritage Ponderosa Pine (26 in DBH)</a></h3>
+            </div>
+            <p style="margin-top: 8px;">
+              <strong>Specimen:</strong> <code>MFD-PP-208</code> (<em>Pinus ponderosa</em>, Ponderosa Pine) at Plus Code <code>84JV84GG+JQ</code>.<br />
+              <strong>Statutory Authority:</strong> Medford Municipal Code (MMC) Sections 6.700 to 6.750 (Public and Street Trees); Medford Land Development Code (MLDC) § 10.780 (Landscaping); City of Medford Tree Protection Guidelines (April 2026) (Full_Rule_Record).
+            </p>
+            <ul class="oa-pillar-list" style="margin-top: 10px;">
+              <li><strong>Evaluated DBH &amp; Shell Stability:</strong> 26 in (66.04 cm) | Mattheck <code>t/R = 0.41</code> (Stable)</li>
+              <li><strong>Protection Zones:</strong> CRZ 26 ft (7.92 m) | AS 4970 SRZ 10.19 ft (3.11 m)</li>
+              <li><strong>Permit &amp; Mitigation Liability:</strong> Permit required: MFD-PP-208 Ponderosa Pine (pruning). | Cash-in-lieu if removed: $2,600</li>
+              <li><strong>Holobiont Equity vs. CTLA:</strong> $111,332 vs. $11,102 (10.03x) | John White Age: 225 yrs</li>
+              <li><strong>Canonical SHA-256:</strong> <code>607b4b310c63c5a3e2b65f57...</code></li>
+            </ul>
+          </div>
+          <div class="oa-pillar-actions">
+            <a href="./medford-ponderosa-pine/index.html" class="btn btn-primary btn-sm">Read Static HTML Evidentiary Page</a>
+            <a href="../demo/index.html#oa1=eyJ2IjoiMi4wLjAiLCJqIjoib3ItbWVkZm9yZCIsInNwIjpbIlBpbnVzIHBvbmRlcm9zYSIsIlBvbmRlcm9zYSBQaW5lIiw0ODQ2MSwiRWN0b215Y29ycmhpemFsX0VNIl0sImRiaCI6WzY2LjA0LGZhbHNlLCJzaW5nbGVfc3RlbSIsbnVsbF0sInd0IjpbZmFsc2UsIjIwMjYtMTEtMTIiLCJQcmVzZXJ2YXRpb25fV2l0aF9SaGl6b3NwaGVyZV9SZW1lZGlhdGlvbiJdLCJkaXN0IjpbMTQsMiwxMCwxMF0sImN0eCI6WyJHb29kIiwiT3BlbiBHcm93biAvIFBhcmtsYW5kIiwyNCwxNC41LDE1LDY4LCI4NEpWODRHRytKUSIsIk1GRC1QUC0yMDgiLCIyMDI2LTEwLTI4Il0sImIiOjQsImlkIjoiY2FzZS01LW1lZGZvcmQtcG9uZGVyb3NhLXBpbmUiLCJsYmwiOiJDYXNlIDU6IE1lZGZvcmQgSGVyaXRhZ2UgUG9uZGVyb3NhIFBpbmUgKDI2IGluIERCSCkifQ" class="btn btn-secondary btn-sm">Open in Interactive Field Workbench (#oa1=)</a>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <div class="container">
+      <p>
+        Open Arbor v2.0 &middot; Static Crawlable Case Gallery &middot; Governed by the Open Arbor Alliance &middot; Licensed under AGPL-3.0-only.
+      </p>
+    </div>
+  </footer>
+
+  <script type="module" src="../openarbor-bundle.js"></script>
+</body>
+</html>

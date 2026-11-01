@@ -23,16 +23,38 @@
       <nav class="oa-main-nav" aria-label="Primary Navigation">
         <a href="../index.html" class="oa-nav-link">Alliance Portal</a>
         <a href="./index.html" class="oa-nav-link active" aria-current="page">Live Engine Demo</a>
+        <a href="../cases/index.html" class="oa-nav-link">Case Gallery</a>
         <a href="../tools/index.html" class="oa-nav-link">41-Tool Workbench</a>
         <a href="../ordinances/index.html" class="oa-nav-link">Ordinance Commons</a>
         <a href="../mcp/index.html" class="oa-nav-link">MCP Playground</a>
         <a href="../spec/index.html" class="oa-nav-link">RCA-Spec v2.0</a>
+        <a href="../methods/index.html" class="oa-nav-link">Falsifiability</a>
       </nav>
       <div class="oa-theme-control">
         <button type="button" id="oa-theme-toggle" class="btn-secondary btn-sm" aria-label="Toggle color scheme">Theme: Auto</button>
       </div>
     </div>
   </header>
+
+  <div id="sticky-determination-bar" class="oa-sticky-verdict-bar no-print" role="region" aria-label="Live Determination Summary" tabindex="0">
+    <div class="oa-sticky-verdict-inner">
+      <div class="oa-sticky-metrics">
+        <span class="oa-sticky-item"><strong>Status:</strong> <span id="sticky-status-val">Heritage Tree (Protected)</span></span>
+        <span class="oa-sticky-sep" aria-hidden="true">|</span>
+        <span class="oa-sticky-item"><strong>DBH:</strong> <span id="sticky-dbh-val">30 in (76.2 cm)</span></span>
+        <span class="oa-sticky-sep" aria-hidden="true">|</span>
+        <span class="oa-sticky-item"><strong>CRZ:</strong> <span id="sticky-crz-val">30 ft (9.14 m)</span></span>
+        <span class="oa-sticky-sep" aria-hidden="true">|</span>
+        <span class="oa-sticky-item"><strong>Replacement Owed:</strong> <span id="sticky-replacement-val">90 in</span></span>
+        <span class="oa-sticky-sep" aria-hidden="true">|</span>
+        <span class="oa-sticky-item"><strong>Cash in Lieu:</strong> <span id="sticky-cash-val">$18,000</span></span>
+      </div>
+      <div class="oa-sticky-actions">
+        <button type="button" id="btn-copy-verdict-link" class="btn-secondary btn-sm">Copy verdict link</button>
+        <button type="button" id="btn-export-print-report" class="btn-primary btn-sm">Export report</button>
+      </div>
+    </div>
+  </div>
 
   <section class="app-header">
     <div class="container header-inner">
@@ -519,6 +541,20 @@
           </div>
           <div id="verdict-ordinance-body"></div>
 
+          <div id="provenance-surface-panel" class="oa-provenance-panel">
+            <div class="oa-provenance-meta" id="provenance-meta-strip"></div>
+            <div class="oa-provenance-unverified" id="provenance-unverified-panel"></div>
+          </div>
+
+          <div class="field" style="margin-top: 14px;">
+            <label for="permalink-url-display">Shareable Assessment Permalink (<code>#oa1=...</code>)</label>
+            <span class="hint">Versioned URL fragment encoding jurisdiction, species, DBH, work type, disturbance, and site context.</span>
+            <div class="input-with-btn">
+              <input type="text" id="permalink-url-display" readonly value="https://openarbor.org/demo/#oa1=...">
+              <button type="button" id="btn-copy-verdict-link-secondary" class="btn btn-secondary">Copy Verdict Link</button>
+            </div>
+          </div>
+
           <!-- SPATIAL MAP LAYER SWITCHER -->
           <div class="spatial-map-switcher-section">
             <div class="svg-map-header">
@@ -759,6 +795,24 @@
             style="width: 100%; min-height: 280px; resize: vertical;"
             spellcheck="false"
           ></textarea>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- D6: EVIDENTIARY PRINT REPORT (#evidentiary-print-sheet)               -->
+    <!-- ===================================================================== -->
+    <section id="evidentiary-print-sheet" class="oa-print-sheet" aria-label="Evidentiary Print Report">
+      <div id="print-report-dynamic-body">
+        <header class="oa-print-header">
+          <h1>Open Arbor Evidentiary Determination Report</h1>
+          <p class="oa-print-subtitle">ANSI A300 Part 5 | ISA BMP | AS 4970 | RCA-Spec v2.0 | Dataset Version 2.0.0 (Last Verified: 2026-10-23)</p>
+        </header>
+        <div id="print-svg-map-holder" class="oa-print-map"></div>
+        <div class="oa-print-signature-block">
+          <h3>Practitioner Evidentiary Attestation &amp; Signature Block</h3>
+          <p><strong>Practitioner Name:</strong> George Steward | <strong>Credential:</strong> ISA Certified Arborist TX-362025A / Oak Wilt Qualified</p>
+          <p><strong>Practitioner Signature:</strong> ___________________________ &nbsp;&nbsp; <strong>Date Signed:</strong> _______________</p>
         </div>
       </div>
     </section>

@@ -114,6 +114,15 @@ export function initSharedThemeToggle() {
       applyThemeState();
     });
   }
+
+  if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      const swUrl = new URL('../sw.js', import.meta.url).pathname;
+      navigator.serviceWorker.register(swUrl).catch(() => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      });
+    });
+  }
 }
 
 /**

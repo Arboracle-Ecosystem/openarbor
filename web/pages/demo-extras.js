@@ -32,6 +32,74 @@ import {
   FIXED_PARITY_CASES,
 } from '../presets.js';
 import { getLatestFieldState } from '../app.js';
+import { renderExpandableHashHtml } from './masterwork-core.js';
+
+const RIPARIAN_GROVE_STAND_TREES = [
+  {
+    tag: 'ATX-QV-101',
+    species: 'Quercus virginiana (Live Oak)',
+    dbh_inches: 34.0,
+    x_ft: 0,
+    y_ft: 0,
+    case_id: 'case-1-austin-live-oak',
+  },
+  {
+    tag: 'ATX-QV-102',
+    species: 'Quercus virginiana (Live Oak)',
+    dbh_inches: 28.0,
+    x_ft: 24,
+    y_ft: 12,
+    case_id: 'case-1-austin-live-oak',
+  },
+  {
+    tag: 'GTN-CI-204',
+    species: 'Carya illinoinensis (Pecan)',
+    dbh_inches: 31.0,
+    x_ft: 46,
+    y_ft: -6,
+    case_id: 'case-2-georgetown-pecan',
+  },
+  {
+    tag: 'GTN-CI-205',
+    species: 'Carya illinoinensis (Pecan)',
+    dbh_inches: 24.5,
+    x_ft: 68,
+    y_ft: 8,
+    case_id: 'case-2-georgetown-pecan',
+  },
+  {
+    tag: 'RIP-TD-301',
+    species: 'Taxodium distichum (Bald Cypress)',
+    dbh_inches: 36.0,
+    x_ft: 34,
+    y_ft: -32,
+    case_id: 'case-1-austin-live-oak',
+  },
+  {
+    tag: 'RIP-UC-302',
+    species: 'Ulmus crassifolia (Cedar Elm)',
+    dbh_inches: 19.5,
+    x_ft: -18,
+    y_ft: 20,
+    case_id: 'case-2-georgetown-pecan',
+  },
+  {
+    tag: 'RIP-QM-303',
+    species: 'Quercus macrocarpa (Bur Oak)',
+    dbh_inches: 29.0,
+    x_ft: -26,
+    y_ft: -16,
+    case_id: 'case-1-austin-live-oak',
+  },
+  {
+    tag: 'LHT-QS-309',
+    species: 'Quercus stellata (Post Oak)',
+    dbh_inches: 21.0,
+    x_ft: 8,
+    y_ft: -28,
+    case_id: 'case-3-liberty-hill-post-oak',
+  },
+];
 
 const round1 = (n) => Math.round(Number(n || 0) * 10) / 10;
 const round2 = (n) => Math.round(Number(n || 0) * 100) / 100;
@@ -153,10 +221,8 @@ export function initSharedThemeToggle() {
 
   if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      const swUrl = new URL('../sw.js', import.meta.url).pathname;
-      navigator.serviceWorker.register(swUrl).catch(() => {
-        navigator.serviceWorker.register('/sw.js').catch(() => {});
-      });
+      const swUrl = new URL('./sw.js', import.meta.url).pathname;
+      navigator.serviceWorker.register(swUrl).catch(() => {});
     });
   }
 }
@@ -440,28 +506,36 @@ export function initDemoExtrasUI() {
   const standTbody = document.getElementById('stand-builder-tbody');
   const btnStandAdd = document.getElementById('btn-stand-add-tree');
   const btnStandReset = document.getElementById('btn-stand-reset');
+  const btnStandLoadGrove = document.getElementById('btn-stand-load-grove');
   const inputStandParcelSqm = document.getElementById('input-stand-parcel-sqm');
 
   function renderStandTableRows() {
     if (!standTbody) return;
-    const speciesOptions = ALL_SPECIES_PRESETS.map(
-      (s) => `<option value="${s.scientific} (${s.common})">${s.common} (${s.scientific})</option>`
-    ).join('');
     const caseOptions = FIXED_PARITY_CASES.map(
       (c) => `<option value="${c.id}">${c.label}</option>`
     ).join('');
 
     standTbody.innerHTML = standTrees
-      .map(
-        (t, idx) => `
+      .map((t, idx) => {
+        const presetValues = ALL_SPECIES_PRESETS.map(
+          (s) => `${s.scientific} (${s.common})`
+        );
+        const hasCurrentSpecies = presetValues.includes(t.species);
+        const speciesOpts = ALL_SPECIES_PRESETS.map((s) => {
+          const val = `${s.scientific} (${s.common})`;
+          const sel = val === t.species ? ' selected' : '';
+          return `<option value="${val}"${sel}>${s.common} (${s.scientific})</option>`;
+        }).join('');
+
+        return `
         <tr data-stand-idx="${idx}">
           <td>
             <input type="text" class="stand-input-tag" value="${t.tag}" aria-label="Tree Tag row ${idx + 1}">
           </td>
           <td>
             <select class="stand-input-species" aria-label="Species row ${idx + 1}">
-              <option value="${t.species}">${t.species}</option>
-              ${speciesOptions}
+              ${hasCurrentSpecies ? '' : `<option value="${t.species}" selected>${t.species}</option>`}
+              ${speciesOpts}
             </select>
           </td>
           <td>
@@ -479,15 +553,18 @@ export function initDemoExtrasUI() {
             </select>
           </td>
           <td>
-            <button type="button" class="btn btn-outline btn-stand-remove" data-remove-idx="${idx}" ${standTrees.length <= 1 ? 'disabled' : ''}>Remove</button>
+            <div class="oa-stand-row-actions">
+              <button type="button" class="btn btn-secondary btn-xs btn-stand-clone" data-clone-idx="${idx}">Clone</button>
+              <button type="button" class="btn btn-outline btn-xs btn-stand-remove" data-remove-idx="${idx}" ${standTrees.length <= 1 ? 'disabled' : ''}>Remove</button>
+            </div>
           </td>
         </tr>
-      `
-      )
+      `;
+      })
       .join('');
   }
 
-  standTbody?.addEventListener('input', (e) => {
+  const handleStandRowEdit = (e) => {
     const row = e.target.closest('tr[data-stand-idx]');
     if (!row) return;
     const idx = Number(row.dataset.standIdx);
@@ -502,9 +579,29 @@ export function initDemoExtrasUI() {
     item.case_id = row.querySelector('.stand-input-case')?.value || FIXED_PARITY_CASES[0].id;
 
     renderStandUnionOutputs();
-  });
+  };
+
+  standTbody?.addEventListener('input', handleStandRowEdit);
+  standTbody?.addEventListener('change', handleStandRowEdit);
 
   standTbody?.addEventListener('click', (e) => {
+    const cloneBtn = e.target.closest('.btn-stand-clone');
+    if (cloneBtn) {
+      const idx = Number(cloneBtn.dataset.cloneIdx);
+      const source = standTrees[idx];
+      if (source) {
+        const nextNum = standTrees.length + 1;
+        standTrees.splice(idx + 1, 0, {
+          ...JSON.parse(JSON.stringify(source)),
+          tag: `${source.tag}-C${nextNum}`,
+          x_ft: Number(source.x_ft || 0) + 12,
+          y_ft: Number(source.y_ft || 0) + 8,
+        });
+        renderStandUnionAndScorecard();
+      }
+      return;
+    }
+
     const rmBtn = e.target.closest('.btn-stand-remove');
     if (!rmBtn) return;
     const idx = Number(rmBtn.dataset.removeIdx);
@@ -521,7 +618,7 @@ export function initDemoExtrasUI() {
       species: 'Quercus virginiana (Live Oak)',
       dbh_inches: 24.0,
       x_ft: (nextNum - 1) * 14,
-      y_ft: (nextNum % 2 === 0 ? 12 : -10),
+      y_ft: nextNum % 2 === 0 ? 12 : -10,
       case_id: 'case-1-austin-live-oak',
     });
     renderStandUnionAndScorecard();
@@ -529,6 +626,13 @@ export function initDemoExtrasUI() {
 
   btnStandReset?.addEventListener('click', () => {
     standTrees = JSON.parse(JSON.stringify(DEFAULT_STAND_TREES));
+    if (inputStandParcelSqm) inputStandParcelSqm.value = '4047';
+    renderStandUnionAndScorecard();
+  });
+
+  btnStandLoadGrove?.addEventListener('click', () => {
+    standTrees = JSON.parse(JSON.stringify(RIPARIAN_GROVE_STAND_TREES));
+    if (inputStandParcelSqm) inputStandParcelSqm.value = '6070';
     renderStandUnionAndScorecard();
   });
 
@@ -773,11 +877,11 @@ export function initDemoExtrasUI() {
         <div>
           <strong>W3C Verifiable Credential / Open Badges 3.0 Status:</strong>
           <span class="badge badge-protected">MINTED &amp; SCHEMA VERIFIED</span>
-          <span class="badge badge-neutral">Anchored Report #1 SHA-256: <code id="report_sha256">${anchoredPrimarySha256.slice(0, 16)}...</code></span>
+          <span class="metric-sub">Anchored Report #1 SHA-256: ${renderExpandableHashHtml(anchoredPrimarySha256, { codeId: 'report_sha256' })}</span>
         </div>
         <div class="sha-box">
           <span>Credential Proof Value:</span>
-          <code>${minted.proof.proofValue}</code>
+          ${renderExpandableHashHtml(minted.proof.proofValue, { headChars: 17, tailChars: 8 })}
         </div>
       `;
     }
@@ -808,11 +912,11 @@ export function initDemoExtrasUI() {
               <strong class="verdict-big text-accent">VERIFIED MATCH</strong>
               <span class="badge badge-protected">Zero Byte Tampering Detected</span>
             </div>
-            <span class="metric-sub">Anchored <code>report_sha256</code>: <code>${anchoredPrimarySha256}</code></span>
+            <div class="metric-sub">Anchored <code>report_sha256</code>: ${renderExpandableHashHtml(anchoredPrimarySha256)}</div>
           </div>
           <div class="verdict-right">
             <span class="metric-label">Recomputed Canonical SHA-256</span>
-            <code>${recomputedHash}</code>
+            ${renderExpandableHashHtml(recomputedHash)}
           </div>
         `;
       } else {
@@ -824,11 +928,11 @@ export function initDemoExtrasUI() {
               <strong class="verdict-big text-danger">TAMPER DETECTED: SHA-256 MISMATCH</strong>
               <span class="badge badge-danger">Credential Evidence Invalidated</span>
             </div>
-            <span class="metric-sub">Anchored <code>report_sha256</code>: <code>${anchoredPrimarySha256}</code></span>
+            <div class="metric-sub">Anchored <code>report_sha256</code>: ${renderExpandableHashHtml(anchoredPrimarySha256)}</div>
           </div>
           <div class="verdict-right">
             <span class="metric-label">Recomputed Tampered SHA-256</span>
-            <code class="text-danger">${recomputedHash}</code>
+            ${renderExpandableHashHtml(recomputedHash, { danger: true })}
           </div>
         `;
       }

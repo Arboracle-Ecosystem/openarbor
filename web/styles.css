@@ -50,11 +50,25 @@
 html, body {
   margin: 0;
   padding: 0;
+  max-inline-size: 100%;
+  overflow-x: clip;
   background-color: var(--bg-deep);
   color: var(--text-main);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   line-height: 1.45;
   -webkit-font-smoothing: antialiased;
+}
+
+code,
+.muni-link,
+.metric-value,
+.metric-sub,
+.citation-callout,
+.subtitle,
+.oa-prov-title,
+.data-table td,
+.data-table th {
+  overflow-wrap: anywhere;
 }
 
 .sr-only {
@@ -162,6 +176,62 @@ html, body {
   gap: 6px;
 }
 
+@media (max-width: 680px) {
+  .oa-site-header {
+    padding: 6px 0;
+  }
+
+  .oa-nav-container {
+    gap: 6px 8px;
+    padding: 0 10px;
+  }
+
+  .oa-brand-link {
+    font-size: 0.96rem;
+    gap: 6px;
+  }
+
+  .oa-brand-mark {
+    width: 26px;
+    height: 26px;
+    font-size: 0.76rem;
+  }
+
+  .oa-theme-control {
+    gap: 4px;
+    margin-inline-start: auto;
+  }
+
+  .oa-theme-control .btn-sm {
+    min-height: 30px;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+  }
+
+  .oa-main-nav {
+    order: 3;
+    inline-size: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    gap: 4px;
+    padding-bottom: 2px;
+  }
+
+  .oa-main-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .oa-nav-link,
+  .oa-nav-veil-trigger {
+    flex-shrink: 0;
+    padding: 5px 9px;
+    min-height: 31px;
+    font-size: 0.79rem;
+    white-space: nowrap;
+  }
+}
+
 .app-header {
   background: linear-gradient(180deg, var(--header-grad-top) 0%, var(--bg-deep) 100%);
   border-bottom: 1px solid var(--border-main);
@@ -227,15 +297,23 @@ h3 {
   border: 1px solid var(--border-main);
   border-radius: var(--radius-md);
   padding: 14px;
+  min-inline-size: 0;
+  max-inline-size: 100%;
 }
 
 .card-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
+  gap: 8px 10px;
   margin-bottom: 12px;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--border-subtle);
+  min-inline-size: 0;
+}
+
+.card-header > * {
+  min-inline-size: 0;
 }
 
 .section-header-compact {
@@ -507,9 +585,15 @@ input.user-valid-fallback {
 
 .metric-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 8px;
   margin: 10px 0;
+}
+
+@media (min-width: 520px) {
+  .metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .metric-box {
@@ -520,6 +604,7 @@ input.user-valid-fallback {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-inline-size: 0;
 }
 
 .highlight-box {
@@ -580,6 +665,16 @@ input.user-valid-fallback {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  min-inline-size: 0;
+}
+
+.results-stack > *,
+.verdict-banner > *,
+.muni-header > *,
+.linter-row > *,
+.svg-map-header > * {
+  min-inline-size: 0;
+  max-inline-size: 100%;
 }
 
 .verdict-banner {
@@ -592,10 +687,12 @@ input.user-valid-fallback {
   padding: 12px;
   border-radius: var(--radius-sm);
   border-left: 4px solid var(--accent-green);
+  min-inline-size: 0;
 }
 
 .verdict-title-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   margin-top: 2px;
@@ -707,6 +804,12 @@ input.user-valid-fallback {
     background: var(--bg-elevated);
   }
 
+  .table-wrapper td:nth-child(1)::before {
+    content: var(--label-1, "") ": ";
+    font-weight: 600;
+    color: var(--accent-bright);
+  }
+
   .table-wrapper td:nth-child(2)::before {
     content: var(--label-2, "") ": ";
     font-weight: 600;
@@ -750,6 +853,118 @@ input.user-valid-fallback {
   }
 }
 
+/* Mode 2 Multi-Tree Stand Specimen Cards on Narrow Containers */
+.oa-stand-table-wrapper {
+  max-block-size: none;
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+.oa-stand-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+@container (width < 760px) {
+  .oa-stand-table-wrapper {
+    border: none;
+    background: transparent;
+    overflow: visible;
+  }
+
+  .oa-stand-table-wrapper table,
+  .oa-stand-table-wrapper thead,
+  .oa-stand-table-wrapper tbody,
+  .oa-stand-table-wrapper tr,
+  .oa-stand-table-wrapper th,
+  .oa-stand-table-wrapper td {
+    display: block;
+  }
+
+  .oa-stand-table-wrapper thead {
+    display: none;
+  }
+
+  .oa-stand-table-wrapper tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    padding: 12px;
+    margin-block-end: 12px;
+    border: 1px solid var(--border-main);
+    border-radius: var(--radius-md);
+    background: var(--bg-elevated);
+  }
+
+  .oa-stand-table-wrapper td {
+    padding: 0;
+    border: none;
+    min-inline-size: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  /* Species, Diagnostic Template, and Action span full card width; Tag+DBH and X+Y pair cleanly */
+  .oa-stand-table-wrapper td:nth-child(2),
+  .oa-stand-table-wrapper td:nth-child(6),
+  .oa-stand-table-wrapper td:nth-child(7) {
+    grid-column: 1 / -1;
+  }
+
+  .oa-stand-table-wrapper td:nth-child(1)::before {
+    content: var(--label-1, "Tree Tag");
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--accent-bright);
+  }
+  .oa-stand-table-wrapper td:nth-child(2)::before {
+    content: var(--label-2, "Species");
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--accent-bright);
+  }
+  .oa-stand-table-wrapper td:nth-child(3)::before {
+    content: var(--label-3, "DBH (in)");
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--accent-bright);
+  }
+  .oa-stand-table-wrapper td:nth-child(4)::before {
+    content: var(--label-4, "Local X (ft)");
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--accent-bright);
+  }
+  .oa-stand-table-wrapper td:nth-child(5)::before {
+    content: var(--label-5, "Local Y (ft)");
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--accent-bright);
+  }
+  .oa-stand-table-wrapper td:nth-child(6)::before {
+    content: var(--label-6, "RCA Diagnostic Template");
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--accent-bright);
+  }
+  .oa-stand-table-wrapper td:nth-child(7)::before {
+    content: "";
+    display: none;
+  }
+
+  .oa-stand-row-actions {
+    padding-top: 4px;
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  .oa-stand-row-actions .btn {
+    flex: 1;
+    min-height: 40px;
+  }
+}
+
 .text-accent {
   color: var(--accent-bright);
 }
@@ -764,22 +979,32 @@ input.user-valid-fallback {
   color: var(--accent-bright);
 }
 
-.svg-map-wrap {
+.svg-map-wrap,
+.oa-print-map,
+#stand-union-svg {
   margin-top: 12px;
+  max-inline-size: 100%;
+  overflow: hidden;
 }
 
 .svg-map-header {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  gap: 8px;
   flex-wrap: wrap;
   font-size: 0.82rem;
   margin-bottom: 6px;
   color: var(--text-muted);
 }
 
-.svg-map-wrap svg {
-  width: 100%;
-  height: auto;
+.svg-map-wrap svg,
+.oa-print-map svg,
+#stand-union-svg svg {
+  display: block;
+  inline-size: 100%;
+  max-inline-size: 100%;
+  block-size: auto;
   border-radius: var(--radius-sm);
 }
 
@@ -1135,18 +1360,30 @@ input.user-valid-fallback {
 
 .oa-schema-filter-wrap {
   flex: 1;
-  min-width: 240px;
+  min-inline-size: min(240px, 100%);
 }
 
 dialog {
-  max-width: min(820px, 94vw);
-  width: 100%;
+  box-sizing: border-box;
+  inline-size: min(820px, calc(100dvw - 20px));
+  max-inline-size: calc(100dvw - 20px);
+  max-block-size: calc(100dvh - 24px);
+  margin: auto;
+  inset: 0;
   background: var(--bg-card);
   color: var(--text-main);
   border: 1px solid var(--accent-bright);
   border-radius: var(--radius-md);
-  padding: 18px;
+  padding: 14px;
   box-shadow: var(--shadow-elevated);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+@media (min-width: 640px) {
+  dialog {
+    padding: 18px;
+  }
 }
 
 dialog:modal {
@@ -1175,49 +1412,49 @@ dialog::backdrop {
     align-items: center;
   }
   .preset-bar {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .field-row-2 {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .field-row-3 {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .field-row-4 {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
   .field-row-5 {
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
   .metric-grid-2 {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .metric-grid-3 {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .metric-grid-4 {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
   .export-action-bar {
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
   .oa-hero-grid {
-    grid-template-columns: 1.15fr 0.85fr;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
   }
   .oa-strip-grid {
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
   .oa-pillars-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .oa-code-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .oa-mcp-tool-bar {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .oa-mcp-dual-pane {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -1361,14 +1598,14 @@ textarea:focus-visible {
 
 .oa-provenance-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   margin-top: 12px;
 }
 
 @media (min-width: 720px) {
   .oa-provenance-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -1379,8 +1616,11 @@ textarea:focus-visible {
   background: var(--bg-card);
   border: 1px solid var(--border-main);
   border-radius: var(--radius-md);
-  padding: 18px;
+  padding: 16px;
   margin-top: 16px;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow-x: hidden;
 }
 
 .oa-print-header {
@@ -1392,12 +1632,19 @@ textarea:focus-visible {
   border-bottom: 2px solid var(--border-main);
   padding-bottom: 10px;
   margin-bottom: 12px;
+  min-inline-size: 0;
+}
+
+.oa-print-header > * {
+  min-inline-size: 0;
+  max-inline-size: 100%;
 }
 
 .oa-print-section {
   margin-bottom: 14px;
   padding-bottom: 10px;
   border-bottom: 1px solid var(--border-subtle);
+  min-inline-size: 0;
 }
 
 .oa-signature-block {
@@ -1406,13 +1653,20 @@ textarea:focus-visible {
   border: 1px solid var(--border-main);
   border-radius: var(--radius-sm);
   background: var(--bg-elevated);
+  min-inline-size: 0;
 }
 
 .oa-signature-lines {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 18px;
   margin-top: 22px;
+}
+
+@media (min-width: 560px) {
+  .oa-signature-lines {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .oa-signature-line {
@@ -1482,7 +1736,8 @@ textarea:focus-visible {
 }
 
 .oa-deep-popover {
-  width: min(440px, 92vw);
+  inline-size: min(440px, calc(100dvw - 24px));
+  max-inline-size: calc(100dvw - 24px);
   padding: 14px;
   background: var(--bg-card);
   color: var(--text-main);
@@ -1804,14 +2059,14 @@ details.oa-veil:not([open])::details-content {
 
 .oa-lens-workspace {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 18px;
   align-items: start;
 }
 
 @media (min-width: 920px) {
   .oa-lens-workspace {
-    grid-template-columns: 1.22fr 0.78fr;
+    grid-template-columns: minmax(0, 1.22fr) minmax(0, 0.78fr);
   }
 }
 
@@ -1821,12 +2076,40 @@ details.oa-veil:not([open])::details-content {
   border-radius: var(--radius-md);
   padding: 10px;
   overflow: hidden;
+  min-inline-size: 0;
+}
+
+.oa-living-lens-dual {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.oa-living-lens-ring-svg {
+  border-top: 1px dashed var(--border-subtle);
+  padding-top: 8px;
+}
+
+@media (min-width: 760px) {
+  .oa-living-lens-dual {
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, 0.92fr);
+    gap: 12px;
+  }
+
+  .oa-living-lens-ring-svg {
+    border-top: none;
+    padding-top: 0;
+    border-inline-start: 1px dashed var(--border-subtle);
+    padding-inline-start: 10px;
+  }
 }
 
 .oa-living-svg-stage svg {
   display: block;
-  width: 100%;
-  height: auto;
+  inline-size: 100%;
+  max-inline-size: 100%;
+  block-size: auto;
   border-radius: var(--radius-sm);
 }
 
@@ -1922,13 +2205,13 @@ details.oa-veil:not([open])::details-content {
 
 .oa-two-futures-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
 }
 
 @media (min-width: 780px) {
   .oa-two-futures-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -1940,6 +2223,7 @@ details.oa-veil:not([open])::details-content {
   gap: 8px;
   border: 1px solid var(--border-subtle);
   background: var(--bg-input);
+  min-inline-size: 0;
 }
 
 .oa-future-liquidation {
@@ -2004,14 +2288,14 @@ details.oa-veil:not([open])::details-content {
 /* 5. Act II Human Truth Cards & Phased Stewardship Triage Grid */
 .oa-truth-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   margin-top: 14px;
 }
 
 @media (min-width: 880px) {
   .oa-truth-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -2025,6 +2309,7 @@ details.oa-veil:not([open])::details-content {
   justify-content: space-between;
   gap: 12px;
   box-shadow: var(--shadow-soft);
+  min-inline-size: 0;
 }
 
 .oa-truth-card h3 {
@@ -2042,14 +2327,14 @@ details.oa-veil:not([open])::details-content {
 
 .oa-triage-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 10px;
   margin-top: 8px;
 }
 
 @media (min-width: 720px) {
   .oa-triage-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -2062,6 +2347,7 @@ details.oa-veil:not([open])::details-content {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-inline-size: 0;
 }
 
 .oa-arborist-banner {
@@ -2074,11 +2360,13 @@ details.oa-veil:not([open])::details-content {
   align-items: center;
   justify-content: space-between;
   gap: 14px;
+  min-inline-size: 0;
 }
 
 /* 6. Shared Arborist Handoff Modal Dialog (.oa-handoff-dialog) */
 .oa-handoff-dialog {
-  max-width: min(760px, 94vw);
+  inline-size: min(760px, calc(100dvw - 20px));
+  max-inline-size: calc(100dvw - 20px);
   padding: 0;
   border: 1px solid var(--cambium-border);
   border-radius: var(--radius-lg);
@@ -2087,10 +2375,17 @@ details.oa-veil:not([open])::details-content {
 }
 
 .oa-handoff-dialog-inner {
-  padding: 20px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 14px;
+  min-inline-size: 0;
+}
+
+@media (min-width: 640px) {
+  .oa-handoff-dialog-inner {
+    padding: 20px;
+  }
 }
 
 .oa-handoff-header {
@@ -2100,6 +2395,11 @@ details.oa-veil:not([open])::details-content {
   gap: 12px;
   padding-bottom: 10px;
   border-bottom: 1px solid var(--border-subtle);
+  min-inline-size: 0;
+}
+
+.oa-handoff-header > * {
+  min-inline-size: 0;
 }
 
 .oa-handoff-close-btn {
@@ -2111,6 +2411,7 @@ details.oa-veil:not([open])::details-content {
   color: var(--text-main);
   font-weight: 700;
   cursor: pointer;
+  flex: none;
 }
 
 .oa-handoff-tabs {
@@ -2120,7 +2421,8 @@ details.oa-veil:not([open])::details-content {
 }
 
 .oa-handoff-textarea {
-  width: 100%;
+  inline-size: 100%;
+  max-inline-size: 100%;
   min-height: 200px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.81rem;
@@ -2138,11 +2440,13 @@ details.oa-veil:not([open])::details-content {
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+  min-inline-size: 0;
 }
 
 .oa-handoff-url-row input[type="text"] {
-  flex: 1;
-  min-width: 220px;
+  flex: 1 1 180px;
+  min-inline-size: 0;
+  inline-size: 100%;
   min-height: 38px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.78rem;
@@ -2168,6 +2472,108 @@ details.oa-veil:not([open])::details-content {
   opacity: 0.7;
 }
 
+/* 7. Expandable SHA-256 Digest & Permalink Chip (details.oa-hash-chip) */
+details.oa-hash-chip {
+  display: inline-block;
+  max-inline-size: 100%;
+  vertical-align: middle;
+}
+
+details.oa-hash-chip[open] {
+  display: block;
+  inline-size: 100%;
+  margin-top: 4px;
+}
+
+summary.oa-hash-chip-summary {
+  list-style: none;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: var(--code-bg);
+  color: var(--text-main);
+  cursor: pointer;
+  font-size: 0.78rem;
+  max-inline-size: 100%;
+  user-select: none;
+}
+
+summary.oa-hash-chip-summary::-webkit-details-marker {
+  display: none;
+}
+
+summary.oa-hash-chip-summary:hover {
+  border-color: var(--cambium-border);
+  background: var(--bg-elevated);
+}
+
+summary.oa-hash-chip-summary:focus-visible {
+  outline: 2px solid var(--oa-heartwood-gold, #D4B86A);
+  outline-offset: 2px;
+}
+
+details.oa-hash-chip.is-danger summary.oa-hash-chip-summary,
+details.oa-hash-chip.is-danger .oa-hash-chip-panel {
+  border-color: var(--danger-red);
+  color: var(--danger-text);
+}
+
+.oa-hash-chip-short {
+  font-size: 0.78rem;
+  color: inherit;
+  background: transparent;
+  padding: 0;
+  border: none;
+}
+
+.oa-hash-chip-action-closed,
+.oa-hash-chip-action-open {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent-copper);
+}
+
+details.oa-hash-chip:not([open]) .oa-hash-chip-action-open {
+  display: none;
+}
+
+details.oa-hash-chip[open] .oa-hash-chip-action-closed {
+  display: none;
+}
+
+.oa-hash-chip-panel {
+  margin-top: 6px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: var(--code-bg);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  max-inline-size: 100%;
+}
+
+.oa-hash-chip-full {
+  flex: 1 1 180px;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+  font-size: 0.76rem;
+  line-height: 1.45;
+  background: transparent;
+  padding: 0;
+  border: none;
+}
+
 @page {
   size: letter portrait;
   margin: 0.4in;
@@ -2182,6 +2588,7 @@ details.oa-veil:not([open])::details-content {
     color-scheme: light !important;
     font-size: 9pt;
     line-height: 1.25;
+    overflow: visible !important;
   }
 
   .oa-site-header,
@@ -2200,8 +2607,22 @@ details.oa-veil:not([open])::details-content {
   .app-footer,
   .header-actions,
   .export-action-bar,
-  .preview-tabs {
+  .preview-tabs,
+  .oa-hash-chip-summary,
+  .oa-hash-copy-btn {
     display: none !important;
+  }
+
+  details.oa-hash-chip,
+  details.oa-hash-chip::details-content,
+  .oa-hash-chip-panel {
+    display: inline !important;
+    block-size: auto !important;
+    content-visibility: visible !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
   }
 
   body:has(#evidentiary-print-sheet) .app-header,
@@ -2217,6 +2638,42 @@ details.oa-veil:not([open])::details-content {
     border: none !important;
     padding: 0 !important;
     margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  .oa-print-sheet .table-wrapper {
+    overflow: visible !important;
+    max-block-size: none !important;
+    border: none !important;
+    margin: 2pt 0 !important;
+    container-type: normal !important;
+  }
+
+  .oa-print-sheet table {
+    display: table !important;
+    inline-size: 100% !important;
+  }
+
+  .oa-print-sheet thead {
+    display: table-header-group !important;
+  }
+
+  .oa-print-sheet tbody {
+    display: table-row-group !important;
+  }
+
+  .oa-print-sheet tr {
+    display: table-row !important;
+  }
+
+  .oa-print-sheet th,
+  .oa-print-sheet td {
+    display: table-cell !important;
+  }
+
+  .oa-print-sheet td::before {
+    content: none !important;
+    display: none !important;
   }
 
   .card,

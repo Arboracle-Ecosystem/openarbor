@@ -63,6 +63,7 @@ import {
   encodeAssessmentPermalink,
   formatStickyDeterminationSummary,
   inspectMunicipalityProvenance,
+  renderExpandableHashHtml,
 } from '../web/pages/masterwork-core.js';
 
 import { validateOrdinanceFile } from '../scripts/validate-ordinance.mjs';
@@ -321,7 +322,7 @@ function renderSharedHeader(relRoot, activeRoute) {
     {
       href: `${relRoot}/methods/index.html`,
       title: 'Executable Proof & Falsifiability',
-      desc: 'Bit-for-bit parity audits, epistemic boundaries, and physical kill criteria.',
+      desc: 'Bit-for-bit parity audits, STIM epistemic sieve, and physical kill criteria.',
       id: 'methods',
     },
   ];
@@ -363,12 +364,12 @@ function renderSharedHeader(relRoot, activeRoute) {
           popovertarget="oa-deep-stack-popover"
           aria-expanded="false"
         >
-          Under the Veil
+          Understory
         </button>
       </nav>
       <div id="oa-deep-stack-popover" class="oa-deep-popover" popover>
         <div class="oa-deep-popover-header">
-          <span>Technical &amp; Scientific Surfaces</span>
+          <span>Forest OS Understory &middot; STIM-Aligned Stack</span>
           <span>AGPL-3.0</span>
         </div>
 ${popoverHtml}
@@ -380,7 +381,7 @@ ${popoverHtml}
           class="btn btn-secondary btn-sm oa-veil-mode-btn"
           aria-pressed="false"
         >
-          Veil: Canopy
+          Layer: Canopy
         </button>
         <button
           type="button"
@@ -634,7 +635,7 @@ function renderSingleCaseHtml({ caseObj, evalResult, permalinkHash, stickySummar
   const triageRowsHtml = triage.stages
     .map(
       (st) => `              <tr>
-                <th scope="row"><strong>${escapeHtml(st.label)}</strong><br /><small>${escapeHtml(st.timing)}</small></th>
+                <th scope="row"><strong>Stage ${escapeHtml(st.stage_number)}: ${escapeHtml(st.title)}</strong><br /><small>${escapeHtml(st.window)}</small></th>
                 <td>${escapeHtml(st.scope)}</td>
                 <td><strong>${escapeHtml(formatUsd(st.client_price_usd))}</strong></td>
                 <td class="text-accent"><strong>${escapeHtml(formatUsd(st.practitioner_net_usd))}</strong></td>
@@ -732,7 +733,7 @@ ${renderSharedHeader('../..', 'cases')}
         <span class="eyebrow">Verified Bioregional Field Case &middot; ${escapeHtml(provenance.municipality_name)} &middot; Plus Code ${escapeHtml(sb.plus_code_global)}</span>
         <h1>${escapeHtml(caseObj.label)}</h1>
         <p class="subtitle">
-          Specimen <code>${escapeHtml(sb.tree_tag)}</code> (<em>${escapeHtml(sb.species_scientific)}</em>, ${escapeHtml(sb.species_common)}) &middot; Assessed <code>${escapeHtml(sb.assessment_date)}</code> &middot; Canonical SHA-256: <code>${escapeHtml(evalResult.sha256)}</code>
+          Specimen <code>${escapeHtml(sb.tree_tag)}</code> (<em>${escapeHtml(sb.species_scientific)}</em>, ${escapeHtml(sb.species_common)}) &middot; Assessed <code>${escapeHtml(sb.assessment_date)}</code> &middot; Canonical SHA-256: ${renderExpandableHashHtml(evalResult.sha256)}
         </p>
       </div>
       <div class="header-actions">
@@ -750,7 +751,9 @@ ${renderSharedHeader('../..', 'cases')}
         <h2 id="innate-triage-heading">Answer-First Field Verdict &amp; 3-Stage Stewardship Triage</h2>
       </div>
       <div class="citation-callout" style="margin-bottom: 14px;">
-        <strong>Answer-First Summary:</strong> ${escapeHtml(leoBrief.answer_first)}
+        <p style="margin: 0 0 6px 0;"><strong>${escapeHtml(leoBrief.answer_first?.headline_verdict || '')}</strong></p>
+        <p style="margin: 0 0 6px 0;">${escapeHtml(leoBrief.answer_first?.structural_truth || '')} ${escapeHtml(leoBrief.answer_first?.statutory_and_seasonal_truth || '')} ${escapeHtml(leoBrief.answer_first?.stewardship_vs_liquidation || '')}</p>
+        <p class="hint" style="margin: 0;"><strong>Physical Kill Criterion:</strong> ${escapeHtml(leoBrief.answer_first?.falsifier || '')}</p>
       </div>
 
       <div class="metric-grid metric-grid-4">
@@ -840,7 +843,7 @@ ${triageRowsHtml}
       <div class="citation-callout">
         <strong>Statutory Permit Summary (<code>permitSummary</code>):</strong> ${escapeHtml(evalResult.permitText)}<br />
         <strong>Primary Municipal Code Citation:</strong> ${escapeHtml(provenance.primary_citation)} ${evalResult.permit.citation ? `| Trigger Citation: ${escapeHtml(evalResult.permit.citation)}` : ''}<br />
-        <strong>Canonical Assessment Digest (<code>computeCanonicalSha256</code>):</strong> <code>${escapeHtml(evalResult.sha256)}</code>
+        <strong>Canonical Assessment Digest (<code>computeCanonicalSha256</code>):</strong> ${renderExpandableHashHtml(evalResult.sha256)}
       </div>
 
       ${flagsHtml}
@@ -1150,10 +1153,10 @@ ${companionRowsHtml}
       </div>
     </section>
 
-    <!-- BEHIND THE VEIL: LEO-RCA 6-Slot Epistemic Receipt -->
+    <!-- STIM EPISTEMIC SIEVE: LEO-RCA 6-Slot Cambium Receipt -->
     <details class="oa-veil card" id="case-leo-epistemic-veil">
       <summary class="oa-veil-summary">
-        <strong>Lift the Veil: LEO-RCA 6-Slot Epistemic Receipt</strong>
+        <strong>STIM Epistemic Sieve: LEO-RCA 6-Slot Cambium Receipt</strong>
         <span>(Oracle Provenance Anchors, Reconciled UNVERIFIED Tokens &amp; Sabotage Self-Audit)</span>
       </summary>
       <div class="oa-veil-body" style="margin-top: 14px;">
@@ -1198,7 +1201,7 @@ ${companionRowsHtml}
           </div>
           <div class="metric-box">
             <span class="metric-label">Cryptographic Evidence Seal (SHA-256)</span>
-            <strong class="metric-value" style="font-size: 0.78rem; word-break: break-all;"><code>${escapeHtml(evalResult.sha256)}</code></strong>
+            <div style="margin: 4px 0;">${renderExpandableHashHtml(evalResult.sha256)}</div>
             <span class="metric-sub">Engine Version: <code>2.1.0</code> &middot; Dataset: <code>2.0.0</code></span>
           </div>
         </div>

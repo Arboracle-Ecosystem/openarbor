@@ -560,3 +560,32 @@ export function inspectMunicipalityProvenance(muni) {
     unverified_gaps: unverifiedGaps,
   };
 }
+
+function escapeChipHtml(val) {
+  return String(val ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/**
+ * Render an accessible, print-safe expandable chip (<details class="oa-hash-chip">)
+ * for long SHA-256 hex digests, cryptographic proof strings, or #oa1= permalinks.
+ * Shows a compact preview on mobile/screen while keeping full text searchable via <details>
+ * and rendering the full unwrapped string cleanly in @media print.
+ */
+export function renderExpandableHashHtml(rawValue, options = {}) {
+  const str = String(rawValue ?? '').trim();
+  if (!str) return '';
+  const headChars = Number(options.headChars ?? 10);
+  const tailChars = Number(options.tailChars ?? 8);
+  const codeId = options.codeId ? ` id="${escapeChipHtml(options.codeId)}"` : '';
+  const dangerClass = options.danger ? ' is-danger' : '';
+  const escapedFull = escapeChipHtml(str);
+  if (str.length <= headChars + tailChars + 5) {
+    return `<code${codeId}>${escapedFull}</code>`;
+  }
+  const shortPreview = escapeChipHtml(`${str.slice(0, headChars)}...${str.slice(-tailChars)}`);
+  return `<details class="oa-hash-chip${dangerClass}"><summary class="oa-hash-chip-summary"><code class="oa-hash-chip-short">${shortPreview}</code><span class="oa-hash-chip-action-closed">Expand</span><span class="oa-hash-chip-action-open">Collapse</span></summary><div class="oa-hash-chip-panel"><code${codeId} class="oa-hash-chip-full">${escapedFull}</code><button type="button" class="btn btn-outline btn-xs oa-hash-copy-btn" data-copy-hash="${escapedFull}">Copy</button></div></details>`;
+}

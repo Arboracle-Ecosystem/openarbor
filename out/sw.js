@@ -5,7 +5,7 @@
  * at root (/) on openarbor.org and at subpath (/openarbor/) on GitHub Pages.
  */
 
-const CACHE_NAME = 'openarbor-field-v2.0.0';
+const CACHE_NAME = 'openarbor-field-v2.2.0';
 
 const PRECACHE_PATHS = [
   './',
@@ -86,14 +86,17 @@ self.addEventListener('fetch', (event) => {
       // 1. Check exact URL match (ignoring search query / hash)
       let cached = await cache.match(request, { ignoreSearch: true });
 
-      // 2. Directory index fallback (e.g. /demo/ -> /demo/index.html or /demo -> /demo/index.html)
+      // 2. Directory index fallback (e.g. /demo/ -> /demo/index.html; /demo -> canonical 301 to /demo/)
       if (!cached) {
         if (url.pathname.endsWith('/')) {
           const indexUrl = new URL(`${url.pathname}index.html`, url.origin).href;
           cached = await cache.match(indexUrl, { ignoreSearch: true });
         } else if (!url.pathname.split('/').pop().includes('.')) {
           const indexUrl = new URL(`${url.pathname}/index.html`, url.origin).href;
-          cached = await cache.match(indexUrl, { ignoreSearch: true });
+          const indexCached = await cache.match(indexUrl, { ignoreSearch: true });
+          if (indexCached) {
+            return Response.redirect(`${url.origin}${url.pathname}/${url.search}`, 301);
+          }
         }
       }
 

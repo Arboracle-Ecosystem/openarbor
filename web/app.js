@@ -94,6 +94,7 @@ import {
   decodeAssessmentPermalink,
   formatStickyDeterminationSummary,
   inspectMunicipalityProvenance,
+  renderExpandableHashHtml,
 } from './pages/masterwork-core.js';
 
 export {
@@ -150,6 +151,7 @@ export {
   decodeAssessmentPermalink,
   formatStickyDeterminationSummary,
   inspectMunicipalityProvenance,
+  renderExpandableHashHtml,
 };
 
 const OLC_CHARS = '23456789CFGHJMPQRVWX';
@@ -1132,57 +1134,61 @@ export function initFieldToolUI() {
             <strong>Record Tier:</strong> ${prov.record_tier}
           </p>
           <p class="oa-print-meta">
-            <strong>Canonical SHA-256 Digest:</strong> <code>${res.compiledReport.sha256}</code><br>
-            <strong>Shareable Permalink Address:</strong> <code>${fullShareUrl}</code>
+            <strong>Canonical SHA-256 Digest:</strong> ${renderExpandableHashHtml(res.compiledReport.sha256)}<br>
+            <strong>Shareable Permalink Address:</strong> ${renderExpandableHashHtml(fullShareUrl, { headChars: 28, tailChars: 12 })}
           </p>
         </header>
 
         <section class="oa-print-section">
           <h2>Table 1. Tree Structural &amp; Biomechanical Baseline</h2>
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>DBH &amp; Method</th>
-                <th>Height &amp; Crown Spread</th>
-                <th>Global Plus Code</th>
-                <th>Mattheck t/R &amp; Stability</th>
-                <th>Root Flare Burial</th>
-                <th>Protection Zone Radii (SRZ / CRZ / TIZ)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>${bio.dbh_inches} in (${bio.dbh_cm} cm) [${sb.multistem_aggregation_method || 'single_stem'}]</td>
-                <td>H: ${sb.height_m} m | N-S: ${sb.crown_spread_ns_m} m | E-W: ${sb.crown_spread_ew_m} m</td>
-                <td><code>${sb.plus_code_global}</code></td>
-                <td>t/R = ${bio.biomechanics.sound_shell_thickness_ratio_t_over_r} (${bio.biomechanics.mattheck_criterion_satisfied ? 'Stable >= 0.30' : 'Thinning < 0.30'})</td>
-                <td>${rh.root_flare_burial_depth_cm ?? 0} cm burial (Flare: ${rh.root_flare_diameter_cm} cm)</td>
-                <td>SRZ: ${res.rootZones.srz.radius_feet} ft (${res.rootZones.srz.radius_meters} m) | CRZ: ${res.rootZones.crz.radius_feet} ft (${res.rootZones.crz.radius_meters} m) | TIZ: ${bio.root_zones.tiz_radius_meters} m</td>
-              </tr>
-            </tbody>
-          </table>
+          <div tabindex="0" role="region" aria-label="Table 1. Tree Structural and Biomechanical Baseline" class="table-wrapper">
+            <table class="data-table" style="--label-1: 'DBH &amp; Method'; --label-2: 'Height &amp; Spread'; --label-3: 'Plus Code'; --label-4: 'Mattheck t/R'; --label-5: 'Flare Burial'; --label-6: 'SRZ / CRZ / TIZ';">
+              <thead>
+                <tr>
+                  <th>DBH &amp; Method</th>
+                  <th>Height &amp; Crown Spread</th>
+                  <th>Global Plus Code</th>
+                  <th>Mattheck t/R &amp; Stability</th>
+                  <th>Root Flare Burial</th>
+                  <th>Protection Zone Radii (SRZ / CRZ / TIZ)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>${bio.dbh_inches} in (${bio.dbh_cm} cm) [${sb.multistem_aggregation_method || 'single_stem'}]</td>
+                  <td>H: ${sb.height_m} m | N-S: ${sb.crown_spread_ns_m} m | E-W: ${sb.crown_spread_ew_m} m</td>
+                  <td><code>${sb.plus_code_global}</code></td>
+                  <td>t/R = ${bio.biomechanics.sound_shell_thickness_ratio_t_over_r} (${bio.biomechanics.mattheck_criterion_satisfied ? 'Stable >= 0.30' : 'Thinning < 0.30'})</td>
+                  <td>${rh.root_flare_burial_depth_cm ?? 0} cm burial (Flare: ${rh.root_flare_diameter_cm} cm)</td>
+                  <td>SRZ: ${res.rootZones.srz.radius_feet} ft (${res.rootZones.srz.radius_meters} m) | CRZ: ${res.rootZones.crz.radius_feet} ft (${res.rootZones.crz.radius_meters} m) | TIZ: ${bio.root_zones.tiz_radius_meters} m</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </section>
 
         <section class="oa-print-section">
           <h2>Table 2. Municipal Ordinance Determination, Mitigation Schedule &amp; Epistemic Boundaries</h2>
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Protection Status</th>
-                <th>Permit Verdict</th>
-                <th>Replacement Inches Owed (If Removed)</th>
-                <th>Cash-in-Lieu Obligation (If Removed)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><strong>${statusLabel(row)}</strong></td>
-                <td><strong>${res.permit.unknown ? 'Verify with City (UNVERIFIED)' : res.permit.required ? 'PERMIT REQUIRED' : 'No Permit Triggered'}</strong> (${res.permitText})</td>
-                <td>${mitIfRemoved ? `${mitIfRemoved.replacement_inches_owed} in (${mitIfRemoved.replacement_trees_owed} trees)` : '0 in'}</td>
-                <td><strong>$${Number(mitIfRemoved?.cash_in_lieu_usd || 0).toLocaleString()}</strong></td>
-              </tr>
-            </tbody>
-          </table>
+          <div tabindex="0" role="region" aria-label="Table 2. Municipal Ordinance Determination and Mitigation Schedule" class="table-wrapper">
+            <table class="data-table" style="--label-1: 'Protection Status'; --label-2: 'Permit Verdict'; --label-3: 'Replacement Owed'; --label-4: 'Cash-in-Lieu';">
+              <thead>
+                <tr>
+                  <th>Protection Status</th>
+                  <th>Permit Verdict</th>
+                  <th>Replacement Inches Owed (If Removed)</th>
+                  <th>Cash-in-Lieu Obligation (If Removed)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>${statusLabel(row)}</strong></td>
+                  <td><strong>${res.permit.unknown ? 'Verify with City (UNVERIFIED)' : res.permit.required ? 'PERMIT REQUIRED' : 'No Permit Triggered'}</strong> (${res.permitText})</td>
+                  <td>${mitIfRemoved ? `${mitIfRemoved.replacement_inches_owed} in (${mitIfRemoved.replacement_trees_owed} trees)` : '0 in'}</td>
+                  <td><strong>$${Number(mitIfRemoved?.cash_in_lieu_usd || 0).toLocaleString()}</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
           <div class="oa-print-epistemic">
             <strong>What this record does not know (Epistemic &amp; Statutory Boundaries):</strong>
             ${provPrintHtml}
@@ -1196,24 +1202,26 @@ export function initFieldToolUI() {
 
         <section class="oa-print-section">
           <h2>Table 3. Dual Valuation &amp; Allometric Ecosystem Services</h2>
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>CTLA 10th Ed. Depreciated Value</th>
-                <th>200-Yr Holobiont Biological Equity</th>
-                <th>John White (FCIN12) Est. Age</th>
-                <th>Annual Stormwater / Energy / Carbon Flow</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>$${val.ctla_10th_ed_depreciated_usd.toLocaleString()}</td>
-                <td><strong>$${val.holobiont_200yr_biological_equity_usd.toLocaleString()}</strong> (${val.veteran_keystone_habitat_multiplier}x Keystone)</td>
-                <td>${age.estimated_age_years} yrs (${age.site_condition})</td>
-                <td>${eco.avoided_runoff_gallons_yr.toLocaleString()} gal/yr | ${eco.cooling_savings_kwh_yr} kWh/yr | ${eco.carbon_storage_lbs.toLocaleString()} lbs C ($${eco.total_annual_benefits_usd}/yr)</td>
-              </tr>
-            </tbody>
-          </table>
+          <div tabindex="0" role="region" aria-label="Table 3. Dual Valuation and Allometric Ecosystem Services" class="table-wrapper">
+            <table class="data-table" style="--label-1: 'CTLA 10th Ed. Value'; --label-2: '200-Yr Holobiont Equity'; --label-3: 'John White Est. Age'; --label-4: 'Annual Services';">
+              <thead>
+                <tr>
+                  <th>CTLA 10th Ed. Depreciated Value</th>
+                  <th>200-Yr Holobiont Biological Equity</th>
+                  <th>John White (FCIN12) Est. Age</th>
+                  <th>Annual Stormwater / Energy / Carbon Flow</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>$${val.ctla_10th_ed_depreciated_usd.toLocaleString()}</td>
+                  <td><strong>$${val.holobiont_200yr_biological_equity_usd.toLocaleString()}</strong> (${val.veteran_keystone_habitat_multiplier}x Keystone)</td>
+                  <td>${age.estimated_age_years} yrs (${age.site_condition})</td>
+                  <td>${eco.avoided_runoff_gallons_yr.toLocaleString()} gal/yr | ${eco.cooling_savings_kwh_yr} kWh/yr | ${eco.carbon_storage_lbs.toLocaleString()} lbs C ($${eco.total_annual_benefits_usd}/yr)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </section>
 
         <section class="oa-print-signature-block">
@@ -1223,7 +1231,7 @@ export function initFieldToolUI() {
             <strong>Credential:</strong> ${escapeUiHtml(el('input-assessor-credential')?.value.trim() || 'ISA Certified Arborist TX-362025A / Oak Wilt Qualified')} &nbsp;|&nbsp;
             <strong>Assessment Date:</strong> ${sb.assessment_date || '2026-10-28'}
           </p>
-          <p><strong>Canonical Evidence SHA-256:</strong> <code>${res.compiledReport.sha256}</code></p>
+          <div style="margin: 8px 0;"><strong>Canonical Evidence SHA-256:</strong> ${renderExpandableHashHtml(res.compiledReport.sha256)}</div>
           <p style="margin-top: 18px;">
             <strong>Practitioner Signature:</strong> ___________________________ &nbsp;&nbsp;&nbsp;&nbsp;
             <strong>Date Signed:</strong> _______________
@@ -1520,7 +1528,7 @@ export function initFieldToolUI() {
         </div>
         <div class="sha-box">
           <span>SHA-256:</span>
-          <code>${res.compiledReport.sha256}</code>
+          ${renderExpandableHashHtml(res.compiledReport.sha256)}
         </div>
       </div>
       ${lintErrorsHtml}
@@ -1936,7 +1944,7 @@ export function initFieldToolUI() {
     const veilBtn = el('oa-veil-mode-toggle');
     if (veilBtn) {
       veilBtn.setAttribute('aria-pressed', 'true');
-      veilBtn.textContent = 'Veil: Deep Proof';
+      veilBtn.textContent = 'Layer: Heartwood';
     }
     el('veil-deep-forensics')?.scrollIntoView({ behavior: 'smooth' });
   });

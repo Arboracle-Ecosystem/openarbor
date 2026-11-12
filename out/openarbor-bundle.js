@@ -5444,729 +5444,6 @@ var DEFAULT_STAND_TREES = [
   }
 ];
 
-// web/pages/demo-extras.js
-var round16 = (n) => Math.round(Number(n || 0) * 10) / 10;
-var round27 = (n) => Math.round(Number(n || 0) * 100) / 100;
-function bindDialogLightDismissFallback(dialog) {
-  if (!dialog || typeof HTMLDialogElement === "undefined") return;
-  if ("closedBy" in HTMLDialogElement.prototype) return;
-  if (dialog.dataset.lightDismissBound) return;
-  dialog.dataset.lightDismissBound = "true";
-  const isOutside = (e) => {
-    if (e.clientX === 0 && e.clientY === 0) return false;
-    const rect = dialog.getBoundingClientRect();
-    return rect.width > 0 && rect.height > 0 && (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom);
-  };
-  let pointerDownOutside = false;
-  dialog.addEventListener("pointerdown", (e) => {
-    pointerDownOutside = isOutside(e);
-  });
-  dialog.addEventListener("pointerup", (e) => {
-    if (pointerDownOutside && isOutside(e)) {
-      dialog.close();
-    }
-    pointerDownOutside = false;
-  });
-}
-function initSharedThemeToggle() {
-  if (typeof document === "undefined" || typeof window === "undefined") return;
-  let meta = document.querySelector('meta[name="color-scheme"]');
-  if (!meta) {
-    meta = document.createElement("meta");
-    meta.name = "color-scheme";
-    meta.content = "light dark";
-    document.head.appendChild(meta);
-  }
-  const btn = document.getElementById("oa-theme-toggle");
-  const mql = typeof window.matchMedia === "function" ? window.matchMedia("(prefers-color-scheme: dark)") : { matches: true, addEventListener: null };
-  const getSystemScheme = () => mql.matches ? "dark" : "light";
-  const getStoredScheme = () => {
-    try {
-      return localStorage.getItem("color-scheme");
-    } catch {
-      return null;
-    }
-  };
-  const applyThemeState = () => {
-    const stored = getStoredScheme();
-    const sys = getSystemScheme();
-    const effective = stored === "light" || stored === "dark" ? stored : sys;
-    meta.content = stored === "light" || stored === "dark" ? stored : "light dark";
-    document.documentElement.dataset.theme = effective;
-    if (btn) {
-      if (stored === "dark") {
-        btn.textContent = "Theme: Dark";
-      } else if (stored === "light") {
-        btn.textContent = "Theme: Light";
-      } else {
-        btn.textContent = `Theme: Auto (${sys === "dark" ? "Dark" : "Light"})`;
-      }
-    }
-  };
-  applyThemeState();
-  if (typeof mql.addEventListener === "function") {
-    mql.addEventListener("change", () => applyThemeState());
-  }
-  if (btn && !btn.dataset.themeBound) {
-    btn.dataset.themeBound = "true";
-    btn.addEventListener("click", () => {
-      const stored = getStoredScheme();
-      const sys = getSystemScheme();
-      const currentEffective = stored === "light" || stored === "dark" ? stored : sys;
-      const targetScheme = currentEffective === "dark" ? "light" : "dark";
-      try {
-        if (targetScheme === sys) {
-          localStorage.removeItem("color-scheme");
-          meta.content = "light dark";
-        } else {
-          localStorage.setItem("color-scheme", targetScheme);
-          meta.content = targetScheme;
-        }
-      } catch {
-        meta.content = targetScheme;
-      }
-      applyThemeState();
-    });
-  }
-  if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      const swUrl = new URL("../sw.js", import.meta.url).pathname;
-      navigator.serviceWorker.register(swUrl).catch(() => {
-        navigator.serviceWorker.register("/sw.js").catch(() => {
-        });
-      });
-    });
-  }
-}
-function getEcologicalTier(score) {
-  const s = Number(score) || 0;
-  if (s >= 80) {
-    return { label: "Regenerative Sanctuary", badgeClass: "badge-protected" };
-  }
-  if (s >= 60) {
-    return { label: "Functional Canopy", badgeClass: "badge-heritage" };
-  }
-  if (s >= 40) {
-    return { label: "Transitional Stand", badgeClass: "badge-warn" };
-  }
-  return { label: "Degraded Site", badgeClass: "badge-danger" };
-}
-var leafletLoadPromise = null;
-function ensureLeafletLoaded() {
-  if (typeof window === "undefined") return Promise.reject(new Error("No window environment"));
-  if (window.L) return Promise.resolve(window.L);
-  if (leafletLoadPromise) return leafletLoadPromise;
-  leafletLoadPromise = new Promise((resolve, reject) => {
-    const cssId = "oa-leaflet-css";
-    if (!document.getElementById(cssId)) {
-      const link = document.createElement("link");
-      link.id = cssId;
-      link.rel = "stylesheet";
-      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-      link.crossOrigin = "";
-      document.head.appendChild(link);
-    }
-    const script = document.createElement("script");
-    script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-    script.crossOrigin = "";
-    script.onload = () => {
-      if (window.L) resolve(window.L);
-      else reject(new Error("Leaflet loaded without global L"));
-    };
-    script.onerror = () => {
-      leafletLoadPromise = null;
-      reject(new Error("Failed to load Leaflet 1.9.4 from CDN"));
-    };
-    document.head.appendChild(script);
-  });
-  return leafletLoadPromise;
-}
-function initDemoExtrasUI() {
-  if (typeof document === "undefined") return;
-  const modeSingleEl = document.getElementById("demo-mode-single");
-  const modeStandEl = document.getElementById("demo-mode-stand");
-  const modeBadgeEl = document.getElementById("demo-mode-badge");
-  const modeButtons = document.querySelectorAll("[data-demo-mode]");
-  let activeMode = "single";
-  let activeMapLayerMode = "svg";
-  let sessionGmapsApiKey = "";
-  let leafletMap = null;
-  let leafletTileLayer = null;
-  let leafletVectorGroup = null;
-  if (modeButtons.length > 0) {
-    modeButtons.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const mode = btn.dataset.demoMode || "single";
-        activeMode = mode;
-        modeButtons.forEach((b) => {
-          const isMatch = b.dataset.demoMode === mode;
-          b.classList.toggle("active", isMatch);
-          b.setAttribute("aria-selected", isMatch ? "true" : "false");
-        });
-        if (modeSingleEl) modeSingleEl.hidden = mode !== "single";
-        if (modeStandEl) modeStandEl.hidden = mode !== "stand";
-        if (modeBadgeEl) modeBadgeEl.hidden = mode !== "badge";
-        if (mode === "stand") {
-          renderStandUnionAndScorecard();
-        } else if (mode === "badge") {
-          mintAndRenderOpenBadge();
-        } else if (mode === "single" && activeMapLayerMode === "leaflet") {
-          refreshLeafletParcelMap();
-        }
-      });
-    });
-  }
-  const btnMapSvg = document.getElementById("btn-map-mode-svg");
-  const btnMapLeaflet = document.getElementById("btn-map-mode-leaflet");
-  const svgMapContainer = document.getElementById("svg-map-container");
-  const parcelMapPanel = document.getElementById("parcel-map-panel");
-  const selectTileLayer = document.getElementById("select-parcel-tile-layer");
-  const inputGmapsKey = document.getElementById("input-gmaps-api-key");
-  const coordsReadout = document.getElementById("parcel-coords-readout");
-  const parcelStatus = document.getElementById("parcel-map-status");
-  function setSpatialMapMode(mode) {
-    activeMapLayerMode = mode;
-    if (btnMapSvg) btnMapSvg.classList.toggle("active", mode === "svg");
-    if (btnMapLeaflet) btnMapLeaflet.classList.toggle("active", mode === "leaflet");
-    if (svgMapContainer) svgMapContainer.hidden = mode !== "svg";
-    if (parcelMapPanel) parcelMapPanel.hidden = mode !== "leaflet";
-    if (mode === "leaflet") {
-      refreshLeafletParcelMap();
-    }
-  }
-  btnMapSvg?.addEventListener("click", () => setSpatialMapMode("svg"));
-  btnMapLeaflet?.addEventListener("click", () => setSpatialMapMode("leaflet"));
-  inputGmapsKey?.addEventListener("input", () => {
-    sessionGmapsApiKey = inputGmapsKey.value.trim();
-    if (activeMapLayerMode === "leaflet" && selectTileLayer?.value === "gmaps") {
-      refreshLeafletParcelMap();
-    }
-  });
-  selectTileLayer?.addEventListener("change", () => {
-    if (activeMapLayerMode === "leaflet") {
-      refreshLeafletParcelMap();
-    }
-  });
-  async function refreshLeafletParcelMap() {
-    const canvas = document.getElementById("leaflet-map-canvas");
-    if (!canvas) return;
-    const { latestAssessment: latestAssessment2, latestResult: latestResult2 } = getLatestFieldState();
-    const assessment = latestAssessment2 || FIXED_PARITY_CASES[0].assessment;
-    const sb = assessment.structural_baseline || {};
-    const rh = assessment.rhizosphere_and_root_collar || {};
-    const decoded = decodePlusCode(sb.plus_code_global) || { lat: 30.2672, lng: -97.7431 };
-    if (coordsReadout) {
-      coordsReadout.value = `${decoded.lat.toFixed(4)}, ${decoded.lng.toFixed(4)} (${sb.plus_code_global || "86247784+VP"})`;
-    }
-    try {
-      const L = await ensureLeafletLoaded();
-      if (!leafletMap) {
-        leafletMap = L.map(canvas).setView([decoded.lat, decoded.lng], 19);
-        leafletVectorGroup = L.layerGroup().addTo(leafletMap);
-      } else {
-        leafletMap.setView([decoded.lat, decoded.lng], 19);
-        setTimeout(() => leafletMap.invalidateSize(), 60);
-      }
-      if (leafletTileLayer) {
-        leafletMap.removeLayer(leafletTileLayer);
-      }
-      const layerChoice = selectTileLayer?.value || "osm";
-      if (layerChoice === "esri") {
-        leafletTileLayer = L.tileLayer(
-          "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-          {
-            maxZoom: 20,
-            attribution: "Tiles &copy; Esri, USGS, USDA NAIP"
-          }
-        ).addTo(leafletMap);
-      } else if (layerChoice === "gmaps") {
-        const keyParam = sessionGmapsApiKey ? `&key=${encodeURIComponent(sessionGmapsApiKey)}` : "";
-        leafletTileLayer = L.tileLayer(
-          `https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}${keyParam}`,
-          {
-            maxZoom: 21,
-            attribution: "Map data &copy; Google Satellite"
-          }
-        ).addTo(leafletMap);
-      } else {
-        leafletTileLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          maxZoom: 20,
-          attribution: "&copy; OpenStreetMap contributors"
-        }).addTo(leafletMap);
-      }
-      leafletVectorGroup.clearLayers();
-      const dbhIn = (Number(sb.dbh_cm) || 76.2) / 2.54;
-      const crzMeters = latestResult2?.rootZones?.crz?.radius_meters || calculateCRZ(dbhIn, 1).radius_meters;
-      const tpzMeters = latestResult2?.rootZones?.tpzUs115?.radius_meters || round27(crzMeters * 1.5);
-      const srzMeters = latestResult2?.rootZones?.srz?.radius_meters || calculateSRZ((Number(rh.root_flare_diameter_cm) || 90) / 2.54, dbhIn).radius_meters;
-      const geoFeature = latestResult2?.geojson?.features?.[0];
-      const lat = geoFeature?.geometry?.coordinates?.[1] ?? decoded.lat;
-      const lng = geoFeature?.geometry?.coordinates?.[0] ?? decoded.lng;
-      L.circle([lat, lng], {
-        radius: tpzMeters,
-        color: "#e9c46a",
-        weight: 2,
-        dashArray: "6, 4",
-        fillColor: "#e9c46a",
-        fillOpacity: 0.08
-      }).bindPopup(
-        `<strong>${sb.tree_tag || "Tree"} Tree Influence Zone (TIZ / TPZ 1.5x)</strong><br>Radius: ${tpzMeters} m (${round16(tpzMeters / 0.3048)} ft)`
-      ).addTo(leafletVectorGroup);
-      L.circle([lat, lng], {
-        radius: crzMeters,
-        color: "#52b788",
-        weight: 2.5,
-        fillColor: "#52b788",
-        fillOpacity: 0.18
-      }).bindPopup(
-        `<strong>${sb.tree_tag || "Tree"} Critical Root Zone (CRZ)</strong><br>Radius: ${crzMeters} m (${round16(crzMeters / 0.3048)} ft)<br>Species: <em>${sb.species_scientific || "Quercus virginiana"}</em>`
-      ).addTo(leafletVectorGroup);
-      L.circle([lat, lng], {
-        radius: srzMeters,
-        color: "#e63946",
-        weight: 2,
-        dashArray: "4, 4",
-        fillColor: "#e63946",
-        fillOpacity: 0.25
-      }).bindPopup(
-        `<strong>${sb.tree_tag || "Tree"} Structural Root Zone (AS 4970 SRZ)</strong><br>Radius: ${srzMeters} m (${round16(srzMeters / 0.3048)} ft)`
-      ).addTo(leafletVectorGroup);
-      L.circleMarker([lat, lng], {
-        radius: 5,
-        color: "#ffffff",
-        fillColor: "#2d6a4f",
-        fillOpacity: 1
-      }).bindPopup(
-        `<strong>${sb.tree_tag || "Tree"} (${sb.species_common || "Live Oak"})</strong><br>DBH: ${round16(dbhIn)} in (${sb.dbh_cm} cm)<br>Plus Code: <code>${sb.plus_code_global}</code>`
-      ).addTo(leafletVectorGroup);
-      if (parcelStatus) {
-        parcelStatus.textContent = `Rendered OGC CRS84 GeoJSON rings at (${lat.toFixed(4)}, ${lng.toFixed(4)}): SRZ = ${srzMeters} m, CRZ = ${crzMeters} m, TIZ/TPZ = ${tpzMeters} m.`;
-      }
-    } catch (err) {
-      if (parcelStatus) {
-        parcelStatus.textContent = `Interactive map notice: ${err.message}. Use the Deterministic SVG CAD Map for offline vector inspection.`;
-      }
-    }
-  }
-  window.addEventListener("openarbor:field-updated", () => {
-    if (activeMode === "single" && activeMapLayerMode === "leaflet") {
-      refreshLeafletParcelMap();
-    }
-  });
-  let standTrees = JSON.parse(JSON.stringify(DEFAULT_STAND_TREES));
-  const standTbody = document.getElementById("stand-builder-tbody");
-  const btnStandAdd = document.getElementById("btn-stand-add-tree");
-  const btnStandReset = document.getElementById("btn-stand-reset");
-  const inputStandParcelSqm = document.getElementById("input-stand-parcel-sqm");
-  function renderStandTableRows() {
-    if (!standTbody) return;
-    const speciesOptions = ALL_SPECIES_PRESETS.map(
-      (s) => `<option value="${s.scientific} (${s.common})">${s.common} (${s.scientific})</option>`
-    ).join("");
-    const caseOptions = FIXED_PARITY_CASES.map(
-      (c) => `<option value="${c.id}">${c.label}</option>`
-    ).join("");
-    standTbody.innerHTML = standTrees.map(
-      (t, idx) => `
-        <tr data-stand-idx="${idx}">
-          <td>
-            <input type="text" class="stand-input-tag" value="${t.tag}" aria-label="Tree Tag row ${idx + 1}">
-          </td>
-          <td>
-            <select class="stand-input-species" aria-label="Species row ${idx + 1}">
-              <option value="${t.species}">${t.species}</option>
-              ${speciesOptions}
-            </select>
-          </td>
-          <td>
-            <input type="number" class="stand-input-dbh" min="1" max="200" step="0.5" value="${t.dbh_inches}" aria-label="DBH inches row ${idx + 1}">
-          </td>
-          <td>
-            <input type="number" class="stand-input-x" min="-500" max="500" step="1" value="${t.x_ft}" aria-label="Local X feet row ${idx + 1}">
-          </td>
-          <td>
-            <input type="number" class="stand-input-y" min="-500" max="500" step="1" value="${t.y_ft}" aria-label="Local Y feet row ${idx + 1}">
-          </td>
-          <td>
-            <select class="stand-input-case" aria-label="Diagnostic template row ${idx + 1}">
-              ${caseOptions.replace(`value="${t.case_id}"`, `value="${t.case_id}" selected`)}
-            </select>
-          </td>
-          <td>
-            <button type="button" class="btn btn-outline btn-stand-remove" data-remove-idx="${idx}" ${standTrees.length <= 1 ? "disabled" : ""}>Remove</button>
-          </td>
-        </tr>
-      `
-    ).join("");
-  }
-  standTbody?.addEventListener("input", (e) => {
-    const row = e.target.closest("tr[data-stand-idx]");
-    if (!row) return;
-    const idx = Number(row.dataset.standIdx);
-    const item = standTrees[idx];
-    if (!item) return;
-    item.tag = row.querySelector(".stand-input-tag")?.value.trim() || `T-${idx + 1}`;
-    item.species = row.querySelector(".stand-input-species")?.value || item.species;
-    item.dbh_inches = Math.max(1, Number(row.querySelector(".stand-input-dbh")?.value) || 12);
-    item.x_ft = Number(row.querySelector(".stand-input-x")?.value) || 0;
-    item.y_ft = Number(row.querySelector(".stand-input-y")?.value) || 0;
-    item.case_id = row.querySelector(".stand-input-case")?.value || FIXED_PARITY_CASES[0].id;
-    renderStandUnionOutputs();
-  });
-  standTbody?.addEventListener("click", (e) => {
-    const rmBtn = e.target.closest(".btn-stand-remove");
-    if (!rmBtn) return;
-    const idx = Number(rmBtn.dataset.removeIdx);
-    if (standTrees.length > 1 && idx >= 0 && idx < standTrees.length) {
-      standTrees.splice(idx, 1);
-      renderStandUnionAndScorecard();
-    }
-  });
-  btnStandAdd?.addEventListener("click", () => {
-    const nextNum = standTrees.length + 1;
-    standTrees.push({
-      tag: `ATX-QV-10${nextNum}`,
-      species: "Quercus virginiana (Live Oak)",
-      dbh_inches: 24,
-      x_ft: (nextNum - 1) * 14,
-      y_ft: nextNum % 2 === 0 ? 12 : -10,
-      case_id: "case-1-austin-live-oak"
-    });
-    renderStandUnionAndScorecard();
-  });
-  btnStandReset?.addEventListener("click", () => {
-    standTrees = JSON.parse(JSON.stringify(DEFAULT_STAND_TREES));
-    renderStandUnionAndScorecard();
-  });
-  inputStandParcelSqm?.addEventListener("input", () => {
-    renderStandUnionOutputs();
-  });
-  function renderStandUnionAndScorecard() {
-    renderStandTableRows();
-    renderStandUnionOutputs();
-  }
-  function renderStandUnionOutputs() {
-    const metricsEl = document.getElementById("stand-union-metrics");
-    const svgWrapEl = document.getElementById("stand-union-svg");
-    const svgSummaryEl = document.getElementById("stand-svg-summary");
-    const scSummaryEl = document.getElementById("stand-scorecard-summary");
-    const scTbodyEl = document.getElementById("stand-scorecard-tbody");
-    if (!metricsEl || !svgWrapEl || !scTbodyEl) return;
-    const baseLat = 30.2672;
-    const baseLng = -97.7431;
-    const FT_PER_DEG_LAT = 364e3;
-    const ftPerDegLng = FT_PER_DEG_LAT * Math.cos(baseLat * Math.PI / 180);
-    const locatedTrees = standTrees.map((t) => {
-      const dbhIn = Math.max(1, Number(t.dbh_inches) || 12);
-      const crz = calculateCRZ(dbhIn, 1);
-      const lat = baseLat + (Number(t.y_ft) || 0) / FT_PER_DEG_LAT;
-      const lng = baseLng + (Number(t.x_ft) || 0) / ftPerDegLng;
-      return {
-        ...t,
-        dbh: dbhIn,
-        lat,
-        lng,
-        crz_ft: crz.radius_feet,
-        tpz_ft: crz.radius_feet,
-        fence_ft: crz.radius_feet,
-        crz_area: crz.area_sqft,
-        removal: false
-      };
-    });
-    const grossCrzAreaSqFt = Math.round(
-      locatedTrees.reduce((sum, r) => sum + r.crz_area, 0)
-    );
-    const unionRes = unionRootZoneArea(locatedTrees);
-    const unionCrzAreaSqFt = unionRes.area_sqft;
-    const overlapReductionSqFt = unionRes.overlap_saved_sqft;
-    const overlapPct = grossCrzAreaSqFt > 0 ? round16(overlapReductionSqFt / grossCrzAreaSqFt * 100) : 0;
-    metricsEl.innerHTML = `
-      <div class="metric-box">
-        <span class="metric-label">Gross Summed CRZ Area</span>
-        <strong class="metric-value"><span id="gross_crz_area_sq_ft">${grossCrzAreaSqFt.toLocaleString()}</span> sq ft</strong>
-        <span class="metric-sub">${round16(grossCrzAreaSqFt * 0.092903)} m2 un-deduplicated sum</span>
-      </div>
-      <div class="metric-box highlight-box">
-        <span class="metric-label">1-ft Grid De-Duplicated Union Area</span>
-        <strong class="metric-value text-accent"><span id="union_crz_area_sq_ft">${unionCrzAreaSqFt.toLocaleString()}</span> sq ft</strong>
-        <span class="metric-sub">${round16(unionCrzAreaSqFt * 0.092903)} m2 net rhizosphere footprint</span>
-      </div>
-      <div class="metric-box">
-        <span class="metric-label">Overlap Saved (De-Duplicated)</span>
-        <strong class="metric-value"><span id="overlap_reduction_sq_ft">${overlapReductionSqFt.toLocaleString()}</span> sq ft (${overlapPct}%)</strong>
-        <span class="metric-sub">Prevents double-billing mulch &amp; AirSpade work</span>
-      </div>
-      <div class="metric-box">
-        <span class="metric-label">Stand Tree Count &amp; Total DBH</span>
-        <strong class="metric-value">${locatedTrees.length} trees (${round16(locatedTrees.reduce((s, r) => s + r.dbh, 0))} in)</strong>
-        <span class="metric-sub">1-ft Cartesian grid union verified</span>
-      </div>
-    `;
-    const svgMarkup = renderSiteMapSVG(locatedTrees, { width: 680, height: 340 });
-    svgWrapEl.innerHTML = svgMarkup || '<p class="hint">Add located trees to render the SVG stand union map.</p>';
-    if (svgSummaryEl) {
-      svgSummaryEl.innerHTML = `Net Union CRZ: <strong>${unionCrzAreaSqFt.toLocaleString()} sq ft</strong> | Overlap Saved: <strong>${overlapReductionSqFt.toLocaleString()} sq ft (${overlapPct}%)</strong>`;
-    }
-    const standAssessments = locatedTrees.map((t) => {
-      const matchedCase = FIXED_PARITY_CASES.find((c) => c.id === t.case_id) || FIXED_PARITY_CASES[0];
-      const clone = JSON.parse(JSON.stringify(matchedCase.assessment));
-      clone.structural_baseline.tree_tag = t.tag;
-      clone.structural_baseline.dbh_cm = round27(t.dbh * 2.54);
-      clone.structural_baseline.lat = t.lat;
-      clone.structural_baseline.lng = t.lng;
-      const crzM = round27(t.crz_ft * 0.3048);
-      clone.rhizosphere_and_root_collar.crz_radius_m = crzM;
-      clone.rhizosphere_and_root_collar.tiz_radius_m = round27(crzM * 1.5);
-      return clone;
-    });
-    const parcelSqm = Math.max(100, Number(inputStandParcelSqm?.value) || 4047);
-    const rollup = computeSanctuaryScorecardRollup(standAssessments, parcelSqm);
-    const sc = rollup.sanctuary_scorecard;
-    const eq = rollup.ecological_equity;
-    const compositeTier = getEcologicalTier(sc.composite_sanctuary_score);
-    if (scSummaryEl) {
-      scSummaryEl.innerHTML = `
-        <div>
-          <span class="metric-label">Composite Open Sanctuary Scorecard Rating</span>
-          <div class="verdict-title-row">
-            <strong class="verdict-big">${sc.composite_sanctuary_score} / 100</strong>
-            <span class="badge ${compositeTier.badgeClass}">${compositeTier.label}</span>
-          </div>
-          <span class="metric-sub">Stand Holobiont 200-Yr Equity: <strong>$${eq.total_holobiont_200yr_equity_usd.toLocaleString()}</strong> vs. Classical CTLA: $${eq.total_ctla_depreciated_usd.toLocaleString()} (${eq.inversion_ratio}x)</span>
-        </div>
-        <div class="verdict-right">
-          <span class="metric-label">Canopy Coverage of Parcel</span>
-          <strong>${rollup.spatial_coverage.canopy_coverage_parcel_pct}% (${rollup.spatial_coverage.total_canopy_projection_sqm} m2 / ${rollup.parcel_area_sqm} m2)</strong>
-        </div>
-      `;
-    }
-    const dimensionRows = [
-      {
-        name: "Soil Health Index",
-        score: sc.soil_health_index,
-        driver: "Top-15cm bulk density (g/cm3), steady-state infiltration (mm/hr), SOM (%), and F:B fungal ratio weighted by TIZ area"
-      },
-      {
-        name: "Canopy Coverage",
-        score: sc.canopy_coverage_index,
-        driver: `Live Crown Ratio-weighted dripline projection (${rollup.spatial_coverage.total_canopy_projection_sqm} m2 across ${rollup.parcel_area_sqm} m2 parcel)`
-      },
-      {
-        name: "Water Dynamics",
-        score: sc.water_dynamics_index,
-        driver: "60% vadose zone soil infiltration capacity + 40% canopy rainfall interception (Xiao et al. 2000)"
-      },
-      {
-        name: "Biodiversity Baseline",
-        score: sc.biodiversity_baseline_index,
-        driver: "Unique iNaturalist taxa documented across host canopy trees, mycorrhizal symbionts, and understory companion guilds"
-      },
-      {
-        name: "Restoration Potential Score",
-        score: sc.restoration_potential_score,
-        driver: "60-month STIM target realization potential across SER International Principles recovery wheel"
-      }
-    ];
-    scTbodyEl.innerHTML = dimensionRows.map((d) => {
-      const tier = getEcologicalTier(d.score);
-      return `
-          <tr>
-            <td><strong>${d.name}</strong></td>
-            <td><strong>${d.score} / 100</strong></td>
-            <td><span class="badge ${tier.badgeClass}">${tier.label}</span></td>
-            <td>${d.driver}</td>
-          </tr>
-        `;
-    }).join("");
-  }
-  const inputPractitioner = document.getElementById("input-badge-practitioner");
-  const inputCredId = document.getElementById("input-badge-credential-id");
-  const inputIssuerUri = document.getElementById("input-badge-issuer-uri");
-  const inputEvidenceUri = document.getElementById("input-badge-evidence-uri");
-  const btnMintBadge = document.getElementById("btn-mint-badge");
-  const btnDownloadBadge = document.getElementById("btn-download-badge");
-  const btnCopyBadge = document.getElementById("btn-copy-badge");
-  const badgeDigestBanner = document.getElementById("badge-digest-banner");
-  const badgeJsonPreview = document.getElementById("badge-json-preview");
-  const inputTamperTest = document.getElementById("input-tamper-test");
-  const tamperBanner = document.getElementById("tamper-verification-banner");
-  const btnTamperAttack = document.getElementById("btn-tamper-simulate-attack");
-  const btnTamperRestore = document.getElementById("btn-tamper-restore");
-  let latestMintedBadge = null;
-  let anchoredPrimaryAssessment = null;
-  let anchoredPrimarySha256 = "";
-  function mintAndRenderOpenBadge() {
-    if (!badgeJsonPreview) return;
-    const { latestAssessment: latestAssessment2 } = getLatestFieldState();
-    const primaryAssessment = JSON.parse(
-      JSON.stringify(latestAssessment2 || FIXED_PARITY_CASES[0].assessment)
-    );
-    const secondAssessment = JSON.parse(JSON.stringify(FIXED_PARITY_CASES[1].assessment));
-    const thirdAssessment = JSON.parse(JSON.stringify(FIXED_PARITY_CASES[2].assessment));
-    const practitionerName = inputPractitioner?.value.trim() || "George Steward";
-    const rawCredId = inputCredId?.value.trim() || "ISA TX-362025A / RCA-001";
-    const issuerUri = inputIssuerUri?.value.trim() || "https://openarbor.org/issuers/open-arbor-alliance";
-    const evidenceBaseUri = inputEvidenceUri?.value.trim() || "https://openarbor.org/reports/rca-v2/";
-    const practitionerMeta = {
-      id: `did:web:openarbor.org:stewards:${practitionerName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
-      practitioner_name: practitionerName,
-      credential_id: `https://openarbor.org/credentials/rca-verified/${encodeURIComponent(rawCredId.replace(/\s+/g, "-"))}`,
-      validFrom: "2026-10-29T00:00:00Z",
-      validUntil: "2027-10-29T00:00:00Z",
-      legacy_statutory_equivalencies: {
-        credential_category: "ISA_Certified_Arborist",
-        issuing_organization: "International Society of Arboriculture / Open Arbor Alliance",
-        credential_identifier: rawCredId,
-        verification_url: "https://openarbor.org/spec/"
-      }
-    };
-    const minted = mintOpenBadgeAttestation(
-      practitionerMeta,
-      [primaryAssessment, secondAssessment, thirdAssessment],
-      rca_assessment_schema_default
-    );
-    if (issuerUri) {
-      minted.issuer.id = issuerUri;
-    }
-    if (evidenceBaseUri && Array.isArray(minted.evidence)) {
-      const cleanBase = evidenceBaseUri.endsWith("/") ? evidenceBaseUri : `${evidenceBaseUri}/`;
-      minted.evidence.forEach((ev, idx) => {
-        ev.id = `${cleanBase}report-00${idx + 1}-${ev.report_sha256_hash.slice(0, 8)}.json`;
-      });
-    }
-    const copyWithoutProof = { ...minted };
-    delete copyWithoutProof.proof;
-    const outerProofDigest = computeCanonicalSha256(copyWithoutProof);
-    minted.proof.proofValue = `sha256:${outerProofDigest}`;
-    latestMintedBadge = minted;
-    anchoredPrimaryAssessment = primaryAssessment;
-    anchoredPrimarySha256 = minted.evidence[0].report_sha256_hash;
-    if (badgeDigestBanner) {
-      badgeDigestBanner.innerHTML = `
-        <div>
-          <strong>W3C Verifiable Credential / Open Badges 3.0 Status:</strong>
-          <span class="badge badge-protected">MINTED &amp; SCHEMA VERIFIED</span>
-          <span class="badge badge-neutral">Anchored Report #1 SHA-256: <code id="report_sha256">${anchoredPrimarySha256.slice(0, 16)}...</code></span>
-        </div>
-        <div class="sha-box">
-          <span>Credential Proof Value:</span>
-          <code>${minted.proof.proofValue}</code>
-        </div>
-      `;
-    }
-    badgeJsonPreview.textContent = JSON.stringify(minted, null, 2);
-    if (inputTamperTest) {
-      inputTamperTest.value = JSON.stringify(primaryAssessment, null, 2);
-      evaluateTamperInput();
-    }
-  }
-  function evaluateTamperInput() {
-    if (!inputTamperTest || !tamperBanner) return;
-    const rawText = inputTamperTest.value;
-    try {
-      const parsed = JSON.parse(rawText);
-      const recomputedHash = computeCanonicalSha256(parsed);
-      const isMatch = recomputedHash === anchoredPrimarySha256;
-      if (isMatch) {
-        tamperBanner.style.borderLeftColor = "var(--accent-green)";
-        tamperBanner.innerHTML = `
-          <div>
-            <span class="metric-label">Cryptographic Integrity Verification</span>
-            <div class="verdict-title-row">
-              <strong class="verdict-big text-accent">VERIFIED MATCH</strong>
-              <span class="badge badge-protected">Zero Byte Tampering Detected</span>
-            </div>
-            <span class="metric-sub">Anchored <code>report_sha256</code>: <code>${anchoredPrimarySha256}</code></span>
-          </div>
-          <div class="verdict-right">
-            <span class="metric-label">Recomputed Canonical SHA-256</span>
-            <code>${recomputedHash}</code>
-          </div>
-        `;
-      } else {
-        tamperBanner.style.borderLeftColor = "var(--danger-red)";
-        tamperBanner.innerHTML = `
-          <div>
-            <span class="metric-label">Cryptographic Integrity Verification</span>
-            <div class="verdict-title-row">
-              <strong class="verdict-big text-danger">TAMPER DETECTED: SHA-256 MISMATCH</strong>
-              <span class="badge badge-danger">Credential Evidence Invalidated</span>
-            </div>
-            <span class="metric-sub">Anchored <code>report_sha256</code>: <code>${anchoredPrimarySha256}</code></span>
-          </div>
-          <div class="verdict-right">
-            <span class="metric-label">Recomputed Tampered SHA-256</span>
-            <code class="text-danger">${recomputedHash}</code>
-          </div>
-        `;
-      }
-    } catch (err) {
-      tamperBanner.style.borderLeftColor = "var(--danger-red)";
-      tamperBanner.innerHTML = `
-        <div>
-          <span class="metric-label">Cryptographic Integrity Verification</span>
-          <div class="verdict-title-row">
-            <strong class="verdict-big text-danger">TAMPER DETECTED: MALFORMED JSON PAYLOAD</strong>
-            <span class="badge badge-danger">Syntax Error</span>
-          </div>
-          <span class="metric-sub">${err.message}</span>
-        </div>
-      `;
-    }
-  }
-  btnMintBadge?.addEventListener("click", () => mintAndRenderOpenBadge());
-  inputPractitioner?.addEventListener("input", () => mintAndRenderOpenBadge());
-  inputCredId?.addEventListener("input", () => mintAndRenderOpenBadge());
-  inputIssuerUri?.addEventListener("input", () => mintAndRenderOpenBadge());
-  inputEvidenceUri?.addEventListener("input", () => mintAndRenderOpenBadge());
-  inputTamperTest?.addEventListener("input", () => evaluateTamperInput());
-  btnTamperAttack?.addEventListener("click", () => {
-    if (!anchoredPrimaryAssessment || !inputTamperTest) return;
-    const tampered = JSON.parse(JSON.stringify(anchoredPrimaryAssessment));
-    tampered.structural_baseline.sound_shell_thickness_ratio_t_over_r = 0.18;
-    tampered.structural_baseline.municipal_permit_disposition.recommended_disposition = "Removal_Last_Resort_Unmitigable_Hazard";
-    inputTamperTest.value = JSON.stringify(tampered, null, 2);
-    evaluateTamperInput();
-  });
-  btnTamperRestore?.addEventListener("click", () => {
-    if (!anchoredPrimaryAssessment || !inputTamperTest) return;
-    inputTamperTest.value = JSON.stringify(anchoredPrimaryAssessment, null, 2);
-    evaluateTamperInput();
-  });
-  btnDownloadBadge?.addEventListener("click", () => {
-    if (!latestMintedBadge) mintAndRenderOpenBadge();
-    if (!latestMintedBadge) return;
-    const blob = new Blob([JSON.stringify(latestMintedBadge, null, 2)], {
-      type: "application/ld+json;charset=utf-8"
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "openarbor-rca-verified.ob3.json";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  });
-  btnCopyBadge?.addEventListener("click", async () => {
-    if (!latestMintedBadge) mintAndRenderOpenBadge();
-    if (navigator.clipboard && latestMintedBadge) {
-      await navigator.clipboard.writeText(JSON.stringify(latestMintedBadge, null, 2));
-      const prev = btnCopyBadge.textContent;
-      btnCopyBadge.textContent = "Copied .ob3.json to Clipboard";
-      setTimeout(() => {
-        btnCopyBadge.textContent = prev;
-      }, 1800);
-    }
-  });
-  if (standTbody) {
-    renderStandUnionAndScorecard();
-  }
-  if (badgeJsonPreview) {
-    mintAndRenderOpenBadge();
-  }
-}
-
 // web/pages/masterwork-core.js
 var ENGINE_VERSION = "2.0.0";
 var DATASET_VERSION = "2.0.0";
@@ -6663,6 +5940,844 @@ function inspectMunicipalityProvenance(muni) {
     unverified_gaps: unverifiedGaps
   };
 }
+function escapeChipHtml(val) {
+  return String(val ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function renderExpandableHashHtml(rawValue, options = {}) {
+  const str = String(rawValue ?? "").trim();
+  if (!str) return "";
+  const headChars = Number(options.headChars ?? 10);
+  const tailChars = Number(options.tailChars ?? 8);
+  const codeId = options.codeId ? ` id="${escapeChipHtml(options.codeId)}"` : "";
+  const dangerClass = options.danger ? " is-danger" : "";
+  const escapedFull = escapeChipHtml(str);
+  if (str.length <= headChars + tailChars + 5) {
+    return `<code${codeId}>${escapedFull}</code>`;
+  }
+  const shortPreview = escapeChipHtml(`${str.slice(0, headChars)}...${str.slice(-tailChars)}`);
+  return `<details class="oa-hash-chip${dangerClass}"><summary class="oa-hash-chip-summary"><code class="oa-hash-chip-short">${shortPreview}</code><span class="oa-hash-chip-action-closed">Expand</span><span class="oa-hash-chip-action-open">Collapse</span></summary><div class="oa-hash-chip-panel"><code${codeId} class="oa-hash-chip-full">${escapedFull}</code><button type="button" class="btn btn-outline btn-xs oa-hash-copy-btn" data-copy-hash="${escapedFull}">Copy</button></div></details>`;
+}
+
+// web/pages/demo-extras.js
+var RIPARIAN_GROVE_STAND_TREES = [
+  {
+    tag: "ATX-QV-101",
+    species: "Quercus virginiana (Live Oak)",
+    dbh_inches: 34,
+    x_ft: 0,
+    y_ft: 0,
+    case_id: "case-1-austin-live-oak"
+  },
+  {
+    tag: "ATX-QV-102",
+    species: "Quercus virginiana (Live Oak)",
+    dbh_inches: 28,
+    x_ft: 24,
+    y_ft: 12,
+    case_id: "case-1-austin-live-oak"
+  },
+  {
+    tag: "GTN-CI-204",
+    species: "Carya illinoinensis (Pecan)",
+    dbh_inches: 31,
+    x_ft: 46,
+    y_ft: -6,
+    case_id: "case-2-georgetown-pecan"
+  },
+  {
+    tag: "GTN-CI-205",
+    species: "Carya illinoinensis (Pecan)",
+    dbh_inches: 24.5,
+    x_ft: 68,
+    y_ft: 8,
+    case_id: "case-2-georgetown-pecan"
+  },
+  {
+    tag: "RIP-TD-301",
+    species: "Taxodium distichum (Bald Cypress)",
+    dbh_inches: 36,
+    x_ft: 34,
+    y_ft: -32,
+    case_id: "case-1-austin-live-oak"
+  },
+  {
+    tag: "RIP-UC-302",
+    species: "Ulmus crassifolia (Cedar Elm)",
+    dbh_inches: 19.5,
+    x_ft: -18,
+    y_ft: 20,
+    case_id: "case-2-georgetown-pecan"
+  },
+  {
+    tag: "RIP-QM-303",
+    species: "Quercus macrocarpa (Bur Oak)",
+    dbh_inches: 29,
+    x_ft: -26,
+    y_ft: -16,
+    case_id: "case-1-austin-live-oak"
+  },
+  {
+    tag: "LHT-QS-309",
+    species: "Quercus stellata (Post Oak)",
+    dbh_inches: 21,
+    x_ft: 8,
+    y_ft: -28,
+    case_id: "case-3-liberty-hill-post-oak"
+  }
+];
+var round16 = (n) => Math.round(Number(n || 0) * 10) / 10;
+var round27 = (n) => Math.round(Number(n || 0) * 100) / 100;
+function bindDialogLightDismissFallback(dialog) {
+  if (!dialog || typeof HTMLDialogElement === "undefined") return;
+  if ("closedBy" in HTMLDialogElement.prototype) return;
+  if (dialog.dataset.lightDismissBound) return;
+  dialog.dataset.lightDismissBound = "true";
+  const isOutside = (e) => {
+    if (e.clientX === 0 && e.clientY === 0) return false;
+    const rect = dialog.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0 && (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom);
+  };
+  let pointerDownOutside = false;
+  dialog.addEventListener("pointerdown", (e) => {
+    pointerDownOutside = isOutside(e);
+  });
+  dialog.addEventListener("pointerup", (e) => {
+    if (pointerDownOutside && isOutside(e)) {
+      dialog.close();
+    }
+    pointerDownOutside = false;
+  });
+}
+function initSharedThemeToggle() {
+  if (typeof document === "undefined" || typeof window === "undefined") return;
+  let meta = document.querySelector('meta[name="color-scheme"]');
+  if (!meta) {
+    meta = document.createElement("meta");
+    meta.name = "color-scheme";
+    meta.content = "light dark";
+    document.head.appendChild(meta);
+  }
+  const btn = document.getElementById("oa-theme-toggle");
+  const mql = typeof window.matchMedia === "function" ? window.matchMedia("(prefers-color-scheme: dark)") : { matches: true, addEventListener: null };
+  const getSystemScheme = () => mql.matches ? "dark" : "light";
+  const getStoredScheme = () => {
+    try {
+      return localStorage.getItem("color-scheme");
+    } catch {
+      return null;
+    }
+  };
+  const applyThemeState = () => {
+    const stored = getStoredScheme();
+    const sys = getSystemScheme();
+    const effective = stored === "light" || stored === "dark" ? stored : sys;
+    meta.content = stored === "light" || stored === "dark" ? stored : "light dark";
+    document.documentElement.dataset.theme = effective;
+    if (btn) {
+      if (stored === "dark") {
+        btn.textContent = "Theme: Dark";
+      } else if (stored === "light") {
+        btn.textContent = "Theme: Light";
+      } else {
+        btn.textContent = `Theme: Auto (${sys === "dark" ? "Dark" : "Light"})`;
+      }
+    }
+  };
+  applyThemeState();
+  if (typeof mql.addEventListener === "function") {
+    mql.addEventListener("change", () => applyThemeState());
+  }
+  if (btn && !btn.dataset.themeBound) {
+    btn.dataset.themeBound = "true";
+    btn.addEventListener("click", () => {
+      const stored = getStoredScheme();
+      const sys = getSystemScheme();
+      const currentEffective = stored === "light" || stored === "dark" ? stored : sys;
+      const targetScheme = currentEffective === "dark" ? "light" : "dark";
+      try {
+        if (targetScheme === sys) {
+          localStorage.removeItem("color-scheme");
+          meta.content = "light dark";
+        } else {
+          localStorage.setItem("color-scheme", targetScheme);
+          meta.content = targetScheme;
+        }
+      } catch {
+        meta.content = targetScheme;
+      }
+      applyThemeState();
+    });
+  }
+  if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      const swUrl = new URL("./sw.js", import.meta.url).pathname;
+      navigator.serviceWorker.register(swUrl).catch(() => {
+      });
+    });
+  }
+}
+function getEcologicalTier(score) {
+  const s = Number(score) || 0;
+  if (s >= 80) {
+    return { label: "Regenerative Sanctuary", badgeClass: "badge-protected" };
+  }
+  if (s >= 60) {
+    return { label: "Functional Canopy", badgeClass: "badge-heritage" };
+  }
+  if (s >= 40) {
+    return { label: "Transitional Stand", badgeClass: "badge-warn" };
+  }
+  return { label: "Degraded Site", badgeClass: "badge-danger" };
+}
+var leafletLoadPromise = null;
+function ensureLeafletLoaded() {
+  if (typeof window === "undefined") return Promise.reject(new Error("No window environment"));
+  if (window.L) return Promise.resolve(window.L);
+  if (leafletLoadPromise) return leafletLoadPromise;
+  leafletLoadPromise = new Promise((resolve, reject) => {
+    const cssId = "oa-leaflet-css";
+    if (!document.getElementById(cssId)) {
+      const link = document.createElement("link");
+      link.id = cssId;
+      link.rel = "stylesheet";
+      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+      link.crossOrigin = "";
+      document.head.appendChild(link);
+    }
+    const script = document.createElement("script");
+    script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+    script.crossOrigin = "";
+    script.onload = () => {
+      if (window.L) resolve(window.L);
+      else reject(new Error("Leaflet loaded without global L"));
+    };
+    script.onerror = () => {
+      leafletLoadPromise = null;
+      reject(new Error("Failed to load Leaflet 1.9.4 from CDN"));
+    };
+    document.head.appendChild(script);
+  });
+  return leafletLoadPromise;
+}
+function initDemoExtrasUI() {
+  if (typeof document === "undefined") return;
+  const modeSingleEl = document.getElementById("demo-mode-single");
+  const modeStandEl = document.getElementById("demo-mode-stand");
+  const modeBadgeEl = document.getElementById("demo-mode-badge");
+  const modeButtons = document.querySelectorAll("[data-demo-mode]");
+  let activeMode = "single";
+  let activeMapLayerMode = "svg";
+  let sessionGmapsApiKey = "";
+  let leafletMap = null;
+  let leafletTileLayer = null;
+  let leafletVectorGroup = null;
+  if (modeButtons.length > 0) {
+    modeButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const mode = btn.dataset.demoMode || "single";
+        activeMode = mode;
+        modeButtons.forEach((b) => {
+          const isMatch = b.dataset.demoMode === mode;
+          b.classList.toggle("active", isMatch);
+          b.setAttribute("aria-selected", isMatch ? "true" : "false");
+        });
+        if (modeSingleEl) modeSingleEl.hidden = mode !== "single";
+        if (modeStandEl) modeStandEl.hidden = mode !== "stand";
+        if (modeBadgeEl) modeBadgeEl.hidden = mode !== "badge";
+        if (mode === "stand") {
+          renderStandUnionAndScorecard();
+        } else if (mode === "badge") {
+          mintAndRenderOpenBadge();
+        } else if (mode === "single" && activeMapLayerMode === "leaflet") {
+          refreshLeafletParcelMap();
+        }
+      });
+    });
+  }
+  const btnMapSvg = document.getElementById("btn-map-mode-svg");
+  const btnMapLeaflet = document.getElementById("btn-map-mode-leaflet");
+  const svgMapContainer = document.getElementById("svg-map-container");
+  const parcelMapPanel = document.getElementById("parcel-map-panel");
+  const selectTileLayer = document.getElementById("select-parcel-tile-layer");
+  const inputGmapsKey = document.getElementById("input-gmaps-api-key");
+  const coordsReadout = document.getElementById("parcel-coords-readout");
+  const parcelStatus = document.getElementById("parcel-map-status");
+  function setSpatialMapMode(mode) {
+    activeMapLayerMode = mode;
+    if (btnMapSvg) btnMapSvg.classList.toggle("active", mode === "svg");
+    if (btnMapLeaflet) btnMapLeaflet.classList.toggle("active", mode === "leaflet");
+    if (svgMapContainer) svgMapContainer.hidden = mode !== "svg";
+    if (parcelMapPanel) parcelMapPanel.hidden = mode !== "leaflet";
+    if (mode === "leaflet") {
+      refreshLeafletParcelMap();
+    }
+  }
+  btnMapSvg?.addEventListener("click", () => setSpatialMapMode("svg"));
+  btnMapLeaflet?.addEventListener("click", () => setSpatialMapMode("leaflet"));
+  inputGmapsKey?.addEventListener("input", () => {
+    sessionGmapsApiKey = inputGmapsKey.value.trim();
+    if (activeMapLayerMode === "leaflet" && selectTileLayer?.value === "gmaps") {
+      refreshLeafletParcelMap();
+    }
+  });
+  selectTileLayer?.addEventListener("change", () => {
+    if (activeMapLayerMode === "leaflet") {
+      refreshLeafletParcelMap();
+    }
+  });
+  async function refreshLeafletParcelMap() {
+    const canvas = document.getElementById("leaflet-map-canvas");
+    if (!canvas) return;
+    const { latestAssessment: latestAssessment2, latestResult: latestResult2 } = getLatestFieldState();
+    const assessment = latestAssessment2 || FIXED_PARITY_CASES[0].assessment;
+    const sb = assessment.structural_baseline || {};
+    const rh = assessment.rhizosphere_and_root_collar || {};
+    const decoded = decodePlusCode(sb.plus_code_global) || { lat: 30.2672, lng: -97.7431 };
+    if (coordsReadout) {
+      coordsReadout.value = `${decoded.lat.toFixed(4)}, ${decoded.lng.toFixed(4)} (${sb.plus_code_global || "86247784+VP"})`;
+    }
+    try {
+      const L = await ensureLeafletLoaded();
+      if (!leafletMap) {
+        leafletMap = L.map(canvas).setView([decoded.lat, decoded.lng], 19);
+        leafletVectorGroup = L.layerGroup().addTo(leafletMap);
+      } else {
+        leafletMap.setView([decoded.lat, decoded.lng], 19);
+        setTimeout(() => leafletMap.invalidateSize(), 60);
+      }
+      if (leafletTileLayer) {
+        leafletMap.removeLayer(leafletTileLayer);
+      }
+      const layerChoice = selectTileLayer?.value || "osm";
+      if (layerChoice === "esri") {
+        leafletTileLayer = L.tileLayer(
+          "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+          {
+            maxZoom: 20,
+            attribution: "Tiles &copy; Esri, USGS, USDA NAIP"
+          }
+        ).addTo(leafletMap);
+      } else if (layerChoice === "gmaps") {
+        const keyParam = sessionGmapsApiKey ? `&key=${encodeURIComponent(sessionGmapsApiKey)}` : "";
+        leafletTileLayer = L.tileLayer(
+          `https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}${keyParam}`,
+          {
+            maxZoom: 21,
+            attribution: "Map data &copy; Google Satellite"
+          }
+        ).addTo(leafletMap);
+      } else {
+        leafletTileLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          maxZoom: 20,
+          attribution: "&copy; OpenStreetMap contributors"
+        }).addTo(leafletMap);
+      }
+      leafletVectorGroup.clearLayers();
+      const dbhIn = (Number(sb.dbh_cm) || 76.2) / 2.54;
+      const crzMeters = latestResult2?.rootZones?.crz?.radius_meters || calculateCRZ(dbhIn, 1).radius_meters;
+      const tpzMeters = latestResult2?.rootZones?.tpzUs115?.radius_meters || round27(crzMeters * 1.5);
+      const srzMeters = latestResult2?.rootZones?.srz?.radius_meters || calculateSRZ((Number(rh.root_flare_diameter_cm) || 90) / 2.54, dbhIn).radius_meters;
+      const geoFeature = latestResult2?.geojson?.features?.[0];
+      const lat = geoFeature?.geometry?.coordinates?.[1] ?? decoded.lat;
+      const lng = geoFeature?.geometry?.coordinates?.[0] ?? decoded.lng;
+      L.circle([lat, lng], {
+        radius: tpzMeters,
+        color: "#e9c46a",
+        weight: 2,
+        dashArray: "6, 4",
+        fillColor: "#e9c46a",
+        fillOpacity: 0.08
+      }).bindPopup(
+        `<strong>${sb.tree_tag || "Tree"} Tree Influence Zone (TIZ / TPZ 1.5x)</strong><br>Radius: ${tpzMeters} m (${round16(tpzMeters / 0.3048)} ft)`
+      ).addTo(leafletVectorGroup);
+      L.circle([lat, lng], {
+        radius: crzMeters,
+        color: "#52b788",
+        weight: 2.5,
+        fillColor: "#52b788",
+        fillOpacity: 0.18
+      }).bindPopup(
+        `<strong>${sb.tree_tag || "Tree"} Critical Root Zone (CRZ)</strong><br>Radius: ${crzMeters} m (${round16(crzMeters / 0.3048)} ft)<br>Species: <em>${sb.species_scientific || "Quercus virginiana"}</em>`
+      ).addTo(leafletVectorGroup);
+      L.circle([lat, lng], {
+        radius: srzMeters,
+        color: "#e63946",
+        weight: 2,
+        dashArray: "4, 4",
+        fillColor: "#e63946",
+        fillOpacity: 0.25
+      }).bindPopup(
+        `<strong>${sb.tree_tag || "Tree"} Structural Root Zone (AS 4970 SRZ)</strong><br>Radius: ${srzMeters} m (${round16(srzMeters / 0.3048)} ft)`
+      ).addTo(leafletVectorGroup);
+      L.circleMarker([lat, lng], {
+        radius: 5,
+        color: "#ffffff",
+        fillColor: "#2d6a4f",
+        fillOpacity: 1
+      }).bindPopup(
+        `<strong>${sb.tree_tag || "Tree"} (${sb.species_common || "Live Oak"})</strong><br>DBH: ${round16(dbhIn)} in (${sb.dbh_cm} cm)<br>Plus Code: <code>${sb.plus_code_global}</code>`
+      ).addTo(leafletVectorGroup);
+      if (parcelStatus) {
+        parcelStatus.textContent = `Rendered OGC CRS84 GeoJSON rings at (${lat.toFixed(4)}, ${lng.toFixed(4)}): SRZ = ${srzMeters} m, CRZ = ${crzMeters} m, TIZ/TPZ = ${tpzMeters} m.`;
+      }
+    } catch (err) {
+      if (parcelStatus) {
+        parcelStatus.textContent = `Interactive map notice: ${err.message}. Use the Deterministic SVG CAD Map for offline vector inspection.`;
+      }
+    }
+  }
+  window.addEventListener("openarbor:field-updated", () => {
+    if (activeMode === "single" && activeMapLayerMode === "leaflet") {
+      refreshLeafletParcelMap();
+    }
+  });
+  let standTrees = JSON.parse(JSON.stringify(DEFAULT_STAND_TREES));
+  const standTbody = document.getElementById("stand-builder-tbody");
+  const btnStandAdd = document.getElementById("btn-stand-add-tree");
+  const btnStandReset = document.getElementById("btn-stand-reset");
+  const btnStandLoadGrove = document.getElementById("btn-stand-load-grove");
+  const inputStandParcelSqm = document.getElementById("input-stand-parcel-sqm");
+  function renderStandTableRows() {
+    if (!standTbody) return;
+    const caseOptions = FIXED_PARITY_CASES.map(
+      (c) => `<option value="${c.id}">${c.label}</option>`
+    ).join("");
+    standTbody.innerHTML = standTrees.map((t, idx) => {
+      const presetValues = ALL_SPECIES_PRESETS.map(
+        (s) => `${s.scientific} (${s.common})`
+      );
+      const hasCurrentSpecies = presetValues.includes(t.species);
+      const speciesOpts = ALL_SPECIES_PRESETS.map((s) => {
+        const val = `${s.scientific} (${s.common})`;
+        const sel = val === t.species ? " selected" : "";
+        return `<option value="${val}"${sel}>${s.common} (${s.scientific})</option>`;
+      }).join("");
+      return `
+        <tr data-stand-idx="${idx}">
+          <td>
+            <input type="text" class="stand-input-tag" value="${t.tag}" aria-label="Tree Tag row ${idx + 1}">
+          </td>
+          <td>
+            <select class="stand-input-species" aria-label="Species row ${idx + 1}">
+              ${hasCurrentSpecies ? "" : `<option value="${t.species}" selected>${t.species}</option>`}
+              ${speciesOpts}
+            </select>
+          </td>
+          <td>
+            <input type="number" class="stand-input-dbh" min="1" max="200" step="0.5" value="${t.dbh_inches}" aria-label="DBH inches row ${idx + 1}">
+          </td>
+          <td>
+            <input type="number" class="stand-input-x" min="-500" max="500" step="1" value="${t.x_ft}" aria-label="Local X feet row ${idx + 1}">
+          </td>
+          <td>
+            <input type="number" class="stand-input-y" min="-500" max="500" step="1" value="${t.y_ft}" aria-label="Local Y feet row ${idx + 1}">
+          </td>
+          <td>
+            <select class="stand-input-case" aria-label="Diagnostic template row ${idx + 1}">
+              ${caseOptions.replace(`value="${t.case_id}"`, `value="${t.case_id}" selected`)}
+            </select>
+          </td>
+          <td>
+            <div class="oa-stand-row-actions">
+              <button type="button" class="btn btn-secondary btn-xs btn-stand-clone" data-clone-idx="${idx}">Clone</button>
+              <button type="button" class="btn btn-outline btn-xs btn-stand-remove" data-remove-idx="${idx}" ${standTrees.length <= 1 ? "disabled" : ""}>Remove</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join("");
+  }
+  const handleStandRowEdit = (e) => {
+    const row = e.target.closest("tr[data-stand-idx]");
+    if (!row) return;
+    const idx = Number(row.dataset.standIdx);
+    const item = standTrees[idx];
+    if (!item) return;
+    item.tag = row.querySelector(".stand-input-tag")?.value.trim() || `T-${idx + 1}`;
+    item.species = row.querySelector(".stand-input-species")?.value || item.species;
+    item.dbh_inches = Math.max(1, Number(row.querySelector(".stand-input-dbh")?.value) || 12);
+    item.x_ft = Number(row.querySelector(".stand-input-x")?.value) || 0;
+    item.y_ft = Number(row.querySelector(".stand-input-y")?.value) || 0;
+    item.case_id = row.querySelector(".stand-input-case")?.value || FIXED_PARITY_CASES[0].id;
+    renderStandUnionOutputs();
+  };
+  standTbody?.addEventListener("input", handleStandRowEdit);
+  standTbody?.addEventListener("change", handleStandRowEdit);
+  standTbody?.addEventListener("click", (e) => {
+    const cloneBtn = e.target.closest(".btn-stand-clone");
+    if (cloneBtn) {
+      const idx2 = Number(cloneBtn.dataset.cloneIdx);
+      const source = standTrees[idx2];
+      if (source) {
+        const nextNum = standTrees.length + 1;
+        standTrees.splice(idx2 + 1, 0, {
+          ...JSON.parse(JSON.stringify(source)),
+          tag: `${source.tag}-C${nextNum}`,
+          x_ft: Number(source.x_ft || 0) + 12,
+          y_ft: Number(source.y_ft || 0) + 8
+        });
+        renderStandUnionAndScorecard();
+      }
+      return;
+    }
+    const rmBtn = e.target.closest(".btn-stand-remove");
+    if (!rmBtn) return;
+    const idx = Number(rmBtn.dataset.removeIdx);
+    if (standTrees.length > 1 && idx >= 0 && idx < standTrees.length) {
+      standTrees.splice(idx, 1);
+      renderStandUnionAndScorecard();
+    }
+  });
+  btnStandAdd?.addEventListener("click", () => {
+    const nextNum = standTrees.length + 1;
+    standTrees.push({
+      tag: `ATX-QV-10${nextNum}`,
+      species: "Quercus virginiana (Live Oak)",
+      dbh_inches: 24,
+      x_ft: (nextNum - 1) * 14,
+      y_ft: nextNum % 2 === 0 ? 12 : -10,
+      case_id: "case-1-austin-live-oak"
+    });
+    renderStandUnionAndScorecard();
+  });
+  btnStandReset?.addEventListener("click", () => {
+    standTrees = JSON.parse(JSON.stringify(DEFAULT_STAND_TREES));
+    if (inputStandParcelSqm) inputStandParcelSqm.value = "4047";
+    renderStandUnionAndScorecard();
+  });
+  btnStandLoadGrove?.addEventListener("click", () => {
+    standTrees = JSON.parse(JSON.stringify(RIPARIAN_GROVE_STAND_TREES));
+    if (inputStandParcelSqm) inputStandParcelSqm.value = "6070";
+    renderStandUnionAndScorecard();
+  });
+  inputStandParcelSqm?.addEventListener("input", () => {
+    renderStandUnionOutputs();
+  });
+  function renderStandUnionAndScorecard() {
+    renderStandTableRows();
+    renderStandUnionOutputs();
+  }
+  function renderStandUnionOutputs() {
+    const metricsEl = document.getElementById("stand-union-metrics");
+    const svgWrapEl = document.getElementById("stand-union-svg");
+    const svgSummaryEl = document.getElementById("stand-svg-summary");
+    const scSummaryEl = document.getElementById("stand-scorecard-summary");
+    const scTbodyEl = document.getElementById("stand-scorecard-tbody");
+    if (!metricsEl || !svgWrapEl || !scTbodyEl) return;
+    const baseLat = 30.2672;
+    const baseLng = -97.7431;
+    const FT_PER_DEG_LAT = 364e3;
+    const ftPerDegLng = FT_PER_DEG_LAT * Math.cos(baseLat * Math.PI / 180);
+    const locatedTrees = standTrees.map((t) => {
+      const dbhIn = Math.max(1, Number(t.dbh_inches) || 12);
+      const crz = calculateCRZ(dbhIn, 1);
+      const lat = baseLat + (Number(t.y_ft) || 0) / FT_PER_DEG_LAT;
+      const lng = baseLng + (Number(t.x_ft) || 0) / ftPerDegLng;
+      return {
+        ...t,
+        dbh: dbhIn,
+        lat,
+        lng,
+        crz_ft: crz.radius_feet,
+        tpz_ft: crz.radius_feet,
+        fence_ft: crz.radius_feet,
+        crz_area: crz.area_sqft,
+        removal: false
+      };
+    });
+    const grossCrzAreaSqFt = Math.round(
+      locatedTrees.reduce((sum, r) => sum + r.crz_area, 0)
+    );
+    const unionRes = unionRootZoneArea(locatedTrees);
+    const unionCrzAreaSqFt = unionRes.area_sqft;
+    const overlapReductionSqFt = unionRes.overlap_saved_sqft;
+    const overlapPct = grossCrzAreaSqFt > 0 ? round16(overlapReductionSqFt / grossCrzAreaSqFt * 100) : 0;
+    metricsEl.innerHTML = `
+      <div class="metric-box">
+        <span class="metric-label">Gross Summed CRZ Area</span>
+        <strong class="metric-value"><span id="gross_crz_area_sq_ft">${grossCrzAreaSqFt.toLocaleString()}</span> sq ft</strong>
+        <span class="metric-sub">${round16(grossCrzAreaSqFt * 0.092903)} m2 un-deduplicated sum</span>
+      </div>
+      <div class="metric-box highlight-box">
+        <span class="metric-label">1-ft Grid De-Duplicated Union Area</span>
+        <strong class="metric-value text-accent"><span id="union_crz_area_sq_ft">${unionCrzAreaSqFt.toLocaleString()}</span> sq ft</strong>
+        <span class="metric-sub">${round16(unionCrzAreaSqFt * 0.092903)} m2 net rhizosphere footprint</span>
+      </div>
+      <div class="metric-box">
+        <span class="metric-label">Overlap Saved (De-Duplicated)</span>
+        <strong class="metric-value"><span id="overlap_reduction_sq_ft">${overlapReductionSqFt.toLocaleString()}</span> sq ft (${overlapPct}%)</strong>
+        <span class="metric-sub">Prevents double-billing mulch &amp; AirSpade work</span>
+      </div>
+      <div class="metric-box">
+        <span class="metric-label">Stand Tree Count &amp; Total DBH</span>
+        <strong class="metric-value">${locatedTrees.length} trees (${round16(locatedTrees.reduce((s, r) => s + r.dbh, 0))} in)</strong>
+        <span class="metric-sub">1-ft Cartesian grid union verified</span>
+      </div>
+    `;
+    const svgMarkup = renderSiteMapSVG(locatedTrees, { width: 680, height: 340 });
+    svgWrapEl.innerHTML = svgMarkup || '<p class="hint">Add located trees to render the SVG stand union map.</p>';
+    if (svgSummaryEl) {
+      svgSummaryEl.innerHTML = `Net Union CRZ: <strong>${unionCrzAreaSqFt.toLocaleString()} sq ft</strong> | Overlap Saved: <strong>${overlapReductionSqFt.toLocaleString()} sq ft (${overlapPct}%)</strong>`;
+    }
+    const standAssessments = locatedTrees.map((t) => {
+      const matchedCase = FIXED_PARITY_CASES.find((c) => c.id === t.case_id) || FIXED_PARITY_CASES[0];
+      const clone = JSON.parse(JSON.stringify(matchedCase.assessment));
+      clone.structural_baseline.tree_tag = t.tag;
+      clone.structural_baseline.dbh_cm = round27(t.dbh * 2.54);
+      clone.structural_baseline.lat = t.lat;
+      clone.structural_baseline.lng = t.lng;
+      const crzM = round27(t.crz_ft * 0.3048);
+      clone.rhizosphere_and_root_collar.crz_radius_m = crzM;
+      clone.rhizosphere_and_root_collar.tiz_radius_m = round27(crzM * 1.5);
+      return clone;
+    });
+    const parcelSqm = Math.max(100, Number(inputStandParcelSqm?.value) || 4047);
+    const rollup = computeSanctuaryScorecardRollup(standAssessments, parcelSqm);
+    const sc = rollup.sanctuary_scorecard;
+    const eq = rollup.ecological_equity;
+    const compositeTier = getEcologicalTier(sc.composite_sanctuary_score);
+    if (scSummaryEl) {
+      scSummaryEl.innerHTML = `
+        <div>
+          <span class="metric-label">Composite Open Sanctuary Scorecard Rating</span>
+          <div class="verdict-title-row">
+            <strong class="verdict-big">${sc.composite_sanctuary_score} / 100</strong>
+            <span class="badge ${compositeTier.badgeClass}">${compositeTier.label}</span>
+          </div>
+          <span class="metric-sub">Stand Holobiont 200-Yr Equity: <strong>$${eq.total_holobiont_200yr_equity_usd.toLocaleString()}</strong> vs. Classical CTLA: $${eq.total_ctla_depreciated_usd.toLocaleString()} (${eq.inversion_ratio}x)</span>
+        </div>
+        <div class="verdict-right">
+          <span class="metric-label">Canopy Coverage of Parcel</span>
+          <strong>${rollup.spatial_coverage.canopy_coverage_parcel_pct}% (${rollup.spatial_coverage.total_canopy_projection_sqm} m2 / ${rollup.parcel_area_sqm} m2)</strong>
+        </div>
+      `;
+    }
+    const dimensionRows = [
+      {
+        name: "Soil Health Index",
+        score: sc.soil_health_index,
+        driver: "Top-15cm bulk density (g/cm3), steady-state infiltration (mm/hr), SOM (%), and F:B fungal ratio weighted by TIZ area"
+      },
+      {
+        name: "Canopy Coverage",
+        score: sc.canopy_coverage_index,
+        driver: `Live Crown Ratio-weighted dripline projection (${rollup.spatial_coverage.total_canopy_projection_sqm} m2 across ${rollup.parcel_area_sqm} m2 parcel)`
+      },
+      {
+        name: "Water Dynamics",
+        score: sc.water_dynamics_index,
+        driver: "60% vadose zone soil infiltration capacity + 40% canopy rainfall interception (Xiao et al. 2000)"
+      },
+      {
+        name: "Biodiversity Baseline",
+        score: sc.biodiversity_baseline_index,
+        driver: "Unique iNaturalist taxa documented across host canopy trees, mycorrhizal symbionts, and understory companion guilds"
+      },
+      {
+        name: "Restoration Potential Score",
+        score: sc.restoration_potential_score,
+        driver: "60-month STIM target realization potential across SER International Principles recovery wheel"
+      }
+    ];
+    scTbodyEl.innerHTML = dimensionRows.map((d) => {
+      const tier = getEcologicalTier(d.score);
+      return `
+          <tr>
+            <td><strong>${d.name}</strong></td>
+            <td><strong>${d.score} / 100</strong></td>
+            <td><span class="badge ${tier.badgeClass}">${tier.label}</span></td>
+            <td>${d.driver}</td>
+          </tr>
+        `;
+    }).join("");
+  }
+  const inputPractitioner = document.getElementById("input-badge-practitioner");
+  const inputCredId = document.getElementById("input-badge-credential-id");
+  const inputIssuerUri = document.getElementById("input-badge-issuer-uri");
+  const inputEvidenceUri = document.getElementById("input-badge-evidence-uri");
+  const btnMintBadge = document.getElementById("btn-mint-badge");
+  const btnDownloadBadge = document.getElementById("btn-download-badge");
+  const btnCopyBadge = document.getElementById("btn-copy-badge");
+  const badgeDigestBanner = document.getElementById("badge-digest-banner");
+  const badgeJsonPreview = document.getElementById("badge-json-preview");
+  const inputTamperTest = document.getElementById("input-tamper-test");
+  const tamperBanner = document.getElementById("tamper-verification-banner");
+  const btnTamperAttack = document.getElementById("btn-tamper-simulate-attack");
+  const btnTamperRestore = document.getElementById("btn-tamper-restore");
+  let latestMintedBadge = null;
+  let anchoredPrimaryAssessment = null;
+  let anchoredPrimarySha256 = "";
+  function mintAndRenderOpenBadge() {
+    if (!badgeJsonPreview) return;
+    const { latestAssessment: latestAssessment2 } = getLatestFieldState();
+    const primaryAssessment = JSON.parse(
+      JSON.stringify(latestAssessment2 || FIXED_PARITY_CASES[0].assessment)
+    );
+    const secondAssessment = JSON.parse(JSON.stringify(FIXED_PARITY_CASES[1].assessment));
+    const thirdAssessment = JSON.parse(JSON.stringify(FIXED_PARITY_CASES[2].assessment));
+    const practitionerName = inputPractitioner?.value.trim() || "George Steward";
+    const rawCredId = inputCredId?.value.trim() || "ISA TX-362025A / RCA-001";
+    const issuerUri = inputIssuerUri?.value.trim() || "https://openarbor.org/issuers/open-arbor-alliance";
+    const evidenceBaseUri = inputEvidenceUri?.value.trim() || "https://openarbor.org/reports/rca-v2/";
+    const practitionerMeta = {
+      id: `did:web:openarbor.org:stewards:${practitionerName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+      practitioner_name: practitionerName,
+      credential_id: `https://openarbor.org/credentials/rca-verified/${encodeURIComponent(rawCredId.replace(/\s+/g, "-"))}`,
+      validFrom: "2026-10-29T00:00:00Z",
+      validUntil: "2027-10-29T00:00:00Z",
+      legacy_statutory_equivalencies: {
+        credential_category: "ISA_Certified_Arborist",
+        issuing_organization: "International Society of Arboriculture / Open Arbor Alliance",
+        credential_identifier: rawCredId,
+        verification_url: "https://openarbor.org/spec/"
+      }
+    };
+    const minted = mintOpenBadgeAttestation(
+      practitionerMeta,
+      [primaryAssessment, secondAssessment, thirdAssessment],
+      rca_assessment_schema_default
+    );
+    if (issuerUri) {
+      minted.issuer.id = issuerUri;
+    }
+    if (evidenceBaseUri && Array.isArray(minted.evidence)) {
+      const cleanBase = evidenceBaseUri.endsWith("/") ? evidenceBaseUri : `${evidenceBaseUri}/`;
+      minted.evidence.forEach((ev, idx) => {
+        ev.id = `${cleanBase}report-00${idx + 1}-${ev.report_sha256_hash.slice(0, 8)}.json`;
+      });
+    }
+    const copyWithoutProof = { ...minted };
+    delete copyWithoutProof.proof;
+    const outerProofDigest = computeCanonicalSha256(copyWithoutProof);
+    minted.proof.proofValue = `sha256:${outerProofDigest}`;
+    latestMintedBadge = minted;
+    anchoredPrimaryAssessment = primaryAssessment;
+    anchoredPrimarySha256 = minted.evidence[0].report_sha256_hash;
+    if (badgeDigestBanner) {
+      badgeDigestBanner.innerHTML = `
+        <div>
+          <strong>W3C Verifiable Credential / Open Badges 3.0 Status:</strong>
+          <span class="badge badge-protected">MINTED &amp; SCHEMA VERIFIED</span>
+          <span class="metric-sub">Anchored Report #1 SHA-256: ${renderExpandableHashHtml(anchoredPrimarySha256, { codeId: "report_sha256" })}</span>
+        </div>
+        <div class="sha-box">
+          <span>Credential Proof Value:</span>
+          ${renderExpandableHashHtml(minted.proof.proofValue, { headChars: 17, tailChars: 8 })}
+        </div>
+      `;
+    }
+    badgeJsonPreview.textContent = JSON.stringify(minted, null, 2);
+    if (inputTamperTest) {
+      inputTamperTest.value = JSON.stringify(primaryAssessment, null, 2);
+      evaluateTamperInput();
+    }
+  }
+  function evaluateTamperInput() {
+    if (!inputTamperTest || !tamperBanner) return;
+    const rawText = inputTamperTest.value;
+    try {
+      const parsed = JSON.parse(rawText);
+      const recomputedHash = computeCanonicalSha256(parsed);
+      const isMatch = recomputedHash === anchoredPrimarySha256;
+      if (isMatch) {
+        tamperBanner.style.borderLeftColor = "var(--accent-green)";
+        tamperBanner.innerHTML = `
+          <div>
+            <span class="metric-label">Cryptographic Integrity Verification</span>
+            <div class="verdict-title-row">
+              <strong class="verdict-big text-accent">VERIFIED MATCH</strong>
+              <span class="badge badge-protected">Zero Byte Tampering Detected</span>
+            </div>
+            <div class="metric-sub">Anchored <code>report_sha256</code>: ${renderExpandableHashHtml(anchoredPrimarySha256)}</div>
+          </div>
+          <div class="verdict-right">
+            <span class="metric-label">Recomputed Canonical SHA-256</span>
+            ${renderExpandableHashHtml(recomputedHash)}
+          </div>
+        `;
+      } else {
+        tamperBanner.style.borderLeftColor = "var(--danger-red)";
+        tamperBanner.innerHTML = `
+          <div>
+            <span class="metric-label">Cryptographic Integrity Verification</span>
+            <div class="verdict-title-row">
+              <strong class="verdict-big text-danger">TAMPER DETECTED: SHA-256 MISMATCH</strong>
+              <span class="badge badge-danger">Credential Evidence Invalidated</span>
+            </div>
+            <div class="metric-sub">Anchored <code>report_sha256</code>: ${renderExpandableHashHtml(anchoredPrimarySha256)}</div>
+          </div>
+          <div class="verdict-right">
+            <span class="metric-label">Recomputed Tampered SHA-256</span>
+            ${renderExpandableHashHtml(recomputedHash, { danger: true })}
+          </div>
+        `;
+      }
+    } catch (err) {
+      tamperBanner.style.borderLeftColor = "var(--danger-red)";
+      tamperBanner.innerHTML = `
+        <div>
+          <span class="metric-label">Cryptographic Integrity Verification</span>
+          <div class="verdict-title-row">
+            <strong class="verdict-big text-danger">TAMPER DETECTED: MALFORMED JSON PAYLOAD</strong>
+            <span class="badge badge-danger">Syntax Error</span>
+          </div>
+          <span class="metric-sub">${err.message}</span>
+        </div>
+      `;
+    }
+  }
+  btnMintBadge?.addEventListener("click", () => mintAndRenderOpenBadge());
+  inputPractitioner?.addEventListener("input", () => mintAndRenderOpenBadge());
+  inputCredId?.addEventListener("input", () => mintAndRenderOpenBadge());
+  inputIssuerUri?.addEventListener("input", () => mintAndRenderOpenBadge());
+  inputEvidenceUri?.addEventListener("input", () => mintAndRenderOpenBadge());
+  inputTamperTest?.addEventListener("input", () => evaluateTamperInput());
+  btnTamperAttack?.addEventListener("click", () => {
+    if (!anchoredPrimaryAssessment || !inputTamperTest) return;
+    const tampered = JSON.parse(JSON.stringify(anchoredPrimaryAssessment));
+    tampered.structural_baseline.sound_shell_thickness_ratio_t_over_r = 0.18;
+    tampered.structural_baseline.municipal_permit_disposition.recommended_disposition = "Removal_Last_Resort_Unmitigable_Hazard";
+    inputTamperTest.value = JSON.stringify(tampered, null, 2);
+    evaluateTamperInput();
+  });
+  btnTamperRestore?.addEventListener("click", () => {
+    if (!anchoredPrimaryAssessment || !inputTamperTest) return;
+    inputTamperTest.value = JSON.stringify(anchoredPrimaryAssessment, null, 2);
+    evaluateTamperInput();
+  });
+  btnDownloadBadge?.addEventListener("click", () => {
+    if (!latestMintedBadge) mintAndRenderOpenBadge();
+    if (!latestMintedBadge) return;
+    const blob = new Blob([JSON.stringify(latestMintedBadge, null, 2)], {
+      type: "application/ld+json;charset=utf-8"
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "openarbor-rca-verified.ob3.json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+  btnCopyBadge?.addEventListener("click", async () => {
+    if (!latestMintedBadge) mintAndRenderOpenBadge();
+    if (navigator.clipboard && latestMintedBadge) {
+      await navigator.clipboard.writeText(JSON.stringify(latestMintedBadge, null, 2));
+      const prev = btnCopyBadge.textContent;
+      btnCopyBadge.textContent = "Copied .ob3.json to Clipboard";
+      setTimeout(() => {
+        btnCopyBadge.textContent = prev;
+      }, 1800);
+    }
+  });
+  if (standTbody) {
+    renderStandUnionAndScorecard();
+  }
+  if (badgeJsonPreview) {
+    mintAndRenderOpenBadge();
+  }
+}
 
 // web/pages/living-lens-ui.js
 var ALL_MUNICIPALITIES = [
@@ -6956,7 +7071,7 @@ function initVeilAndHandoffChrome() {
   const syncVeilButtonLabel = (isDeep) => {
     if (!veilToggleBtn) return;
     veilToggleBtn.setAttribute("aria-pressed", String(Boolean(isDeep)));
-    veilToggleBtn.textContent = isDeep ? "Veil: Deep Proof" : "Veil: Canopy";
+    veilToggleBtn.textContent = isDeep ? "Layer: Heartwood" : "Layer: Canopy";
   };
   const applyVeilModeToPage = (isDeep, persist = false) => {
     const veils = document.querySelectorAll("details.oa-veil");
@@ -7057,6 +7172,18 @@ function initVeilAndHandoffChrome() {
       copyTextWithFeedback(text, btn, "Copied");
     });
   });
+  if (document.documentElement.dataset.oaHashCopyDelegated !== "true") {
+    document.documentElement.dataset.oaHashCopyDelegated = "true";
+    document.addEventListener("click", (event) => {
+      const target = event.target;
+      const btn = target && target.closest ? target.closest("[data-copy-hash]") : null;
+      if (!btn) return;
+      const hashText = btn.getAttribute("data-copy-hash") || "";
+      if (hashText) {
+        copyTextWithFeedback(hashText, btn, "Copied");
+      }
+    });
+  }
   if (document.getElementById("arborist-handoff-dialog")) {
     ensureArboristHandoffDialog();
   }
@@ -7076,7 +7203,7 @@ function renderLivingLensSVG({
 }) {
   const isSound = tOverR >= 0.3;
   const cxTree = 236;
-  const gradeY = 184;
+  const gradeY = 180;
   const maxHalfSpanPx = 198;
   const safeTizFt = Math.max(tizFt, 12);
   const pxPerFoot = Math.min(9.2, maxHalfSpanPx / safeTizFt);
@@ -7086,14 +7213,14 @@ function renderLivingLensSVG({
   const trunkHalfPx = Math.max(5, Math.min(20, round17(dbhIn * 0.3)));
   const flareHalfPx = trunkHalfPx + 7;
   const canopyRx = Math.max(52, Math.min(148, round17(40 + dbhIn * 1.95)));
-  const canopyRy = Math.max(36, Math.min(72, round17(28 + dbhIn * 0.78)));
-  const canopyCy = gradeY - 62 - Math.round(canopyRy * 0.55);
+  const canopyRy = Math.max(36, Math.min(70, round17(28 + dbhIn * 0.76)));
+  const canopyCy = gradeY - 60 - Math.round(canopyRy * 0.55);
   const crzRightEdge = cxTree + crzHalfPx;
   const cutFraction = Math.max(0, Math.min(0.82, disturbancePct / 50 * 0.76));
   const trenchX = round17(crzRightEdge - crzHalfPx * cutFraction * 1.15);
   const trenchBreachesSrz = disturbancePct > 0 && trenchX <= cxTree + srzHalfPx;
-  const ringCx = 612;
-  const ringCy = 148;
+  const ringCx = 140;
+  const ringCy = 144;
   const barkOuterR = 84;
   const woodOuterR = 76;
   const cavityR = round17(Math.max(0, Math.min(woodOuterR - 4, woodOuterR * (1 - tOverR))));
@@ -7122,227 +7249,233 @@ function renderLivingLensSVG({
         stroke-width="2.5"
         stroke-dasharray="5 3"
       />
-      <rect x="${Math.max(248, Math.min(342, trenchX - 54))}" y="${gradeY - 38}" width="116" height="20" rx="5" fill="var(--danger-bg)" stroke="var(--danger-red)" stroke-width="1" />
-      <text x="${Math.max(306, Math.min(400, trenchX + 4))}" y="${gradeY - 24}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--danger-red)">
+      <rect x="${Math.max(246, Math.min(340, trenchX - 54))}" y="${gradeY - 38}" width="118" height="20" rx="5" fill="var(--danger-bg)" stroke="var(--danger-red)" stroke-width="1" />
+      <text x="${Math.max(305, Math.min(399, trenchX + 5))}" y="${gradeY - 24}" text-anchor="middle" font-size="10.2" font-weight="700" fill="var(--danger-red)">
         ${disturbancePct}% CRZ Trench Cut${trenchBreachesSrz ? " (Hits SRZ)" : ""}
       </text>
     ` : `
       <rect x="${cxTree + crzHalfPx - 108}" y="${gradeY - 32}" width="114" height="19" rx="5" fill="var(--highlight-bg)" stroke="var(--accent-green)" stroke-width="1" />
-      <text x="${cxTree + crzHalfPx - 51}" y="${gradeY - 19}" text-anchor="middle" font-size="9.5" font-weight="700" fill="var(--accent-bright)">
+      <text x="${cxTree + crzHalfPx - 51}" y="${gradeY - 19}" text-anchor="middle" font-size="9.8" font-weight="700" fill="var(--accent-bright)">
         0% Trenching (Intact)
       </text>
     `;
   return `
-    <svg
-      class="oa-living-lens-svg"
-      viewBox="0 0 760 322"
-      role="img"
-      aria-label="${escapeHtml(speciesCommon)} living cross-section: ${dbhIn} inch DBH, ${crzFt.toFixed(1)} ft Critical Root Zone, ${srzFt.toFixed(1)} ft Structural Root Zone, and Mattheck t over R ratio ${tOverR.toFixed(2)}"
-    >
-      <title>${escapeHtml(speciesCommon)} Living Architecture and Trunk Shell Cross-Section</title>
-      <desc>Left diagram shows canopy, root flare, AS 4970 Structural Root Zone (${srzFt.toFixed(1)} ft), ANSI A300 Critical Root Zone (${crzFt.toFixed(1)} ft), 1.5x Tree Influence Zone (${tizFt.toFixed(1)} ft), and ${disturbancePct}% trench disturbance. Right diagram shows trunk cross-section with ${cavityPct}% internal cavity width and t/R = ${tOverR.toFixed(2)} relative to the 0.30 Claus Mattheck threshold.</desc>
+    <div class="oa-living-lens-dual">
+      <svg
+        class="oa-living-lens-svg oa-living-lens-tree-svg"
+        viewBox="0 0 472 308"
+        role="img"
+        aria-label="${escapeHtml(speciesCommon)} living canopy and root sponge cross-section: ${dbhIn} inch DBH, ${crzFt.toFixed(1)} ft Critical Root Zone, ${srzFt.toFixed(1)} ft Structural Root Zone"
+      >
+        <title>${escapeHtml(speciesCommon)} Living Canopy, Root Plate and Mycorrhizal Sponge</title>
+        <desc>Diagram shows canopy, root flare, AS 4970 Structural Root Zone (${srzFt.toFixed(1)} ft), ANSI A300 Critical Root Zone (${crzFt.toFixed(1)} ft), 1.5x Tree Influence Zone (${tizFt.toFixed(1)} ft), and ${disturbancePct}% trench disturbance.</desc>
 
-      <!-- Left Viewport Title -->
-      <text x="22" y="21" font-size="11" font-weight="700" fill="var(--text-muted)" letter-spacing="0.04em">
-        LIVING CANOPY, ROOT PLATE &amp; SOIL SPONGE (SCALE VIEW)
-      </text>
+        <text x="18" y="20" font-size="11" font-weight="700" fill="var(--text-muted)" letter-spacing="0.04em">
+          LIVING CANOPY, ROOT PLATE &amp; SOIL SPONGE (SCALE VIEW)
+        </text>
 
-      <!-- Underground Vadose Soil Sponge Horizon -->
-      <rect x="16" y="${gradeY}" width="444" height="118" rx="10" fill="var(--accent-copper)" fill-opacity="0.07" />
+        <!-- Underground Vadose Soil Sponge Horizon -->
+        <rect x="14" y="${gradeY}" width="444" height="116" rx="10" fill="var(--accent-copper)" fill-opacity="0.07" />
 
-      <!-- 1.5x TIZ Mycorrhizal Influence Zone Band -->
-      <rect
-        x="${round17(cxTree - tizHalfPx)}"
-        y="${gradeY + 8}"
-        width="${round17(tizHalfPx * 2)}"
-        height="82"
-        rx="12"
-        fill="var(--accent-copper)"
-        fill-opacity="0.09"
-        stroke="var(--accent-copper)"
-        stroke-width="1.2"
-        stroke-dasharray="5 4"
-      />
+        <!-- 1.5x TIZ Mycorrhizal Influence Zone Band -->
+        <rect
+          x="${round17(cxTree - tizHalfPx)}"
+          y="${gradeY + 8}"
+          width="${round17(tizHalfPx * 2)}"
+          height="84"
+          rx="12"
+          fill="var(--accent-copper)"
+          fill-opacity="0.09"
+          stroke="var(--accent-copper)"
+          stroke-width="1.2"
+          stroke-dasharray="5 4"
+        />
 
-      <!-- ANSI A300 1.0x CRZ Feeder Root Zone Band -->
-      <rect
-        x="${round17(cxTree - crzHalfPx)}"
-        y="${gradeY + 14}"
-        width="${round17(crzHalfPx * 2)}"
-        height="58"
-        rx="10"
-        fill="var(--accent-green)"
-        fill-opacity="0.14"
-        stroke="var(--accent-bright)"
-        stroke-width="1.6"
-      />
+        <!-- ANSI A300 1.0x CRZ Feeder Root Zone Band -->
+        <rect
+          x="${round17(cxTree - crzHalfPx)}"
+          y="${gradeY + 14}"
+          width="${round17(crzHalfPx * 2)}"
+          height="58"
+          rx="10"
+          fill="var(--accent-green)"
+          fill-opacity="0.14"
+          stroke="var(--accent-bright)"
+          stroke-width="1.6"
+        />
 
-      <!-- AS 4970 Structural Windthrow Plate (SRZ) -->
-      <rect
-        x="${round17(cxTree - srzHalfPx)}"
-        y="${gradeY + 18}"
-        width="${round17(srzHalfPx * 2)}"
-        height="34"
-        rx="8"
-        fill="var(--accent-copper)"
-        fill-opacity="0.24"
-        stroke="var(--accent-copper)"
-        stroke-width="1.8"
-      />
+        <!-- AS 4970 Structural Windthrow Plate (SRZ) -->
+        <rect
+          x="${round17(cxTree - srzHalfPx)}"
+          y="${gradeY + 18}"
+          width="${round17(srzHalfPx * 2)}"
+          height="34"
+          rx="8"
+          fill="var(--accent-copper)"
+          fill-opacity="0.24"
+          stroke="var(--accent-copper)"
+          stroke-width="1.8"
+        />
 
-      <!-- Organic Lateral Root Architecture & Mycorrhizal Filaments -->
-      <path
-        d="M ${cxTree - trunkHalfPx} ${gradeY + 6} Q ${cxTree - srzHalfPx} ${gradeY + 26}, ${cxTree - crzHalfPx + 8} ${gradeY + 34}
-           M ${cxTree + trunkHalfPx} ${gradeY + 6} Q ${cxTree + srzHalfPx} ${gradeY + 26}, ${cxTree + crzHalfPx - 8} ${gradeY + 34}
-           M ${cxTree - 4} ${gradeY + 10} Q ${cxTree - srzHalfPx * 0.7} ${gradeY + 42}, ${cxTree - tizHalfPx + 14} ${gradeY + 56}
-           M ${cxTree + 4} ${gradeY + 10} Q ${cxTree + srzHalfPx * 0.7} ${gradeY + 42}, ${cxTree + tizHalfPx - 14} ${gradeY + 56}"
-        fill="none"
-        stroke="var(--accent-copper)"
-        stroke-width="2.1"
-        stroke-linecap="round"
-        opacity="0.82"
-      />
+        <!-- Organic Lateral Root Architecture & Mycorrhizal Filaments -->
+        <path
+          d="M ${cxTree - trunkHalfPx} ${gradeY + 6} Q ${cxTree - srzHalfPx} ${gradeY + 26}, ${cxTree - crzHalfPx + 8} ${gradeY + 34}
+             M ${cxTree + trunkHalfPx} ${gradeY + 6} Q ${cxTree + srzHalfPx} ${gradeY + 26}, ${cxTree + crzHalfPx - 8} ${gradeY + 34}
+             M ${cxTree - 4} ${gradeY + 10} Q ${cxTree - srzHalfPx * 0.7} ${gradeY + 42}, ${cxTree - tizHalfPx + 14} ${gradeY + 56}
+             M ${cxTree + 4} ${gradeY + 10} Q ${cxTree + srzHalfPx * 0.7} ${gradeY + 42}, ${cxTree + tizHalfPx - 14} ${gradeY + 56}"
+          fill="none"
+          stroke="var(--accent-copper)"
+          stroke-width="2.1"
+          stroke-linecap="round"
+          opacity="0.82"
+        />
 
-      <!-- Canopy Crown Layered Botanical Silhouette -->
-      <ellipse
-        cx="${cxTree - Math.round(canopyRx * 0.28)}"
-        cy="${canopyCy + 8}"
-        rx="${round17(canopyRx * 0.68)}"
-        ry="${round17(canopyRy * 0.78)}"
-        fill="var(--accent-green)"
-        fill-opacity="0.2"
-        stroke="var(--accent-bright)"
-        stroke-width="1.2"
-      />
-      <ellipse
-        cx="${cxTree + Math.round(canopyRx * 0.28)}"
-        cy="${canopyCy + 10}"
-        rx="${round17(canopyRx * 0.66)}"
-        ry="${round17(canopyRy * 0.76)}"
-        fill="var(--accent-green)"
-        fill-opacity="0.2"
-        stroke="var(--accent-bright)"
-        stroke-width="1.2"
-      />
-      <ellipse
-        cx="${cxTree}"
-        cy="${canopyCy}"
-        rx="${canopyRx}"
-        ry="${canopyRy}"
-        fill="var(--accent-green)"
-        fill-opacity="0.28"
-        stroke="var(--accent-bright)"
-        stroke-width="1.8"
-      />
+        <!-- Canopy Crown Layered Botanical Silhouette -->
+        <ellipse
+          cx="${cxTree - Math.round(canopyRx * 0.28)}"
+          cy="${canopyCy + 8}"
+          rx="${round17(canopyRx * 0.68)}"
+          ry="${round17(canopyRy * 0.78)}"
+          fill="var(--accent-green)"
+          fill-opacity="0.2"
+          stroke="var(--accent-bright)"
+          stroke-width="1.2"
+        />
+        <ellipse
+          cx="${cxTree + Math.round(canopyRx * 0.28)}"
+          cy="${canopyCy + 10}"
+          rx="${round17(canopyRx * 0.66)}"
+          ry="${round17(canopyRy * 0.76)}"
+          fill="var(--accent-green)"
+          fill-opacity="0.2"
+          stroke="var(--accent-bright)"
+          stroke-width="1.2"
+        />
+        <ellipse
+          cx="${cxTree}"
+          cy="${canopyCy}"
+          rx="${canopyRx}"
+          ry="${canopyRy}"
+          fill="var(--accent-green)"
+          fill-opacity="0.28"
+          stroke="var(--accent-bright)"
+          stroke-width="1.8"
+        />
 
-      <!-- Trunk & Basal Root Flare -->
-      <path
-        d="M ${cxTree - trunkHalfPx * 0.8} ${canopyCy + 14}
-           L ${cxTree - trunkHalfPx} ${gradeY - 14}
-           Q ${cxTree - trunkHalfPx - 2} ${gradeY - 2}, ${cxTree - flareHalfPx} ${gradeY + 6}
-           L ${cxTree + flareHalfPx} ${gradeY + 6}
-           Q ${cxTree + trunkHalfPx + 2} ${gradeY - 2}, ${cxTree + trunkHalfPx} ${gradeY - 14}
-           L ${cxTree + trunkHalfPx * 0.8} ${canopyCy + 14} Z"
-        fill="var(--accent-copper)"
-        fill-opacity="0.88"
-      />
-      <!-- Scaffold limbs -->
-      <path
-        d="M ${cxTree - 2} ${canopyCy + 26} Q ${cxTree - 24} ${canopyCy + 4}, ${cxTree - 46} ${canopyCy - 6}
-           M ${cxTree + 2} ${canopyCy + 22} Q ${cxTree + 26} ${canopyCy + 2}, ${cxTree + 48} ${canopyCy - 8}"
-        fill="none"
-        stroke="var(--accent-copper)"
-        stroke-width="3.2"
-        stroke-linecap="round"
-      />
+        <!-- Trunk & Basal Root Flare -->
+        <path
+          d="M ${cxTree - trunkHalfPx * 0.8} ${canopyCy + 14}
+             L ${cxTree - trunkHalfPx} ${gradeY - 14}
+             Q ${cxTree - trunkHalfPx - 2} ${gradeY - 2}, ${cxTree - flareHalfPx} ${gradeY + 6}
+             L ${cxTree + flareHalfPx} ${gradeY + 6}
+             Q ${cxTree + trunkHalfPx + 2} ${gradeY - 2}, ${cxTree + trunkHalfPx} ${gradeY - 14}
+             L ${cxTree + trunkHalfPx * 0.8} ${canopyCy + 14} Z"
+          fill="var(--accent-copper)"
+          fill-opacity="0.88"
+        />
+        <!-- Scaffold limbs -->
+        <path
+          d="M ${cxTree - 2} ${canopyCy + 26} Q ${cxTree - 24} ${canopyCy + 4}, ${cxTree - 46} ${canopyCy - 6}
+             M ${cxTree + 2} ${canopyCy + 22} Q ${cxTree + 26} ${canopyCy + 2}, ${cxTree + 48} ${canopyCy - 8}"
+          fill="none"
+          stroke="var(--accent-copper)"
+          stroke-width="3.2"
+          stroke-linecap="round"
+        />
 
-      <!-- Soil Grade Line -->
-      <line x1="16" y1="${gradeY}" x2="460" y2="${gradeY}" stroke="var(--text-main)" stroke-opacity="0.45" stroke-width="1.5" />
-      <text x="24" y="${gradeY - 6}" font-size="9.5" font-weight="600" fill="var(--text-muted)">Soil Line</text>
+        <!-- Soil Grade Line -->
+        <line x1="14" y1="${gradeY}" x2="458" y2="${gradeY}" stroke="var(--text-main)" stroke-opacity="0.45" stroke-width="1.5" />
+        <text x="22" y="${gradeY - 6}" font-size="10" font-weight="600" fill="var(--text-muted)">Soil Line</text>
 
-      <!-- Trench / Disturbance Cut Overlay -->
-      ${trenchMarkup}
+        <!-- Trench / Disturbance Cut Overlay -->
+        ${trenchMarkup}
 
-      <!-- Zone Labels Below Grade -->
-      <text x="${cxTree}" y="${gradeY + 39}" text-anchor="middle" font-size="9.5" font-weight="700" fill="var(--text-main)">
-        SRZ Windthrow Plate: ${srzFt.toFixed(1)} ft
-      </text>
-      <text x="${cxTree}" y="${gradeY + 67}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--accent-bright)">
-        ANSI A300 CRZ: ${crzFt.toFixed(1)} ft radius
-      </text>
-      <text x="${cxTree}" y="${gradeY + 85}" text-anchor="middle" font-size="9.5" font-weight="600" fill="var(--accent-copper)">
-        1.5x Mycorrhizal Sponge (TIZ: ${tizFt.toFixed(1)} ft \xB7 ${Math.round(stormGallons).toLocaleString("en-US")} gal / 1-in storm)
-      </text>
+        <!-- Zone Labels Below Grade -->
+        <text x="${cxTree}" y="${gradeY + 39}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--text-main)">
+          SRZ Windthrow Plate: ${srzFt.toFixed(1)} ft
+        </text>
+        <text x="${cxTree}" y="${gradeY + 66}" text-anchor="middle" font-size="10.4" font-weight="700" fill="var(--accent-bright)">
+          ANSI A300 CRZ: ${crzFt.toFixed(1)} ft radius
+        </text>
+        <text x="${cxTree}" y="${gradeY + 86}" text-anchor="middle" font-size="9.8" font-weight="600" fill="var(--accent-copper)">
+          1.5x Mycorrhizal Sponge (TIZ: ${tizFt.toFixed(1)} ft \xB7 ${Math.round(stormGallons).toLocaleString("en-US")} gal / 1-in storm)
+        </text>
+      </svg>
 
-      <!-- Viewport Divider -->
-      <line x1="474" y1="16" x2="474" y2="306" stroke="var(--border-subtle)" stroke-width="1.2" />
+      <svg
+        class="oa-living-lens-svg oa-living-lens-ring-svg"
+        viewBox="0 0 280 308"
+        role="img"
+        aria-label="${escapeHtml(speciesCommon)} trunk shell ring cross-section: Mattheck t over R ratio ${tOverR.toFixed(2)}"
+      >
+        <title>${escapeHtml(speciesCommon)} Trunk Shell Ring (Mattheck t/R)</title>
+        <desc>Trunk cross-section with ${cavityPct}% internal cavity width and t/R = ${tOverR.toFixed(2)} relative to the 0.30 Claus Mattheck hollow-shell buckling threshold.</desc>
 
-      <!-- Right Viewport Title -->
-      <text x="612" y="21" text-anchor="middle" font-size="11" font-weight="700" fill="var(--text-muted)" letter-spacing="0.04em">
-        TRUNK SHELL RING (MATTHECK t/R)
-      </text>
+        <text x="${ringCx}" y="20" text-anchor="middle" font-size="11" font-weight="700" fill="var(--text-muted)" letter-spacing="0.04em">
+          TRUNK SHELL RING (MATTHECK t/R)
+        </text>
 
-      <!-- Outer Bark Circle -->
-      <circle cx="${ringCx}" cy="${ringCy}" r="${barkOuterR}" fill="var(--accent-copper)" fill-opacity="0.82" stroke="var(--border-main)" stroke-width="1.5" />
+        <text x="${ringCx}" y="46" text-anchor="middle" font-size="9.8" font-weight="600" fill="var(--text-muted)">
+          Dashed ring: Mattheck 0.30 limit
+        </text>
 
-      <!-- Living Cambium & Sapwood Ring -->
-      <circle cx="${ringCx}" cy="${ringCy}" r="${woodOuterR + 3}" fill="none" stroke="var(--accent-bright)" stroke-width="3.2" />
+        <!-- Outer Bark Circle -->
+        <circle cx="${ringCx}" cy="${ringCy}" r="${barkOuterR}" fill="var(--accent-copper)" fill-opacity="0.82" stroke="var(--border-main)" stroke-width="1.5" />
 
-      <!-- Sound Structural Wood Cylinder -->
-      <circle cx="${ringCx}" cy="${ringCy}" r="${woodOuterR}" fill="var(--veil-bg)" stroke="var(--accent-copper)" stroke-width="1.2" />
+        <!-- Living Cambium & Sapwood Ring -->
+        <circle cx="${ringCx}" cy="${ringCy}" r="${woodOuterR + 3}" fill="none" stroke="var(--accent-bright)" stroke-width="3.2" />
 
-      <!-- Subtle Growth Rings -->
-      <circle cx="${ringCx}" cy="${ringCy}" r="${round17(woodOuterR * 0.85)}" fill="none" stroke="var(--accent-copper)" stroke-opacity="0.3" stroke-width="1" />
-      <circle cx="${ringCx}" cy="${ringCy}" r="${round17(woodOuterR * 0.52)}" fill="none" stroke="var(--accent-copper)" stroke-opacity="0.24" stroke-width="1" />
+        <!-- Sound Structural Wood Cylinder -->
+        <circle cx="${ringCx}" cy="${ringCy}" r="${woodOuterR}" fill="var(--veil-bg)" stroke="var(--accent-copper)" stroke-width="1.2" />
 
-      <!-- Internal Heartwood Cavity (R - t) -->
-      ${cavityR > 1.5 ? `<circle cx="${ringCx}" cy="${ringCy}" r="${cavityR}" fill="var(--bg-deep)" stroke="var(--text-muted)" stroke-width="1.4" />` : ""}
+        <!-- Subtle Growth Rings -->
+        <circle cx="${ringCx}" cy="${ringCy}" r="${round17(woodOuterR * 0.85)}" fill="none" stroke="var(--accent-copper)" stroke-opacity="0.3" stroke-width="1" />
+        <circle cx="${ringCx}" cy="${ringCy}" r="${round17(woodOuterR * 0.52)}" fill="none" stroke="var(--accent-copper)" stroke-opacity="0.24" stroke-width="1" />
 
-      <!-- Claus Mattheck t/R = 0.30 Buckling Threshold Reference Ring -->
-      <circle
-        cx="${ringCx}"
-        cy="${ringCy}"
-        r="${mattheckThresholdR}"
-        fill="none"
-        stroke="${isSound ? "var(--accent-bright)" : "var(--danger-red)"}"
-        stroke-width="1.6"
-        stroke-dasharray="4 3"
-      />
+        <!-- Internal Heartwood Cavity (R - t) -->
+        ${cavityR > 1.5 ? `<circle cx="${ringCx}" cy="${ringCy}" r="${cavityR}" fill="var(--bg-deep)" stroke="var(--text-muted)" stroke-width="1.4" />` : ""}
 
-      <!-- Center Readout inside Trunk Ring -->
-      <text x="${ringCx}" y="${ringCy - 4}" text-anchor="middle" font-size="13" font-weight="800" fill="var(--text-main)">
-        t/R = ${tOverR.toFixed(2)}
-      </text>
-      <text x="${ringCx}" y="${ringCy + 13}" text-anchor="middle" font-size="9.5" font-weight="600" fill="var(--text-muted)">
-        ${cavityPct === 0 ? "Solid cylinder" : `${cavityPct}% hollow width`}
-      </text>
-      <text x="${ringCx}" y="${ringCy + 27}" text-anchor="middle" font-size="8.8" font-weight="600" fill="var(--text-muted)">
-        R = ${trunkRadiusCm.toFixed(1)} cm
-      </text>
+        <!-- Claus Mattheck t/R = 0.30 Buckling Threshold Reference Ring -->
+        <circle
+          cx="${ringCx}"
+          cy="${ringCy}"
+          r="${mattheckThresholdR}"
+          fill="none"
+          stroke="${isSound ? "var(--accent-bright)" : "var(--danger-red)"}"
+          stroke-width="1.6"
+          stroke-dasharray="4 3"
+        />
 
-      <!-- Mattheck 0.30 Reference Pointer -->
-      <text x="${ringCx}" y="52" text-anchor="middle" font-size="9.5" font-weight="600" fill="var(--text-muted)">
-        Dashed ring: Mattheck 0.30 limit
-      </text>
+        <!-- Center Readout inside Trunk Ring -->
+        <text x="${ringCx}" y="${ringCy - 4}" text-anchor="middle" font-size="13.5" font-weight="800" fill="var(--text-main)">
+          t/R = ${tOverR.toFixed(2)}
+        </text>
+        <text x="${ringCx}" y="${ringCy + 13}" text-anchor="middle" font-size="9.8" font-weight="600" fill="var(--text-muted)">
+          ${cavityPct === 0 ? "Solid cylinder" : `${cavityPct}% hollow width`}
+        </text>
+        <text x="${ringCx}" y="${ringCy + 27}" text-anchor="middle" font-size="9.2" font-weight="600" fill="var(--text-muted)">
+          R = ${trunkRadiusCm.toFixed(1)} cm
+        </text>
 
-      <!-- Structural Verdict Pill -->
-      <rect
-        x="492"
-        y="250"
-        width="244"
-        height="48"
-        rx="9"
-        fill="${shellBadgeFill}"
-        stroke="${shellBadgeStroke}"
-        stroke-width="1.4"
-      />
-      <text x="614" y="270" text-anchor="middle" font-size="11" font-weight="800" fill="${shellBadgeText}">
-        ${shellVerdictLabel}
-      </text>
-      <text x="614" y="286" text-anchor="middle" font-size="9.5" font-weight="600" fill="var(--text-main)">
-        ${shellSubLabel}
-      </text>
-    </svg>
+        <!-- Structural Verdict Pill -->
+        <rect
+          x="18"
+          y="246"
+          width="244"
+          height="48"
+          rx="9"
+          fill="${shellBadgeFill}"
+          stroke="${shellBadgeStroke}"
+          stroke-width="1.4"
+        />
+        <text x="${ringCx}" y="266" text-anchor="middle" font-size="11" font-weight="800" fill="${shellBadgeText}">
+          ${shellVerdictLabel}
+        </text>
+        <text x="${ringCx}" y="282" text-anchor="middle" font-size="9.5" font-weight="600" fill="var(--text-main)">
+          ${shellSubLabel}
+        </text>
+      </svg>
+    </div>
   `;
 }
 function initLivingLensUI() {
@@ -11421,57 +11554,61 @@ function initFieldToolUI() {
             <strong>Record Tier:</strong> ${prov.record_tier}
           </p>
           <p class="oa-print-meta">
-            <strong>Canonical SHA-256 Digest:</strong> <code>${res.compiledReport.sha256}</code><br>
-            <strong>Shareable Permalink Address:</strong> <code>${fullShareUrl}</code>
+            <strong>Canonical SHA-256 Digest:</strong> ${renderExpandableHashHtml(res.compiledReport.sha256)}<br>
+            <strong>Shareable Permalink Address:</strong> ${renderExpandableHashHtml(fullShareUrl, { headChars: 28, tailChars: 12 })}
           </p>
         </header>
 
         <section class="oa-print-section">
           <h2>Table 1. Tree Structural &amp; Biomechanical Baseline</h2>
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>DBH &amp; Method</th>
-                <th>Height &amp; Crown Spread</th>
-                <th>Global Plus Code</th>
-                <th>Mattheck t/R &amp; Stability</th>
-                <th>Root Flare Burial</th>
-                <th>Protection Zone Radii (SRZ / CRZ / TIZ)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>${bio.dbh_inches} in (${bio.dbh_cm} cm) [${sb.multistem_aggregation_method || "single_stem"}]</td>
-                <td>H: ${sb.height_m} m | N-S: ${sb.crown_spread_ns_m} m | E-W: ${sb.crown_spread_ew_m} m</td>
-                <td><code>${sb.plus_code_global}</code></td>
-                <td>t/R = ${bio.biomechanics.sound_shell_thickness_ratio_t_over_r} (${bio.biomechanics.mattheck_criterion_satisfied ? "Stable >= 0.30" : "Thinning < 0.30"})</td>
-                <td>${rh.root_flare_burial_depth_cm ?? 0} cm burial (Flare: ${rh.root_flare_diameter_cm} cm)</td>
-                <td>SRZ: ${res.rootZones.srz.radius_feet} ft (${res.rootZones.srz.radius_meters} m) | CRZ: ${res.rootZones.crz.radius_feet} ft (${res.rootZones.crz.radius_meters} m) | TIZ: ${bio.root_zones.tiz_radius_meters} m</td>
-              </tr>
-            </tbody>
-          </table>
+          <div tabindex="0" role="region" aria-label="Table 1. Tree Structural and Biomechanical Baseline" class="table-wrapper">
+            <table class="data-table" style="--label-1: 'DBH &amp; Method'; --label-2: 'Height &amp; Spread'; --label-3: 'Plus Code'; --label-4: 'Mattheck t/R'; --label-5: 'Flare Burial'; --label-6: 'SRZ / CRZ / TIZ';">
+              <thead>
+                <tr>
+                  <th>DBH &amp; Method</th>
+                  <th>Height &amp; Crown Spread</th>
+                  <th>Global Plus Code</th>
+                  <th>Mattheck t/R &amp; Stability</th>
+                  <th>Root Flare Burial</th>
+                  <th>Protection Zone Radii (SRZ / CRZ / TIZ)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>${bio.dbh_inches} in (${bio.dbh_cm} cm) [${sb.multistem_aggregation_method || "single_stem"}]</td>
+                  <td>H: ${sb.height_m} m | N-S: ${sb.crown_spread_ns_m} m | E-W: ${sb.crown_spread_ew_m} m</td>
+                  <td><code>${sb.plus_code_global}</code></td>
+                  <td>t/R = ${bio.biomechanics.sound_shell_thickness_ratio_t_over_r} (${bio.biomechanics.mattheck_criterion_satisfied ? "Stable >= 0.30" : "Thinning < 0.30"})</td>
+                  <td>${rh.root_flare_burial_depth_cm ?? 0} cm burial (Flare: ${rh.root_flare_diameter_cm} cm)</td>
+                  <td>SRZ: ${res.rootZones.srz.radius_feet} ft (${res.rootZones.srz.radius_meters} m) | CRZ: ${res.rootZones.crz.radius_feet} ft (${res.rootZones.crz.radius_meters} m) | TIZ: ${bio.root_zones.tiz_radius_meters} m</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </section>
 
         <section class="oa-print-section">
           <h2>Table 2. Municipal Ordinance Determination, Mitigation Schedule &amp; Epistemic Boundaries</h2>
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Protection Status</th>
-                <th>Permit Verdict</th>
-                <th>Replacement Inches Owed (If Removed)</th>
-                <th>Cash-in-Lieu Obligation (If Removed)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><strong>${statusLabel(row)}</strong></td>
-                <td><strong>${res.permit.unknown ? "Verify with City (UNVERIFIED)" : res.permit.required ? "PERMIT REQUIRED" : "No Permit Triggered"}</strong> (${res.permitText})</td>
-                <td>${mitIfRemoved ? `${mitIfRemoved.replacement_inches_owed} in (${mitIfRemoved.replacement_trees_owed} trees)` : "0 in"}</td>
-                <td><strong>$${Number(mitIfRemoved?.cash_in_lieu_usd || 0).toLocaleString()}</strong></td>
-              </tr>
-            </tbody>
-          </table>
+          <div tabindex="0" role="region" aria-label="Table 2. Municipal Ordinance Determination and Mitigation Schedule" class="table-wrapper">
+            <table class="data-table" style="--label-1: 'Protection Status'; --label-2: 'Permit Verdict'; --label-3: 'Replacement Owed'; --label-4: 'Cash-in-Lieu';">
+              <thead>
+                <tr>
+                  <th>Protection Status</th>
+                  <th>Permit Verdict</th>
+                  <th>Replacement Inches Owed (If Removed)</th>
+                  <th>Cash-in-Lieu Obligation (If Removed)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>${statusLabel(row)}</strong></td>
+                  <td><strong>${res.permit.unknown ? "Verify with City (UNVERIFIED)" : res.permit.required ? "PERMIT REQUIRED" : "No Permit Triggered"}</strong> (${res.permitText})</td>
+                  <td>${mitIfRemoved ? `${mitIfRemoved.replacement_inches_owed} in (${mitIfRemoved.replacement_trees_owed} trees)` : "0 in"}</td>
+                  <td><strong>$${Number(mitIfRemoved?.cash_in_lieu_usd || 0).toLocaleString()}</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
           <div class="oa-print-epistemic">
             <strong>What this record does not know (Epistemic &amp; Statutory Boundaries):</strong>
             ${provPrintHtml}
@@ -11485,24 +11622,26 @@ function initFieldToolUI() {
 
         <section class="oa-print-section">
           <h2>Table 3. Dual Valuation &amp; Allometric Ecosystem Services</h2>
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>CTLA 10th Ed. Depreciated Value</th>
-                <th>200-Yr Holobiont Biological Equity</th>
-                <th>John White (FCIN12) Est. Age</th>
-                <th>Annual Stormwater / Energy / Carbon Flow</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>$${val.ctla_10th_ed_depreciated_usd.toLocaleString()}</td>
-                <td><strong>$${val.holobiont_200yr_biological_equity_usd.toLocaleString()}</strong> (${val.veteran_keystone_habitat_multiplier}x Keystone)</td>
-                <td>${age.estimated_age_years} yrs (${age.site_condition})</td>
-                <td>${eco.avoided_runoff_gallons_yr.toLocaleString()} gal/yr | ${eco.cooling_savings_kwh_yr} kWh/yr | ${eco.carbon_storage_lbs.toLocaleString()} lbs C ($${eco.total_annual_benefits_usd}/yr)</td>
-              </tr>
-            </tbody>
-          </table>
+          <div tabindex="0" role="region" aria-label="Table 3. Dual Valuation and Allometric Ecosystem Services" class="table-wrapper">
+            <table class="data-table" style="--label-1: 'CTLA 10th Ed. Value'; --label-2: '200-Yr Holobiont Equity'; --label-3: 'John White Est. Age'; --label-4: 'Annual Services';">
+              <thead>
+                <tr>
+                  <th>CTLA 10th Ed. Depreciated Value</th>
+                  <th>200-Yr Holobiont Biological Equity</th>
+                  <th>John White (FCIN12) Est. Age</th>
+                  <th>Annual Stormwater / Energy / Carbon Flow</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>$${val.ctla_10th_ed_depreciated_usd.toLocaleString()}</td>
+                  <td><strong>$${val.holobiont_200yr_biological_equity_usd.toLocaleString()}</strong> (${val.veteran_keystone_habitat_multiplier}x Keystone)</td>
+                  <td>${age.estimated_age_years} yrs (${age.site_condition})</td>
+                  <td>${eco.avoided_runoff_gallons_yr.toLocaleString()} gal/yr | ${eco.cooling_savings_kwh_yr} kWh/yr | ${eco.carbon_storage_lbs.toLocaleString()} lbs C ($${eco.total_annual_benefits_usd}/yr)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </section>
 
         <section class="oa-print-signature-block">
@@ -11512,7 +11651,7 @@ function initFieldToolUI() {
             <strong>Credential:</strong> ${escapeUiHtml(el("input-assessor-credential")?.value.trim() || "ISA Certified Arborist TX-362025A / Oak Wilt Qualified")} &nbsp;|&nbsp;
             <strong>Assessment Date:</strong> ${sb.assessment_date || "2026-10-28"}
           </p>
-          <p><strong>Canonical Evidence SHA-256:</strong> <code>${res.compiledReport.sha256}</code></p>
+          <div style="margin: 8px 0;"><strong>Canonical Evidence SHA-256:</strong> ${renderExpandableHashHtml(res.compiledReport.sha256)}</div>
           <p style="margin-top: 18px;">
             <strong>Practitioner Signature:</strong> ___________________________ &nbsp;&nbsp;&nbsp;&nbsp;
             <strong>Date Signed:</strong> _______________
@@ -11774,7 +11913,7 @@ function initFieldToolUI() {
         </div>
         <div class="sha-box">
           <span>SHA-256:</span>
-          <code>${res.compiledReport.sha256}</code>
+          ${renderExpandableHashHtml(res.compiledReport.sha256)}
         </div>
       </div>
       ${lintErrorsHtml}
@@ -12133,7 +12272,7 @@ function initFieldToolUI() {
     const veilBtn = el("oa-veil-mode-toggle");
     if (veilBtn) {
       veilBtn.setAttribute("aria-pressed", "true");
-      veilBtn.textContent = "Veil: Deep Proof";
+      veilBtn.textContent = "Layer: Heartwood";
     }
     el("veil-deep-forensics")?.scrollIntoView({ behavior: "smooth" });
   });
@@ -12295,6 +12434,7 @@ export {
   permitDetermination,
   permitSummary,
   rca_assessment_schema_default as rcaAssessmentSchema,
+  renderExpandableHashHtml,
   renderSiteMapSVG,
   runLeoRcaSelfAudit,
   statusLabel,

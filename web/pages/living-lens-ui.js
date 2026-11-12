@@ -393,12 +393,12 @@ export function initVeilAndHandoffChrome() {
     bindDialogLightDismissFallback(dlg);
   });
 
-  // 2. Global Header Veil Toggle (#oa-veil-mode-toggle)
+  // 2. Global Header Forest OS Layer Toggle (#oa-veil-mode-toggle)
   const veilToggleBtn = document.getElementById('oa-veil-mode-toggle');
   const syncVeilButtonLabel = (isDeep) => {
     if (!veilToggleBtn) return;
     veilToggleBtn.setAttribute('aria-pressed', String(Boolean(isDeep)));
-    veilToggleBtn.textContent = isDeep ? 'Veil: Deep Proof' : 'Veil: Canopy';
+    veilToggleBtn.textContent = isDeep ? 'Layer: Heartwood' : 'Layer: Canopy';
   };
 
   const applyVeilModeToPage = (isDeep, persist = false) => {
@@ -522,6 +522,20 @@ export function initVeilAndHandoffChrome() {
     });
   });
 
+  // 4b. Delegated 1-tap copy handler for expandable SHA-256 / permalink hash chips ([data-copy-hash])
+  if (document.documentElement.dataset.oaHashCopyDelegated !== 'true') {
+    document.documentElement.dataset.oaHashCopyDelegated = 'true';
+    document.addEventListener('click', (event) => {
+      const target = event.target;
+      const btn = target && target.closest ? target.closest('[data-copy-hash]') : null;
+      if (!btn) return;
+      const hashText = btn.getAttribute('data-copy-hash') || '';
+      if (hashText) {
+        copyTextWithFeedback(hashText, btn, 'Copied');
+      }
+    });
+  }
+
   // 5. Ensure handoff dialog is ready if already rendered in DOM
   if (document.getElementById('arborist-handoff-dialog')) {
     ensureArboristHandoffDialog();
@@ -529,7 +543,9 @@ export function initVeilAndHandoffChrome() {
 }
 
 /**
- * Render the dual-viewport Botanical Cross-Section & Mattheck Trunk Ring SVG.
+ * Render the responsive dual-panel Botanical Cross-Section & Mattheck Trunk Ring SVGs.
+ * Stacks vertically on mobile (< 760px) so every label is full-width legible,
+ * and sits side-by-side on desktop (>= 760px).
  */
 function renderLivingLensSVG({
   speciesCommon,
@@ -546,12 +562,12 @@ function renderLivingLensSVG({
 }) {
   const isSound = tOverR >= 0.30;
 
-  // Left viewport geometry (x: 16..456, center trunk x = 236, grade y = 184)
+  // Tree & Root Sponge viewport geometry (viewBox 0 0 472 308, center trunk x = 236, grade y = 180)
   const cxTree = 236;
-  const gradeY = 184;
+  const gradeY = 180;
   const maxHalfSpanPx = 198;
 
-  // Scale TIZ to fit cleanly inside left viewport while keeping exact CRZ/SRZ ratios relative to TIZ
+  // Scale TIZ to fit cleanly inside tree viewport while keeping exact CRZ/SRZ ratios relative to TIZ
   const safeTizFt = Math.max(tizFt, 12);
   const pxPerFoot = Math.min(9.2, maxHalfSpanPx / safeTizFt);
   const tizHalfPx = Math.max(64, Math.min(maxHalfSpanPx, round1(tizFt * pxPerFoot)));
@@ -561,8 +577,8 @@ function renderLivingLensSVG({
   const trunkHalfPx = Math.max(5, Math.min(20, round1(dbhIn * 0.3)));
   const flareHalfPx = trunkHalfPx + 7;
   const canopyRx = Math.max(52, Math.min(148, round1(40 + dbhIn * 1.95)));
-  const canopyRy = Math.max(36, Math.min(72, round1(28 + dbhIn * 0.78)));
-  const canopyCy = gradeY - 62 - Math.round(canopyRy * 0.55);
+  const canopyRy = Math.max(36, Math.min(70, round1(28 + dbhIn * 0.76)));
+  const canopyCy = gradeY - 60 - Math.round(canopyRy * 0.55);
 
   // Trench encroachment cut enters from right edge of CRZ inward
   const crzRightEdge = cxTree + crzHalfPx;
@@ -570,9 +586,9 @@ function renderLivingLensSVG({
   const trenchX = round1(crzRightEdge - crzHalfPx * cutFraction * 1.15);
   const trenchBreachesSrz = disturbancePct > 0 && trenchX <= cxTree + srzHalfPx;
 
-  // Right viewport geometry: Claus Mattheck Trunk Cross-Section (center 612, 148)
-  const ringCx = 612;
-  const ringCy = 148;
+  // Trunk Ring viewport geometry: Claus Mattheck Trunk Cross-Section (viewBox 0 0 280 308, center 140, 144)
+  const ringCx = 140;
+  const ringCy = 144;
   const barkOuterR = 84;
   const woodOuterR = 76;
   const cavityR = round1(Math.max(0, Math.min(woodOuterR - 4, woodOuterR * (1 - tOverR))));
@@ -609,233 +625,239 @@ function renderLivingLensSVG({
         stroke-width="2.5"
         stroke-dasharray="5 3"
       />
-      <rect x="${Math.max(248, Math.min(342, trenchX - 54))}" y="${gradeY - 38}" width="116" height="20" rx="5" fill="var(--danger-bg)" stroke="var(--danger-red)" stroke-width="1" />
-      <text x="${Math.max(306, Math.min(400, trenchX + 4))}" y="${gradeY - 24}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--danger-red)">
+      <rect x="${Math.max(246, Math.min(340, trenchX - 54))}" y="${gradeY - 38}" width="118" height="20" rx="5" fill="var(--danger-bg)" stroke="var(--danger-red)" stroke-width="1" />
+      <text x="${Math.max(305, Math.min(399, trenchX + 5))}" y="${gradeY - 24}" text-anchor="middle" font-size="10.2" font-weight="700" fill="var(--danger-red)">
         ${disturbancePct}% CRZ Trench Cut${trenchBreachesSrz ? ' (Hits SRZ)' : ''}
       </text>
     `
       : `
       <rect x="${cxTree + crzHalfPx - 108}" y="${gradeY - 32}" width="114" height="19" rx="5" fill="var(--highlight-bg)" stroke="var(--accent-green)" stroke-width="1" />
-      <text x="${cxTree + crzHalfPx - 51}" y="${gradeY - 19}" text-anchor="middle" font-size="9.5" font-weight="700" fill="var(--accent-bright)">
+      <text x="${cxTree + crzHalfPx - 51}" y="${gradeY - 19}" text-anchor="middle" font-size="9.8" font-weight="700" fill="var(--accent-bright)">
         0% Trenching (Intact)
       </text>
     `;
 
   return `
-    <svg
-      class="oa-living-lens-svg"
-      viewBox="0 0 760 322"
-      role="img"
-      aria-label="${escapeHtml(speciesCommon)} living cross-section: ${dbhIn} inch DBH, ${crzFt.toFixed(1)} ft Critical Root Zone, ${srzFt.toFixed(1)} ft Structural Root Zone, and Mattheck t over R ratio ${tOverR.toFixed(2)}"
-    >
-      <title>${escapeHtml(speciesCommon)} Living Architecture and Trunk Shell Cross-Section</title>
-      <desc>Left diagram shows canopy, root flare, AS 4970 Structural Root Zone (${srzFt.toFixed(1)} ft), ANSI A300 Critical Root Zone (${crzFt.toFixed(1)} ft), 1.5x Tree Influence Zone (${tizFt.toFixed(1)} ft), and ${disturbancePct}% trench disturbance. Right diagram shows trunk cross-section with ${cavityPct}% internal cavity width and t/R = ${tOverR.toFixed(2)} relative to the 0.30 Claus Mattheck threshold.</desc>
+    <div class="oa-living-lens-dual">
+      <svg
+        class="oa-living-lens-svg oa-living-lens-tree-svg"
+        viewBox="0 0 472 308"
+        role="img"
+        aria-label="${escapeHtml(speciesCommon)} living canopy and root sponge cross-section: ${dbhIn} inch DBH, ${crzFt.toFixed(1)} ft Critical Root Zone, ${srzFt.toFixed(1)} ft Structural Root Zone"
+      >
+        <title>${escapeHtml(speciesCommon)} Living Canopy, Root Plate and Mycorrhizal Sponge</title>
+        <desc>Diagram shows canopy, root flare, AS 4970 Structural Root Zone (${srzFt.toFixed(1)} ft), ANSI A300 Critical Root Zone (${crzFt.toFixed(1)} ft), 1.5x Tree Influence Zone (${tizFt.toFixed(1)} ft), and ${disturbancePct}% trench disturbance.</desc>
 
-      <!-- Left Viewport Title -->
-      <text x="22" y="21" font-size="11" font-weight="700" fill="var(--text-muted)" letter-spacing="0.04em">
-        LIVING CANOPY, ROOT PLATE &amp; SOIL SPONGE (SCALE VIEW)
-      </text>
+        <text x="18" y="20" font-size="11" font-weight="700" fill="var(--text-muted)" letter-spacing="0.04em">
+          LIVING CANOPY, ROOT PLATE &amp; SOIL SPONGE (SCALE VIEW)
+        </text>
 
-      <!-- Underground Vadose Soil Sponge Horizon -->
-      <rect x="16" y="${gradeY}" width="444" height="118" rx="10" fill="var(--accent-copper)" fill-opacity="0.07" />
+        <!-- Underground Vadose Soil Sponge Horizon -->
+        <rect x="14" y="${gradeY}" width="444" height="116" rx="10" fill="var(--accent-copper)" fill-opacity="0.07" />
 
-      <!-- 1.5x TIZ Mycorrhizal Influence Zone Band -->
-      <rect
-        x="${round1(cxTree - tizHalfPx)}"
-        y="${gradeY + 8}"
-        width="${round1(tizHalfPx * 2)}"
-        height="82"
-        rx="12"
-        fill="var(--accent-copper)"
-        fill-opacity="0.09"
-        stroke="var(--accent-copper)"
-        stroke-width="1.2"
-        stroke-dasharray="5 4"
-      />
+        <!-- 1.5x TIZ Mycorrhizal Influence Zone Band -->
+        <rect
+          x="${round1(cxTree - tizHalfPx)}"
+          y="${gradeY + 8}"
+          width="${round1(tizHalfPx * 2)}"
+          height="84"
+          rx="12"
+          fill="var(--accent-copper)"
+          fill-opacity="0.09"
+          stroke="var(--accent-copper)"
+          stroke-width="1.2"
+          stroke-dasharray="5 4"
+        />
 
-      <!-- ANSI A300 1.0x CRZ Feeder Root Zone Band -->
-      <rect
-        x="${round1(cxTree - crzHalfPx)}"
-        y="${gradeY + 14}"
-        width="${round1(crzHalfPx * 2)}"
-        height="58"
-        rx="10"
-        fill="var(--accent-green)"
-        fill-opacity="0.14"
-        stroke="var(--accent-bright)"
-        stroke-width="1.6"
-      />
+        <!-- ANSI A300 1.0x CRZ Feeder Root Zone Band -->
+        <rect
+          x="${round1(cxTree - crzHalfPx)}"
+          y="${gradeY + 14}"
+          width="${round1(crzHalfPx * 2)}"
+          height="58"
+          rx="10"
+          fill="var(--accent-green)"
+          fill-opacity="0.14"
+          stroke="var(--accent-bright)"
+          stroke-width="1.6"
+        />
 
-      <!-- AS 4970 Structural Windthrow Plate (SRZ) -->
-      <rect
-        x="${round1(cxTree - srzHalfPx)}"
-        y="${gradeY + 18}"
-        width="${round1(srzHalfPx * 2)}"
-        height="34"
-        rx="8"
-        fill="var(--accent-copper)"
-        fill-opacity="0.24"
-        stroke="var(--accent-copper)"
-        stroke-width="1.8"
-      />
+        <!-- AS 4970 Structural Windthrow Plate (SRZ) -->
+        <rect
+          x="${round1(cxTree - srzHalfPx)}"
+          y="${gradeY + 18}"
+          width="${round1(srzHalfPx * 2)}"
+          height="34"
+          rx="8"
+          fill="var(--accent-copper)"
+          fill-opacity="0.24"
+          stroke="var(--accent-copper)"
+          stroke-width="1.8"
+        />
 
-      <!-- Organic Lateral Root Architecture & Mycorrhizal Filaments -->
-      <path
-        d="M ${cxTree - trunkHalfPx} ${gradeY + 6} Q ${cxTree - srzHalfPx} ${gradeY + 26}, ${cxTree - crzHalfPx + 8} ${gradeY + 34}
-           M ${cxTree + trunkHalfPx} ${gradeY + 6} Q ${cxTree + srzHalfPx} ${gradeY + 26}, ${cxTree + crzHalfPx - 8} ${gradeY + 34}
-           M ${cxTree - 4} ${gradeY + 10} Q ${cxTree - srzHalfPx * 0.7} ${gradeY + 42}, ${cxTree - tizHalfPx + 14} ${gradeY + 56}
-           M ${cxTree + 4} ${gradeY + 10} Q ${cxTree + srzHalfPx * 0.7} ${gradeY + 42}, ${cxTree + tizHalfPx - 14} ${gradeY + 56}"
-        fill="none"
-        stroke="var(--accent-copper)"
-        stroke-width="2.1"
-        stroke-linecap="round"
-        opacity="0.82"
-      />
+        <!-- Organic Lateral Root Architecture & Mycorrhizal Filaments -->
+        <path
+          d="M ${cxTree - trunkHalfPx} ${gradeY + 6} Q ${cxTree - srzHalfPx} ${gradeY + 26}, ${cxTree - crzHalfPx + 8} ${gradeY + 34}
+             M ${cxTree + trunkHalfPx} ${gradeY + 6} Q ${cxTree + srzHalfPx} ${gradeY + 26}, ${cxTree + crzHalfPx - 8} ${gradeY + 34}
+             M ${cxTree - 4} ${gradeY + 10} Q ${cxTree - srzHalfPx * 0.7} ${gradeY + 42}, ${cxTree - tizHalfPx + 14} ${gradeY + 56}
+             M ${cxTree + 4} ${gradeY + 10} Q ${cxTree + srzHalfPx * 0.7} ${gradeY + 42}, ${cxTree + tizHalfPx - 14} ${gradeY + 56}"
+          fill="none"
+          stroke="var(--accent-copper)"
+          stroke-width="2.1"
+          stroke-linecap="round"
+          opacity="0.82"
+        />
 
-      <!-- Canopy Crown Layered Botanical Silhouette -->
-      <ellipse
-        cx="${cxTree - Math.round(canopyRx * 0.28)}"
-        cy="${canopyCy + 8}"
-        rx="${round1(canopyRx * 0.68)}"
-        ry="${round1(canopyRy * 0.78)}"
-        fill="var(--accent-green)"
-        fill-opacity="0.2"
-        stroke="var(--accent-bright)"
-        stroke-width="1.2"
-      />
-      <ellipse
-        cx="${cxTree + Math.round(canopyRx * 0.28)}"
-        cy="${canopyCy + 10}"
-        rx="${round1(canopyRx * 0.66)}"
-        ry="${round1(canopyRy * 0.76)}"
-        fill="var(--accent-green)"
-        fill-opacity="0.2"
-        stroke="var(--accent-bright)"
-        stroke-width="1.2"
-      />
-      <ellipse
-        cx="${cxTree}"
-        cy="${canopyCy}"
-        rx="${canopyRx}"
-        ry="${canopyRy}"
-        fill="var(--accent-green)"
-        fill-opacity="0.28"
-        stroke="var(--accent-bright)"
-        stroke-width="1.8"
-      />
+        <!-- Canopy Crown Layered Botanical Silhouette -->
+        <ellipse
+          cx="${cxTree - Math.round(canopyRx * 0.28)}"
+          cy="${canopyCy + 8}"
+          rx="${round1(canopyRx * 0.68)}"
+          ry="${round1(canopyRy * 0.78)}"
+          fill="var(--accent-green)"
+          fill-opacity="0.2"
+          stroke="var(--accent-bright)"
+          stroke-width="1.2"
+        />
+        <ellipse
+          cx="${cxTree + Math.round(canopyRx * 0.28)}"
+          cy="${canopyCy + 10}"
+          rx="${round1(canopyRx * 0.66)}"
+          ry="${round1(canopyRy * 0.76)}"
+          fill="var(--accent-green)"
+          fill-opacity="0.2"
+          stroke="var(--accent-bright)"
+          stroke-width="1.2"
+        />
+        <ellipse
+          cx="${cxTree}"
+          cy="${canopyCy}"
+          rx="${canopyRx}"
+          ry="${canopyRy}"
+          fill="var(--accent-green)"
+          fill-opacity="0.28"
+          stroke="var(--accent-bright)"
+          stroke-width="1.8"
+        />
 
-      <!-- Trunk & Basal Root Flare -->
-      <path
-        d="M ${cxTree - trunkHalfPx * 0.8} ${canopyCy + 14}
-           L ${cxTree - trunkHalfPx} ${gradeY - 14}
-           Q ${cxTree - trunkHalfPx - 2} ${gradeY - 2}, ${cxTree - flareHalfPx} ${gradeY + 6}
-           L ${cxTree + flareHalfPx} ${gradeY + 6}
-           Q ${cxTree + trunkHalfPx + 2} ${gradeY - 2}, ${cxTree + trunkHalfPx} ${gradeY - 14}
-           L ${cxTree + trunkHalfPx * 0.8} ${canopyCy + 14} Z"
-        fill="var(--accent-copper)"
-        fill-opacity="0.88"
-      />
-      <!-- Scaffold limbs -->
-      <path
-        d="M ${cxTree - 2} ${canopyCy + 26} Q ${cxTree - 24} ${canopyCy + 4}, ${cxTree - 46} ${canopyCy - 6}
-           M ${cxTree + 2} ${canopyCy + 22} Q ${cxTree + 26} ${canopyCy + 2}, ${cxTree + 48} ${canopyCy - 8}"
-        fill="none"
-        stroke="var(--accent-copper)"
-        stroke-width="3.2"
-        stroke-linecap="round"
-      />
+        <!-- Trunk & Basal Root Flare -->
+        <path
+          d="M ${cxTree - trunkHalfPx * 0.8} ${canopyCy + 14}
+             L ${cxTree - trunkHalfPx} ${gradeY - 14}
+             Q ${cxTree - trunkHalfPx - 2} ${gradeY - 2}, ${cxTree - flareHalfPx} ${gradeY + 6}
+             L ${cxTree + flareHalfPx} ${gradeY + 6}
+             Q ${cxTree + trunkHalfPx + 2} ${gradeY - 2}, ${cxTree + trunkHalfPx} ${gradeY - 14}
+             L ${cxTree + trunkHalfPx * 0.8} ${canopyCy + 14} Z"
+          fill="var(--accent-copper)"
+          fill-opacity="0.88"
+        />
+        <!-- Scaffold limbs -->
+        <path
+          d="M ${cxTree - 2} ${canopyCy + 26} Q ${cxTree - 24} ${canopyCy + 4}, ${cxTree - 46} ${canopyCy - 6}
+             M ${cxTree + 2} ${canopyCy + 22} Q ${cxTree + 26} ${canopyCy + 2}, ${cxTree + 48} ${canopyCy - 8}"
+          fill="none"
+          stroke="var(--accent-copper)"
+          stroke-width="3.2"
+          stroke-linecap="round"
+        />
 
-      <!-- Soil Grade Line -->
-      <line x1="16" y1="${gradeY}" x2="460" y2="${gradeY}" stroke="var(--text-main)" stroke-opacity="0.45" stroke-width="1.5" />
-      <text x="24" y="${gradeY - 6}" font-size="9.5" font-weight="600" fill="var(--text-muted)">Soil Line</text>
+        <!-- Soil Grade Line -->
+        <line x1="14" y1="${gradeY}" x2="458" y2="${gradeY}" stroke="var(--text-main)" stroke-opacity="0.45" stroke-width="1.5" />
+        <text x="22" y="${gradeY - 6}" font-size="10" font-weight="600" fill="var(--text-muted)">Soil Line</text>
 
-      <!-- Trench / Disturbance Cut Overlay -->
-      ${trenchMarkup}
+        <!-- Trench / Disturbance Cut Overlay -->
+        ${trenchMarkup}
 
-      <!-- Zone Labels Below Grade -->
-      <text x="${cxTree}" y="${gradeY + 39}" text-anchor="middle" font-size="9.5" font-weight="700" fill="var(--text-main)">
-        SRZ Windthrow Plate: ${srzFt.toFixed(1)} ft
-      </text>
-      <text x="${cxTree}" y="${gradeY + 67}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--accent-bright)">
-        ANSI A300 CRZ: ${crzFt.toFixed(1)} ft radius
-      </text>
-      <text x="${cxTree}" y="${gradeY + 85}" text-anchor="middle" font-size="9.5" font-weight="600" fill="var(--accent-copper)">
-        1.5x Mycorrhizal Sponge (TIZ: ${tizFt.toFixed(1)} ft · ${Math.round(stormGallons).toLocaleString('en-US')} gal / 1-in storm)
-      </text>
+        <!-- Zone Labels Below Grade -->
+        <text x="${cxTree}" y="${gradeY + 39}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--text-main)">
+          SRZ Windthrow Plate: ${srzFt.toFixed(1)} ft
+        </text>
+        <text x="${cxTree}" y="${gradeY + 66}" text-anchor="middle" font-size="10.4" font-weight="700" fill="var(--accent-bright)">
+          ANSI A300 CRZ: ${crzFt.toFixed(1)} ft radius
+        </text>
+        <text x="${cxTree}" y="${gradeY + 86}" text-anchor="middle" font-size="9.8" font-weight="600" fill="var(--accent-copper)">
+          1.5x Mycorrhizal Sponge (TIZ: ${tizFt.toFixed(1)} ft · ${Math.round(stormGallons).toLocaleString('en-US')} gal / 1-in storm)
+        </text>
+      </svg>
 
-      <!-- Viewport Divider -->
-      <line x1="474" y1="16" x2="474" y2="306" stroke="var(--border-subtle)" stroke-width="1.2" />
+      <svg
+        class="oa-living-lens-svg oa-living-lens-ring-svg"
+        viewBox="0 0 280 308"
+        role="img"
+        aria-label="${escapeHtml(speciesCommon)} trunk shell ring cross-section: Mattheck t over R ratio ${tOverR.toFixed(2)}"
+      >
+        <title>${escapeHtml(speciesCommon)} Trunk Shell Ring (Mattheck t/R)</title>
+        <desc>Trunk cross-section with ${cavityPct}% internal cavity width and t/R = ${tOverR.toFixed(2)} relative to the 0.30 Claus Mattheck hollow-shell buckling threshold.</desc>
 
-      <!-- Right Viewport Title -->
-      <text x="612" y="21" text-anchor="middle" font-size="11" font-weight="700" fill="var(--text-muted)" letter-spacing="0.04em">
-        TRUNK SHELL RING (MATTHECK t/R)
-      </text>
+        <text x="${ringCx}" y="20" text-anchor="middle" font-size="11" font-weight="700" fill="var(--text-muted)" letter-spacing="0.04em">
+          TRUNK SHELL RING (MATTHECK t/R)
+        </text>
 
-      <!-- Outer Bark Circle -->
-      <circle cx="${ringCx}" cy="${ringCy}" r="${barkOuterR}" fill="var(--accent-copper)" fill-opacity="0.82" stroke="var(--border-main)" stroke-width="1.5" />
+        <text x="${ringCx}" y="46" text-anchor="middle" font-size="9.8" font-weight="600" fill="var(--text-muted)">
+          Dashed ring: Mattheck 0.30 limit
+        </text>
 
-      <!-- Living Cambium & Sapwood Ring -->
-      <circle cx="${ringCx}" cy="${ringCy}" r="${woodOuterR + 3}" fill="none" stroke="var(--accent-bright)" stroke-width="3.2" />
+        <!-- Outer Bark Circle -->
+        <circle cx="${ringCx}" cy="${ringCy}" r="${barkOuterR}" fill="var(--accent-copper)" fill-opacity="0.82" stroke="var(--border-main)" stroke-width="1.5" />
 
-      <!-- Sound Structural Wood Cylinder -->
-      <circle cx="${ringCx}" cy="${ringCy}" r="${woodOuterR}" fill="var(--veil-bg)" stroke="var(--accent-copper)" stroke-width="1.2" />
+        <!-- Living Cambium & Sapwood Ring -->
+        <circle cx="${ringCx}" cy="${ringCy}" r="${woodOuterR + 3}" fill="none" stroke="var(--accent-bright)" stroke-width="3.2" />
 
-      <!-- Subtle Growth Rings -->
-      <circle cx="${ringCx}" cy="${ringCy}" r="${round1(woodOuterR * 0.85)}" fill="none" stroke="var(--accent-copper)" stroke-opacity="0.3" stroke-width="1" />
-      <circle cx="${ringCx}" cy="${ringCy}" r="${round1(woodOuterR * 0.52)}" fill="none" stroke="var(--accent-copper)" stroke-opacity="0.24" stroke-width="1" />
+        <!-- Sound Structural Wood Cylinder -->
+        <circle cx="${ringCx}" cy="${ringCy}" r="${woodOuterR}" fill="var(--veil-bg)" stroke="var(--accent-copper)" stroke-width="1.2" />
 
-      <!-- Internal Heartwood Cavity (R - t) -->
-      ${
-        cavityR > 1.5
-          ? `<circle cx="${ringCx}" cy="${ringCy}" r="${cavityR}" fill="var(--bg-deep)" stroke="var(--text-muted)" stroke-width="1.4" />`
-          : ''
-      }
+        <!-- Subtle Growth Rings -->
+        <circle cx="${ringCx}" cy="${ringCy}" r="${round1(woodOuterR * 0.85)}" fill="none" stroke="var(--accent-copper)" stroke-opacity="0.3" stroke-width="1" />
+        <circle cx="${ringCx}" cy="${ringCy}" r="${round1(woodOuterR * 0.52)}" fill="none" stroke="var(--accent-copper)" stroke-opacity="0.24" stroke-width="1" />
 
-      <!-- Claus Mattheck t/R = 0.30 Buckling Threshold Reference Ring -->
-      <circle
-        cx="${ringCx}"
-        cy="${ringCy}"
-        r="${mattheckThresholdR}"
-        fill="none"
-        stroke="${isSound ? 'var(--accent-bright)' : 'var(--danger-red)'}"
-        stroke-width="1.6"
-        stroke-dasharray="4 3"
-      />
+        <!-- Internal Heartwood Cavity (R - t) -->
+        ${
+          cavityR > 1.5
+            ? `<circle cx="${ringCx}" cy="${ringCy}" r="${cavityR}" fill="var(--bg-deep)" stroke="var(--text-muted)" stroke-width="1.4" />`
+            : ''
+        }
 
-      <!-- Center Readout inside Trunk Ring -->
-      <text x="${ringCx}" y="${ringCy - 4}" text-anchor="middle" font-size="13" font-weight="800" fill="var(--text-main)">
-        t/R = ${tOverR.toFixed(2)}
-      </text>
-      <text x="${ringCx}" y="${ringCy + 13}" text-anchor="middle" font-size="9.5" font-weight="600" fill="var(--text-muted)">
-        ${cavityPct === 0 ? 'Solid cylinder' : `${cavityPct}% hollow width`}
-      </text>
-      <text x="${ringCx}" y="${ringCy + 27}" text-anchor="middle" font-size="8.8" font-weight="600" fill="var(--text-muted)">
-        R = ${trunkRadiusCm.toFixed(1)} cm
-      </text>
+        <!-- Claus Mattheck t/R = 0.30 Buckling Threshold Reference Ring -->
+        <circle
+          cx="${ringCx}"
+          cy="${ringCy}"
+          r="${mattheckThresholdR}"
+          fill="none"
+          stroke="${isSound ? 'var(--accent-bright)' : 'var(--danger-red)'}"
+          stroke-width="1.6"
+          stroke-dasharray="4 3"
+        />
 
-      <!-- Mattheck 0.30 Reference Pointer -->
-      <text x="${ringCx}" y="52" text-anchor="middle" font-size="9.5" font-weight="600" fill="var(--text-muted)">
-        Dashed ring: Mattheck 0.30 limit
-      </text>
+        <!-- Center Readout inside Trunk Ring -->
+        <text x="${ringCx}" y="${ringCy - 4}" text-anchor="middle" font-size="13.5" font-weight="800" fill="var(--text-main)">
+          t/R = ${tOverR.toFixed(2)}
+        </text>
+        <text x="${ringCx}" y="${ringCy + 13}" text-anchor="middle" font-size="9.8" font-weight="600" fill="var(--text-muted)">
+          ${cavityPct === 0 ? 'Solid cylinder' : `${cavityPct}% hollow width`}
+        </text>
+        <text x="${ringCx}" y="${ringCy + 27}" text-anchor="middle" font-size="9.2" font-weight="600" fill="var(--text-muted)">
+          R = ${trunkRadiusCm.toFixed(1)} cm
+        </text>
 
-      <!-- Structural Verdict Pill -->
-      <rect
-        x="492"
-        y="250"
-        width="244"
-        height="48"
-        rx="9"
-        fill="${shellBadgeFill}"
-        stroke="${shellBadgeStroke}"
-        stroke-width="1.4"
-      />
-      <text x="614" y="270" text-anchor="middle" font-size="11" font-weight="800" fill="${shellBadgeText}">
-        ${shellVerdictLabel}
-      </text>
-      <text x="614" y="286" text-anchor="middle" font-size="9.5" font-weight="600" fill="var(--text-main)">
-        ${shellSubLabel}
-      </text>
-    </svg>
+        <!-- Structural Verdict Pill -->
+        <rect
+          x="18"
+          y="246"
+          width="244"
+          height="48"
+          rx="9"
+          fill="${shellBadgeFill}"
+          stroke="${shellBadgeStroke}"
+          stroke-width="1.4"
+        />
+        <text x="${ringCx}" y="266" text-anchor="middle" font-size="11" font-weight="800" fill="${shellBadgeText}">
+          ${shellVerdictLabel}
+        </text>
+        <text x="${ringCx}" y="282" text-anchor="middle" font-size="9.5" font-weight="600" fill="var(--text-main)">
+          ${shellSubLabel}
+        </text>
+      </svg>
+    </div>
   `;
 }
 

@@ -9,7 +9,7 @@
       document.querySelector('meta[name="color-scheme"]').content = localStorage.getItem('color-scheme') ?? 'light dark';
     } catch (e) {}
   </script>
-  <title>Static Crawlable Case Gallery (5 Bioregional Reference Determinations) | Open Arbor v2.0</title>
+  <title>Verified Bioregional Field Cases (5 Static Determinations) | Open Arbor v2.1</title>
   <meta
     name="description"
     content="Five pre-rendered, crawlable arboricultural evidentiary case determinations across Central Texas (Austin, Georgetown, Liberty Hill) and Rogue Valley, Oregon (Ashland, Medford). 100% readable with JavaScript disabled."
@@ -21,20 +21,61 @@
     <div class="oa-nav-container">
       <a href="../index.html" class="oa-brand-link">
         <span class="oa-brand-mark">OA</span>
-        <span class="oa-brand-text">Open Arbor <small>v2.0</small></span>
+        <span class="oa-brand-text">Open Arbor <small>v2.1</small></span>
       </a>
       <nav class="oa-main-nav" aria-label="Primary Navigation">
-        <a href="../index.html" class="oa-nav-link">Alliance Portal</a>
-          <a href="../demo/index.html" class="oa-nav-link">Live Engine Demo</a>
-          <a href="../cases/index.html" class="oa-nav-link active" aria-current="page">Case Gallery</a>
-          <a href="../tools/index.html" class="oa-nav-link">41-Tool Workbench</a>
-          <a href="../ordinances/index.html" class="oa-nav-link">Ordinance Commons</a>
-          <a href="../mcp/index.html" class="oa-nav-link">MCP Playground</a>
-          <a href="../spec/index.html" class="oa-nav-link">RCA-Spec v2.0</a>
-          <a href="../methods/index.html" class="oa-nav-link">Falsifiability</a>
+        <a href="../index.html" class="oa-nav-link">Field Home</a>
+        <a href="../demo/index.html" class="oa-nav-link">Field Studio</a>
+        <a href="../cases/index.html" class="oa-nav-link active" aria-current="page">Case Studies</a>
+        <a href="../ordinances/index.html" class="oa-nav-link">City Tree Laws</a>
+        <button
+          type="button"
+          class="oa-nav-veil-trigger"
+          popovertarget="oa-deep-stack-popover"
+          aria-expanded="false"
+        >
+          Under the Veil
+        </button>
       </nav>
+      <div id="oa-deep-stack-popover" class="oa-deep-popover" popover>
+        <div class="oa-deep-popover-header">
+          <span>Technical &amp; Scientific Surfaces</span>
+          <span>AGPL-3.0</span>
+        </div>
+        <a href="../tools/index.html" class="oa-deep-popover-item">
+          <strong>41-Tool Forestry &amp; LiDAR Workbench</strong>
+          <span>Point clouds, dendrochronology, fire behavior, and core ESM calculators.</span>
+        </a>
+        <a href="../mcp/index.html" class="oa-deep-popover-item">
+          <strong>MCP Agent Server Playground</strong>
+          <span>JSON-RPC 2.0 inspector so AI agents run verified math instead of guessing.</span>
+        </a>
+        <a href="../spec/index.html" class="oa-deep-popover-item">
+          <strong>RCA-Spec v2.0 &amp; 200-Yr Vault</strong>
+          <span>Ten-section evidentiary standard, primary equations, and Heartwood file vault.</span>
+        </a>
+        <a href="../methods/index.html" class="oa-deep-popover-item">
+          <strong>Executable Proof &amp; Falsifiability</strong>
+          <span>Bit-for-bit parity audits, epistemic boundaries, and physical kill criteria.</span>
+        </a>
+      </div>
       <div class="oa-theme-control">
-        <button type="button" id="oa-theme-toggle" class="btn btn-secondary btn-sm" aria-label="Toggle color scheme">Theme: Auto</button>
+        <button
+          type="button"
+          id="oa-veil-mode-toggle"
+          class="btn btn-secondary btn-sm oa-veil-mode-btn"
+          aria-pressed="false"
+        >
+          Veil: Canopy
+        </button>
+        <button
+          type="button"
+          id="oa-theme-toggle"
+          class="btn btn-secondary btn-sm"
+          aria-label="Toggle color scheme"
+        >
+          Theme: Auto
+        </button>
       </div>
     </div>
   </header>
@@ -42,15 +83,15 @@
   <section class="app-header">
     <div class="container header-inner">
       <div>
-        <span class="eyebrow">Deliverable D3 &middot; Zero-JS Crawlable Evidentiary Determinations &middot; RCA-Spec v2.0</span>
+        <span class="eyebrow">Verified Bioregional Field Cases &middot; Zero-JS Crawlable Evidentiary Determinations &middot; RCA-Spec v2.0</span>
         <h1>Bioregional Reference Case Gallery (Central Texas &amp; Rogue Valley, Oregon)</h1>
         <p class="subtitle">
-          Five benchmark municipal tree determinations pre-rendered at build time directly from the certified ECMAScript core engines. Every case page includes full statutory citations, inline vector <code>&lt;svg&gt;</code> root protection maps, provenance boundaries, and cryptographic <code>SHA-256</code> digests with JavaScript disabled.
+          Five benchmark municipal tree determinations pre-rendered at build time directly from the certified ECMAScript core engines. Every case page includes plain-language stewardship triage, full statutory citations, inline vector <code>&lt;svg&gt;</code> root protection maps, provenance boundaries, and cryptographic <code>SHA-256</code> digests with JavaScript disabled.
         </p>
       </div>
       <div class="header-actions">
-        <a href="../demo/index.html" class="btn btn-primary">Launch Interactive Field Workbench</a>
-        <a href="../methods/index.html" class="btn btn-outline">Inspect Falsifiability Suite</a>
+        <a href="../demo/index.html" class="btn btn-primary">Open Field Studio</a>
+        <a href="../methods/index.html" class="btn btn-outline">Executable Proof Ledger</a>
       </div>
     </div>
   </section>
@@ -405,7 +446,7 @@
   <footer class="app-footer">
     <div class="container">
       <p>
-        Open Arbor v2.0 &middot; Static Crawlable Case Gallery &middot; Governed by the Open Arbor Alliance &middot; Licensed under AGPL-3.0-only.
+        Open Arbor v2.1 &middot; Verified Bioregional Field Cases &middot; Governed by the Open Arbor Alliance &middot; Licensed under AGPL-3.0-only.
       </p>
     </div>
   </footer>

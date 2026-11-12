@@ -1,7 +1,8 @@
 /**
- * Open Arbor v2.0 Mobile-First Field & Portal Stylesheet
- * Supports Sunlight Field Mode (`light`) and Canopy Dark Mode (`dark`) via CSS `light-dark()`
- * and modern-web-guidance `dark-mode-toggle` + `responsive-table` patterns.
+ * Open Arbor v2.1 Mobile-First Field & Portal Stylesheet ("The Giant Sequoia / Rick Rubin Cut")
+ * Supports Botanical Daylight (`light`) and Old-Growth Sequoia Night (`dark`) via CSS `light-dark()`
+ * and modern-web-guidance `dark-mode-toggle`, `responsive-table`, `accordion`, `content-first-noise-reduction`,
+ * `light-dismiss-a-dialog`, and `prevent-page-scroll-under-modal-dialog` patterns.
  */
 
 :root {
@@ -14,26 +15,32 @@
     color-scheme: light;
   }
 
-  --bg-deep: light-dark(#f4f6f0, #08120a);
-  --bg-card: light-dark(#ffffff, #0f2113);
-  --bg-input: light-dark(#f8faf6, #0a170c);
-  --bg-elevated: light-dark(#eaf1ec, #162e1b);
-  --border-main: light-dark(#2d6a4f, #2d6a4f);
-  --border-subtle: light-dark(#b7d1c3, #1e4633);
+  --bg-deep: light-dark(#f6f5ef, #08110b);
+  --bg-card: light-dark(#ffffff, #0e1f13);
+  --bg-input: light-dark(#faf9f4, #0a160d);
+  --bg-elevated: light-dark(#edece3, #142a1a);
+  --border-main: light-dark(#2b5f44, #2d6a4f);
+  --border-subtle: light-dark(#c5d4c7, #1e4633);
   --text-main: light-dark(#0d1f12, #f5f0e8);
-  --text-muted: light-dark(#3b5745, #b7c9bd);
+  --text-muted: light-dark(#3b5543, #b7c9bd);
   --accent-green: light-dark(#1b6b45, #52b788);
   --accent-bright: light-dark(#145938, #74c69d);
-  --accent-amber: light-dark(#b87d14, #e9c46a);
+  --accent-amber: light-dark(#a86814, #e9c46a);
+  --accent-copper: light-dark(#9a5220, #e29d56);
+  --cambium-border: light-dark(#b37838, #d49a52);
+  --veil-bg: light-dark(#f1efe6, #0b180f);
   --danger-red: light-dark(#c92a37, #e63946);
   --danger-bg: light-dark(#fdecee, #3b1216);
   --danger-text: light-dark(#7d111b, #ffd6da);
-  --code-bg: light-dark(#edf2ee, #050b06);
+  --code-bg: light-dark(#ecebe2, #050b06);
   --highlight-bg: light-dark(#e2f2e8, #13301c);
-  --header-grad-top: light-dark(#e3ede6, #132a18);
+  --header-grad-top: light-dark(#e9e7dc, #102416);
   --btn-primary-text: light-dark(#ffffff, #061108);
+  --shadow-soft: light-dark(0 6px 22px rgba(13, 31, 18, 0.06), 0 8px 26px rgba(0, 0, 0, 0.36));
+  --shadow-elevated: light-dark(0 16px 38px rgba(13, 31, 18, 0.12), 0 18px 44px rgba(0, 0, 0, 0.54));
   --radius-sm: 6px;
   --radius-md: 10px;
+  --radius-lg: 14px;
 }
 
 * {
@@ -150,7 +157,9 @@ html, body {
 
 .oa-theme-control {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  gap: 6px;
 }
 
 .app-header {
@@ -1137,11 +1146,18 @@ dialog {
   border: 1px solid var(--accent-bright);
   border-radius: var(--radius-md);
   padding: 18px;
+  box-shadow: var(--shadow-elevated);
+}
+
+dialog:modal {
+  overscroll-behavior: contain;
 }
 
 dialog::backdrop {
   background: rgba(4, 10, 6, 0.76);
   backdrop-filter: blur(2px);
+  overflow: hidden;
+  overscroll-behavior: contain;
 }
 
 .app-footer {
@@ -1406,6 +1422,752 @@ textarea:focus-visible {
   color: var(--text-muted);
 }
 
+/* ============================================================================
+ * Open Arbor v2.1 ("The Giant Sequoia / Rick Rubin Cut")
+ * Compact Navigation, Popover Deep Stack, Progressive Veil, Living Tree Lens,
+ * Two Futures Triage, and Shared Arborist Handoff Modal Dialog
+ * ============================================================================ */
+
+/* 1. Compact Header Navigation & "Under the Veil" Popover */
+.oa-nav-veil-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 11px;
+  min-height: 34px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--cambium-border);
+  background: var(--veil-bg);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.oa-nav-veil-trigger:hover,
+.oa-nav-veil-trigger.active {
+  background: var(--bg-elevated);
+  border-color: var(--accent-copper);
+}
+
+.oa-nav-veil-trigger:focus-visible,
+.oa-veil-mode-btn:focus-visible {
+  outline: 2px solid var(--oa-heartwood-gold, #D4B86A);
+  outline-offset: 2px;
+}
+
+.oa-nav-veil-trigger::after {
+  content: "";
+  inline-size: 0.9em;
+  block-size: 0.9em;
+  flex: none;
+  pointer-events: none;
+  forced-color-adjust: none;
+  background-color: var(--accent-copper);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='2.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 7.5L10 12.5L15 7.5'/%3E%3C/svg%3E") no-repeat center / contain;
+}
+
+.oa-veil-mode-btn {
+  border-color: var(--cambium-border);
+  color: var(--text-main);
+  background: var(--veil-bg);
+  font-weight: 700;
+}
+
+.oa-veil-mode-btn[aria-pressed="true"] {
+  background: var(--accent-copper);
+  border-color: var(--accent-copper);
+  color: #ffffff;
+}
+
+.oa-deep-popover {
+  width: min(440px, 92vw);
+  padding: 14px;
+  background: var(--bg-card);
+  color: var(--text-main);
+  border: 1px solid var(--cambium-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-elevated);
+}
+
+.oa-deep-popover[popover]:not(:popover-open):not(.\:popover-open) {
+  display: none;
+}
+
+.oa-deep-popover[popover]:is(:popover-open, .\:popover-open) {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+@supports (position-area: block-end) {
+  .oa-deep-popover[popover] {
+    inset: auto;
+    margin: 6px 0 0 0;
+    position-area: block-end span-inline-start;
+    position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
+  }
+}
+
+@supports not (position-area: block-end) {
+  .oa-deep-popover[popover] {
+    position: fixed;
+    inset: 3.5rem 1rem auto auto;
+    margin: 0;
+    z-index: 80;
+  }
+}
+
+.oa-deep-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent-copper);
+}
+
+.oa-deep-popover-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 9px 11px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-input);
+  text-decoration: none;
+  color: var(--text-main);
+}
+
+.oa-deep-popover-item:hover,
+.oa-deep-popover-item.active {
+  background: var(--bg-elevated);
+  border-color: var(--accent-bright);
+}
+
+.oa-deep-popover-item strong {
+  font-size: 0.88rem;
+  color: var(--text-main);
+}
+
+.oa-deep-popover-item span {
+  font-size: 0.77rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+@media (min-width: 960px) {
+  .oa-nav-container {
+    flex-wrap: nowrap;
+  }
+  .oa-main-nav {
+    flex-wrap: nowrap;
+  }
+}
+
+:target {
+  scroll-margin-top: 4.5rem;
+}
+
+/* 2. Behind the Veil Progressive Disclosure (<details class="oa-veil">) */
+details.oa-veil {
+  margin-top: 14px;
+  border: 1px solid var(--border-subtle);
+  border-inline-start: 3px solid var(--cambium-border);
+  border-radius: var(--radius-sm);
+  background: var(--veil-bg);
+}
+
+summary.oa-veil-summary {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65ch;
+  padding: 11px 14px;
+  font-size: 0.87rem;
+  font-weight: 700;
+  color: var(--text-main);
+  user-select: none;
+}
+
+summary.oa-veil-summary::-webkit-details-marker {
+  display: none;
+}
+
+summary.oa-veil-summary:where(:not([aria-disabled="true"])) {
+  cursor: pointer;
+}
+
+summary.oa-veil-summary:where(:not([aria-disabled="true"])):hover {
+  background: var(--bg-elevated);
+}
+
+summary.oa-veil-summary:focus-visible {
+  outline: 2px solid var(--oa-heartwood-gold, #D4B86A);
+  outline-offset: -2px;
+  border-radius: var(--radius-sm);
+}
+
+summary.oa-veil-summary::before {
+  content: "";
+  inline-size: 1.05em;
+  block-size: 1.05em;
+  flex: none;
+  pointer-events: none;
+  forced-color-adjust: none;
+  background-color: var(--accent-copper);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='2.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 7.5L10 12.5L15 7.5'/%3E%3C/svg%3E") no-repeat center / contain;
+  rotate: -90deg;
+}
+
+summary.oa-veil-summary:dir(rtl)::before {
+  rotate: 90deg;
+}
+
+details.oa-veil[open] > summary.oa-veil-summary::before {
+  rotate: 0deg;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  summary.oa-veil-summary::before {
+    transition: rotate 0.2s ease;
+  }
+}
+
+details.oa-veil::details-content {
+  interpolate-size: allow-keywords;
+  overflow: clip;
+  contain: layout;
+}
+
+details.oa-veil:not([open])::details-content {
+  block-size: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  details.oa-veil::details-content {
+    transition: block-size, content-visibility, display;
+    transition-duration: 0.28s;
+    transition-timing-function: ease-in-out;
+    transition-behavior: allow-discrete;
+  }
+}
+
+.oa-veil-kicker {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent-copper);
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--cambium-border);
+  background: var(--bg-card);
+}
+
+.oa-veil-body {
+  padding: 12px 14px 14px 14px;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.oa-veil-formula {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.79rem;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--code-bg);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-main);
+  overflow-x: auto;
+}
+
+.oa-veil-source {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+/* 3. Sequoia Opening & Living Tree Lens (#landing-quick-calc) */
+.oa-sequoia-hero {
+  background: linear-gradient(180deg, var(--header-grad-top) 0%, var(--bg-deep) 100%);
+  border-bottom: 1px solid var(--border-main);
+  padding: 32px 0 36px 0;
+}
+
+.oa-sequoia-intro {
+  max-width: 880px;
+  margin-bottom: 22px;
+}
+
+.oa-sequoia-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent-copper);
+  margin-bottom: 8px;
+}
+
+.oa-sequoia-title {
+  font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+  font-size: clamp(1.95rem, 3.8vw, 2.85rem);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  margin: 0 0 12px 0;
+  color: var(--text-main);
+}
+
+.oa-sequoia-lead {
+  font-size: clamp(0.98rem, 1.45vw, 1.1rem);
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.oa-lens-shell {
+  background: var(--bg-card);
+  border: 1px solid var(--border-main);
+  border-top: 3px solid var(--cambium-border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.oa-lens-topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.oa-archetype-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.oa-archetype-btn {
+  min-height: 38px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-input);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.oa-archetype-btn:hover {
+  background: var(--bg-elevated);
+  border-color: var(--accent-bright);
+}
+
+.oa-archetype-btn.active {
+  background: var(--accent-green);
+  color: var(--btn-primary-text);
+  border-color: var(--accent-green);
+}
+
+.oa-archetype-btn:focus-visible {
+  outline: 2px solid var(--oa-heartwood-gold, #D4B86A);
+  outline-offset: 2px;
+}
+
+.oa-lens-specimen-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.oa-lens-workspace {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+@media (min-width: 920px) {
+  .oa-lens-workspace {
+    grid-template-columns: 1.22fr 0.78fr;
+  }
+}
+
+.oa-living-svg-stage {
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 10px;
+  overflow: hidden;
+}
+
+.oa-living-svg-stage svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+}
+
+.oa-svg-caption-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 6px 12px;
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.oa-tactile-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 14px;
+}
+
+.oa-control-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.oa-control-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.oa-tape-pill {
+  display: inline-block;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--accent-copper);
+  background: var(--veil-bg);
+  border: 1px solid var(--cambium-border);
+  border-radius: var(--radius-sm);
+  padding: 3px 8px;
+  margin-top: 2px;
+}
+
+/* 4. Innate Answer-First Verdict & Two Futures Strip */
+.oa-innate-verdict-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-main);
+  border-inline-start: 4px solid var(--accent-green);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.oa-innate-verdict-card.is-thin-shell {
+  border-inline-start-color: var(--danger-red);
+}
+
+.oa-innate-verdict-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.oa-innate-verdict-headline {
+  font-size: 1.06rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.oa-innate-verdict-prose {
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.oa-two-futures-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 780px) {
+  .oa-two-futures-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.oa-future-card {
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-input);
+}
+
+.oa-future-liquidation {
+  border-color: var(--danger-red);
+  background: var(--danger-bg);
+  color: var(--danger-text);
+}
+
+.oa-future-stewardship {
+  border-color: var(--accent-bright);
+  background: var(--highlight-bg);
+}
+
+.oa-future-kicker {
+  font-size: 0.73rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.oa-future-headline {
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.oa-future-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.84rem;
+  line-height: 1.48;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.oa-word-of-mouth-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.oa-word-of-mouth-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.btn-copper {
+  background: var(--accent-copper);
+  color: #ffffff;
+  border-color: var(--accent-copper);
+}
+
+.btn-copper:hover {
+  filter: brightness(1.06);
+}
+
+/* 5. Act II Human Truth Cards & Phased Stewardship Triage Grid */
+.oa-truth-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-top: 14px;
+}
+
+@media (min-width: 880px) {
+  .oa-truth-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.oa-truth-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-main);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: var(--shadow-soft);
+}
+
+.oa-truth-card h3 {
+  font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+  font-size: 1.2rem;
+  margin: 4px 0 8px 0;
+}
+
+.oa-truth-prose {
+  margin: 0;
+  font-size: 0.91rem;
+  line-height: 1.56;
+  color: var(--text-muted);
+}
+
+.oa-triage-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+@media (min-width: 720px) {
+  .oa-triage-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.oa-triage-stage {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-top: 3px solid var(--accent-green);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.oa-arborist-banner {
+  background: linear-gradient(135deg, var(--highlight-bg) 0%, var(--bg-elevated) 100%);
+  border: 1px solid var(--cambium-border);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+/* 6. Shared Arborist Handoff Modal Dialog (.oa-handoff-dialog) */
+.oa-handoff-dialog {
+  max-width: min(760px, 94vw);
+  padding: 0;
+  border: 1px solid var(--cambium-border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  color: var(--text-main);
+}
+
+.oa-handoff-dialog-inner {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.oa-handoff-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.oa-handoff-close-btn {
+  min-height: 34px;
+  padding: 5px 11px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-elevated);
+  color: var(--text-main);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.oa-handoff-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.oa-handoff-textarea {
+  width: 100%;
+  min-height: 200px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.81rem;
+  line-height: 1.48;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-main);
+  background: var(--code-bg);
+  color: var(--text-main);
+  resize: vertical;
+}
+
+.oa-handoff-url-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.oa-handoff-url-row input[type="text"] {
+  flex: 1;
+  min-width: 220px;
+  min-height: 38px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.78rem;
+}
+
+.oa-handoff-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.oa-receiver-banner-card {
+  border-top: 3px solid var(--cambium-border);
+  background: linear-gradient(180deg, var(--highlight-bg) 0%, var(--bg-card) 100%);
+}
+
+.oa-sticky-sep {
+  color: var(--border-main);
+  opacity: 0.7;
+}
+
 @page {
   size: letter portrait;
   margin: 0.4in;
@@ -1423,6 +2185,8 @@ textarea:focus-visible {
   }
 
   .oa-site-header,
+  .oa-deep-popover,
+  #arborist-handoff-dialog,
   .oa-sticky-verdict-bar,
   #sticky-determination-bar,
   .no-print,

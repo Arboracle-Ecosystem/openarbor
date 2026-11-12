@@ -9,7 +9,7 @@
       document.querySelector('meta[name="color-scheme"]').content = localStorage.getItem('color-scheme') ?? 'light dark';
     } catch (e) {}
   </script>
-  <title>Case 4: Ashland Heritage Oregon White Oak (41.3 in DBH) | Static Evidentiary Determination | Open Arbor v2.0</title>
+  <title>Case 4: Ashland Heritage Oregon White Oak (41.3 in DBH) | Verified Bioregional Field Case | Open Arbor v2.1</title>
   <meta
     name="description"
     content="Static pre-rendered arboricultural determination for ASH-QG-105 (Quercus garryana) in Ashland, OR: Heritage (Permit Required) | DBH: 41.34 in (105 cm) | CRZ: 41.34 ft (12.6 m) | Replacement Owed: 82.68 in | Cash in Lieu: $6,201."
@@ -21,20 +21,61 @@
     <div class="oa-nav-container">
       <a href="../../index.html" class="oa-brand-link">
         <span class="oa-brand-mark">OA</span>
-        <span class="oa-brand-text">Open Arbor <small>v2.0</small></span>
+        <span class="oa-brand-text">Open Arbor <small>v2.1</small></span>
       </a>
       <nav class="oa-main-nav" aria-label="Primary Navigation">
-        <a href="../../index.html" class="oa-nav-link">Alliance Portal</a>
-          <a href="../../demo/index.html" class="oa-nav-link">Live Engine Demo</a>
-          <a href="../../cases/index.html" class="oa-nav-link active" aria-current="page">Case Gallery</a>
-          <a href="../../tools/index.html" class="oa-nav-link">41-Tool Workbench</a>
-          <a href="../../ordinances/index.html" class="oa-nav-link">Ordinance Commons</a>
-          <a href="../../mcp/index.html" class="oa-nav-link">MCP Playground</a>
-          <a href="../../spec/index.html" class="oa-nav-link">RCA-Spec v2.0</a>
-          <a href="../../methods/index.html" class="oa-nav-link">Falsifiability</a>
+        <a href="../../index.html" class="oa-nav-link">Field Home</a>
+        <a href="../../demo/index.html" class="oa-nav-link">Field Studio</a>
+        <a href="../../cases/index.html" class="oa-nav-link active" aria-current="page">Case Studies</a>
+        <a href="../../ordinances/index.html" class="oa-nav-link">City Tree Laws</a>
+        <button
+          type="button"
+          class="oa-nav-veil-trigger"
+          popovertarget="oa-deep-stack-popover"
+          aria-expanded="false"
+        >
+          Under the Veil
+        </button>
       </nav>
+      <div id="oa-deep-stack-popover" class="oa-deep-popover" popover>
+        <div class="oa-deep-popover-header">
+          <span>Technical &amp; Scientific Surfaces</span>
+          <span>AGPL-3.0</span>
+        </div>
+        <a href="../../tools/index.html" class="oa-deep-popover-item">
+          <strong>41-Tool Forestry &amp; LiDAR Workbench</strong>
+          <span>Point clouds, dendrochronology, fire behavior, and core ESM calculators.</span>
+        </a>
+        <a href="../../mcp/index.html" class="oa-deep-popover-item">
+          <strong>MCP Agent Server Playground</strong>
+          <span>JSON-RPC 2.0 inspector so AI agents run verified math instead of guessing.</span>
+        </a>
+        <a href="../../spec/index.html" class="oa-deep-popover-item">
+          <strong>RCA-Spec v2.0 &amp; 200-Yr Vault</strong>
+          <span>Ten-section evidentiary standard, primary equations, and Heartwood file vault.</span>
+        </a>
+        <a href="../../methods/index.html" class="oa-deep-popover-item">
+          <strong>Executable Proof &amp; Falsifiability</strong>
+          <span>Bit-for-bit parity audits, epistemic boundaries, and physical kill criteria.</span>
+        </a>
+      </div>
       <div class="oa-theme-control">
-        <button type="button" id="oa-theme-toggle" class="btn btn-secondary btn-sm" aria-label="Toggle color scheme">Theme: Auto</button>
+        <button
+          type="button"
+          id="oa-veil-mode-toggle"
+          class="btn btn-secondary btn-sm oa-veil-mode-btn"
+          aria-pressed="false"
+        >
+          Veil: Canopy
+        </button>
+        <button
+          type="button"
+          id="oa-theme-toggle"
+          class="btn btn-secondary btn-sm"
+          aria-label="Toggle color scheme"
+        >
+          Theme: Auto
+        </button>
       </div>
     </div>
   </header>
@@ -50,7 +91,7 @@
         <span><strong>Cash in Lieu:</strong> <strong id="sticky-cash-val" class="text-danger">$6,201</strong></span>
       </div>
       <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-        <a href="../../demo/index.html#oa1=eyJ2IjoiMi4wLjAiLCJqIjoib3ItYXNobGFuZCIsInNwIjpbIlF1ZXJjdXMgZ2FycnlhbmEiLCJPcmVnb24gV2hpdGUgT2FrIiw0Nzg1MSwiRWN0b215Y29ycmhpemFsX0VNIl0sImRiaCI6WzEwNSxmYWxzZSwic2luZ2xlX3N0ZW0iLG51bGxdLCJ3dCI6W2ZhbHNlLCIyMDI2LTExLTEwIiwiUHJlc2VydmF0aW9uX1dpdGhfUmhpem9zcGhlcmVfUmVtZWRpYXRpb24iXSwiZGlzdCI6WzEyLDEsOCw4XSwiY3R4IjpbIkdvb2QiLCJPcGVuIEdyb3duIC8gUGFya2xhbmQiLDE4LjUsMjEsMjIuNSw3MiwiODRKVjU3VlIrUjYiLCJBU0gtUUctMTA1IiwiMjAyNi0xMC0yMyJdLCJiIjozLCJpZCI6ImNhc2UtNC1hc2hsYW5kLW9yZWdvbi13aGl0ZS1vYWsiLCJsYmwiOiJDYXNlIDQ6IEFzaGxhbmQgSGVyaXRhZ2UgT3JlZ29uIFdoaXRlIE9hayAoNDEuMyBpbiBEQkgpIn0" class="btn btn-primary btn-xs">Open in Interactive Field Workbench (#oa1=)</a>
+        <a href="../../demo/index.html#oa1=eyJ2IjoiMi4wLjAiLCJqIjoib3ItYXNobGFuZCIsInNwIjpbIlF1ZXJjdXMgZ2FycnlhbmEiLCJPcmVnb24gV2hpdGUgT2FrIiw0Nzg1MSwiRWN0b215Y29ycmhpemFsX0VNIl0sImRiaCI6WzEwNSxmYWxzZSwic2luZ2xlX3N0ZW0iLG51bGxdLCJ3dCI6W2ZhbHNlLCIyMDI2LTExLTEwIiwiUHJlc2VydmF0aW9uX1dpdGhfUmhpem9zcGhlcmVfUmVtZWRpYXRpb24iXSwiZGlzdCI6WzEyLDEsOCw4XSwiY3R4IjpbIkdvb2QiLCJPcGVuIEdyb3duIC8gUGFya2xhbmQiLDE4LjUsMjEsMjIuNSw3MiwiODRKVjU3VlIrUjYiLCJBU0gtUUctMTA1IiwiMjAyNi0xMC0yMyJdLCJiIjozLCJpZCI6ImNhc2UtNC1hc2hsYW5kLW9yZWdvbi13aGl0ZS1vYWsiLCJsYmwiOiJDYXNlIDQ6IEFzaGxhbmQgSGVyaXRhZ2UgT3JlZ29uIFdoaXRlIE9hayAoNDEuMyBpbiBEQkgpIn0" class="btn btn-primary btn-xs">Open in Field Studio (#oa1=)</a>
         <a href="../index.html" class="btn btn-outline btn-xs">All 5 Cases</a>
       </div>
     </div>
@@ -59,20 +100,98 @@
   <section class="app-header">
     <div class="container header-inner">
       <div>
-        <span class="eyebrow">Static Pre-Rendered Evidentiary Record &middot; Ashland, OR &middot; Plus Code 84JV57VR+R6</span>
+        <span class="eyebrow">Verified Bioregional Field Case &middot; Ashland, OR &middot; Plus Code 84JV57VR+R6</span>
         <h1>Case 4: Ashland Heritage Oregon White Oak (41.3 in DBH)</h1>
         <p class="subtitle">
           Specimen <code>ASH-QG-105</code> (<em>Quercus garryana</em>, Oregon White Oak) &middot; Assessed <code>2026-10-23</code> &middot; Canonical SHA-256: <code>c87412851e02c8a64e6976840c8cac769e6c2fe17adbaf99df856f4fc4e62345</code>
         </p>
       </div>
       <div class="header-actions">
-        <a href="../../demo/index.html#oa1=eyJ2IjoiMi4wLjAiLCJqIjoib3ItYXNobGFuZCIsInNwIjpbIlF1ZXJjdXMgZ2FycnlhbmEiLCJPcmVnb24gV2hpdGUgT2FrIiw0Nzg1MSwiRWN0b215Y29ycmhpemFsX0VNIl0sImRiaCI6WzEwNSxmYWxzZSwic2luZ2xlX3N0ZW0iLG51bGxdLCJ3dCI6W2ZhbHNlLCIyMDI2LTExLTEwIiwiUHJlc2VydmF0aW9uX1dpdGhfUmhpem9zcGhlcmVfUmVtZWRpYXRpb24iXSwiZGlzdCI6WzEyLDEsOCw4XSwiY3R4IjpbIkdvb2QiLCJPcGVuIEdyb3duIC8gUGFya2xhbmQiLDE4LjUsMjEsMjIuNSw3MiwiODRKVjU3VlIrUjYiLCJBU0gtUUctMTA1IiwiMjAyNi0xMC0yMyJdLCJiIjozLCJpZCI6ImNhc2UtNC1hc2hsYW5kLW9yZWdvbi13aGl0ZS1vYWsiLCJsYmwiOiJDYXNlIDQ6IEFzaGxhbmQgSGVyaXRhZ2UgT3JlZ29uIFdoaXRlIE9hayAoNDEuMyBpbiBEQkgpIn0" class="btn btn-primary">Hydrate in Live Field Engine</a>
-        <a href="../index.html" class="btn btn-secondary">Back to Case Gallery</a>
+        <a href="../../demo/index.html#oa1=eyJ2IjoiMi4wLjAiLCJqIjoib3ItYXNobGFuZCIsInNwIjpbIlF1ZXJjdXMgZ2FycnlhbmEiLCJPcmVnb24gV2hpdGUgT2FrIiw0Nzg1MSwiRWN0b215Y29ycmhpemFsX0VNIl0sImRiaCI6WzEwNSxmYWxzZSwic2luZ2xlX3N0ZW0iLG51bGxdLCJ3dCI6W2ZhbHNlLCIyMDI2LTExLTEwIiwiUHJlc2VydmF0aW9uX1dpdGhfUmhpem9zcGhlcmVfUmVtZWRpYXRpb24iXSwiZGlzdCI6WzEyLDEsOCw4XSwiY3R4IjpbIkdvb2QiLCJPcGVuIEdyb3duIC8gUGFya2xhbmQiLDE4LjUsMjEsMjIuNSw3MiwiODRKVjU3VlIrUjYiLCJBU0gtUUctMTA1IiwiMjAyNi0xMC0yMyJdLCJiIjozLCJpZCI6ImNhc2UtNC1hc2hsYW5kLW9yZWdvbi13aGl0ZS1vYWsiLCJsYmwiOiJDYXNlIDQ6IEFzaGxhbmQgSGVyaXRhZ2UgT3JlZ29uIFdoaXRlIE9hayAoNDEuMyBpbiBEQkgpIn0" class="btn btn-primary">Hydrate in Field Studio</a>
+        <a href="../index.html" class="btn btn-secondary">Back to Case Studies</a>
       </div>
     </div>
   </section>
 
   <main class="container main-layout">
+    <!-- INNATE SUMMARY: Plain-Language Answer-First Verdict & 3-Stage Phased Stewardship Triage -->
+    <section id="innate-stewardship-triage" class="card" aria-labelledby="innate-triage-heading">
+      <div class="card-header">
+        <span class="step-badge">Plain-Language Verdict</span>
+        <h2 id="innate-triage-heading">Answer-First Field Verdict &amp; 3-Stage Stewardship Triage</h2>
+      </div>
+      <div class="citation-callout" style="margin-bottom: 14px;">
+        <strong>Answer-First Summary:</strong> [object Object]
+      </div>
+
+      <div class="metric-grid metric-grid-4">
+        <div class="metric-box highlight-box">
+          <span class="metric-label">Stage 1 Day-1 Root-Collar Triage</span>
+          <strong class="metric-value text-accent">$2,816</strong>
+          <span class="metric-sub">Saves $1,095 on Day 1 vs. chainsaw bid</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">One-Time Chainsaw Removal Bid</span>
+          <strong class="metric-value text-danger">$3,911</strong>
+          <span class="metric-sub">Plus $6,201 city mitigation liability if destroyed</span>
+        </div>
+        <div class="metric-box highlight-box">
+          <span class="metric-label">5-Year Arborist Net Margin</span>
+          <strong class="metric-value text-accent">$8,218</strong>
+          <span class="metric-sub">6.56x higher net margin vs. one-time removal ($1,252)</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">Vadose Soil Sponge Capacity</span>
+          <strong class="metric-value">5,739 gal</strong>
+          <span class="metric-sub">1-in storm capture &middot; SOM sponge: 5,917.8 gal (Compacted (&lt; 15 mm/hr))</span>
+        </div>
+      </div>
+
+      <div tabindex="0" role="region" aria-labelledby="triage-table-caption-ashland-oregon-white-oak" class="table-wrapper" style="margin-top: 14px;">
+        <table
+          class="data-table"
+          style="
+            --label-1: 'Stewardship Stage';
+            --label-2: 'Field Scope';
+            --label-3: 'Client Price';
+            --label-4: 'Arborist Net Margin';
+          "
+        >
+          <caption id="triage-table-caption-ashland-oregon-white-oak" class="sr-only">
+            Three-Stage Phased Stewardship Triage for ASH-QG-105
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Stewardship Stage &amp; Window</th>
+              <th scope="col">Field Scope &amp; Deliverables</th>
+              <th scope="col">Client Investment</th>
+              <th scope="col">Practitioner Net Margin</th>
+            </tr>
+          </thead>
+          <tbody>
+              <tr>
+                <th scope="row"><strong></strong><br /><small></small></th>
+                <td>Pneumatic root-flare unburying, stem-girdling root relief, Mattheck t/R shell verification, and municipal protection filing.</td>
+                <td><strong>$2,816</strong></td>
+                <td class="text-accent"><strong>$1,633</strong></td>
+              </tr>
+              <tr>
+                <th scope="row"><strong></strong><br /><small></small></th>
+                <td>Supersonic radial AirSpade trenching across the Critical Root Zone, pre-charged biochar, fungal compost, humate, and coarse woodchip horizon.</td>
+                <td><strong>$6,669</strong></td>
+                <td class="text-accent"><strong>$3,424</strong></td>
+              </tr>
+              <tr>
+                <th scope="row"><strong></strong><br /><small></small></th>
+                <td>Native understory guild planting, 36-month mycorrhizal recharge, and longitudinal Year-1 and Year-5 STIM soil and canopy verification.</td>
+                <td><strong>$5,457</strong></td>
+                <td class="text-accent"><strong>$3,161</strong></td>
+              </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
     <!-- SECTION 1: Static Pre-Rendered Determination -->
     <section id="static-determination-verdict" class="card" aria-labelledby="sec1-heading">
       <div class="card-header">
@@ -249,7 +368,7 @@
         <h2 id="sec3-heading">Deterministic Root Protection Map &amp; Subterranean Biomechanics</h2>
       </div>
       <p class="subtitle">
-        To-scale vector <code>&lt;svg&gt;</code> site map generated by <code>renderSiteMapSVG()</code> alongside international root protection zones (<code>AS 4970</code>, <code>ANSI A300 Part 5</code>, <code>BS 5837</code>), Claus Mattheck hollow-shell buckling physics ($t/R$), and supersonic AirSpade radial trenching prescriptions.
+        To-scale vector <code>&lt;svg&gt;</code> site map generated by <code>renderSiteMapSVG()</code> alongside international root protection zones (<code>AS 4970</code>, <code>ANSI A300 Part 5</code>, <code>BS 5837</code>), Claus Mattheck hollow-shell buckling physics (<code>t/R</code>), and supersonic AirSpade radial trenching prescriptions.
       </p>
 
       <div class="svg-map-wrap">
@@ -315,9 +434,9 @@
               <td>Defines the 8 cm coarse ramial woodchip mulch horizon (68.42 m3) and native companion guild zone.</td>
             </tr>
             <tr>
-              <th scope="row">Mattheck Hollow-Shell Ratio ($t/R$) &amp; CODIT</th>
+              <th scope="row">Mattheck Hollow-Shell Ratio (<code>t/R</code>) &amp; CODIT</th>
               <td><strong><code>t/R = 0.34</code></strong><br /><small>Sound shell: 17.9 cm / Radius: 52.5 cm</small></td>
-              <td>Mattheck (1994) $t/R ge 0.30$ Criterion &amp; Shigo CODIT</td>
+              <td>Mattheck (1994) <code>t/R &ge; 0.30</code> Criterion &amp; Shigo CODIT</td>
               <td><strong>Structurally Sound (t/R &gt;= 0.30 Mattheck Criterion Satisfied)</strong> | CODIT: <code>Wall_4_Active_Barrier_Zone</code>.</td>
             </tr>
             <tr>
@@ -498,6 +617,72 @@
       </div>
     </section>
 
+    <!-- BEHIND THE VEIL: LEO-RCA 6-Slot Epistemic Receipt -->
+    <details class="oa-veil card" id="case-leo-epistemic-veil">
+      <summary class="oa-veil-summary">
+        <strong>Lift the Veil: LEO-RCA 6-Slot Epistemic Receipt</strong>
+        <span>(Oracle Provenance Anchors, Reconciled UNVERIFIED Tokens &amp; Sabotage Self-Audit)</span>
+      </summary>
+      <div class="oa-veil-body" style="margin-top: 14px;">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px;">
+          <code>STATUS: OA-RCA-v2:ASH-QG-105 | drafts complete: 1/1 | unverified citations: 0</code>
+          <span class="badge badge-protected">
+            3/3 Negative Sabotage Fixtures Caught
+          </span>
+        </div>
+        <pre class="code-preview" style="white-space: pre-wrap;">STATUS: OA-RCA-v2:ASH-QG-105 | drafts complete: 1/1 | unverified citations: 0
+
+# LEO-RCA Profile 01 Evidentiary Stewardship Brief (ASH-QG-105)
+
+## Slot 1: Epistemic Status &amp; Workstream Header
+- **Workstream ID:** `OA-RCA-v2:ASH-QG-105`
+- **Schema &amp; Profile:** `RCA_v2` / `LEO-RCA-Profile-01`
+- **Declared Epistemic Gaps:** `0`
+
+## Slot 2: Sovereign Airlock &amp; Fiduciary Boundary
+- **Local Execution Airlock:** Computed deterministically in zero-dependency ECMAScript Modules with zero cloud runtime telemetry.
+- **Fiduciary Separation:** Diagnostic biomechanics are decoupled from timber removal bidding. Municipal permit applications and site work require direct owner and credentialed arborist sign-off.
+
+## Slot 3: Point-of-Use Resolution
+- **Subject Specimen:** *Quercus garryana* (Oregon White Oak), tag `ASH-QG-105`
+- **Geospatial Anchor:** Plus Code `84JV57VR+R6` (Lat `42.19`, Lng `-122.71`)
+- **Governing Municipal Code:** Ashland Municipal Code (AMC) Chapter 18.4.5 (Tree Preservation and Protection), Chapter 18.5.7 (Tree Removal Permits), and AMC 18.3.10.090.D (Hillside Development) (Ashland, OR (or-ashland))
+- **Point-of-Use Terms:** `DBH` = Diameter at Breast Height (4.5 ft); `t/R` = outer sound wood shell thickness divided by trunk radius (Mattheck 0.30 threshold); `CRZ` = Critical Root Zone; `SRZ` = Structural Root Zone windthrow plate; `STIM` = Soil and Tree Integrated Monitoring.
+
+## Slot 4: Answer-First Verdict, Phased Triage &amp; Physical Falsifier
+- **Headline Verdict:** Preserve Oregon White Oak (ASH-QG-105): the outer living wood cylinder exceeds the 0.30 Claus Mattheck stability threshold and qualifies for phased rhizosphere stewardship rather than removal.
+- **Structural Truth:** The living wood cylinder retains a 17.9 cm outer shell across a 52.5 cm trunk radius (t/R = 0.34, above the 0.30 Claus Mattheck hollow-shell buckling threshold), anchored by a 12.35 ft (3.77 m) Structural Root Zone windthrow root plate.
+- **Statutory &amp; Seasonal Truth:** Under Ashland Municipal Code (AMC) Chapter 18.4.5 (Tree Preservation and Protection), Chapter 18.5.7 (Tree Removal Permits), and AMC 18.3.10.090.D (Hillside Development) (Ashland, OR (or-ashland)), this 41.34 in DBH specimen is classified as Heritage with a statutory CRZ = 41.34 ft (12.6 m). Permit required: ASH-QG-105 Oregon White Oak (pruning). No active seasonal Oak Wilt pruning vector restriction is flagged for this specimen and jurisdiction.
+- **Stewardship vs. Liquidation:** Preserving this living canopy asset retains $427,039 in 200-year holobiont equity ($23,273 classical CTLA depreciated timber appraisal and $6,201 municipal cash-in-lieu mitigation exposure if destroyed). Day-1 Stage 1 preservation triage starts at $2,816 compared against a one-time removal bid of $3,911, while the 5-year stewardship program delivers a 6.56x net practitioner margin multiplier over liquidation.
+- **Physical Falsifier (STIM Kill Criterion):** If Year-1 terminal twig extension remains below 6 cm or upper crown dieback exceeds 15%, re-evaluate for deep vadose water table restriction or secondary root pathogen colonization.
+
+### 3-Stage Phased Stewardship Triage (Total 5-Year Gross: $14,942 | Practitioner Net: $8,218)
+- **Stage 1 (Day 1 (Immediate Triage)): Root-Collar Excavation, SGR Relief &amp; Structural Audit** | Client investment: **$2,816** | Practitioner net: **$1,633**
+- **Stage 2 (Months 6 to 18): 150 psi Radial AirSpade Decompaction &amp; Biochar-Fungal Inoculation** | Client investment: **$6,669** | Practitioner net: **$3,424**
+- **Stage 3 (Years 2 to 5): Native Companion Guild &amp; Year-1 / Year-5 STIM Verification** | Client investment: **$5,457** | Practitioner net: **$3,161**
+
+## Slot 5: Three-Tier Evidence Boundary &amp; Oracle Provenance Anchors
+### Tier 1: Deterministic Engine &amp; Measured Biometrics
+- Measured DBH (in): [[oracle:rca.structural.dbh_in=41.34]]
+- Mattheck Sound Shell Ratio (t/R): [[oracle:rca.biomechanics.t_over_r=0.34]]
+- Critical Root Zone Radius (ft): [[oracle:root_zone.crz_ft=41.34]]
+- Structural Root Zone Radius (ft): [[oracle:root_zone.srz_ft=12.35]]
+- 200-Year Holobiont Living Equity (USD): [[oracle:rca.valuation.holobiont_200yr_usd=427039]]
+- CTLA 10th Ed. Depreciated Value (USD): [[oracle:rca.valuation.ctla_depreciated_usd=23273]]
+- Municipal Cash-in-Lieu Exposure (USD): [[oracle:ordinance.cash_in_lieu_usd=6201]]
+- Day-1 Stage 1 Triage Price (USD): [[oracle:rca.triage.stage1_usd=2816]]
+
+### Tier 2: Literature &amp; Statutory Calibration
+- Claus Mattheck hollow-cylinder buckling criterion (t/R &gt;= 0.30); Australian AS 4970-2009 SRZ; ANSI A300 Part 5 root-zone management; Nowak (1994, 2006) allometrics; Ashland Municipal Code (AMC) Chapter 18.4.5 (Tree Preservation and Protection), Chapter 18.5.7 (Tree Removal Permits), and AMC 18.3.10.090.D (Hillside Development).
+
+### Tier 3: Explicit Unverified Epistemic Boundaries
+- Zero unverified statutory or instrument gaps recorded in this brief.
+
+## Slot 6: Cryptographic SHA-256 Receipt
+- **Canonical Assessment SHA-256:** `c87412851e02c8a64e6976840c8cac769e6c2fe17adbaf99df856f4fc4e62345`</pre>
+      </div>
+    </details>
+
     <!-- SECTION 5: Evidentiary Signature Block -->
     <section id="evidentiary-print-sheet" class="card" aria-labelledby="sec5-heading">
       <div class="card-header">
@@ -510,7 +695,7 @@
 
       <div class="citation-callout">
         <p style="margin: 0 0 8px 0;">
-          <strong>Conflict-of-Interest &amp; Evidentiary Attestation Statement:</strong> I certify that this arboricultural and rhizosphere assessment was conducted in accordance with <code>ANSI A300</code> (Parts 1, 2, and 5), <code>ISA Best Management Practices</code>, <code>AS 4970-2009</code>, and <code>Open Arbor RCA-Spec v2.0</code>. The assessing practitioner holds zero financial interest in timber liquidation or un-evidenced tree removal. All biometric, biomechanical ($t/R = 0.34$), soil physical, and statutory mitigation figures trace deterministically to the canonical JSON payload anchored below.
+          <strong>Conflict-of-Interest &amp; Evidentiary Attestation Statement:</strong> I certify that this arboricultural and rhizosphere assessment was conducted in accordance with <code>ANSI A300</code> (Parts 1, 2, and 5), <code>ISA Best Management Practices</code>, <code>AS 4970-2009</code>, and <code>Open Arbor RCA-Spec v2.0</code>. The assessing practitioner holds zero financial interest in timber liquidation or un-evidenced tree removal. All biometric, biomechanical (<code>t/R = 0.34</code>), soil physical, and statutory mitigation figures trace deterministically to the canonical JSON payload anchored below.
         </p>
         <div class="metric-grid metric-grid-3" style="margin-top: 12px;">
           <div class="metric-box">
@@ -526,7 +711,7 @@
           <div class="metric-box">
             <span class="metric-label">Cryptographic Evidence Seal (SHA-256)</span>
             <strong class="metric-value" style="font-size: 0.78rem; word-break: break-all;"><code>c87412851e02c8a64e6976840c8cac769e6c2fe17adbaf99df856f4fc4e62345</code></strong>
-            <span class="metric-sub">Engine Version: <code>2.0.0</code> &middot; Dataset: <code>2.0.0</code></span>
+            <span class="metric-sub">Engine Version: <code>2.1.0</code> &middot; Dataset: <code>2.0.0</code></span>
           </div>
         </div>
         <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border-subtle); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; font-size: 0.85rem;">
@@ -541,7 +726,7 @@
   <footer class="app-footer">
     <div class="container">
       <p>
-        Open Arbor v2.0 &middot; Static Evidentiary Case Record (<code>ashland-oregon-white-oak</code>) &middot; Governed by the Open Arbor Alliance &middot; Licensed under AGPL-3.0-only.
+        Open Arbor v2.1 &middot; Verified Bioregional Field Case (<code>ashland-oregon-white-oak</code>) &middot; Governed by the Open Arbor Alliance &middot; Licensed under AGPL-3.0-only.
       </p>
     </div>
   </footer>

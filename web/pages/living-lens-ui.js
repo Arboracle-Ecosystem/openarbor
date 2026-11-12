@@ -1,0 +1,1273 @@
+/**
+ * Open Arbor v2.1 Front Door, Living Cross-Section & Veil UI Controller (web/pages/living-lens-ui.js)
+ * Zero-dependency browser/Node ESM module providing:
+ *   1. Global Veil Chrome (#oa-veil-mode-toggle), [popovertarget] fallback, and <dialog closedby="any"> light-dismiss fallback
+ *   2. Shared Arborist Handoff modal (<dialog id="arborist-handoff-dialog">) reusable across / and /demo/
+ *   3. Interactive Living Tree Lens (#landing-quick-calc) wired to certified Open Arbor core engines:
+ *      rootZone.js, ordinanceEngine.js, ecosystemBenefits.js, rcaEngine.js, leoRcaEngine.js, and soilFunction.js
+ */
+
+import {
+  calculateCRZ,
+  calculateTPZ,
+  calculateSRZ,
+} from '../../src/core/rootZone.js';
+
+import {
+  evaluateTreeInventory,
+  permitDetermination,
+  permitSummary,
+  computeMitigationPlan,
+  statusLabel,
+  isOakSpecies,
+} from '../../src/core/ordinanceEngine.js';
+
+import {
+  calculateTreeEcosystemBenefits,
+  estimateTreeAge,
+} from '../../src/core/ecosystemBenefits.js';
+
+import {
+  evaluateBiomechanicsAndRhizosphere,
+  computeHolobiontValuation,
+  computeRegenerativePracticeEconomics,
+} from '../../src/core/rcaEngine.js';
+
+import {
+  computePhasedStewardshipTriage,
+  compileLeoRcaBrief,
+  composeArboristHandoffBrief,
+} from '../../src/core/leoRcaEngine.js';
+
+import {
+  estimateSoilSpongeCapacity,
+} from '../../src/core/soilFunction.js';
+
+import txOrdinances from '../../data/ordinances/central_texas_ordinances.json';
+import orOrdinances from '../../data/ordinances/rogue_valley_oregon_ordinances.json';
+import { FIXED_PARITY_CASES } from '../presets.js';
+import { encodeAssessmentPermalink, inspectMunicipalityProvenance } from './masterwork-core.js';
+
+const ALL_MUNICIPALITIES = [
+  ...(txOrdinances.municipalities || []),
+  ...(orOrdinances.municipalities || []),
+];
+
+const VEIL_STORAGE_KEY = 'openarbor-veil-mode';
+
+const round1 = (n) => Math.round(Number(n || 0) * 10) / 10;
+const round2 = (n) => Math.round(Number(n || 0) * 100) / 100;
+
+function formatUsd(n) {
+  return `$${Math.round(Number(n || 0)).toLocaleString('en-US')}`;
+}
+
+function escapeHtml(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function deepClone(obj) {
+  return JSON.parse(JSON.stringify(obj));
+}
+
+export const ARCHETYPE_SPECIMENS = [
+  {
+    key: 'austin-live-oak',
+    buttonLabel: '300-Yr Austin Live Oak',
+    shortCaption: '30 in · 62% hollow (t/R 0.38)',
+    caseIndex: 0,
+    ordinanceId: 'tx-austin',
+    dbhIn: 30,
+    cavityPct: 62,
+    disturbancePct: 10,
+    growthFactor: 4.5,
+  },
+  {
+    key: 'ashland-white-oak',
+    buttonLabel: 'Hollow Ashland White Oak',
+    shortCaption: '41 in · 66% hollow (t/R 0.34)',
+    caseIndex: 3,
+    ordinanceId: 'or-ashland',
+    dbhIn: 41,
+    cavityPct: 66,
+    disturbancePct: 12,
+    growthFactor: 5.0,
+  },
+  {
+    key: 'georgetown-pecan',
+    buttonLabel: 'Multi-Stem Georgetown Pecan',
+    shortCaption: '27 in · 54% hollow (t/R 0.46)',
+    caseIndex: 1,
+    ordinanceId: 'tx-georgetown',
+    dbhIn: 27,
+    cavityPct: 54,
+    disturbancePct: 10,
+    growthFactor: 4.0,
+  },
+  {
+    key: 'yard-post-oak',
+    buttonLabel: 'Yard Post Oak',
+    shortCaption: '20 in · 68% hollow (t/R 0.32)',
+    caseIndex: 2,
+    ordinanceId: 'tx-liberty-hill',
+    dbhIn: 20,
+    cavityPct: 68,
+    disturbancePct: 22,
+    growthFactor: 5.0,
+  },
+];
+
+let latestHandoffBundle = null;
+let activeHandoffAudience = 'steward';
+
+function bindDialogLightDismissFallback(dialog) {
+  if (!dialog || dialog.dataset.oaLightDismissBound === 'true') return;
+  dialog.dataset.oaLightDismissBound = 'true';
+
+  if (!('closedBy' in HTMLDialogElement.prototype)) {
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog) {
+        const rect = dialog.getBoundingClientRect();
+        const clickedInDialog =
+          rect.top <= event.clientY &&
+          event.clientY <= rect.bottom &&
+          rect.left <= event.clientX &&
+          event.clientX <= rect.right;
+        if (!clickedInDialog) {
+          dialog.close();
+        }
+      }
+    });
+  }
+}
+
+function buildDemoPermalinkUrl(permalinkHash) {
+  const hash = String(permalinkHash || '').startsWith('#')
+    ? permalinkHash
+    : `#${permalinkHash || ''}`;
+  if (typeof window === 'undefined' || !window.location) {
+    return `https://openarbor.org/demo/${hash}`;
+  }
+  const demoUrl = new URL(
+    window.location.pathname.includes('/demo/') ? './index.html' : './demo/index.html',
+    window.location.href
+  );
+  demoUrl.hash = hash;
+  return demoUrl.href;
+}
+
+function copyTextWithFeedback(text, buttonEl, copiedLabel = 'Copied') {
+  const payload = String(text || '');
+  const showFeedback = () => {
+    if (!buttonEl) return;
+    const prev = buttonEl.dataset.oaOrigLabel || buttonEl.textContent;
+    buttonEl.dataset.oaOrigLabel = prev;
+    buttonEl.textContent = copiedLabel;
+    window.setTimeout(() => {
+      buttonEl.textContent = prev;
+    }, 1600);
+  };
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(payload).then(showFeedback).catch(() => {
+      fallbackExecCopy(payload);
+      showFeedback();
+    });
+    return;
+  }
+  fallbackExecCopy(payload);
+  showFeedback();
+}
+
+function fallbackExecCopy(text) {
+  if (typeof document === 'undefined') return;
+  const temp = document.createElement('textarea');
+  temp.value = text;
+  temp.setAttribute('readonly', '');
+  temp.style.position = 'fixed';
+  temp.style.opacity = '0';
+  document.body.appendChild(temp);
+  temp.select();
+  try {
+    document.execCommand('copy');
+  } catch {
+    // Ignore clipboard restriction in non-interactive headless harnesses
+  }
+  document.body.removeChild(temp);
+}
+
+/**
+ * Ensure the shared Arborist Handoff modal exists in the current document and is wired.
+ */
+export function ensureArboristHandoffDialog() {
+  if (typeof document === 'undefined') return null;
+
+  let dialog = document.getElementById('arborist-handoff-dialog');
+  if (!dialog) {
+    dialog = document.createElement('dialog');
+    dialog.id = 'arborist-handoff-dialog';
+    dialog.setAttribute('closedby', 'any');
+    dialog.setAttribute('aria-labelledby', 'handoff-dialog-title');
+    dialog.className = 'oa-handoff-dialog';
+    dialog.innerHTML = `
+      <div class="oa-handoff-dialog-inner">
+        <div class="oa-handoff-header">
+          <div>
+            <span class="eyebrow">Word-of-Mouth Field Handoff &middot; Zero Account Required</span>
+            <h2 id="handoff-dialog-title">Send This Tree to Your Arborist</h2>
+          </div>
+          <button type="button" id="btn-close-handoff-dialog" class="oa-handoff-close-btn" aria-label="Close arborist handoff dialog">Close</button>
+        </div>
+        <p class="subtitle" id="handoff-subject-line">
+          Share a calm, pre-computed field baseline with your preferred arborist or property steward. Every figure opens directly in the Field Studio with zero login.
+        </p>
+        <div class="oa-handoff-tabs" role="tablist" aria-label="Select handoff message format">
+          <button type="button" role="tab" class="tab-btn active" data-handoff-tab="steward" aria-selected="true">Note for My Arborist</button>
+          <button type="button" role="tab" class="tab-btn" data-handoff-tab="arborist" aria-selected="false">Arborist-to-Client Note</button>
+          <button type="button" role="tab" class="tab-btn" data-handoff-tab="truck" aria-selected="false">Crew &amp; Truck Summary</button>
+        </div>
+        <div class="field">
+          <label for="handoff-message-textarea" id="handoff-textarea-label">Copy-Ready Note (Editable before sending)</label>
+          <textarea id="handoff-message-textarea" class="oa-handoff-textarea" rows="8" spellcheck="true"></textarea>
+        </div>
+        <div class="field">
+          <label for="handoff-share-url-input">Zero-Server Tree Link (Opens exact sliders &amp; municipal code in Field Studio)</label>
+          <div class="oa-handoff-url-row">
+            <input type="text" id="handoff-share-url-input" readonly />
+            <button type="button" id="btn-copy-handoff-url" class="btn btn-secondary btn-sm">Copy Direct Tree Link</button>
+          </div>
+        </div>
+        <div class="oa-handoff-actions">
+          <span class="hint" id="handoff-share-status">No data is uploaded to any server; the tree state lives inside the link hash.</span>
+          <div class="oa-word-of-mouth-actions">
+            <button type="button" id="btn-copy-handoff-note" class="btn btn-copper">Copy Note</button>
+            <button type="button" id="btn-native-share-handoff" class="btn btn-primary">Share via Phone or Email</button>
+            <a href="./demo/index.html" id="handoff-open-studio-link" class="btn btn-secondary">Open Full Studio</a>
+            <button type="button" data-close-handoff class="btn btn-outline">Done</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(dialog);
+  }
+
+  bindDialogLightDismissFallback(dialog);
+
+  if (dialog.dataset.oaHandoffWired !== 'true') {
+    dialog.dataset.oaHandoffWired = 'true';
+
+    const closeBtn = dialog.querySelector('#btn-close-handoff-dialog');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => dialog.close());
+    }
+    dialog.querySelectorAll('[data-close-handoff]').forEach((btn) => {
+      btn.addEventListener('click', () => dialog.close());
+    });
+
+    const tabButtons = dialog.querySelectorAll('[data-handoff-tab]');
+    const textarea = dialog.querySelector('#handoff-message-textarea');
+    const copyNoteBtn = dialog.querySelector('#btn-copy-handoff-note');
+    const copyUrlBtn = dialog.querySelector('#btn-copy-handoff-url');
+    const urlInput = dialog.querySelector('#handoff-share-url-input');
+    const shareBtn = dialog.querySelector('#btn-native-share-handoff');
+    const statusEl = dialog.querySelector('#handoff-share-status');
+
+    const syncTabContent = (tabKey) => {
+      activeHandoffAudience = tabKey;
+      tabButtons.forEach((b) => {
+        const isCurrent = b.getAttribute('data-handoff-tab') === tabKey;
+        b.classList.toggle('active', isCurrent);
+        b.setAttribute('aria-selected', String(isCurrent));
+      });
+      if (!latestHandoffBundle || !textarea) return;
+      if (tabKey === 'arborist') {
+        textarea.value = latestHandoffBundle.arborist_to_client_message;
+      } else if (tabKey === 'truck') {
+        textarea.value = latestHandoffBundle.arborist_truck_summary;
+      } else {
+        textarea.value = latestHandoffBundle.steward_to_arborist_message;
+      }
+    };
+
+    tabButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        syncTabContent(btn.getAttribute('data-handoff-tab') || 'steward');
+      });
+    });
+
+    if (copyNoteBtn && textarea) {
+      copyNoteBtn.addEventListener('click', () => {
+        copyTextWithFeedback(textarea.value, copyNoteBtn, 'Copied Note');
+        if (statusEl) {
+          statusEl.textContent = 'Note copied to clipboard. Paste into a text message or email to your arborist.';
+        }
+      });
+    }
+
+    if (copyUrlBtn && urlInput) {
+      copyUrlBtn.addEventListener('click', () => {
+        copyTextWithFeedback(urlInput.value, copyUrlBtn, 'Copied Link');
+        if (statusEl) {
+          statusEl.textContent = 'Direct Field Studio link copied to clipboard.';
+        }
+      });
+    }
+
+    if (shareBtn) {
+      shareBtn.addEventListener('click', async () => {
+        const subject = latestHandoffBundle?.subject || 'Open Arbor Tree Stewardship Brief';
+        const bodyText = textarea ? textarea.value : '';
+        const shareUrl = urlInput ? urlInput.value : '';
+
+        if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+          try {
+            await navigator.share({
+              title: subject,
+              text: bodyText,
+              url: shareUrl,
+            });
+            if (statusEl) statusEl.textContent = 'Shared via device share sheet.';
+            return;
+          } catch (err) {
+            if (err && err.name === 'AbortError') return;
+          }
+        }
+
+        const mailto = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyText)}`;
+        window.location.href = mailto;
+      });
+    }
+  }
+
+  return dialog;
+}
+
+/**
+ * Populate and open the Arborist Handoff modal using composeArboristHandoffBrief.
+ */
+export function openArboristHandoffDialog(handoffParams = {}) {
+  const dialog = ensureArboristHandoffDialog();
+  if (!dialog) return null;
+
+  latestHandoffBundle = composeArboristHandoffBrief(handoffParams);
+  const shareUrl = handoffParams.shareUrl || 'https://openarbor.org/demo/';
+
+  const subjectEl = dialog.querySelector('#handoff-subject-line');
+  const textarea = dialog.querySelector('#handoff-message-textarea');
+  const urlInput = dialog.querySelector('#handoff-share-url-input');
+  const studioLink = dialog.querySelector('#handoff-open-studio-link');
+
+  if (subjectEl) subjectEl.textContent = latestHandoffBundle.subject;
+  if (urlInput) urlInput.value = shareUrl;
+  if (studioLink) studioLink.setAttribute('href', shareUrl);
+
+  if (textarea) {
+    if (activeHandoffAudience === 'arborist') {
+      textarea.value = latestHandoffBundle.arborist_to_client_message;
+    } else if (activeHandoffAudience === 'truck') {
+      textarea.value = latestHandoffBundle.arborist_truck_summary;
+    } else {
+      textarea.value = latestHandoffBundle.steward_to_arborist_message;
+    }
+  }
+
+  if (typeof dialog.showModal === 'function' && !dialog.open) {
+    dialog.showModal();
+  }
+  return latestHandoffBundle;
+}
+
+/**
+ * Initialize global Veil toggle, [popovertarget] fallback, <dialog closedby="any"> fallback,
+ * and shared copy buttons across every Open Arbor web surface.
+ */
+export function initVeilAndHandoffChrome() {
+  if (typeof document === 'undefined') return;
+
+  // 1. Bind light-dismiss JS fallback on all modal dialogs with closedby="any"
+  document.querySelectorAll('dialog[closedby="any"]').forEach((dlg) => {
+    bindDialogLightDismissFallback(dlg);
+  });
+
+  // 2. Global Header Veil Toggle (#oa-veil-mode-toggle)
+  const veilToggleBtn = document.getElementById('oa-veil-mode-toggle');
+  const syncVeilButtonLabel = (isDeep) => {
+    if (!veilToggleBtn) return;
+    veilToggleBtn.setAttribute('aria-pressed', String(Boolean(isDeep)));
+    veilToggleBtn.textContent = isDeep ? 'Veil: Deep Proof' : 'Veil: Canopy';
+  };
+
+  const applyVeilModeToPage = (isDeep, persist = false) => {
+    const veils = document.querySelectorAll('details.oa-veil');
+    veils.forEach((d) => {
+      d.open = Boolean(isDeep);
+    });
+    syncVeilButtonLabel(isDeep);
+    if (persist) {
+      try {
+        localStorage.setItem(VEIL_STORAGE_KEY, isDeep ? 'deep' : 'canopy');
+      } catch {
+        // Ignore storage quota errors in restricted browsing modes
+      }
+    }
+  };
+
+  let savedVeilDeep = false;
+  try {
+    savedVeilDeep = localStorage.getItem(VEIL_STORAGE_KEY) === 'deep';
+  } catch {
+    savedVeilDeep = false;
+  }
+
+  if (savedVeilDeep) {
+    applyVeilModeToPage(true, false);
+  } else {
+    syncVeilButtonLabel(false);
+  }
+
+  if (veilToggleBtn && veilToggleBtn.dataset.oaVeilBound !== 'true') {
+    veilToggleBtn.dataset.oaVeilBound = 'true';
+    veilToggleBtn.addEventListener('click', () => {
+      const nextDeep = veilToggleBtn.getAttribute('aria-pressed') !== 'true';
+      applyVeilModeToPage(nextDeep, true);
+    });
+  }
+
+  if (document.documentElement.dataset.oaVeilSyncListener !== 'true') {
+    document.documentElement.dataset.oaVeilSyncListener = 'true';
+    document.addEventListener(
+      'toggle',
+      (event) => {
+        const target = event.target;
+        if (target && target.matches && target.matches('details.oa-veil')) {
+          const allVeils = Array.from(document.querySelectorAll('details.oa-veil'));
+          if (allVeils.length > 0) {
+            const allOpen = allVeils.every((d) => d.open);
+            syncVeilButtonLabel(allOpen);
+          }
+        }
+      },
+      true
+    );
+  }
+
+  // 3. Under the Veil Navigation Popover: native aria-expanded sync + zero-dependency fallback
+  const supportsPopover = Object.hasOwn(HTMLElement.prototype, 'popover');
+  const popoverTriggers = document.querySelectorAll('[popovertarget]');
+
+  popoverTriggers.forEach((trigger) => {
+    if (trigger.dataset.oaPopoverBound === 'true') return;
+    trigger.dataset.oaPopoverBound = 'true';
+
+    const targetId = trigger.getAttribute('popovertarget');
+    const popoverEl = targetId ? document.getElementById(targetId) : null;
+    if (!popoverEl) return;
+
+    if (!trigger.hasAttribute('aria-expanded')) {
+      trigger.setAttribute('aria-expanded', 'false');
+    }
+
+    if (supportsPopover) {
+      popoverEl.addEventListener('toggle', (ev) => {
+        const isOpen = ev.newState === 'open';
+        trigger.setAttribute('aria-expanded', String(isOpen));
+      });
+    } else {
+      // Lightweight zero-dependency fallback for browsers without native Popover API
+      const closeFallbackPopover = () => {
+        popoverEl.classList.remove(':popover-open');
+        trigger.setAttribute('aria-expanded', 'false');
+      };
+
+      trigger.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        const willOpen = !popoverEl.classList.contains(':popover-open');
+        popoverEl.classList.toggle(':popover-open', willOpen);
+        trigger.setAttribute('aria-expanded', String(willOpen));
+      });
+
+      document.addEventListener('click', (ev) => {
+        if (
+          popoverEl.classList.contains(':popover-open') &&
+          !popoverEl.contains(ev.target) &&
+          !trigger.contains(ev.target)
+        ) {
+          closeFallbackPopover();
+        }
+      });
+
+      document.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Escape' && popoverEl.classList.contains(':popover-open')) {
+          closeFallbackPopover();
+          trigger.focus();
+        }
+      });
+    }
+  });
+
+  // 4. Shared [data-copy-target] buttons on surfaces that do not mount mcp-ui
+  document.querySelectorAll('[data-copy-target]').forEach((btn) => {
+    if (btn.dataset.oaCopyBound === 'true') return;
+    btn.dataset.oaCopyBound = 'true';
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-copy-target');
+      const sourceEl = id ? document.getElementById(id) : null;
+      if (!sourceEl) return;
+      const text = 'value' in sourceEl ? sourceEl.value : sourceEl.textContent;
+      copyTextWithFeedback(text, btn, 'Copied');
+    });
+  });
+
+  // 5. Ensure handoff dialog is ready if already rendered in DOM
+  if (document.getElementById('arborist-handoff-dialog')) {
+    ensureArboristHandoffDialog();
+  }
+}
+
+/**
+ * Render the dual-viewport Botanical Cross-Section & Mattheck Trunk Ring SVG.
+ */
+function renderLivingLensSVG({
+  speciesCommon,
+  dbhIn,
+  cavityPct,
+  tOverR,
+  disturbancePct,
+  crzFt,
+  srzFt,
+  tizFt,
+  stormGallons,
+  trunkRadiusCm,
+  soundShellCm,
+}) {
+  const isSound = tOverR >= 0.30;
+
+  // Left viewport geometry (x: 16..456, center trunk x = 236, grade y = 184)
+  const cxTree = 236;
+  const gradeY = 184;
+  const maxHalfSpanPx = 198;
+
+  // Scale TIZ to fit cleanly inside left viewport while keeping exact CRZ/SRZ ratios relative to TIZ
+  const safeTizFt = Math.max(tizFt, 12);
+  const pxPerFoot = Math.min(9.2, maxHalfSpanPx / safeTizFt);
+  const tizHalfPx = Math.max(64, Math.min(maxHalfSpanPx, round1(tizFt * pxPerFoot)));
+  const crzHalfPx = Math.max(42, Math.min(tizHalfPx - 10, round1(crzFt * pxPerFoot)));
+  const srzHalfPx = Math.max(20, Math.min(crzHalfPx - 10, round1(srzFt * pxPerFoot)));
+
+  const trunkHalfPx = Math.max(5, Math.min(20, round1(dbhIn * 0.3)));
+  const flareHalfPx = trunkHalfPx + 7;
+  const canopyRx = Math.max(52, Math.min(148, round1(40 + dbhIn * 1.95)));
+  const canopyRy = Math.max(36, Math.min(72, round1(28 + dbhIn * 0.78)));
+  const canopyCy = gradeY - 62 - Math.round(canopyRy * 0.55);
+
+  // Trench encroachment cut enters from right edge of CRZ inward
+  const crzRightEdge = cxTree + crzHalfPx;
+  const cutFraction = Math.max(0, Math.min(0.82, (disturbancePct / 50) * 0.76));
+  const trenchX = round1(crzRightEdge - crzHalfPx * cutFraction * 1.15);
+  const trenchBreachesSrz = disturbancePct > 0 && trenchX <= cxTree + srzHalfPx;
+
+  // Right viewport geometry: Claus Mattheck Trunk Cross-Section (center 612, 148)
+  const ringCx = 612;
+  const ringCy = 148;
+  const barkOuterR = 84;
+  const woodOuterR = 76;
+  const cavityR = round1(Math.max(0, Math.min(woodOuterR - 4, woodOuterR * (1 - tOverR))));
+  const mattheckThresholdR = round1(woodOuterR * 0.70); // t/R = 0.30 boundary
+
+  const shellBadgeFill = isSound ? 'var(--highlight-bg)' : 'var(--danger-bg)';
+  const shellBadgeStroke = isSound ? 'var(--accent-green)' : 'var(--danger-red)';
+  const shellBadgeText = isSound ? 'var(--accent-bright)' : 'var(--danger-red)';
+  const shellVerdictLabel = isSound
+    ? `SOUND SHELL · t/R = ${tOverR.toFixed(2)} (>= 0.30)`
+    : `THIN SHELL · t/R = ${tOverR.toFixed(2)} (< 0.30)`;
+  const shellSubLabel = isSound
+    ? `${soundShellCm.toFixed(1)} cm live wall holds full windload bending`
+    : `${soundShellCm.toFixed(1)} cm wall; run Level 3 sonic tomogram`;
+
+  const trenchMarkup =
+    disturbancePct > 0
+      ? `
+      <rect
+        x="${trenchX}"
+        y="${gradeY - 8}"
+        width="${Math.max(8, round1(crzRightEdge - trenchX + 12))}"
+        height="96"
+        rx="4"
+        fill="var(--danger-red)"
+        fill-opacity="0.14"
+      />
+      <line
+        x1="${trenchX}"
+        y1="${gradeY - 22}"
+        x2="${trenchX}"
+        y2="${gradeY + 92}"
+        stroke="var(--danger-red)"
+        stroke-width="2.5"
+        stroke-dasharray="5 3"
+      />
+      <rect x="${Math.max(248, Math.min(342, trenchX - 54))}" y="${gradeY - 38}" width="116" height="20" rx="5" fill="var(--danger-bg)" stroke="var(--danger-red)" stroke-width="1" />
+      <text x="${Math.max(306, Math.min(400, trenchX + 4))}" y="${gradeY - 24}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--danger-red)">
+        ${disturbancePct}% CRZ Trench Cut${trenchBreachesSrz ? ' (Hits SRZ)' : ''}
+      </text>
+    `
+      : `
+      <rect x="${cxTree + crzHalfPx - 108}" y="${gradeY - 32}" width="114" height="19" rx="5" fill="var(--highlight-bg)" stroke="var(--accent-green)" stroke-width="1" />
+      <text x="${cxTree + crzHalfPx - 51}" y="${gradeY - 19}" text-anchor="middle" font-size="9.5" font-weight="700" fill="var(--accent-bright)">
+        0% Trenching (Intact)
+      </text>
+    `;
+
+  return `
+    <svg
+      class="oa-living-lens-svg"
+      viewBox="0 0 760 322"
+      role="img"
+      aria-label="${escapeHtml(speciesCommon)} living cross-section: ${dbhIn} inch DBH, ${crzFt.toFixed(1)} ft Critical Root Zone, ${srzFt.toFixed(1)} ft Structural Root Zone, and Mattheck t over R ratio ${tOverR.toFixed(2)}"
+    >
+      <title>${escapeHtml(speciesCommon)} Living Architecture and Trunk Shell Cross-Section</title>
+      <desc>Left diagram shows canopy, root flare, AS 4970 Structural Root Zone (${srzFt.toFixed(1)} ft), ANSI A300 Critical Root Zone (${crzFt.toFixed(1)} ft), 1.5x Tree Influence Zone (${tizFt.toFixed(1)} ft), and ${disturbancePct}% trench disturbance. Right diagram shows trunk cross-section with ${cavityPct}% internal cavity width and t/R = ${tOverR.toFixed(2)} relative to the 0.30 Claus Mattheck threshold.</desc>
+
+      <!-- Left Viewport Title -->
+      <text x="22" y="21" font-size="11" font-weight="700" fill="var(--text-muted)" letter-spacing="0.04em">
+        LIVING CANOPY, ROOT PLATE &amp; SOIL SPONGE (SCALE VIEW)
+      </text>
+
+      <!-- Underground Vadose Soil Sponge Horizon -->
+      <rect x="16" y="${gradeY}" width="444" height="118" rx="10" fill="var(--accent-copper)" fill-opacity="0.07" />
+
+      <!-- 1.5x TIZ Mycorrhizal Influence Zone Band -->
+      <rect
+        x="${round1(cxTree - tizHalfPx)}"
+        y="${gradeY + 8}"
+        width="${round1(tizHalfPx * 2)}"
+        height="82"
+        rx="12"
+        fill="var(--accent-copper)"
+        fill-opacity="0.09"
+        stroke="var(--accent-copper)"
+        stroke-width="1.2"
+        stroke-dasharray="5 4"
+      />
+
+      <!-- ANSI A300 1.0x CRZ Feeder Root Zone Band -->
+      <rect
+        x="${round1(cxTree - crzHalfPx)}"
+        y="${gradeY + 14}"
+        width="${round1(crzHalfPx * 2)}"
+        height="58"
+        rx="10"
+        fill="var(--accent-green)"
+        fill-opacity="0.14"
+        stroke="var(--accent-bright)"
+        stroke-width="1.6"
+      />
+
+      <!-- AS 4970 Structural Windthrow Plate (SRZ) -->
+      <rect
+        x="${round1(cxTree - srzHalfPx)}"
+        y="${gradeY + 18}"
+        width="${round1(srzHalfPx * 2)}"
+        height="34"
+        rx="8"
+        fill="var(--accent-copper)"
+        fill-opacity="0.24"
+        stroke="var(--accent-copper)"
+        stroke-width="1.8"
+      />
+
+      <!-- Organic Lateral Root Architecture & Mycorrhizal Filaments -->
+      <path
+        d="M ${cxTree - trunkHalfPx} ${gradeY + 6} Q ${cxTree - srzHalfPx} ${gradeY + 26}, ${cxTree - crzHalfPx + 8} ${gradeY + 34}
+           M ${cxTree + trunkHalfPx} ${gradeY + 6} Q ${cxTree + srzHalfPx} ${gradeY + 26}, ${cxTree + crzHalfPx - 8} ${gradeY + 34}
+           M ${cxTree - 4} ${gradeY + 10} Q ${cxTree - srzHalfPx * 0.7} ${gradeY + 42}, ${cxTree - tizHalfPx + 14} ${gradeY + 56}
+           M ${cxTree + 4} ${gradeY + 10} Q ${cxTree + srzHalfPx * 0.7} ${gradeY + 42}, ${cxTree + tizHalfPx - 14} ${gradeY + 56}"
+        fill="none"
+        stroke="var(--accent-copper)"
+        stroke-width="2.1"
+        stroke-linecap="round"
+        opacity="0.82"
+      />
+
+      <!-- Canopy Crown Layered Botanical Silhouette -->
+      <ellipse
+        cx="${cxTree - Math.round(canopyRx * 0.28)}"
+        cy="${canopyCy + 8}"
+        rx="${round1(canopyRx * 0.68)}"
+        ry="${round1(canopyRy * 0.78)}"
+        fill="var(--accent-green)"
+        fill-opacity="0.2"
+        stroke="var(--accent-bright)"
+        stroke-width="1.2"
+      />
+      <ellipse
+        cx="${cxTree + Math.round(canopyRx * 0.28)}"
+        cy="${canopyCy + 10}"
+        rx="${round1(canopyRx * 0.66)}"
+        ry="${round1(canopyRy * 0.76)}"
+        fill="var(--accent-green)"
+        fill-opacity="0.2"
+        stroke="var(--accent-bright)"
+        stroke-width="1.2"
+      />
+      <ellipse
+        cx="${cxTree}"
+        cy="${canopyCy}"
+        rx="${canopyRx}"
+        ry="${canopyRy}"
+        fill="var(--accent-green)"
+        fill-opacity="0.28"
+        stroke="var(--accent-bright)"
+        stroke-width="1.8"
+      />
+
+      <!-- Trunk & Basal Root Flare -->
+      <path
+        d="M ${cxTree - trunkHalfPx * 0.8} ${canopyCy + 14}
+           L ${cxTree - trunkHalfPx} ${gradeY - 14}
+           Q ${cxTree - trunkHalfPx - 2} ${gradeY - 2}, ${cxTree - flareHalfPx} ${gradeY + 6}
+           L ${cxTree + flareHalfPx} ${gradeY + 6}
+           Q ${cxTree + trunkHalfPx + 2} ${gradeY - 2}, ${cxTree + trunkHalfPx} ${gradeY - 14}
+           L ${cxTree + trunkHalfPx * 0.8} ${canopyCy + 14} Z"
+        fill="var(--accent-copper)"
+        fill-opacity="0.88"
+      />
+      <!-- Scaffold limbs -->
+      <path
+        d="M ${cxTree - 2} ${canopyCy + 26} Q ${cxTree - 24} ${canopyCy + 4}, ${cxTree - 46} ${canopyCy - 6}
+           M ${cxTree + 2} ${canopyCy + 22} Q ${cxTree + 26} ${canopyCy + 2}, ${cxTree + 48} ${canopyCy - 8}"
+        fill="none"
+        stroke="var(--accent-copper)"
+        stroke-width="3.2"
+        stroke-linecap="round"
+      />
+
+      <!-- Soil Grade Line -->
+      <line x1="16" y1="${gradeY}" x2="460" y2="${gradeY}" stroke="var(--text-main)" stroke-opacity="0.45" stroke-width="1.5" />
+      <text x="24" y="${gradeY - 6}" font-size="9.5" font-weight="600" fill="var(--text-muted)">Soil Line</text>
+
+      <!-- Trench / Disturbance Cut Overlay -->
+      ${trenchMarkup}
+
+      <!-- Zone Labels Below Grade -->
+      <text x="${cxTree}" y="${gradeY + 39}" text-anchor="middle" font-size="9.5" font-weight="700" fill="var(--text-main)">
+        SRZ Windthrow Plate: ${srzFt.toFixed(1)} ft
+      </text>
+      <text x="${cxTree}" y="${gradeY + 67}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--accent-bright)">
+        ANSI A300 CRZ: ${crzFt.toFixed(1)} ft radius
+      </text>
+      <text x="${cxTree}" y="${gradeY + 85}" text-anchor="middle" font-size="9.5" font-weight="600" fill="var(--accent-copper)">
+        1.5x Mycorrhizal Sponge (TIZ: ${tizFt.toFixed(1)} ft · ${Math.round(stormGallons).toLocaleString('en-US')} gal / 1-in storm)
+      </text>
+
+      <!-- Viewport Divider -->
+      <line x1="474" y1="16" x2="474" y2="306" stroke="var(--border-subtle)" stroke-width="1.2" />
+
+      <!-- Right Viewport Title -->
+      <text x="612" y="21" text-anchor="middle" font-size="11" font-weight="700" fill="var(--text-muted)" letter-spacing="0.04em">
+        TRUNK SHELL RING (MATTHECK t/R)
+      </text>
+
+      <!-- Outer Bark Circle -->
+      <circle cx="${ringCx}" cy="${ringCy}" r="${barkOuterR}" fill="var(--accent-copper)" fill-opacity="0.82" stroke="var(--border-main)" stroke-width="1.5" />
+
+      <!-- Living Cambium & Sapwood Ring -->
+      <circle cx="${ringCx}" cy="${ringCy}" r="${woodOuterR + 3}" fill="none" stroke="var(--accent-bright)" stroke-width="3.2" />
+
+      <!-- Sound Structural Wood Cylinder -->
+      <circle cx="${ringCx}" cy="${ringCy}" r="${woodOuterR}" fill="var(--veil-bg)" stroke="var(--accent-copper)" stroke-width="1.2" />
+
+      <!-- Subtle Growth Rings -->
+      <circle cx="${ringCx}" cy="${ringCy}" r="${round1(woodOuterR * 0.85)}" fill="none" stroke="var(--accent-copper)" stroke-opacity="0.3" stroke-width="1" />
+      <circle cx="${ringCx}" cy="${ringCy}" r="${round1(woodOuterR * 0.52)}" fill="none" stroke="var(--accent-copper)" stroke-opacity="0.24" stroke-width="1" />
+
+      <!-- Internal Heartwood Cavity (R - t) -->
+      ${
+        cavityR > 1.5
+          ? `<circle cx="${ringCx}" cy="${ringCy}" r="${cavityR}" fill="var(--bg-deep)" stroke="var(--text-muted)" stroke-width="1.4" />`
+          : ''
+      }
+
+      <!-- Claus Mattheck t/R = 0.30 Buckling Threshold Reference Ring -->
+      <circle
+        cx="${ringCx}"
+        cy="${ringCy}"
+        r="${mattheckThresholdR}"
+        fill="none"
+        stroke="${isSound ? 'var(--accent-bright)' : 'var(--danger-red)'}"
+        stroke-width="1.6"
+        stroke-dasharray="4 3"
+      />
+
+      <!-- Center Readout inside Trunk Ring -->
+      <text x="${ringCx}" y="${ringCy - 4}" text-anchor="middle" font-size="13" font-weight="800" fill="var(--text-main)">
+        t/R = ${tOverR.toFixed(2)}
+      </text>
+      <text x="${ringCx}" y="${ringCy + 13}" text-anchor="middle" font-size="9.5" font-weight="600" fill="var(--text-muted)">
+        ${cavityPct === 0 ? 'Solid cylinder' : `${cavityPct}% hollow width`}
+      </text>
+      <text x="${ringCx}" y="${ringCy + 27}" text-anchor="middle" font-size="8.8" font-weight="600" fill="var(--text-muted)">
+        R = ${trunkRadiusCm.toFixed(1)} cm
+      </text>
+
+      <!-- Mattheck 0.30 Reference Pointer -->
+      <text x="${ringCx}" y="52" text-anchor="middle" font-size="9.5" font-weight="600" fill="var(--text-muted)">
+        Dashed ring: Mattheck 0.30 limit
+      </text>
+
+      <!-- Structural Verdict Pill -->
+      <rect
+        x="492"
+        y="250"
+        width="244"
+        height="48"
+        rx="9"
+        fill="${shellBadgeFill}"
+        stroke="${shellBadgeStroke}"
+        stroke-width="1.4"
+      />
+      <text x="614" y="270" text-anchor="middle" font-size="11" font-weight="800" fill="${shellBadgeText}">
+        ${shellVerdictLabel}
+      </text>
+      <text x="614" y="286" text-anchor="middle" font-size="9.5" font-weight="600" fill="var(--text-main)">
+        ${shellSubLabel}
+      </text>
+    </svg>
+  `;
+}
+
+/**
+ * Initialize the Interactive Living Tree Lens on web/index.html (#landing-quick-calc)
+ * and global Veil/Popover/Dialog chrome across all routes.
+ */
+export function initLivingLensUI() {
+  initVeilAndHandoffChrome();
+
+  if (typeof document === 'undefined') return;
+  const qcRoot = document.getElementById('landing-quick-calc');
+  if (!qcRoot || qcRoot.dataset.oaLivingLensReady === 'true') return;
+  qcRoot.dataset.oaLivingLensReady = 'true';
+
+  const dbhSlider = document.getElementById('qc-dbh-slider');
+  const jurSelect = document.getElementById('qc-jurisdiction-select');
+  const cavitySlider = document.getElementById('qc-cavity-slider');
+  const disturbanceSlider = document.getElementById('qc-disturbance-slider');
+  if (!dbhSlider || !jurSelect) return;
+
+  let activeArchetype = ARCHETYPE_SPECIMENS[0];
+
+  const archetypeButtons = qcRoot.querySelectorAll('[data-archetype-key]');
+
+  const setActiveArchetypeButton = (key) => {
+    archetypeButtons.forEach((btn) => {
+      const match = btn.getAttribute('data-archetype-key') === key;
+      btn.classList.toggle('active', match);
+      btn.setAttribute('aria-pressed', String(match));
+    });
+  };
+
+  const updateLivingLens = () => {
+    const dbhIn = Number(dbhSlider.value) || 30;
+    const dbhCm = round2(dbhIn * 2.54);
+    const circumferenceIn = round1(dbhIn * Math.PI);
+    const circFeet = Math.floor(circumferenceIn / 12);
+    const circRemIn = round1(circumferenceIn - circFeet * 12);
+
+    const cavityPct = cavitySlider ? Math.max(0, Math.min(80, Number(cavitySlider.value) || 0)) : 62;
+    const tOverR = round2(Math.max(0.15, Math.min(1.0, 1 - cavityPct / 100)));
+    const disturbancePct = disturbanceSlider
+      ? Math.max(0, Math.min(50, Number(disturbanceSlider.value) || 0))
+      : 10;
+
+    const jurId = jurSelect.value || 'tx-austin';
+    const muni =
+      ALL_MUNICIPALITIES.find((m) => m.id === jurId) || ALL_MUNICIPALITIES[0];
+
+    const baseCase =
+      FIXED_PARITY_CASES[activeArchetype?.caseIndex ?? 0] || FIXED_PARITY_CASES[0];
+    const clonedCase = deepClone(baseCase);
+    const synthAssessment = clonedCase.assessment;
+    const sb = synthAssessment.structural_baseline;
+    const rh = synthAssessment.rhizosphere_and_root_collar;
+    const soil = synthAssessment.soil_and_microbiome_baseline;
+
+    const crzMult = Number(muni?.plan_rules?.root_zone?.crz_ft_per_inch) || 1.0;
+    const crzMin = Number(muni?.plan_rules?.root_zone?.crz_min_ft) || 0;
+    const crz = calculateCRZ(dbhIn, crzMult, crzMin);
+    const tpz = calculateTPZ(dbhIn, 'inches', 'US_1_1', crzMult);
+
+    const baseDbhIn = activeArchetype?.dbhIn || 30;
+    const scaleRatio = dbhIn / baseDbhIn;
+
+    // Keep multi-stem proportional only when matching Georgetown Pecan archetype at 27 in
+    const isMulti =
+      activeArchetype?.key === 'georgetown-pecan' && Math.abs(dbhIn - 27) < 0.5;
+    sb.dbh_cm = dbhCm;
+    sb.is_multistem = isMulti;
+    if (!isMulti) {
+      sb.multistem_aggregation_method = 'single_stem';
+      delete sb.stem_diameters_cm;
+    }
+    sb.sound_shell_thickness_ratio_t_over_r = tOverR;
+    sb.height_m = round1(Math.max(6.0, (Number(sb.height_m) || 16.5) * scaleRatio));
+    sb.crown_spread_ns_m = round1(
+      Math.max(5.0, (Number(sb.crown_spread_ns_m) || 22.0) * scaleRatio)
+    );
+    sb.crown_spread_ew_m = round1(
+      Math.max(5.0, (Number(sb.crown_spread_ew_m) || 24.0) * scaleRatio)
+    );
+
+    const scaledFlareCm = round1(
+      Math.max(dbhCm * 1.15, (Number(rh.root_flare_diameter_cm) || dbhCm * 1.25) * scaleRatio)
+    );
+    const srz = calculateSRZ(scaledFlareCm / 2.54, dbhIn);
+    const tizRadiusFt = round2(crz.radius_feet * 1.5);
+    const tizRadiusM = round2(crz.radius_meters * 1.5);
+    const tizAreaM2 = round2(Math.PI * tizRadiusM * tizRadiusM);
+    const tizAreaSqft = Math.round(Math.PI * tizRadiusFt * tizRadiusFt);
+
+    rh.root_flare_diameter_cm = scaledFlareCm;
+    rh.crz_radius_m = round2(crz.radius_meters);
+    rh.srz_radius_m = round2(srz.radius_meters);
+    rh.tiz_radius_m = tizRadiusM;
+
+    if (synthAssessment.understory_and_guild_prescription) {
+      synthAssessment.understory_and_guild_prescription.mulch_coverage_area_m2 = tizAreaM2;
+    }
+
+    const speciesCommon = sb.species_common || 'Live Oak';
+    const speciesSci = sb.species_scientific || 'Quercus virginiana';
+
+    // Evaluate municipal protection & removal liability
+    const baseTreeRow = {
+      id: 1,
+      tag: sb.tree_tag || 'LENS-01',
+      species: speciesCommon,
+      species_common: speciesCommon,
+      species_scientific: speciesSci,
+      stems_inches: isMulti ? [20, 14] : [dbhIn],
+      dbh_inches: dbhIn,
+      condition_score: 8,
+      removal: false,
+      lat: muni?.coordinates?.lat || 30.2672,
+      lng: muni?.coordinates?.lng || -97.7431,
+    };
+
+    const evaluatedKeep = evaluateTreeInventory([baseTreeRow], muni);
+    const keepRow = evaluatedKeep[0];
+    const protLabel = statusLabel(keepRow);
+
+    const evaluatedRemoved = evaluateTreeInventory(
+      [{ ...baseTreeRow, removal: true }],
+      muni
+    );
+    const permitIfRemoved = permitDetermination(evaluatedRemoved, muni);
+    const permitKeep = permitDetermination(evaluatedKeep, muni);
+    const permitText = permitSummary(permitKeep);
+    const mitIfRemoved = computeMitigationPlan(evaluatedRemoved, muni);
+    const cashInLieuUsd = Math.round(Number(mitIfRemoved?.cash_in_lieu_usd) || 0);
+
+    const maxAllowedCrzPct = Number(
+      muni?.plan_rules?.root_zone?.max_disturbed_pct ??
+        muni?.plan_rules?.root_zone?.max_encroachment_pct ??
+        25
+    );
+    const rootRuleViolated = disturbancePct > maxAllowedCrzPct;
+
+    sb.municipal_permit_disposition = {
+      jurisdiction_id: muni.id,
+      ordinance_citation: muni.ordinance_numbers,
+      protection_tier: keepRow.heritage
+        ? 'Heritage'
+        : keepRow.protected
+        ? 'Protected'
+        : 'Unregulated',
+      permit_required: Boolean(permitIfRemoved.required),
+      recommended_disposition:
+        tOverR >= 0.30
+          ? 'Preservation_With_Rhizosphere_Remediation'
+          : 'Structural_Risk_Reduction_Pruning',
+      seasonal_oak_wilt_restriction_active: false,
+    };
+
+    clonedCase.ordinance_id = muni.id;
+    clonedCase.crz_disturbed_pct = disturbancePct;
+    clonedCase.proposed_removal = false;
+
+    // Core biomechanical, allometric, holobiont, soil sponge, triage & LEO-RCA engines
+    const biomechanics = evaluateBiomechanicsAndRhizosphere(synthAssessment);
+    const valuation = computeHolobiontValuation(synthAssessment);
+    const economics = computeRegenerativePracticeEconomics(synthAssessment);
+    const triage = computePhasedStewardshipTriage(synthAssessment, economics);
+    const ecoBenefits = calculateTreeEcosystemBenefits({
+      species_name: speciesSci,
+      common_name: speciesCommon,
+      dbh_inches: dbhIn,
+      condition_class: clonedCase.condition_class || 'Good',
+    });
+    const ageEst = estimateTreeAge({
+      dbh_inches: dbhIn,
+      base_growth_factor: activeArchetype?.growthFactor || 4.5,
+      site_condition: clonedCase.site_condition || 'Open Grown / Parkland',
+    });
+    const sponge = estimateSoilSpongeCapacity({
+      tiz_area_m2: tizAreaM2,
+      infiltration_mm_hr: Number(soil?.infiltration_rate_mm_hr) || 18,
+      organic_matter_percent: Number(soil?.organic_matter_pct) || 2.6,
+    });
+
+    const provenance = inspectMunicipalityProvenance(muni);
+    const leoBrief = compileLeoRcaBrief(synthAssessment, {
+      municipality: muni,
+      evaluatedRow: keepRow,
+      permitText,
+      mitigationIfRemoved: mitIfRemoved,
+      biomechanics,
+      valuation,
+      economics,
+      triage,
+      rootZones: { crz, tpz, srz },
+      provenance,
+    });
+
+    const permalinkHash = encodeAssessmentPermalink(clonedCase);
+    const shareUrl = buildDemoPermalinkUrl(permalinkHash);
+
+    const holobiontUsd = Math.round(
+      Number(valuation.holobiont_200yr_biological_equity_usd) || 0
+    );
+    const ctlaUsd = Math.round(Number(valuation.ctla_10th_ed_depreciated_usd) || 0);
+    const stage1Usd = Math.round(Number(triage.stages[0]?.client_price_usd) || 0);
+
+    // 1. Update Control Readouts
+    const setElText = (id, val) => {
+      const node = document.getElementById(id);
+      if (node) node.textContent = val;
+    };
+
+    setElText('qc-dbh-display', `${dbhIn} in`);
+    setElText('qc-dbh-cm-display', `${dbhCm.toFixed(1)} cm`);
+    setElText(
+      'qc-tape-circumference',
+      `Tape around trunk at 4.5 ft: ${circumferenceIn.toFixed(1)} in (${circFeet} ft ${circRemIn.toFixed(1)} in)`
+    );
+    setElText(
+      'qc-cavity-display',
+      cavityPct === 0 ? '0% (Solid Wood)' : `${cavityPct}% hollow`
+    );
+
+    const tOverREl = document.getElementById('qc-toverr-display');
+    if (tOverREl) {
+      tOverREl.textContent = `t/R = ${tOverR.toFixed(2)} (${
+        tOverR >= 0.30 ? 'Sound >= 0.30' : 'Thin < 0.30'
+      })`;
+      tOverREl.className = tOverR >= 0.30 ? 'oa-tape-pill' : 'oa-tape-pill badge-removal';
+    }
+
+    setElText('qc-disturbance-display', `${disturbancePct}% of CRZ`);
+    const disturbedSqft = Math.round((crz.area_sqft * disturbancePct) / 100);
+    const disturbanceHintText =
+      disturbancePct === 0
+        ? 'Zero trenching or grade cut inside the Critical Root Zone.'
+        : disturbancePct <= 15
+        ? `Affects ~${disturbedSqft.toLocaleString('en-US')} sq ft of outer feeder roots; specify 150 psi AirSpade trenching rather than mechanical cutting.`
+        : rootRuleViolated
+        ? `Affects ~${disturbedSqft.toLocaleString('en-US')} sq ft and exceeds the ${maxAllowedCrzPct}% CRZ disturbance threshold (${muni.name}).`
+        : `Affects ~${disturbedSqft.toLocaleString('en-US')} sq ft inside the ${crz.radius_feet.toFixed(1)} ft CRZ; protect the inner ${srz.radius_feet.toFixed(1)} ft windthrow plate.`;
+    setElText('qc-disturbance-hint', disturbanceHintText);
+
+    // 2. Update Core Metric Grid (preserving legacy #qc-* IDs)
+    setElText('qc-crz-val', `${crz.radius_feet.toFixed(1)} ft (${crz.radius_meters.toFixed(2)} m)`);
+    setElText(
+      'qc-tpz-val',
+      `${Math.round(crz.area_sqft).toLocaleString('en-US')} sq ft CRZ | ${tizAreaSqft.toLocaleString('en-US')} sq ft sponge`
+    );
+    setElText('qc-srz-val', `${srz.radius_feet.toFixed(1)} ft (${srz.radius_meters.toFixed(2)} m)`);
+    const permitSuffix = permitIfRemoved.required
+      ? ' (Removal Permit Req.)'
+      : permitIfRemoved.unknown
+      ? ' (Verify City Rule)'
+      : '';
+    setElText('qc-status-val', `${protLabel}${permitSuffix}`);
+    setElText('qc-holobiont-val', formatUsd(holobiontUsd));
+    setElText(
+      'qc-ctla-val',
+      `CTLA: ${formatUsd(ctlaUsd)} | Nowak: ${formatUsd(ecoBenefits.total_annual_benefits_usd)}/yr`
+    );
+    setElText(
+      'qc-citation-line',
+      `Citation: ${muni.ordinance_numbers} | ${speciesCommon} (~${ageEst.estimated_age_years} yrs) | Mattheck t/R = ${tOverR.toFixed(2)}`
+    );
+
+    const demoLink = document.getElementById('qc-open-demo-link');
+    if (demoLink) {
+      demoLink.setAttribute('href', `./demo/index.html${permalinkHash}`);
+    }
+
+    // 3. Render Dual Real-Time Botanical SVG
+    const svgStage = document.getElementById('qc-living-svg-container');
+    if (svgStage) {
+      svgStage.innerHTML = renderLivingLensSVG({
+        speciesCommon,
+        dbhIn,
+        cavityPct,
+        tOverR,
+        disturbancePct,
+        crzFt: crz.radius_feet,
+        srzFt: srz.radius_feet,
+        tizFt: tizRadiusFt,
+        stormGallons: sponge.storm_1in_capture_gallons,
+        trunkRadiusCm: biomechanics.biomechanics.trunk_radius_cm,
+        soundShellCm: biomechanics.biomechanics.sound_shell_cm,
+      });
+    }
+
+    // 4. Update Innate Answer-First Verdict (LEO-RCA Slot 4)
+    const verdictCard = document.getElementById('qc-innate-verdict-card');
+    if (verdictCard) {
+      verdictCard.classList.toggle('is-thin-shell', tOverR < 0.30);
+    }
+    setElText('qc-innate-verdict-headline', leoBrief.answer_first.headline_verdict);
+
+    const threeSentenceDiagnosis = [
+      `${
+        tOverR >= 0.30
+          ? `At ${dbhIn} inches DBH (~${ageEst.estimated_age_years} years old), this ${speciesCommon} retains a ${biomechanics.biomechanics.sound_shell_cm} cm living outer cylinder (t/R = ${tOverR.toFixed(2)}, above Claus Mattheck's 0.30 buckling threshold) anchored by a ${srz.radius_feet.toFixed(1)} ft structural root plate.`
+          : `At ${dbhIn} inches DBH (~${ageEst.estimated_age_years} years old), the sound wood wall has thinned to ${biomechanics.biomechanics.sound_shell_cm} cm (t/R = ${tOverR.toFixed(2)}, below Claus Mattheck's 0.30 threshold), so on-site sonic tomography and crown load reduction come before soil work.`
+      }`,
+      `Under ${muni.name}, ${muni.state} (${muni.ordinance_numbers}), it classifies as ${protLabel} with a ${crz.radius_feet.toFixed(1)} ft Critical Root Zone${
+        disturbancePct > 0 ? ` and ${disturbancePct}% proposed root-zone trenching` : ''
+      }.`,
+      `Its underground mycorrhizal zone captures ${Math.round(sponge.storm_1in_capture_gallons).toLocaleString('en-US')} gallons in a 1-inch rain, and Day-1 Stage 1 root-collar relief (${formatUsd(stage1Usd)}) costs less than a one-time chainsaw bid (${formatUsd(triage.removal_bid_usd)}).`,
+    ].join(' ');
+    setElText('qc-innate-verdict-body', threeSentenceDiagnosis);
+    setElText('qc-innate-falsifier', `Physical check: ${leoBrief.answer_first.falsifier}`);
+
+    // 5. Update Two Futures Comparison Strip
+    setElText('qc-future-a-bid', formatUsd(triage.removal_bid_usd));
+    setElText(
+      'qc-future-a-mitigation',
+      cashInLieuUsd > 0
+        ? `${formatUsd(cashInLieuUsd)} city mitigation fee`
+        : `${round1(mitIfRemoved?.replacement_inches_owed || 0)} caliper in replacement`
+    );
+    setElText(
+      'qc-future-a-lost',
+      `${formatUsd(holobiontUsd)} living equity lost (CTLA lumber value: ${formatUsd(ctlaUsd)})`
+    );
+
+    setElText('qc-future-b-stage1', formatUsd(stage1Usd));
+    setElText(
+      'qc-future-b-savings',
+      triage.day_one_undercuts_removal
+        ? `${formatUsd(triage.day_one_savings_vs_removal_usd)} less than Day-1 removal`
+        : 'Phased Stage 1 diagnostic & root-collar relief'
+    );
+    setElText(
+      'qc-future-b-sponge',
+      `${Math.round(sponge.storm_1in_capture_gallons).toLocaleString('en-US')} gal / 1-in storm + ${Math.round(sponge.som_sponge_capacity_gallons).toLocaleString('en-US')} gal SOM reserve`
+    );
+    setElText(
+      'qc-future-b-margin',
+      `${triage.net_margin_multiplier.toFixed(2)}x higher 5-yr arborist net margin (${formatUsd(triage.full_5yr_practitioner_net_usd)} vs ${formatUsd(triage.removal_practitioner_net_usd)})`
+    );
+
+    // 6. Update Act II 3-Stage Triage Breakdown & Act IV Live LEO-RCA Preview
+    const triageGrid = document.getElementById('qc-triage-stages-grid');
+    if (triageGrid && Array.isArray(triage.stages)) {
+      triageGrid.innerHTML = triage.stages
+        .map((st) => {
+          const stageNum = st.stage_number || st.stage || 1;
+          const desc = st.scope || st.summary || '';
+          return `
+            <div class="oa-triage-stage">
+              <span class="oa-stage-tag">Stage ${escapeHtml(stageNum)} &middot; ${escapeHtml(st.window)}</span>
+              <strong>${escapeHtml(st.title)}</strong>
+              <span class="oa-stage-price">${formatUsd(st.client_price_usd)}</span>
+              <span class="hint">Practitioner net: ${formatUsd(st.practitioner_net_usd)}</span>
+              <p class="hint">${escapeHtml(desc)}</p>
+            </div>
+          `;
+        })
+        .join('');
+    }
+
+    setElText('qc-leo-status-preview', leoBrief.status_line);
+    const leoAnchorsEl = document.getElementById('qc-leo-anchors-preview');
+    if (leoAnchorsEl) {
+      const anchors = leoBrief.oracle_anchors || {};
+      const lines = Object.entries(anchors).map(
+        ([k, v]) => `[[oracle:${k}=${v}]]`
+      );
+      lines.push(`sha256:${String(leoBrief.assessment_sha256 || '').slice(0, 24)}...`);
+      leoAnchorsEl.textContent = lines.join('\n');
+    }
+
+    // 7. Store current handoff state for #btn-open-handoff-dialog
+    const oakWiltWarn =
+      isOakSpecies(speciesCommon, speciesSci) && String(muni.id).startsWith('tx-')
+        ? 'Avoid non-emergency oak pruning Feb 1 through Jun 30 in Texas and paint any fresh wound within 10 minutes.'
+        : '';
+
+    qcRoot._currentHandoffParams = {
+      speciesCommon,
+      speciesScientific: speciesSci,
+      dbhInches: dbhIn,
+      cityLabel: `${muni.name}, ${muni.state} (${muni.ordinance_numbers})`,
+      protectionStatus: protLabel,
+      tOverR,
+      crzFeet: crz.radius_feet,
+      holobiontUsd,
+      ctlaUsd,
+      cashInLieuUsd,
+      stage1Usd,
+      removalBidUsd: triage.removal_bid_usd,
+      marginMultiplier: triage.net_margin_multiplier,
+      oakWiltWarning: oakWiltWarn,
+      shareUrl,
+    };
+  };
+
+  // Archetype preset buttons
+  archetypeButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const key = btn.getAttribute('data-archetype-key');
+      const found = ARCHETYPE_SPECIMENS.find((a) => a.key === key);
+      if (!found) return;
+      activeArchetype = found;
+      setActiveArchetypeButton(found.key);
+
+      dbhSlider.value = String(found.dbhIn);
+      jurSelect.value = found.ordinanceId;
+      if (cavitySlider) cavitySlider.value = String(found.cavityPct);
+      if (disturbanceSlider) disturbanceSlider.value = String(found.disturbancePct);
+      updateLivingLens();
+    });
+  });
+
+  // Bubble-phase listeners on #landing-quick-calc always execute AFTER target-phase listeners in spec-ui.js
+  qcRoot.addEventListener('input', () => {
+    updateLivingLens();
+  });
+  qcRoot.addEventListener('change', () => {
+    updateLivingLens();
+  });
+
+  // Wire "Send This Tree to Your Arborist" button
+  const openHandoffBtn = document.getElementById('btn-open-handoff-dialog');
+  if (openHandoffBtn) {
+    openHandoffBtn.addEventListener('click', () => {
+      if (!qcRoot._currentHandoffParams) updateLivingLens();
+      openArboristHandoffDialog(qcRoot._currentHandoffParams);
+    });
+  }
+
+  // Run immediately and queue microtask so Living Lens wins regardless of init order in web/app.js
+  updateLivingLens();
+  if (typeof queueMicrotask === 'function') {
+    queueMicrotask(() => updateLivingLens());
+  }
+}

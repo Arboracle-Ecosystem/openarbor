@@ -12,7 +12,7 @@
 
 Proprietary arboriculture and urban forestry software often locks field observations, municipal tree protection rules, and preservation plans inside closed cloud databases. When a practitioner, municipal forester, or researcher cannot inspect the underlying allometric equations, verify statutory ordinance citations, or export standard `GeoJSON` directly into `QGIS` or `ArcGIS Field Maps`, the software becomes a barrier rather than an instrument.
 
-**Open Arbor** (`v2.0`) refactors the core deterministic engines developed for the Arboracle platform into a zero-dependency, local-first open-standards library and dataset. Every calculation traces to a published arboricultural standard (`ANSI A300`, `ISA BMP`, `AS 4970`, `BS 5837`), peer-reviewed urban forestry literature (`Nowak`, `McPherson & Simpson`, `Xiao`, `John White FCIN12`), or a cited municipal code section.
+**Open Arbor** (`v2.1`) refactors the core deterministic engines developed for the Arboracle platform into a zero-dependency, local-first open-standards library, field portal, and dataset. Every calculation traces to a published arboricultural standard (`ANSI A300`, `ISA BMP`, `AS 4970`, `BS 5837`), peer-reviewed urban forestry literature (`Nowak`, `McPherson & Simpson`, `Xiao`, `John White FCIN12`, `Claus Mattheck`), or a cited municipal code section.
 
 ---
 
@@ -37,9 +37,14 @@ openarbor/
 │       ├── rootZone.js                         # CRZ, TPZ, SRZ, multi-stem, and spatial union de-duplication
 │       ├── ordinanceEngine.js                  # Declarative municipal tree protection and mitigation ledger
 │       ├── ecosystemBenefits.js                # Nowak allometrics, Xiao hydrology, and OGC GeoJSON exporter
-│       └── rcaEngine.js                        # RCA-Spec v2.0 Mattheck t/R biomechanics, dual valuation, economics, and CLI compilers
+│       ├── soilFunction.js                     # Optional soil_function provenance validator and NRCS vadose sponge estimator
+│       ├── rcaEngine.js                        # RCA-Spec v2.0 Mattheck t/R biomechanics, dual valuation, economics, and CLI compilers
+│       └── leoRcaEngine.js                     # LEO-RCA Profile 01 6-slot compiler, 3-stage phased triage, oracle verifier, and handoff briefs
 ├── tests/
-│   └── verify_openarbor.mjs                    # Deterministic zero-dependency Node.js verification suite (9 test suites)
+│   ├── verify_openarbor.mjs                    # Core deterministic Node.js verification suite (10 PASS groups)
+│   ├── verify_soil_function.mjs                # Soil provenance and GeoJSON backward-parity suite (4 PASS groups)
+│   ├── verify_mcp.mjs                          # Subprocess MCP JSON-RPC 2.0 suite (10 PASS groups)
+│   └── verify_masterwork_100x.mjs              # Live build, permalink, offline SW, and LEO-RCA suite (9 PASS groups)
 └── docs/                                       # Architectural blueprints and practice specifications (docs/13_RCA_PRACTICE_SPECIFICATION_v1.md)
 ```
 
@@ -74,13 +79,13 @@ Implements the Post-ISA / Post-ASCA diagnostic and appraisal standards governed 
 
 ## Platform: engines, MCP, and the ordinance commons
 
-<a href="package.json"><img src="https://img.shields.io/badge/npm-v2.0.0_(local)-cb3837.svg" alt="npm: v2.0.0 (local)" /></a>
-<a href="server/mcp/README.md"><img src="https://img.shields.io/badge/MCP-Compatible_(6_Tools)-2d6a4f.svg" alt="MCP: Compatible (6 Tools)" /></a>
-<a href="data/ordinances/CONTRIBUTING_DATA.md"><img src="https://img.shields.io/badge/Ordinance_Commons-6_Cities-74ac00.svg" alt="Ordinance Commons: 6 Cities" /></a>
+<a href="package.json"><img src="https://img.shields.io/badge/npm-v2.1.0_(local)-cb3837.svg" alt="npm: v2.1.0 (local)" /></a>
+<a href="server/mcp/README.md"><img src="https://img.shields.io/badge/MCP-Compatible_(8_Tools)-2d6a4f.svg" alt="MCP: Compatible (8 Tools)" /></a>
+<a href="data/ordinances/CONTRIBUTING_DATA.md"><img src="https://img.shields.io/badge/Ordinance_Commons-8_Cities-74ac00.svg" alt="Ordinance Commons: 8 Cities" /></a>
 
-Open Arbor packages its four zero-dependency calculation modules as subpath exports (`openarbor/root-zone`, `openarbor/ordinance-engine`, `openarbor/ecosystem-benefits`, and `openarbor/rca-engine`) under `AGPL-3.0-only`. Any Node.js application, GIS script, or research pipeline can import the deterministic functions directly without cloud keys or native binary compilation. See [`docs/14_OPENARBOR_PLATFORM_100X.md`](docs/14_OPENARBOR_PLATFORM_100X.md) for the platform architecture and dual-surface licensing model.
+Open Arbor packages its six zero-dependency calculation modules as subpath exports (`openarbor/root-zone`, `openarbor/ordinance-engine`, `openarbor/ecosystem-benefits`, `openarbor/soil-function`, `openarbor/rca-engine`, and `openarbor/leo-rca`) under `AGPL-3.0-only`. Any Node.js application, GIS script, or research pipeline can import the deterministic functions directly without cloud keys or native binary compilation. See [`docs/14_OPENARBOR_PLATFORM_100X.md`](docs/14_OPENARBOR_PLATFORM_100X.md) for the platform architecture and dual-surface licensing model.
 
-For AI assistants and local agents, [`server/mcp/openarbor-mcp.mjs`](server/mcp/openarbor-mcp.mjs) exposes all four engines and the municipal ordinance catalog over newline-delimited stdio JSON-RPC 2.0 (`calculate_root_zone`, `evaluate_ordinance`, `calculate_ecosystem_benefits`, `rca_biomechanics`, `rca_lint`, and `lookup_ordinance`). Register the server in Claude Desktop or Hermes using the snippets in [`server/mcp/README.md`](server/mcp/README.md) and verify subprocess protocol conformance with `npm run test:mcp`.
+For AI assistants and local agents, [`server/mcp/openarbor-mcp.mjs`](server/mcp/openarbor-mcp.mjs) exposes all six engines and the municipal ordinance catalog over newline-delimited stdio JSON-RPC 2.0 (`calculate_root_zone`, `evaluate_ordinance`, `calculate_ecosystem_benefits`, `rca_biomechanics`, `rca_lint`, `lookup_ordinance`, `validate_soil_function`, and `leo_rca_verify`). Register the server in Claude Desktop or Hermes using the snippets in [`server/mcp/README.md`](server/mcp/README.md) and verify subprocess protocol conformance with `npm run test:mcp`.
 
 The Municipal Ordinance Commons (`data/ordinances/`) encodes municipal tree preservation statutes into machine-readable JSON validated against [`schemas/municipal-ordinance.schema.json`](schemas/municipal-ordinance.schema.json). The commons currently ships with six full-rule cities (Austin, Georgetown, and Liberty Hill in Texas; Ashland, Medford, and Grants Pass in Oregon) plus two baseline threshold-and-fee records (Cedar Park and Round Rock). Contributors can validate new or updated city records locally with `node scripts/validate-ordinance.mjs` following [`data/ordinances/CONTRIBUTING_DATA.md`](data/ordinances/CONTRIBUTING_DATA.md).
 

@@ -9,7 +9,7 @@
         document.querySelector('meta[name="color-scheme"]').content = localStorage.getItem('color-scheme') ?? 'light dark';
       } catch (e) {}
     </script>
-    <title>41-Tool Forestry Workbench | Open Arbor Alliance v2.0</title>
+    <title>41-Tool Forestry &amp; LiDAR Workbench | Open Arbor v2.1</title>
     <meta
       name="description"
       content="Open Arbor Alliance 41-Tool Forestry Workbench: 4 Core Browser/Node ESM Engines, 33 open-source forestry scientific tools, and 4 geospatial foundations mapped to RCA-Spec v2.0."
@@ -21,20 +21,54 @@
       <div class="oa-nav-container">
         <a href="../index.html" class="oa-brand-link">
           <span class="oa-brand-mark">OA</span>
-          <span class="oa-brand-text">Open Arbor <small>v2.0</small></span>
+          <span class="oa-brand-text">Open Arbor <small>v2.1</small></span>
         </a>
         <nav class="oa-main-nav" aria-label="Primary Navigation">
-          <a href="../index.html" class="oa-nav-link">Alliance Portal</a>
-          <a href="../demo/index.html" class="oa-nav-link">Live Engine Demo</a>
-          <a href="../cases/index.html" class="oa-nav-link">Case Gallery</a>
-          <a href="../tools/index.html" class="oa-nav-link active" aria-current="page">41-Tool Workbench</a>
-          <a href="../ordinances/index.html" class="oa-nav-link">Ordinance Commons</a>
-          <a href="../mcp/index.html" class="oa-nav-link">MCP Playground</a>
-          <a href="../spec/index.html" class="oa-nav-link">RCA-Spec v2.0</a>
-          <a href="../methods/index.html" class="oa-nav-link">Falsifiability</a>
+          <a href="../index.html" class="oa-nav-link">Field Home</a>
+          <a href="../demo/index.html" class="oa-nav-link">Field Studio</a>
+          <a href="../cases/index.html" class="oa-nav-link">Case Studies</a>
+          <a href="../ordinances/index.html" class="oa-nav-link">City Tree Laws</a>
+          <button
+            type="button"
+            class="oa-nav-veil-trigger active"
+            popovertarget="oa-deep-stack-popover"
+            aria-expanded="false"
+          >
+            Under the Veil
+          </button>
         </nav>
+        <div id="oa-deep-stack-popover" class="oa-deep-popover" popover>
+          <div class="oa-deep-popover-header">
+            <span>Technical &amp; Scientific Surfaces</span>
+            <span>AGPL-3.0</span>
+          </div>
+          <a href="../tools/index.html" class="oa-deep-popover-item active" aria-current="page">
+            <strong>41-Tool Forestry &amp; LiDAR Workbench</strong>
+            <span>Point clouds, dendrochronology, fire behavior, and core ESM calculators.</span>
+          </a>
+          <a href="../mcp/index.html" class="oa-deep-popover-item">
+            <strong>MCP Agent Server Playground</strong>
+            <span>JSON-RPC 2.0 inspector so AI agents run verified math instead of guessing.</span>
+          </a>
+          <a href="../spec/index.html" class="oa-deep-popover-item">
+            <strong>RCA-Spec v2.0 &amp; 200-Yr Vault</strong>
+            <span>Ten-section evidentiary standard, primary equations, and Heartwood file vault.</span>
+          </a>
+          <a href="../methods/index.html" class="oa-deep-popover-item">
+            <strong>Executable Proof &amp; Falsifiability</strong>
+            <span>Bit-for-bit parity audits, epistemic boundaries, and physical kill criteria.</span>
+          </a>
+        </div>
         <div class="oa-theme-control">
-          <button type="button" id="oa-theme-toggle" class="btn-secondary btn-sm" aria-label="Toggle color scheme">Theme: Auto</button>
+          <button
+            type="button"
+            id="oa-veil-mode-toggle"
+            class="btn btn-secondary btn-sm oa-veil-mode-btn"
+            aria-pressed="false"
+          >
+            Veil: Canopy
+          </button>
+          <button type="button" id="oa-theme-toggle" class="btn btn-secondary btn-sm" aria-label="Toggle color scheme">Theme: Auto</button>
         </div>
       </div>
     </header>
@@ -210,7 +244,7 @@
     <footer class="app-footer">
       <div class="container">
         <p>
-          Open Arbor Alliance v2.0 &middot; 41-Tool Open Forestry Workbench &middot; Zero Vendor Lock-In &middot; Grounded in ANSI A300, AS 4970, and RCA-Spec v2.0.
+          Open Arbor Alliance v2.1 &middot; 41-Tool Open Forestry Workbench &middot; Zero Vendor Lock-In &middot; Grounded in ANSI A300, AS 4970, and RCA-Spec v2.0.
         </p>
       </div>
     </footer>

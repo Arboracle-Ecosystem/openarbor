@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * Open Arbor Masterwork 100x Build-Time Generator (scripts/generate-cases-and-methods.mjs)
+ * Open Arbor v2.1 Build-Time Static Case & Falsifiability Generator (web/generate-cases-and-methods.mjs)
  * Generates:
- *   - Deliverable D3: Static, crawlable Case Gallery (out/cases/index.html + 5 case pages)
- *     rendering 100% of the determination, provenance surface, inline SVG map, mitigation schedule,
- *     and signature block as static HTML that works with JavaScript completely disabled.
- *   - Deliverable D7: Falsifiability Page (out/methods/index.html) dynamically parsed from live
+ *   - Verified Bioregional Field Cases (out/cases/index.html + 5 case pages)
+ *     rendering 100% of the determination, innate LEO-RCA answer-first triage, provenance surface,
+ *     inline SVG map, mitigation schedule, and signature block as static HTML with JavaScript disabled.
+ *   - Executable Proof & Falsifiability Ledger (out/methods/index.html) dynamically parsed from live
  *     test runners and municipal ordinance validators on disk with zero hardcoded drift.
  */
 
@@ -37,6 +37,8 @@ import {
   toGeoJSONFeatureCollection,
 } from '../src/core/ecosystemBenefits.js';
 
+import { estimateSoilSpongeCapacity } from '../src/core/soilFunction.js';
+
 import {
   decodePlusCode,
   validateJsonSchema,
@@ -48,6 +50,12 @@ import {
   compileRcaEvidentiaryMarkdown,
   compilePreservationCounterNotice,
 } from '../src/core/rcaEngine.js';
+
+import {
+  computePhasedStewardshipTriage,
+  compileLeoRcaBrief,
+  runLeoRcaSelfAudit,
+} from '../src/core/leoRcaEngine.js';
 
 import { ALL_SPECIES_PRESETS } from '../web/presets.js';
 import {
@@ -209,6 +217,31 @@ function evaluateStaticCase(caseObj, allMunicipalities, rcaAssessmentSchema) {
     rca_sha256: sha256,
   });
 
+  const provenance = inspectMunicipalityProvenance(municipality);
+  const soilInput = assessment.soil_and_microbiome_baseline || {};
+  const soilSponge = estimateSoilSpongeCapacity({
+    tiz_area_m2: Number(biomechanics.root_zones.tiz_area_sqm) || 100,
+    infiltration_mm_hr: Number(soilInput.infiltration_rate_mm_hr ?? 18),
+    organic_matter_percent: Number(soilInput.organic_matter_pct ?? 2.0),
+  });
+
+  const phasedTriage = computePhasedStewardshipTriage(assessment, economics);
+  const leoEvalContext = {
+    biomechanics,
+    valuation,
+    economics,
+    triage: phasedTriage,
+    municipality,
+    rootZones: { crz, srz },
+    assessment_sha256: sha256,
+    evaluatedRow: evaluatedRows[0],
+    permitText,
+    mitigationIfRemoved,
+    provenance,
+  };
+  const leoBrief = compileLeoRcaBrief(assessment, leoEvalContext);
+  const leoSelfAudit = runLeoRcaSelfAudit(assessment, leoEvalContext);
+
   const evalResult = {
     schemaValidation,
     lint,
@@ -240,11 +273,14 @@ function evaluateStaticCase(caseObj, allMunicipalities, rcaAssessmentSchema) {
       srz,
     },
     geojson,
+    soilSponge,
+    phasedTriage,
+    leoBrief,
+    leoSelfAudit,
   };
 
   const permalinkHash = encodeAssessmentPermalink(caseObj);
   const stickySummary = formatStickyDeterminationSummary(evalResult);
-  const provenance = inspectMunicipalityProvenance(municipality);
 
   return {
     caseObj,
@@ -256,37 +292,104 @@ function evaluateStaticCase(caseObj, allMunicipalities, rcaAssessmentSchema) {
 }
 
 function renderSharedHeader(relRoot, activeRoute) {
-  const navItems = [
-    { href: `${relRoot}/index.html`, label: 'Alliance Portal', id: 'portal' },
-    { href: `${relRoot}/demo/index.html`, label: 'Live Engine Demo', id: 'demo' },
-    { href: `${relRoot}/cases/index.html`, label: 'Case Gallery', id: 'cases' },
-    { href: `${relRoot}/tools/index.html`, label: '41-Tool Workbench', id: 'tools' },
-    { href: `${relRoot}/ordinances/index.html`, label: 'Ordinance Commons', id: 'ordinances' },
-    { href: `${relRoot}/mcp/index.html`, label: 'MCP Playground', id: 'mcp' },
-    { href: `${relRoot}/spec/index.html`, label: 'RCA-Spec v2.0', id: 'spec' },
-    { href: `${relRoot}/methods/index.html`, label: 'Falsifiability', id: 'methods' },
+  const primaryItems = [
+    { href: `${relRoot}/index.html`, label: 'Field Home', id: 'portal' },
+    { href: `${relRoot}/demo/index.html`, label: 'Field Studio', id: 'demo' },
+    { href: `${relRoot}/cases/index.html`, label: 'Case Studies', id: 'cases' },
+    { href: `${relRoot}/ordinances/index.html`, label: 'City Tree Laws', id: 'ordinances' },
   ];
 
-  const linksHtml = navItems
+  const veilItems = [
+    {
+      href: `${relRoot}/tools/index.html`,
+      title: '41-Tool Forestry & LiDAR Workbench',
+      desc: 'Point clouds, dendrochronology, fire behavior, and core ESM calculators.',
+      id: 'tools',
+    },
+    {
+      href: `${relRoot}/mcp/index.html`,
+      title: 'MCP Agent Server Playground',
+      desc: 'JSON-RPC 2.0 inspector so AI agents run verified math instead of guessing.',
+      id: 'mcp',
+    },
+    {
+      href: `${relRoot}/spec/index.html`,
+      title: 'RCA-Spec v2.0 & 200-Yr Vault',
+      desc: 'Ten-section evidentiary standard, primary equations, and Heartwood file vault.',
+      id: 'spec',
+    },
+    {
+      href: `${relRoot}/methods/index.html`,
+      title: 'Executable Proof & Falsifiability',
+      desc: 'Bit-for-bit parity audits, epistemic boundaries, and physical kill criteria.',
+      id: 'methods',
+    },
+  ];
+
+  const primaryHtml = primaryItems
     .map((item) => {
       const isActive = item.id === activeRoute;
       return `<a href="${item.href}" class="oa-nav-link${isActive ? ' active' : ''}"${
         isActive ? ' aria-current="page"' : ''
       }>${escapeHtml(item.label)}</a>`;
     })
-    .join('\n          ');
+    .join('\n        ');
+
+  const popoverHtml = veilItems
+    .map((item) => {
+      const isActive = item.id === activeRoute;
+      return `        <a href="${item.href}" class="oa-deep-popover-item${isActive ? ' active' : ''}"${
+        isActive ? ' aria-current="page"' : ''
+      }>
+          <strong>${escapeHtml(item.title)}</strong>
+          <span>${escapeHtml(item.desc)}</span>
+        </a>`;
+    })
+    .join('\n');
+
+  const veilTriggerActive = veilItems.some((item) => item.id === activeRoute);
 
   return `  <header class="oa-site-header">
     <div class="oa-nav-container">
       <a href="${relRoot}/index.html" class="oa-brand-link">
         <span class="oa-brand-mark">OA</span>
-        <span class="oa-brand-text">Open Arbor <small>v2.0</small></span>
+        <span class="oa-brand-text">Open Arbor <small>v2.1</small></span>
       </a>
       <nav class="oa-main-nav" aria-label="Primary Navigation">
-        ${linksHtml}
+        ${primaryHtml}
+        <button
+          type="button"
+          class="oa-nav-veil-trigger${veilTriggerActive ? ' active' : ''}"
+          popovertarget="oa-deep-stack-popover"
+          aria-expanded="false"
+        >
+          Under the Veil
+        </button>
       </nav>
+      <div id="oa-deep-stack-popover" class="oa-deep-popover" popover>
+        <div class="oa-deep-popover-header">
+          <span>Technical &amp; Scientific Surfaces</span>
+          <span>AGPL-3.0</span>
+        </div>
+${popoverHtml}
+      </div>
       <div class="oa-theme-control">
-        <button type="button" id="oa-theme-toggle" class="btn btn-secondary btn-sm" aria-label="Toggle color scheme">Theme: Auto</button>
+        <button
+          type="button"
+          id="oa-veil-mode-toggle"
+          class="btn btn-secondary btn-sm oa-veil-mode-btn"
+          aria-pressed="false"
+        >
+          Veil: Canopy
+        </button>
+        <button
+          type="button"
+          id="oa-theme-toggle"
+          class="btn btn-secondary btn-sm"
+          aria-label="Toggle color scheme"
+        >
+          Theme: Auto
+        </button>
       </div>
     </div>
   </header>`;
@@ -398,7 +501,7 @@ function renderCasesIndexHtml(evaluatedCases) {
       document.querySelector('meta[name="color-scheme"]').content = localStorage.getItem('color-scheme') ?? 'light dark';
     } catch (e) {}
   </script>
-  <title>Static Crawlable Case Gallery (5 Bioregional Reference Determinations) | Open Arbor v2.0</title>
+  <title>Verified Bioregional Field Cases (5 Static Determinations) | Open Arbor v2.1</title>
   <meta
     name="description"
     content="Five pre-rendered, crawlable arboricultural evidentiary case determinations across Central Texas (Austin, Georgetown, Liberty Hill) and Rogue Valley, Oregon (Ashland, Medford). 100% readable with JavaScript disabled."
@@ -411,15 +514,15 @@ ${renderSharedHeader('..', 'cases')}
   <section class="app-header">
     <div class="container header-inner">
       <div>
-        <span class="eyebrow">Deliverable D3 &middot; Zero-JS Crawlable Evidentiary Determinations &middot; RCA-Spec v2.0</span>
+        <span class="eyebrow">Verified Bioregional Field Cases &middot; Zero-JS Crawlable Evidentiary Determinations &middot; RCA-Spec v2.0</span>
         <h1>Bioregional Reference Case Gallery (Central Texas &amp; Rogue Valley, Oregon)</h1>
         <p class="subtitle">
-          Five benchmark municipal tree determinations pre-rendered at build time directly from the certified ECMAScript core engines. Every case page includes full statutory citations, inline vector <code>&lt;svg&gt;</code> root protection maps, provenance boundaries, and cryptographic <code>SHA-256</code> digests with JavaScript disabled.
+          Five benchmark municipal tree determinations pre-rendered at build time directly from the certified ECMAScript core engines. Every case page includes plain-language stewardship triage, full statutory citations, inline vector <code>&lt;svg&gt;</code> root protection maps, provenance boundaries, and cryptographic <code>SHA-256</code> digests with JavaScript disabled.
         </p>
       </div>
       <div class="header-actions">
-        <a href="../demo/index.html" class="btn btn-primary">Launch Interactive Field Workbench</a>
-        <a href="../methods/index.html" class="btn btn-outline">Inspect Falsifiability Suite</a>
+        <a href="../demo/index.html" class="btn btn-primary">Open Field Studio</a>
+        <a href="../methods/index.html" class="btn btn-outline">Executable Proof Ledger</a>
       </div>
     </div>
   </section>
@@ -482,7 +585,7 @@ ${cardsHtml}
   <footer class="app-footer">
     <div class="container">
       <p>
-        Open Arbor v2.0 &middot; Static Crawlable Case Gallery &middot; Governed by the Open Arbor Alliance &middot; Licensed under AGPL-3.0-only.
+        Open Arbor v2.1 &middot; Verified Bioregional Field Cases &middot; Governed by the Open Arbor Alliance &middot; Licensed under AGPL-3.0-only.
       </p>
     </div>
   </footer>
@@ -515,6 +618,11 @@ function renderSingleCaseHtml({ caseObj, evalResult, permalinkHash, stickySummar
   const mitActive = evalResult.mitigationActive;
   const mitIfRemoved = evalResult.mitigationIfRemoved;
   const rz = evalResult.rootZones;
+  const triage = evalResult.phasedTriage;
+  const sponge = evalResult.soilSponge;
+  const leoBrief = evalResult.leoBrief;
+  const leoSelfAudit = evalResult.leoSelfAudit;
+  const stage1 = triage.stages[0];
   const status = statusLabel(row);
 
   const badgeClass = row.heritage
@@ -522,6 +630,17 @@ function renderSingleCaseHtml({ caseObj, evalResult, permalinkHash, stickySummar
     : row.protected
     ? 'badge-protected'
     : 'badge-neutral';
+
+  const triageRowsHtml = triage.stages
+    .map(
+      (st) => `              <tr>
+                <th scope="row"><strong>${escapeHtml(st.label)}</strong><br /><small>${escapeHtml(st.timing)}</small></th>
+                <td>${escapeHtml(st.scope)}</td>
+                <td><strong>${escapeHtml(formatUsd(st.client_price_usd))}</strong></td>
+                <td class="text-accent"><strong>${escapeHtml(formatUsd(st.practitioner_net_usd))}</strong></td>
+              </tr>`
+    )
+    .join('\n');
 
   const verifiedRowsHtml = (provenance.verified_sections || [])
     .map(
@@ -580,7 +699,7 @@ function renderSingleCaseHtml({ caseObj, evalResult, permalinkHash, stickySummar
       document.querySelector('meta[name="color-scheme"]').content = localStorage.getItem('color-scheme') ?? 'light dark';
     } catch (e) {}
   </script>
-  <title>${escapeHtml(caseObj.label)} | Static Evidentiary Determination | Open Arbor v2.0</title>
+  <title>${escapeHtml(caseObj.label)} | Verified Bioregional Field Case | Open Arbor v2.1</title>
   <meta
     name="description"
     content="Static pre-rendered arboricultural determination for ${escapeHtml(sb.tree_tag)} (${escapeHtml(sb.species_scientific)}) in ${escapeHtml(provenance.municipality_name)}: ${escapeHtml(stickySummary.one_line_text)}."
@@ -601,7 +720,7 @@ ${renderSharedHeader('../..', 'cases')}
         <span><strong>Cash in Lieu:</strong> <strong id="sticky-cash-val" class="text-danger">${escapeHtml(stickySummary.cash_in_lieu)}</strong></span>
       </div>
       <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-        <a href="../../demo/index.html${escapeHtml(permalinkHash)}" class="btn btn-primary btn-xs">Open in Interactive Field Workbench (#oa1=)</a>
+        <a href="../../demo/index.html${escapeHtml(permalinkHash)}" class="btn btn-primary btn-xs">Open in Field Studio (#oa1=)</a>
         <a href="../index.html" class="btn btn-outline btn-xs">All 5 Cases</a>
       </div>
     </div>
@@ -610,20 +729,85 @@ ${renderSharedHeader('../..', 'cases')}
   <section class="app-header">
     <div class="container header-inner">
       <div>
-        <span class="eyebrow">Static Pre-Rendered Evidentiary Record &middot; ${escapeHtml(provenance.municipality_name)} &middot; Plus Code ${escapeHtml(sb.plus_code_global)}</span>
+        <span class="eyebrow">Verified Bioregional Field Case &middot; ${escapeHtml(provenance.municipality_name)} &middot; Plus Code ${escapeHtml(sb.plus_code_global)}</span>
         <h1>${escapeHtml(caseObj.label)}</h1>
         <p class="subtitle">
           Specimen <code>${escapeHtml(sb.tree_tag)}</code> (<em>${escapeHtml(sb.species_scientific)}</em>, ${escapeHtml(sb.species_common)}) &middot; Assessed <code>${escapeHtml(sb.assessment_date)}</code> &middot; Canonical SHA-256: <code>${escapeHtml(evalResult.sha256)}</code>
         </p>
       </div>
       <div class="header-actions">
-        <a href="../../demo/index.html${escapeHtml(permalinkHash)}" class="btn btn-primary">Hydrate in Live Field Engine</a>
-        <a href="../index.html" class="btn btn-secondary">Back to Case Gallery</a>
+        <a href="../../demo/index.html${escapeHtml(permalinkHash)}" class="btn btn-primary">Hydrate in Field Studio</a>
+        <a href="../index.html" class="btn btn-secondary">Back to Case Studies</a>
       </div>
     </div>
   </section>
 
   <main class="container main-layout">
+    <!-- INNATE SUMMARY: Plain-Language Answer-First Verdict & 3-Stage Phased Stewardship Triage -->
+    <section id="innate-stewardship-triage" class="card" aria-labelledby="innate-triage-heading">
+      <div class="card-header">
+        <span class="step-badge">Plain-Language Verdict</span>
+        <h2 id="innate-triage-heading">Answer-First Field Verdict &amp; 3-Stage Stewardship Triage</h2>
+      </div>
+      <div class="citation-callout" style="margin-bottom: 14px;">
+        <strong>Answer-First Summary:</strong> ${escapeHtml(leoBrief.answer_first)}
+      </div>
+
+      <div class="metric-grid metric-grid-4">
+        <div class="metric-box highlight-box">
+          <span class="metric-label">Stage 1 Day-1 Root-Collar Triage</span>
+          <strong class="metric-value text-accent">${escapeHtml(formatUsd(stage1.client_price_usd))}</strong>
+          <span class="metric-sub">${escapeHtml(
+            triage.day_one_undercuts_removal
+              ? `Saves ${formatUsd(triage.day_one_savings_vs_removal_usd)} on Day 1 vs. chainsaw bid`
+              : 'Immediate root-flare stabilization and SGR relief'
+          )}</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">One-Time Chainsaw Removal Bid</span>
+          <strong class="metric-value text-danger">${escapeHtml(formatUsd(triage.removal_bid_usd))}</strong>
+          <span class="metric-sub">Plus ${escapeHtml(formatUsd(mitIfRemoved?.cash_in_lieu_usd || 0))} city mitigation liability if destroyed</span>
+        </div>
+        <div class="metric-box highlight-box">
+          <span class="metric-label">5-Year Arborist Net Margin</span>
+          <strong class="metric-value text-accent">${escapeHtml(formatUsd(triage.full_5yr_practitioner_net_usd))}</strong>
+          <span class="metric-sub">${escapeHtml(triage.net_margin_multiplier)}x higher net margin vs. one-time removal (${escapeHtml(formatUsd(triage.removal_practitioner_net_usd))})</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">Vadose Soil Sponge Capacity</span>
+          <strong class="metric-value">${escapeHtml(sponge.storm_1in_capture_gallons.toLocaleString())} gal</strong>
+          <span class="metric-sub">1-in storm capture &middot; SOM sponge: ${escapeHtml(sponge.som_sponge_capacity_gallons.toLocaleString())} gal (${escapeHtml(sponge.infiltration_class)})</span>
+        </div>
+      </div>
+
+      <div tabindex="0" role="region" aria-labelledby="triage-table-caption-${escapeHtml(caseObj.slug)}" class="table-wrapper" style="margin-top: 14px;">
+        <table
+          class="data-table"
+          style="
+            --label-1: 'Stewardship Stage';
+            --label-2: 'Field Scope';
+            --label-3: 'Client Price';
+            --label-4: 'Arborist Net Margin';
+          "
+        >
+          <caption id="triage-table-caption-${escapeHtml(caseObj.slug)}" class="sr-only">
+            Three-Stage Phased Stewardship Triage for ${escapeHtml(sb.tree_tag)}
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Stewardship Stage &amp; Window</th>
+              <th scope="col">Field Scope &amp; Deliverables</th>
+              <th scope="col">Client Investment</th>
+              <th scope="col">Practitioner Net Margin</th>
+            </tr>
+          </thead>
+          <tbody>
+${triageRowsHtml}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
     <!-- SECTION 1: Static Pre-Rendered Determination -->
     <section id="static-determination-verdict" class="card" aria-labelledby="sec1-heading">
       <div class="card-header">
@@ -755,7 +939,7 @@ ${unverifiedRowsHtml}
         <h2 id="sec3-heading">Deterministic Root Protection Map &amp; Subterranean Biomechanics</h2>
       </div>
       <p class="subtitle">
-        To-scale vector <code>&lt;svg&gt;</code> site map generated by <code>renderSiteMapSVG()</code> alongside international root protection zones (<code>AS 4970</code>, <code>ANSI A300 Part 5</code>, <code>BS 5837</code>), Claus Mattheck hollow-shell buckling physics ($t/R$), and supersonic AirSpade radial trenching prescriptions.
+        To-scale vector <code>&lt;svg&gt;</code> site map generated by <code>renderSiteMapSVG()</code> alongside international root protection zones (<code>AS 4970</code>, <code>ANSI A300 Part 5</code>, <code>BS 5837</code>), Claus Mattheck hollow-shell buckling physics (<code>t/R</code>), and supersonic AirSpade radial trenching prescriptions.
       </p>
 
       <div class="svg-map-wrap">
@@ -814,9 +998,9 @@ ${unverifiedRowsHtml}
               <td>Defines the 8 cm coarse ramial woodchip mulch horizon (${escapeHtml(bio.rhizosphere_prescription.amendments.ramial_woodchip_mulch_m3)} m3) and native companion guild zone.</td>
             </tr>
             <tr>
-              <th scope="row">Mattheck Hollow-Shell Ratio ($t/R$) &amp; CODIT</th>
+              <th scope="row">Mattheck Hollow-Shell Ratio (<code>t/R</code>) &amp; CODIT</th>
               <td><strong><code>t/R = ${escapeHtml(bio.biomechanics.sound_shell_thickness_ratio_t_over_r)}</code></strong><br /><small>Sound shell: ${escapeHtml(bio.biomechanics.sound_shell_cm)} cm / Radius: ${escapeHtml(bio.biomechanics.trunk_radius_cm)} cm</small></td>
-              <td>Mattheck (1994) $t/R \ge 0.30$ Criterion &amp; Shigo CODIT</td>
+              <td>Mattheck (1994) <code>t/R &ge; 0.30</code> Criterion &amp; Shigo CODIT</td>
               <td><strong>${escapeHtml(bio.biomechanics.stability_rating)}</strong> | CODIT: <code>${escapeHtml(bio.biomechanics.codit_wall_response_rating)}</code>.</td>
             </tr>
             <tr>
@@ -966,6 +1150,27 @@ ${companionRowsHtml}
       </div>
     </section>
 
+    <!-- BEHIND THE VEIL: LEO-RCA 6-Slot Epistemic Receipt -->
+    <details class="oa-veil card" id="case-leo-epistemic-veil">
+      <summary class="oa-veil-summary">
+        <strong>Lift the Veil: LEO-RCA 6-Slot Epistemic Receipt</strong>
+        <span>(Oracle Provenance Anchors, Reconciled UNVERIFIED Tokens &amp; Sabotage Self-Audit)</span>
+      </summary>
+      <div class="oa-veil-body" style="margin-top: 14px;">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px;">
+          <code>${escapeHtml(leoBrief.status_line)}</code>
+          <span class="badge ${leoSelfAudit.self_audit_passed ? 'badge-protected' : 'badge-warn'}">
+            ${escapeHtml(
+              leoSelfAudit.self_audit_passed
+                ? `${leoSelfAudit.fixtures_tested}/${leoSelfAudit.fixtures_tested} Negative Sabotage Fixtures Caught`
+                : 'Self-Audit Pending'
+            )}
+          </span>
+        </div>
+        <pre class="code-preview" style="white-space: pre-wrap;">${escapeHtml(leoBrief.brief_markdown)}</pre>
+      </div>
+    </details>
+
     <!-- SECTION 5: Evidentiary Signature Block -->
     <section id="evidentiary-print-sheet" class="card" aria-labelledby="sec5-heading">
       <div class="card-header">
@@ -978,7 +1183,7 @@ ${companionRowsHtml}
 
       <div class="citation-callout">
         <p style="margin: 0 0 8px 0;">
-          <strong>Conflict-of-Interest &amp; Evidentiary Attestation Statement:</strong> I certify that this arboricultural and rhizosphere assessment was conducted in accordance with <code>ANSI A300</code> (Parts 1, 2, and 5), <code>ISA Best Management Practices</code>, <code>AS 4970-2009</code>, and <code>Open Arbor RCA-Spec v2.0</code>. The assessing practitioner holds zero financial interest in timber liquidation or un-evidenced tree removal. All biometric, biomechanical ($t/R = ${escapeHtml(bio.biomechanics.sound_shell_thickness_ratio_t_over_r)}$), soil physical, and statutory mitigation figures trace deterministically to the canonical JSON payload anchored below.
+          <strong>Conflict-of-Interest &amp; Evidentiary Attestation Statement:</strong> I certify that this arboricultural and rhizosphere assessment was conducted in accordance with <code>ANSI A300</code> (Parts 1, 2, and 5), <code>ISA Best Management Practices</code>, <code>AS 4970-2009</code>, and <code>Open Arbor RCA-Spec v2.0</code>. The assessing practitioner holds zero financial interest in timber liquidation or un-evidenced tree removal. All biometric, biomechanical (<code>t/R = ${escapeHtml(bio.biomechanics.sound_shell_thickness_ratio_t_over_r)}</code>), soil physical, and statutory mitigation figures trace deterministically to the canonical JSON payload anchored below.
         </p>
         <div class="metric-grid metric-grid-3" style="margin-top: 12px;">
           <div class="metric-box">
@@ -994,7 +1199,7 @@ ${companionRowsHtml}
           <div class="metric-box">
             <span class="metric-label">Cryptographic Evidence Seal (SHA-256)</span>
             <strong class="metric-value" style="font-size: 0.78rem; word-break: break-all;"><code>${escapeHtml(evalResult.sha256)}</code></strong>
-            <span class="metric-sub">Engine Version: <code>2.0.0</code> &middot; Dataset: <code>2.0.0</code></span>
+            <span class="metric-sub">Engine Version: <code>2.1.0</code> &middot; Dataset: <code>2.0.0</code></span>
           </div>
         </div>
         <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border-subtle); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; font-size: 0.85rem;">
@@ -1009,7 +1214,7 @@ ${companionRowsHtml}
   <footer class="app-footer">
     <div class="container">
       <p>
-        Open Arbor v2.0 &middot; Static Evidentiary Case Record (<code>${escapeHtml(caseObj.slug)}</code>) &middot; Governed by the Open Arbor Alliance &middot; Licensed under AGPL-3.0-only.
+        Open Arbor v2.1 &middot; Verified Bioregional Field Case (<code>${escapeHtml(caseObj.slug)}</code>) &middot; Governed by the Open Arbor Alliance &middot; Licensed under AGPL-3.0-only.
       </p>
     </div>
   </footer>
@@ -1115,15 +1320,24 @@ function renderMethodsHtml(rootDir, allMunicipalities) {
     '10': 'Proves static multi-page web build (out/) across all routes and executes deploy/verify-parity.mjs asserting 4/4 bit-for-bit CLI-to-browser parity.',
   };
 
+  const soilInvariants = {
+    '1': 'Proves soil_function block is omitted by default, when all-null, and when inherited via Object.prototype on OGC CRS84 GeoJSON exports.',
+    '2': 'Proves soil_function block attaches with mandatory source attribution when supplied via metadata or options while leaving municipal mitigation fees unchanged.',
+    '3': 'Proves strict validation refusing numeric soil fields without source attribution and rejecting out-of-bounds organic matter, negative infiltration, invalid methods, or inverted ISO dates.',
+    '4': 'Proves deterministic vadose 1-inch storm capture and NRCS organic-matter sponge capacity across Compacted (< 15 mm/hr), Moderate (15 to 50 mm/hr), and Living Sponge (> 50 mm/hr) classes.',
+  };
+
   const mcpInvariants = {
-    '1': 'Spawns server/mcp/openarbor-mcp.mjs over stdio and verifies JSON-RPC 2.0 initialize handshake (protocolVersion 2024-11-05, server openarbor-mcp v2.0.0).',
-    '2': 'Verifies tools/list returns all 6 deterministic MCP tools (calculate_root_zone, evaluate_ordinance, calculate_ecosystem_benefits, rca_biomechanics, rca_lint, lookup_ordinance).',
+    '1': 'Spawns server/mcp/openarbor-mcp.mjs over stdio and verifies JSON-RPC 2.0 initialize handshake (protocolVersion 2024-11-05, server openarbor-mcp v2.1.0).',
+    '2': 'Verifies tools/list returns all 8 deterministic MCP tools (calculate_root_zone, evaluate_ordinance, calculate_ecosystem_benefits, rca_biomechanics, rca_lint, lookup_ordinance, validate_soil_function, leo_rca_verify).',
     '3': 'Verifies known-answer tools/call for calculate_root_zone (24 in DBH, US_1_1 -> radius_feet = 24, area_sqft = 1809.56).',
     '4': 'Verifies lookup_ordinance positive lookup (or-ashland -> 6 in DBH threshold) and graceful structured error on unknown jurisdiction (UNKNOWN_JURISDICTION) without crashing.',
     '5': 'Verifies known-answer tools/call execution for evaluate_ordinance, calculate_ecosystem_benefits, rca_biomechanics (t/R = 0.34 sound), and rca_lint (valid = true).',
-    '6': 'Verifies bounded-input DoS security guards: rejects >500 trees in evaluate_ordinance (MAX_TREES_EXCEEDED) and >128 char jurisdiction IDs (JURISDICTION_ID_TOO_LONG).',
-    '7': 'Verifies prototype-chain pollution security gates in scripts/validate-ordinance.mjs: rejects literal __proto__ and constructor payloads with non-zero exit code.',
-    '8': 'Verifies clean JSON-RPC 2.0 shutdown response and child process termination.',
+    '6': 'Verifies tools/call validate_soil_function positive Living Sponge calculation (1,342 gal storm capture), default omission when unsupplied, and structured INVALID_SOIL_FUNCTION error when source is missing.',
+    '7': 'Verifies tools/call leo_rca_verify 8/8 oracle anchors, 3/3 negative sabotage self-audit, 3-stage phased triage conservation, and house-style-clean Arborist Handoff Brief.',
+    '8': 'Verifies bounded-input DoS security guards across evaluate_ordinance (>500 trees -> MAX_TREES_EXCEEDED), lookup_ordinance (>128 chars -> JURISDICTION_ID_TOO_LONG), and leo_rca_verify (>100,000 chars -> MAX_NARRATIVE_LENGTH_EXCEEDED).',
+    '9': 'Verifies prototype-chain pollution security gates in scripts/validate-ordinance.mjs: rejects literal __proto__ and constructor payloads with non-zero exit code.',
+    '10': 'Verifies clean JSON-RPC 2.0 shutdown response and child process termination.',
   };
 
   const coreGroups = extractPassGroupsFromFile(
@@ -1133,6 +1347,17 @@ function renderMethodsHtml(rootDir, allMunicipalities) {
     openArborInvariants,
     true
   );
+
+  const soilSuitePath = path.join(rootDir, 'tests/verify_soil_function.mjs');
+  const soilGroups = fs.existsSync(soilSuitePath)
+    ? extractPassGroupsFromFile(
+        soilSuitePath,
+        'tests/verify_soil_function.mjs',
+        'node tests/verify_soil_function.mjs',
+        soilInvariants,
+        true
+      )
+    : [];
 
   const mcpGroups = extractPassGroupsFromFile(
     path.join(rootDir, 'tests/verify_mcp.mjs'),
@@ -1151,7 +1376,7 @@ function renderMethodsHtml(rootDir, allMunicipalities) {
   );
 
   const totalVerificationGroups =
-    coreGroups.length + mcpGroups.length + rawMasterworkGroups.length;
+    coreGroups.length + soilGroups.length + mcpGroups.length + rawMasterworkGroups.length;
 
   const masterworkInvariants = {
     D1: 'Proves versioned #oa1= base64url assessment permalink encoding and round-trip decoding across 3 bioregional presets with identical SHA-256 digests, permit verdicts, CRZ radii, and cash-in-lieu fees.',
@@ -1161,6 +1386,8 @@ function renderMethodsHtml(rootDir, allMunicipalities) {
     D5: 'Proves municipal provenance surface and epistemic gap inspector (inspectMunicipalityProvenance) explicitly enumerating UNVERIFIED statutory sub-sections for Cedar Park and Round Rock Threshold_And_Fee_Record entries.',
     D6: 'Proves evidentiary print report stylesheet (@media print, @page Letter) and #evidentiary-print-sheet practitioner attestation & signature block.',
     D7: `Proves falsifiability & verification methodology page (out/methods/index.html) generated dynamically from live test suites with ${totalVerificationGroups}/${totalVerificationGroups} executable verification groups and zero drift.`,
+    D8: 'Proves 3-Stage Phased Stewardship Triage (Day-1 Root-Collar Triage undercutting chainsaw removal on Austin and Ashland heritage oaks), dual-voice Arborist Handoff Brief (#oa1=), and native <dialog id="arborist-handoff-dialog" closedby="any"> across Field Home and Field Studio.',
+    D9: 'Proves deterministic 6-slot LEO-RCA Profile 01 compiler, anti-liquidation oracle verifier (catching Mattheck t/R violations, drifted oracle numbers, and epistemic count mismatches across 3/3 negative sabotage fixtures), Cedar Park Threshold_And_Fee_Record UNVERIFIED[STATUTORY_RULE] reconciliation, and zero raw backticks on Field Home.',
   };
 
   const masterworkGroups = rawMasterworkGroups.map((g) => {
@@ -1270,6 +1497,59 @@ function renderMethodsHtml(rootDir, allMunicipalities) {
     )
     .join('\n');
 
+  const runnerCount = 5 + (soilGroups.length > 0 ? 1 : 0);
+  const soilSummaryClause =
+    soilGroups.length > 0
+      ? `<code>tests/verify_soil_function.mjs</code> (${soilGroups.length} groups), `
+      : '';
+  const soilMetricClause =
+    soilGroups.length > 0 ? ` + ${soilGroups.length} Soil` : '';
+  const soilCliClause =
+    soilGroups.length > 0 ? 'node tests/verify_soil_function.mjs &amp;&amp; ' : '';
+
+  const soilRunnerSectionHtml =
+    soilGroups.length > 0
+      ? `
+    <!-- Soil Function & Vadose Sponge Verification Suite -->
+    <section class="card" aria-labelledby="suite-soil-heading">
+      <div class="card-header">
+        <span class="step-badge">Runner 2 (${soilGroups.length} Groups)</span>
+        <h2 id="suite-soil-heading">Soil Function, Provenance Source Gate &amp; Vadose Sponge Suite (<code>tests/verify_soil_function.mjs</code>)</h2>
+      </div>
+      <div tabindex="0" role="region" aria-labelledby="table-soil-caption" class="table-wrapper">
+        <table
+          class="data-table"
+          style="
+            --label-1: 'Group ID';
+            --label-2: 'Verification Gate';
+            --label-3: 'Soil Physics / Provenance Invariant Proven';
+            --label-4: 'Source File &amp; Line';
+            --label-5: 'CLI Command';
+          "
+        >
+          <caption id="table-soil-caption" class="sr-only">Soil Function and Vadose Sponge Verification Groups in tests/verify_soil_function.mjs</caption>
+          <thead>
+            <tr>
+              <th scope="col">Group ID</th>
+              <th scope="col">Verification Gate</th>
+              <th scope="col">Soil Physics, Provenance, or Prototype-Safety Invariant Proven</th>
+              <th scope="col">Source File &amp; Line</th>
+              <th scope="col">Exact CLI Reproduction Command</th>
+            </tr>
+          </thead>
+          <tbody>
+${renderGroupRows(soilGroups)}
+          </tbody>
+        </table>
+      </div>
+    </section>`
+      : '';
+
+  const mcpRunnerNum = soilGroups.length > 0 ? 3 : 2;
+  const ordRunnerNum = soilGroups.length > 0 ? 4 : 3;
+  const parityRunnerNum = soilGroups.length > 0 ? 5 : 4;
+  const masterworkRunnerNum = soilGroups.length > 0 ? 6 : 5;
+
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -1281,10 +1561,10 @@ function renderMethodsHtml(rootDir, allMunicipalities) {
       document.querySelector('meta[name="color-scheme"]').content = localStorage.getItem('color-scheme') ?? 'light dark';
     } catch (e) {}
   </script>
-  <title>Falsifiability &amp; Verification Methodology (${totalVerificationGroups} Executable Groups) | Open Arbor v2.0</title>
+  <title>Executable Proof &amp; Falsifiability Ledger (${totalVerificationGroups} Executable Groups) | Open Arbor v2.1</title>
   <meta
     name="description"
-    content="Open Arbor v2.0 Falsifiability & Verification Methodology: ${totalVerificationGroups} executable verification groups across 5 deterministic test runners plus ${totalOrdinanceRecords} schema-validated municipal ordinance records (${totalParityAssertions}/${totalParityAssertions} CLI-to-browser parity metrics)."
+    content="Open Arbor v2.1 Executable Proof & Falsifiability Ledger: ${totalVerificationGroups} executable verification groups across ${runnerCount} deterministic test runners plus ${totalOrdinanceRecords} schema-validated municipal ordinance records (${totalParityAssertions}/${totalParityAssertions} CLI-to-browser parity metrics)."
   />
   <link rel="stylesheet" href="../styles.css" />
 </head>
@@ -1294,15 +1574,15 @@ ${renderSharedHeader('..', 'methods')}
   <section class="app-header">
     <div class="container header-inner">
       <div>
-        <span class="eyebrow">Deliverable D7 &middot; Live Build-Time Introspection &middot; Zero Unfalsifiable Claims</span>
+        <span class="eyebrow">Executable Proof &amp; Falsifiability Ledger &middot; Live Build-Time Introspection &middot; Zero Unfalsifiable Claims</span>
         <h1>Falsifiability &amp; Deterministic Verification Methodology</h1>
         <p class="subtitle">
-          Every mathematical equation, statutory threshold, cryptographic digest, and security boundary in Open Arbor is backed by an executable test assertion on disk. This page is generated at build time by parsing the live test suites so counts can never drift from reality.
+          Every mathematical equation, statutory threshold, cryptographic digest, and security boundary in Open Arbor is backed by an executable test assertion on disk. This page is generated at build time by parsing and running the live test suites so counts can never drift from reality.
         </p>
       </div>
       <div class="header-actions">
-        <a href="../cases/index.html" class="btn btn-primary">Inspect 5 Static Case Pages</a>
-        <a href="../demo/index.html" class="btn btn-outline">Launch Field Workbench</a>
+        <a href="../cases/index.html" class="btn btn-primary">Inspect Bioregional Cases</a>
+        <a href="../demo/index.html" class="btn btn-outline">Open Field Studio</a>
       </div>
     </div>
   </section>
@@ -1320,14 +1600,14 @@ ${renderSharedHeader('..', 'methods')}
         <h2 id="falsifiability-summary-heading">Executive Falsifiability Summary (${totalVerificationGroups} Executable Verification Groups + ${totalOrdinanceRecords} Validated Ordinance Records)</h2>
       </div>
       <p class="subtitle">
-        Generated directly from <code>tests/verify_openarbor.mjs</code> (${coreGroups.length} groups), <code>tests/verify_mcp.mjs</code> (${mcpGroups.length} groups), <code>deploy/verify-parity.mjs</code> (${parityCases.length} bioregional parity cases &times; ${parityMetricsPerCase} metrics = ${totalParityAssertions} parity assertions), and <code>tests/verify_masterwork_100x.mjs</code> (${masterworkGroups.length} Masterwork gates), plus <code>scripts/validate-ordinance.mjs</code> (${totalOrdinanceRecords} municipal ordinance records: ${fullRuleCount} <code>Full_Rule_Record</code>, ${thresholdFeeCount} <code>Threshold_And_Fee_Record</code>) = <strong>${totalFalsifiableChecks} total falsifiable checks</strong>.
+        Generated directly from <code>tests/verify_openarbor.mjs</code> (${coreGroups.length} groups), ${soilSummaryClause}<code>tests/verify_mcp.mjs</code> (${mcpGroups.length} groups), <code>deploy/verify-parity.mjs</code> (${parityCases.length} bioregional parity cases &times; ${parityMetricsPerCase} metrics = ${totalParityAssertions} parity assertions), and <code>tests/verify_masterwork_100x.mjs</code> (${masterworkGroups.length} Masterwork gates), plus <code>scripts/validate-ordinance.mjs</code> (${totalOrdinanceRecords} municipal ordinance records: ${fullRuleCount} <code>Full_Rule_Record</code>, ${thresholdFeeCount} <code>Threshold_And_Fee_Record</code>) = <strong>${totalFalsifiableChecks} total falsifiable checks</strong>.
       </p>
 
       <div class="metric-grid metric-grid-4">
         <div class="metric-box highlight-box">
           <span class="metric-label">Executable Verification Groups</span>
           <strong class="metric-value text-accent">${totalVerificationGroups} / ${totalVerificationGroups} Groups</strong>
-          <span class="metric-sub">${coreGroups.length} Core + ${mcpGroups.length} MCP + ${masterworkGroups.length} Masterwork</span>
+          <span class="metric-sub">${coreGroups.length} Core${soilMetricClause} + ${mcpGroups.length} MCP + ${masterworkGroups.length} Masterwork</span>
         </div>
         <div class="metric-box">
           <span class="metric-label">Validated Municipal Ordinances</span>
@@ -1351,7 +1631,7 @@ ${renderSharedHeader('..', 'methods')}
           <strong>One-Line Complete Verification Reproduction Command</strong>
           <button type="button" class="btn btn-outline btn-xs" data-copy-target="cmd-reproduce-all">Copy Command</button>
         </div>
-        <pre id="cmd-reproduce-all" class="code-preview">node tests/verify_openarbor.mjs &amp;&amp; node tests/verify_mcp.mjs &amp;&amp; node scripts/validate-ordinance.mjs &amp;&amp; node deploy/verify-parity.mjs &amp;&amp; node tests/verify_masterwork_100x.mjs</pre>
+        <pre id="cmd-reproduce-all" class="code-preview">node tests/verify_openarbor.mjs &amp;&amp; ${soilCliClause}node tests/verify_mcp.mjs &amp;&amp; node scripts/validate-ordinance.mjs &amp;&amp; node deploy/verify-parity.mjs &amp;&amp; node tests/verify_masterwork_100x.mjs</pre>
       </div>
     </section>
 
@@ -1388,11 +1668,12 @@ ${renderGroupRows(coreGroups)}
         </table>
       </div>
     </section>
+${soilRunnerSectionHtml}
 
-    <!-- Table 2: MCP Server & Security Gate Suite -->
+    <!-- MCP Server & Security Gate Suite -->
     <section class="card" aria-labelledby="suite2-heading">
       <div class="card-header">
-        <span class="step-badge">Runner 2 (${mcpGroups.length} Groups)</span>
+        <span class="step-badge">Runner ${mcpRunnerNum} (${mcpGroups.length} Groups)</span>
         <h2 id="suite2-heading">Model Context Protocol (<code>JSON-RPC 2.0</code>) &amp; Security Gate Suite (<code>tests/verify_mcp.mjs</code>)</h2>
       </div>
       <div tabindex="0" role="region" aria-labelledby="table2-caption" class="table-wrapper">
@@ -1423,10 +1704,10 @@ ${renderGroupRows(mcpGroups)}
       </div>
     </section>
 
-    <!-- Table 3: Municipal Ordinance Schema Validator -->
+    <!-- Municipal Ordinance Schema Validator -->
     <section class="card" aria-labelledby="suite3-heading">
       <div class="card-header">
-        <span class="step-badge">Runner 3 (${totalOrdinanceRecords} Records)</span>
+        <span class="step-badge">Runner ${ordRunnerNum} (${totalOrdinanceRecords} Records)</span>
         <h2 id="suite3-heading">Municipal Tree Ordinance Schema &amp; Completeness Validator (<code>scripts/validate-ordinance.mjs</code>)</h2>
       </div>
       <div tabindex="0" role="region" aria-labelledby="table3-caption" class="table-wrapper">
@@ -1457,10 +1738,10 @@ ${ordinanceRowsHtml}
       </div>
     </section>
 
-    <!-- Table 4: CLI-vs-Browser Bundle Parity Runner -->
+    <!-- CLI-vs-Browser Bundle Parity Runner -->
     <section class="card" aria-labelledby="suite4-heading">
       <div class="card-header">
-        <span class="step-badge">Runner 4 (${parityCases.length} Cases / ${totalParityAssertions} Metrics)</span>
+        <span class="step-badge">Runner ${parityRunnerNum} (${parityCases.length} Cases / ${totalParityAssertions} Metrics)</span>
         <h2 id="suite4-heading">Node.js CLI vs. Browser Bundle Bit-for-Bit Parity Suite (<code>deploy/verify-parity.mjs</code>)</h2>
       </div>
       <div tabindex="0" role="region" aria-labelledby="table4-caption" class="table-wrapper">
@@ -1491,11 +1772,11 @@ ${parityRowsHtml}
       </div>
     </section>
 
-    <!-- Table 5: Masterwork 100x Deliverable Verification Gates -->
+    <!-- Masterwork Deliverable Verification Gates -->
     <section class="card" aria-labelledby="suite5-heading">
       <div class="card-header">
-        <span class="step-badge">Runner 5 (${masterworkGroups.length} Gates)</span>
-        <h2 id="suite5-heading">Masterwork 100x Deliverable Verification Suite (<code>tests/verify_masterwork_100x.mjs</code>)</h2>
+        <span class="step-badge">Runner ${masterworkRunnerNum} (${masterworkGroups.length} Gates)</span>
+        <h2 id="suite5-heading">Field Studio, Epistemic Oracle &amp; Handoff Verification Suite (<code>tests/verify_masterwork_100x.mjs</code>)</h2>
       </div>
       <div tabindex="0" role="region" aria-labelledby="table5-caption" class="table-wrapper">
         <table
@@ -1508,10 +1789,10 @@ ${parityRowsHtml}
             --label-5: 'CLI Command';
           "
         >
-          <caption id="table5-caption" class="sr-only">Masterwork 100x Deliverable Gates D1 through D7</caption>
+          <caption id="table5-caption" class="sr-only">Masterwork Deliverable Verification Gates</caption>
           <thead>
             <tr>
-              <th scope="col">Deliverable ID</th>
+              <th scope="col">Gate ID</th>
               <th scope="col">Verification Gate</th>
               <th scope="col">Architectural &amp; User-Facing Invariant Proven</th>
               <th scope="col">Source File &amp; Line</th>
@@ -1581,7 +1862,7 @@ ${boundaryRowsHtml}
   <footer class="app-footer">
     <div class="container">
       <p>
-        Open Arbor v2.0 &middot; Falsifiability &amp; Verification Methodology &middot; ${totalVerificationGroups} Executable Verification Groups &middot; Licensed under AGPL-3.0-only.
+        Open Arbor v2.1 &middot; Executable Proof &amp; Falsifiability Ledger &middot; ${totalVerificationGroups} Executable Verification Groups &middot; Licensed under AGPL-3.0-only.
       </p>
     </div>
   </footer>

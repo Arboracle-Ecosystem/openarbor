@@ -37,6 +37,42 @@ const round1 = (n) => Math.round(Number(n || 0) * 10) / 10;
 const round2 = (n) => Math.round(Number(n || 0) * 100) / 100;
 
 /**
+ * Pointer-coordinate light-dismiss fallback for <dialog closedby="any">
+ * on browsers where HTMLDialogElement.prototype.closedBy is not yet supported.
+ * Checks pointerdown + pointerup against getBoundingClientRect() rather than event.target.
+ */
+export function bindDialogLightDismissFallback(dialog) {
+  if (!dialog || typeof HTMLDialogElement === 'undefined') return;
+  if ('closedBy' in HTMLDialogElement.prototype) return;
+  if (dialog.dataset.lightDismissBound) return;
+  dialog.dataset.lightDismissBound = 'true';
+
+  const isOutside = (e) => {
+    if (e.clientX === 0 && e.clientY === 0) return false;
+    const rect = dialog.getBoundingClientRect();
+    return (
+      rect.width > 0 &&
+      rect.height > 0 &&
+      (e.clientX < rect.left ||
+        e.clientX > rect.right ||
+        e.clientY < rect.top ||
+        e.clientY > rect.bottom)
+    );
+  };
+
+  let pointerDownOutside = false;
+  dialog.addEventListener('pointerdown', (e) => {
+    pointerDownOutside = isOutside(e);
+  });
+  dialog.addEventListener('pointerup', (e) => {
+    if (pointerDownOutside && isOutside(e)) {
+      dialog.close();
+    }
+    pointerDownOutside = false;
+  });
+}
+
+/**
  * Shared Theme Toggle across all Open Arbor pages.
  * Synchronizes <meta name="color-scheme">, localStorage('color-scheme'), and #oa-theme-toggle button text.
  */

@@ -2,13 +2,15 @@
 /**
  * Open Arbor MCP Server (server/mcp/openarbor-mcp.mjs)
  * Zero-dependency stdio JSON-RPC 2.0 Model Context Protocol server exposing
- * Open Arbor's deterministic engines:
+ * Open Arbor's 8 deterministic tools:
  *   1. calculate_root_zone          -> src/core/rootZone.js
  *   2. evaluate_ordinance           -> src/core/ordinanceEngine.js
  *   3. calculate_ecosystem_benefits -> src/core/ecosystemBenefits.js
  *   4. rca_biomechanics             -> src/core/rcaEngine.js
  *   5. rca_lint                     -> src/core/rcaEngine.js
  *   6. lookup_ordinance             -> data/ordinances/*.json
+ *   7. validate_soil_function       -> src/core/soilFunction.js
+ *   8. leo_rca_verify               -> src/core/leoRcaEngine.js
  *
  * License: AGPL-3.0-only
  */
@@ -36,9 +38,18 @@ import {
   estimateTreeAge,
 } from '../../src/core/ecosystemBenefits.js';
 import {
+  validateSoilFunction,
+  estimateSoilSpongeCapacity,
+} from '../../src/core/soilFunction.js';
+import {
   evaluateBiomechanicsAndRhizosphere,
   lintRcaEvidentiaryReport,
 } from '../../src/core/rcaEngine.js';
+import {
+  compileLeoRcaBrief,
+  verifyLeoRcaNarrative,
+  runLeoRcaSelfAudit,
+} from '../../src/core/leoRcaEngine.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -47,13 +58,14 @@ const ORDINANCES_DIR = path.join(REPO_ROOT, 'data', 'ordinances');
 
 const SERVER_INFO = {
   name: 'openarbor-mcp',
-  version: '2.0.0',
+  version: '2.1.0',
 };
 
 const PROTOCOL_VERSION = '2024-11-05';
 
 export const MAX_EVALUATE_TREES = 500;
 export const MAX_JURISDICTION_ID_LENGTH = 128;
+export const MAX_NARRATIVE_LENGTH = 100000;
 
 /**
  * Load all municipal ordinance records from data/ordinances/*.json.
@@ -288,6 +300,68 @@ export const MCP_TOOLS = [
           maxLength: MAX_JURISDICTION_ID_LENGTH,
           description:
             'Municipality identifier (max 128 chars; e.g., tx-austin, tx-georgetown, tx-liberty-hill, tx-cedar-park, tx-round-rock, or-ashland, or-medford, or-grants-pass).',
+        },
+      },
+    },
+  },
+  {
+    name: 'validate_soil_function',
+    description:
+      'Validate an optional soil_function provenance block (enforcing source attribution and chronological ISO measurement_dates whenever numeric soil metrics are supplied) and compute deterministic vadose storm capture and NRCS organic-matter sponge capacity.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        soil_function: {
+          type: 'object',
+          description:
+            'Optional soil_function object (infiltration_mm_hr, organic_matter_percent, water_holding_gal_acre_ft, measurement_dates, source, method).',
+        },
+        tiz_area_m2: {
+          type: 'number',
+          default: 100,
+          description: 'Tree Influence Zone area in square meters for vadose sponge capacity scaling.',
+        },
+        infiltration_mm_hr: {
+          type: 'number',
+          description:
+            'Optional infiltration rate in mm/hr (used for sponge capacity when soil_function is omitted).',
+        },
+        organic_matter_percent: {
+          type: 'number',
+          description:
+            'Optional soil organic matter percentage from 0 to 100 (used for sponge capacity when soil_function is omitted).',
+        },
+      },
+    },
+  },
+  {
+    name: 'leo_rca_verify',
+    description:
+      'Compile a deterministic 6-Slot LEO-RCA Profile 01 stewardship brief with 3-stage phased triage, verify narrative prose against oracle anchors and the Mattheck t/R >= 0.30 anti-liquidation invariant, and run a 3-fixture negative sabotage self-audit.',
+    inputSchema: {
+      type: 'object',
+      required: ['assessment'],
+      properties: {
+        assessment: {
+          type: 'object',
+          description: 'RCA assessment object conforming to schemas/rca_assessment.schema.json.',
+        },
+        markdown_narrative: {
+          type: 'string',
+          maxLength: MAX_NARRATIVE_LENGTH,
+          description:
+            'Optional Markdown narrative (max 100,000 chars) to verify against deterministic oracle anchors and Mattheck stability invariants.',
+        },
+        jurisdiction_id: {
+          type: 'string',
+          maxLength: MAX_JURISDICTION_ID_LENGTH,
+          description:
+            'Optional jurisdiction ID in data/ordinances/ to attach municipal CRZ and cash-in-lieu context.',
+        },
+        run_self_audit: {
+          type: 'boolean',
+          default: true,
+          description: 'Whether to execute the 3-fixture negative sabotage self-audit gate.',
         },
       },
     },
@@ -582,6 +656,183 @@ export function executeToolCall(name, args = {}) {
         dataset_region: entry.region,
         ordinance: entry.record,
       });
+    }
+
+    case 'validate_soil_function': {
+      try {
+        const safeArgs = args && typeof args === 'object' ? args : {};
+        const hasExplicitBlock = Object.prototype.hasOwnProperty.call(
+          safeArgs,
+          'soil_function'
+        );
+        const hasTopLevelSoilMetadata =
+          Object.prototype.hasOwnProperty.call(safeArgs, 'measurement_dates') ||
+          Object.prototype.hasOwnProperty.call(safeArgs, 'source') ||
+          Object.prototype.hasOwnProperty.call(safeArgs, 'method') ||
+          Object.prototype.hasOwnProperty.call(safeArgs, 'water_holding_gal_acre_ft');
+
+        let rawSoil = null;
+        if (hasExplicitBlock) {
+          rawSoil = safeArgs.soil_function;
+        } else if (hasTopLevelSoilMetadata) {
+          const candidate = {};
+          for (const k of [
+            'infiltration_mm_hr',
+            'organic_matter_percent',
+            'water_holding_gal_acre_ft',
+            'measurement_dates',
+            'source',
+            'method',
+          ]) {
+            if (Object.prototype.hasOwnProperty.call(safeArgs, k)) {
+              candidate[k] = safeArgs[k];
+            }
+          }
+          rawSoil = candidate;
+        }
+
+        const normalized = validateSoilFunction(rawSoil);
+        const tizAreaM2 =
+          safeArgs.tiz_area_m2 != null ? Number(safeArgs.tiz_area_m2) : 100;
+        const infRate =
+          normalized?.infiltration_mm_hr ??
+          (safeArgs.infiltration_mm_hr != null ? Number(safeArgs.infiltration_mm_hr) : 18);
+        const somPct =
+          normalized?.organic_matter_percent ??
+          (safeArgs.organic_matter_percent != null
+            ? Number(safeArgs.organic_matter_percent)
+            : 2.5);
+
+        const spongeCapacity = estimateSoilSpongeCapacity({
+          tiz_area_m2: tizAreaM2,
+          infiltration_mm_hr: infRate,
+          organic_matter_percent: somPct,
+        });
+
+        return formatToolResult({
+          valid: true,
+          soil_function: normalized,
+          omitted_by_default: normalized === null,
+          sponge_capacity: spongeCapacity,
+        });
+      } catch (err) {
+        return formatToolResult(
+          {
+            valid: false,
+            error: 'INVALID_SOIL_FUNCTION',
+            message: err.message,
+          },
+          true
+        );
+      }
+    }
+
+    case 'leo_rca_verify': {
+      const safeArgs = args && typeof args === 'object' ? args : {};
+      const assessment =
+        safeArgs.assessment || (safeArgs.structural_baseline ? safeArgs : null);
+      if (!assessment || typeof assessment !== 'object' || Array.isArray(assessment)) {
+        return formatToolResult(
+          {
+            error: 'INVALID_ASSESSMENT',
+            message: 'leo_rca_verify requires an assessment object with structural_baseline.',
+          },
+          true
+        );
+      }
+
+      if (
+        safeArgs.markdown_narrative !== undefined &&
+        safeArgs.markdown_narrative !== null &&
+        typeof safeArgs.markdown_narrative !== 'string'
+      ) {
+        return formatToolResult(
+          {
+            error: 'INVALID_NARRATIVE_TYPE',
+            message: 'markdown_narrative must be a string when provided.',
+          },
+          true
+        );
+      }
+
+      if (
+        typeof safeArgs.markdown_narrative === 'string' &&
+        safeArgs.markdown_narrative.length > MAX_NARRATIVE_LENGTH
+      ) {
+        return formatToolResult(
+          {
+            error: 'MAX_NARRATIVE_LENGTH_EXCEEDED',
+            max_length: MAX_NARRATIVE_LENGTH,
+            received_length: safeArgs.markdown_narrative.length,
+            message: `markdown_narrative exceeds maximum length of ${MAX_NARRATIVE_LENGTH} characters.`,
+          },
+          true
+        );
+      }
+
+      if (
+        safeArgs.jurisdiction_id &&
+        String(safeArgs.jurisdiction_id).length > MAX_JURISDICTION_ID_LENGTH
+      ) {
+        return formatToolResult(
+          {
+            error: 'JURISDICTION_ID_TOO_LONG',
+            max_length: MAX_JURISDICTION_ID_LENGTH,
+            received_length: String(safeArgs.jurisdiction_id).length,
+            message: `jurisdiction_id exceeds maximum length of ${MAX_JURISDICTION_ID_LENGTH} characters.`,
+          },
+          true
+        );
+      }
+
+      try {
+        const evalContext =
+          safeArgs.eval_context && typeof safeArgs.eval_context === 'object'
+            ? { ...safeArgs.eval_context }
+            : {};
+
+        if (!evalContext.municipality && safeArgs.jurisdiction_id) {
+          const catalog = loadOrdinanceCatalog();
+          const found = catalog.get(String(safeArgs.jurisdiction_id).toLowerCase().trim());
+          if (!found) {
+            return formatToolResult(
+              {
+                error: 'UNKNOWN_JURISDICTION',
+                message: `No ordinance record found for jurisdiction_id '${safeArgs.jurisdiction_id}'.`,
+                available_jurisdictions: Array.from(catalog.keys()),
+              },
+              true
+            );
+          }
+          evalContext.municipality = found.record;
+        }
+
+        const compiled = compileLeoRcaBrief(assessment, evalContext);
+        const narrativeText =
+          typeof safeArgs.markdown_narrative === 'string'
+            ? safeArgs.markdown_narrative
+            : compiled.brief_markdown;
+        const verification = verifyLeoRcaNarrative(narrativeText, assessment, evalContext);
+        const shouldRunSelfAudit = safeArgs.run_self_audit !== false;
+        const selfAudit = shouldRunSelfAudit
+          ? runLeoRcaSelfAudit(assessment, evalContext)
+          : null;
+
+        return formatToolResult({
+          valid: verification.valid && (selfAudit ? selfAudit.self_audit_passed : true),
+          verification,
+          compiled_brief: compiled,
+          self_audit: selfAudit,
+        });
+      } catch (err) {
+        return formatToolResult(
+          {
+            error: 'LEO_RCA_VERIFY_ERROR',
+            message: err.message,
+          },
+          true
+        );
+      }
     }
 
     default:

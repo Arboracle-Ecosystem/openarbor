@@ -1,5 +1,5 @@
 /**
- * OpenArbor Core — Allometric Ecosystem Benefits, Veteran Tree Age, and GeoJSON Adapter
+ * OpenArbor Core: Allometric Ecosystem Benefits, Veteran Tree Age, and GeoJSON Adapter
  * Grounded in published urban forestry literature:
  *   - Biomass & Carbon: Nowak (1994), Cairns et al. (1997)
  *   - Canopy Hydrology: Xiao et al. (2000)
@@ -7,6 +7,10 @@
  *   - Building Shade Cooling: McPherson & Simpson (1999) / ISA (~80 kWh/tree average)
  *   - Veteran Tree Age Estimation: John White (Forestry Commission Information Note FCIN12)
  */
+
+import { validateSoilFunction, estimateSoilSpongeCapacity } from './soilFunction.js';
+
+export { validateSoilFunction, estimateSoilSpongeCapacity };
 
 const round2 = (n) => Math.round(Number(n || 0) * 100) / 100;
 const round1 = (n) => Math.round(Number(n || 0) * 10) / 10;
@@ -153,10 +157,23 @@ export function calculateTreeEcosystemBenefits({
  * Export evaluated OpenArbor tree inventory rows as an OGC-compliant GeoJSON FeatureCollection
  * for direct import into QGIS, ArcGIS Field Maps, or Leaflet.
  */
-export function toGeoJSONFeatureCollection(evaluatedRows = [], metadata = {}) {
-  return {
+export function toGeoJSONFeatureCollection(evaluatedRows = [], metadata = {}, options = {}) {
+  const safeMetadata = metadata && typeof metadata === 'object' ? metadata : {};
+  const metaSoilFunction = Object.prototype.hasOwnProperty.call(safeMetadata, 'soil_function')
+    ? safeMetadata.soil_function
+    : undefined;
+  const { soil_function: _omittedMetaSoil, ...cleanMetadata } = safeMetadata;
+
+  const hasOptionsSoil =
+    options !== null &&
+    typeof options === 'object' &&
+    Object.prototype.hasOwnProperty.call(options, 'soil_function');
+  const rawSoilFunction = hasOptionsSoil ? options.soil_function : metaSoilFunction;
+  const soilFunction = validateSoilFunction(rawSoilFunction);
+
+  const collection = {
     type: 'FeatureCollection',
-    name: metadata.name || 'OpenArbor_Tree_Inventory',
+    name: cleanMetadata.name || 'OpenArbor_Tree_Inventory',
     crs: {
       type: 'name',
       properties: { name: 'urn:ogc:def:crs:OGC:1.3:CRS84' },
@@ -164,7 +181,7 @@ export function toGeoJSONFeatureCollection(evaluatedRows = [], metadata = {}) {
     metadata: {
       generated_at: new Date().toISOString(),
       standard: 'OpenArbor v2.0 (ANSI A300 Part 5 / ISA BMP)',
-      ...metadata,
+      ...cleanMetadata,
     },
     features: evaluatedRows
       .filter((r) => r.lat != null && r.lng != null)
@@ -192,4 +209,10 @@ export function toGeoJSONFeatureCollection(evaluatedRows = [], metadata = {}) {
         },
       })),
   };
+
+  if (soilFunction !== null) {
+    collection.soil_function = soilFunction;
+  }
+
+  return collection;
 }

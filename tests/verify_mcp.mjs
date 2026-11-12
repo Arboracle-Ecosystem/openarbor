@@ -1,8 +1,9 @@
 /**
- * Open Arbor MCP Server Verification Suite (tests/verify_mcp.mjs)
+ * Open Arbor MCP Server & LEO-RCA Verification Suite (tests/verify_mcp.mjs)
  * Spawns `node server/mcp/openarbor-mcp.mjs` as a real child process over stdio
- * and verifies newline-delimited JSON-RPC 2.0 protocol conformance, all 6 MCP tools,
- * known-answer calculations, and negative-path error handling without crashing.
+ * and verifies newline-delimited JSON-RPC 2.0 protocol conformance, all 8 MCP tools,
+ * known-answer calculations, LEO-RCA Profile 01 sabotage gates, phased triage math,
+ * Arborist Handoff Briefs, and negative-path error handling without crashing.
  */
 
 import assert from 'node:assert/strict';
@@ -13,6 +14,14 @@ import path from 'node:path';
 import readline from 'node:readline';
 import { fileURLToPath } from 'node:url';
 
+import {
+  computePhasedStewardshipTriage,
+  compileLeoRcaBrief,
+  verifyLeoRcaNarrative,
+  runLeoRcaSelfAudit,
+  composeArboristHandoffBrief,
+} from '../src/core/leoRcaEngine.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const REPO_ROOT = path.resolve(__dirname, '..');
@@ -20,7 +29,7 @@ const SERVER_PATH = path.join(REPO_ROOT, 'server', 'mcp', 'openarbor-mcp.mjs');
 const VALIDATOR_PATH = path.join(REPO_ROOT, 'scripts', 'validate-ordinance.mjs');
 const EXAMPLE_RCA_PATH = path.join(REPO_ROOT, 'examples', 'ashland_oregon_white_oak_rca_v2.json');
 
-console.log('=== Open Arbor MCP Server Verification Suite (Subprocess JSON-RPC 2.0) ===\n');
+console.log('=== Open Arbor MCP Server & LEO-RCA Verification Suite (Subprocess JSON-RPC 2.0) ===\n');
 
 const child = spawn(process.execPath, [SERVER_PATH], {
   cwd: REPO_ROOT,
@@ -76,17 +85,17 @@ try {
   const initRes = await sendRpc('initialize', {
     protocolVersion: '2024-11-05',
     capabilities: {},
-    clientInfo: { name: 'verify_mcp', version: '2.0.0' },
+    clientInfo: { name: 'verify_mcp', version: '2.1.0' },
   });
   assert.equal(initRes.jsonrpc, '2.0');
   assert.equal(initRes.result.serverInfo.name, 'openarbor-mcp');
-  assert.equal(initRes.result.serverInfo.version, '2.0.0');
-  console.log('[PASS] 1. MCP initialize handshake completed (server: openarbor-mcp v2.0.0)');
+  assert.equal(initRes.result.serverInfo.version, '2.1.0');
+  console.log('[PASS] 1. MCP initialize handshake completed (server: openarbor-mcp v2.1.0)');
 
-  // 2. tools/list assertion (must return exactly 6 tools)
+  // 2. tools/list assertion (must return all 8 tools)
   const listRes = await sendRpc('tools/list', {});
   const tools = listRes.result?.tools || [];
-  assert.equal(tools.length, 6, `Expected 6 MCP tools, got ${tools.length}`);
+  assert.equal(tools.length, 8, `Expected 8 MCP tools, got ${tools.length}`);
   const toolNames = tools.map((t) => t.name);
   assert.deepEqual(toolNames, [
     'calculate_root_zone',
@@ -95,8 +104,10 @@ try {
     'rca_biomechanics',
     'rca_lint',
     'lookup_ordinance',
+    'validate_soil_function',
+    'leo_rca_verify',
   ]);
-  console.log(`[PASS] 2. tools/list verified (${tools.length} tools: ${toolNames.join(', ')})`);
+  console.log('[PASS] 2. tools/list verified across all 8 deterministic MCP tools');
 
   // 3. Known-answer tools/call for calculate_root_zone (dbh: 24 inches, US_1_1 -> radius_feet: 24)
   const rzRes = await sendRpc('tools/call', {
@@ -113,9 +124,7 @@ try {
   assert.equal(rzData.tpz.radius_feet, 24);
   assert.equal(rzData.crz.radius_feet, 24);
   assert.equal(rzData.area_sqft, 1809.56);
-  console.log(
-    `[PASS] 3. tools/call calculate_root_zone (24 in, US_1_1) -> radius_feet=${rzData.radius_feet}, area_sqft=${rzData.area_sqft}`
-  );
+  console.log('[PASS] 3. tools/call calculate_root_zone (24 in, US_1_1 -> 24 ft radius, 1809.56 sq ft) verified');
 
   // 4. Positive & Negative-path calls for lookup_ordinance
   const lookupOk = await sendRpc('tools/call', {
@@ -137,9 +146,7 @@ try {
   assert.ok(Array.isArray(errPayload.available_jurisdictions));
   assert.ok(errPayload.available_jurisdictions.includes('tx-austin'));
   assert.ok(errPayload.available_jurisdictions.includes('or-ashland'));
-  console.log(
-    `[PASS] 4. tools/call lookup_ordinance positive (or-ashland) & negative-path (xx-nonexistent-city -> ${errPayload.error}, no crash)`
-  );
+  console.log('[PASS] 4. tools/call lookup_ordinance positive (or-ashland) and negative-path (UNKNOWN_JURISDICTION) verified');
 
   // 5. Known-answer tools/call for evaluate_ordinance, calculate_ecosystem_benefits, rca_biomechanics, and rca_lint
   const ordRes = await sendRpc('tools/call', {
@@ -203,11 +210,153 @@ try {
   const lintData = JSON.parse(lintRes.result.content[0].text);
   assert.equal(lintData.valid, true);
   assert.equal(lintData.errors.length, 0);
-  console.log(
-    '[PASS] 5. tools/call evaluate_ordinance, calculate_ecosystem_benefits, rca_biomechanics, and rca_lint verified'
+  console.log('[PASS] 5. tools/call evaluate_ordinance, calculate_ecosystem_benefits, rca_biomechanics, and rca_lint verified');
+
+  // 6. Tool 7: validate_soil_function positive and negative-path verification
+  const soilOkRes = await sendRpc('tools/call', {
+    name: 'validate_soil_function',
+    arguments: {
+      tiz_area_m2: 200,
+      soil_function: {
+        infiltration_mm_hr: 55,
+        organic_matter_percent: 4.0,
+        water_holding_gal_acre_ft: 52000,
+        measurement_dates: ['2026-04-01', '2026-10-01'],
+        source: 'OSU Soil Health Lab Panel #2026-105',
+        method: 'measured',
+      },
+    },
+  });
+  assert.equal(soilOkRes.result.isError, false);
+  const soilOkData = JSON.parse(soilOkRes.result.content[0].text);
+  assert.equal(soilOkData.valid, true);
+  assert.equal(soilOkData.omitted_by_default, false);
+  assert.equal(soilOkData.sponge_capacity.infiltration_class, 'Living Sponge (> 50 mm/hr)');
+  assert.equal(soilOkData.sponge_capacity.storm_1in_capture_gallons, 1342);
+
+  const soilEmptyRes = await sendRpc('tools/call', {
+    name: 'validate_soil_function',
+    arguments: { tiz_area_m2: 100 },
+  });
+  assert.equal(soilEmptyRes.result.isError, false);
+  const soilEmptyData = JSON.parse(soilEmptyRes.result.content[0].text);
+  assert.equal(soilEmptyData.valid, true);
+  assert.equal(soilEmptyData.soil_function, null);
+  assert.equal(soilEmptyData.omitted_by_default, true);
+
+  const soilBadRes = await sendRpc('tools/call', {
+    name: 'validate_soil_function',
+    arguments: {
+      soil_function: {
+        infiltration_mm_hr: 30,
+        measurement_dates: ['2026-04-01', '2026-10-01'],
+        method: 'measured',
+      },
+    },
+  });
+  assert.equal(soilBadRes.result.isError, true, 'Missing soil_function.source must return isError=true');
+  const soilBadData = JSON.parse(soilBadRes.result.content[0].text);
+  assert.equal(soilBadData.valid, false);
+  assert.equal(soilBadData.error, 'INVALID_SOIL_FUNCTION');
+  assert.match(soilBadData.message, /source/i);
+  console.log('[PASS] 6. tools/call validate_soil_function positive sponge capacity and negative sourceless rejection verified');
+
+  // 7. Tool 8: leo_rca_verify positive, negative sabotage, phased triage conservation, and handoff brief checks
+  const leoOkRes = await sendRpc('tools/call', {
+    name: 'leo_rca_verify',
+    arguments: {
+      assessment: exampleRca,
+      jurisdiction_id: 'or-ashland',
+      run_self_audit: true,
+    },
+  });
+  assert.equal(leoOkRes.result.isError, false);
+  const leoOkData = JSON.parse(leoOkRes.result.content[0].text);
+  assert.equal(leoOkData.valid, true);
+  assert.equal(leoOkData.verification.valid, true);
+  assert.equal(leoOkData.verification.checked_anchors, 8);
+  assert.equal(leoOkData.self_audit.self_audit_passed, true);
+  assert.equal(leoOkData.self_audit.fixtures_tested, 3);
+
+  const triage = computePhasedStewardshipTriage(exampleRca);
+  assert.equal(triage.stages.length, 3);
+  assert.equal(triage.day_one_undercuts_removal, true);
+  assert.ok(triage.day_one_savings_vs_removal_usd > 0);
+  const sumPrices = triage.stages.reduce((s, st) => s + st.client_price_usd, 0);
+  const sumNets = triage.stages.reduce((s, st) => s + st.practitioner_net_usd, 0);
+  assert.equal(sumPrices, triage.full_5yr_gross_usd);
+  assert.equal(sumNets, triage.full_5yr_practitioner_net_usd);
+
+  const sabotagedNarrative =
+    `${leoOkData.compiled_brief.brief_markdown}\n\n` +
+    'Conclusion: Because of heartwood decay and CRZ = 99.0 ft, we recommend immediate hazard tree removal. [TODO]';
+  const leoSabotageRes = await sendRpc('tools/call', {
+    name: 'leo_rca_verify',
+    arguments: {
+      assessment: exampleRca,
+      jurisdiction_id: 'or-ashland',
+      markdown_narrative: sabotagedNarrative,
+      run_self_audit: false,
+    },
+  });
+  assert.equal(leoSabotageRes.result.isError, false);
+  const leoSabotageData = JSON.parse(leoSabotageRes.result.content[0].text);
+  assert.equal(leoSabotageData.valid, false);
+  assert.equal(leoSabotageData.verification.valid, false);
+  assert.ok(
+    leoSabotageData.verification.errors.some((e) => e.includes('RCA_MATTHECK_T_OVER_R')),
+    'Expected RCA_MATTHECK_T_OVER_R violation on sabotaged removal narrative'
+  );
+  assert.ok(
+    leoSabotageData.verification.errors.some((e) => e.includes('MAST_FM_2_6')),
+    'Expected MAST_FM_2_6 violation on drifted plain-prose CRZ claim'
+  );
+  assert.ok(
+    leoSabotageData.verification.errors.some((e) => e.includes('EPISTEMIC_STATUS_DRIFT')),
+    'Expected EPISTEMIC_STATUS_DRIFT violation on [TODO] placeholder'
   );
 
-  // 6. Bounded-input guard on evaluate_ordinance (> 500 trees) and lookup_ordinance (> 128 chars)
+  // Verify runLeoRcaSelfAudit also handles thin-shell (t/R < 0.30) assessments by cloning t/R >= 0.34 for Fixture 1
+  const thinShellClone = JSON.parse(JSON.stringify(exampleRca));
+  thinShellClone.structural_baseline.sound_shell_thickness_ratio_t_over_r = 0.21;
+  delete thinShellClone.structural_baseline.sonic_tomography_or_resistograph_uri;
+  const thinBrief = compileLeoRcaBrief(thinShellClone, {
+    unverified_gaps: [{ field: 'plan_rules.pruning', description: 'Missing pruning rule' }],
+  });
+  assert.equal(thinBrief.unverified_tokens.length, 2);
+  assert.equal(verifyLeoRcaNarrative(thinBrief.brief_markdown, thinShellClone, {
+    unverified_gaps: [{ field: 'plan_rules.pruning', description: 'Missing pruning rule' }],
+  }).valid, true);
+  const thinAudit = runLeoRcaSelfAudit(thinShellClone);
+  assert.equal(thinAudit.self_audit_passed, true);
+
+  // Verify composeArboristHandoffBrief output and house-style cleanliness
+  const handoff = composeArboristHandoffBrief({
+    speciesCommon: 'Oregon White Oak',
+    speciesScientific: 'Quercus garryana',
+    dbhInches: 41.34,
+    cityLabel: 'Ashland, OR',
+    protectionStatus: 'Heritage',
+    tOverR: 0.34,
+    crzFeet: 41.34,
+    holobiontUsd: 457919,
+    ctlaUsd: 24414,
+    cashInLieuUsd: 8268,
+    stage1Usd: triage.stages[0].client_price_usd,
+    removalBidUsd: triage.removal_bid_usd,
+    marginMultiplier: triage.net_margin_multiplier,
+    oakWiltWarning: '',
+    shareUrl: 'https://openarbor.org/demo/#oa1=test',
+  });
+  for (const textField of Object.values(handoff)) {
+    assert.equal(typeof textField, 'string');
+    assert.ok(textField.length > 20);
+    assert.equal(/[\u2014\u2013\u0021]/.test(textField), false, 'Handoff text must contain zero em/en dashes or exclamation points');
+    assert.equal(/\s-\s/.test(textField), false, 'Handoff text must contain zero spaced hyphens');
+  }
+  console.log('[PASS] 7. tools/call leo_rca_verify, 3-stage phased triage, sabotage self-audit, and handoff brief verified');
+
+  // 8. Bounded-input guards on evaluate_ordinance (> 500 trees), lookup_ordinance (> 128 chars), and leo_rca_verify (> 100,000 chars)
   const oversizedTrees = Array.from({ length: 501 }, (_, i) => ({
     tag: `T-${i + 1}`,
     species_common: 'Live Oak',
@@ -235,17 +384,26 @@ try {
   assert.equal(longIdRes.result.isError, true);
   const longIdPayload = JSON.parse(longIdRes.result.content[0].text);
   assert.equal(longIdPayload.error, 'JURISDICTION_ID_TOO_LONG');
-  console.log(
-    `[PASS] 6. MCP input size guards verified (evaluate_ordinance 501 trees -> ${capPayload.error}; lookup_ordinance 133 chars -> ${longIdPayload.error})`
-  );
 
-  // 7. Prototype-chain bypass negative tests on scripts/validate-ordinance.mjs (__proto__ and constructor)
+  const longNarrativeRes = await sendRpc('tools/call', {
+    name: 'leo_rca_verify',
+    arguments: {
+      assessment: exampleRca,
+      markdown_narrative: 'A'.repeat(100001),
+    },
+  });
+  assert.equal(longNarrativeRes.result.isError, true);
+  const longNarrativePayload = JSON.parse(longNarrativeRes.result.content[0].text);
+  assert.equal(longNarrativePayload.error, 'MAX_NARRATIVE_LENGTH_EXCEEDED');
+  assert.equal(longNarrativePayload.max_length, 100000);
+  console.log('[PASS] 8. MCP bounded-input size guards verified across evaluate_ordinance, lookup_ordinance, and leo_rca_verify');
+
+  // 9. Prototype-chain bypass negative tests on scripts/validate-ordinance.mjs (__proto__ and constructor)
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'openarbor-ord-test-'));
   try {
     const protoFixturePath = path.join(tmpDir, 'bad_proto.json');
     const constructorFixturePath = path.join(tmpDir, 'bad_constructor.json');
 
-    // Write raw JSON with literal "__proto__" key and literal "constructor" key
     fs.writeFileSync(
       protoFixturePath,
       '{\n' +
@@ -294,18 +452,16 @@ try {
       `Expected constructor rejection in stderr, got: ${ctorRun.stderr}`
     );
 
-    console.log(
-      '[PASS] 7. Ordinance validator prototype-chain negative gates verified (__proto__ and constructor rejected with exit code 1)'
-    );
+    console.log('[PASS] 9. Ordinance validator prototype-chain negative gates verified (__proto__ and constructor rejected)');
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
 
-  // 8. Clean shutdown
+  // 10. Clean shutdown
   const shutRes = await sendRpc('shutdown', {});
   assert.equal(shutRes.result, null);
-  console.log('[PASS] 8. MCP shutdown completed cleanly\n');
-  console.log('ALL 8 OPEN ARBOR MCP & VALIDATOR SECURITY CHECKS PASSED (0 proprietary dependencies).');
+  console.log('[PASS] 10. MCP shutdown completed cleanly\n');
+  console.log('ALL 10 OPEN ARBOR MCP, LEO-RCA & VALIDATOR SECURITY CHECKS PASSED (0 proprietary dependencies).');
 } finally {
   rl.close();
   if (!child.killed) {

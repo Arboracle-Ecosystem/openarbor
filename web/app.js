@@ -45,6 +45,19 @@ import {
   mintOpenBadgeAttestation,
 } from '../src/core/rcaEngine.js';
 
+import {
+  validateSoilFunction,
+  estimateSoilSpongeCapacity,
+} from '../src/core/soilFunction.js';
+
+import {
+  computePhasedStewardshipTriage,
+  compileLeoRcaBrief,
+  verifyLeoRcaNarrative,
+  runLeoRcaSelfAudit,
+  composeArboristHandoffBrief,
+} from '../src/core/leoRcaEngine.js';
+
 import txOrdinances from '../data/ordinances/central_texas_ordinances.json';
 import orOrdinances from '../data/ordinances/rogue_valley_oregon_ordinances.json';
 import rcaAssessmentSchema from '../schemas/rca_assessment.schema.json';
@@ -57,7 +70,16 @@ import {
   DEFAULT_STAND_TREES,
 } from './presets.js';
 
-import { initDemoExtrasUI, initSharedThemeToggle } from './pages/demo-extras.js';
+import {
+  initDemoExtrasUI,
+  initSharedThemeToggle,
+  bindDialogLightDismissFallback,
+} from './pages/demo-extras.js';
+import {
+  initLivingLensUI,
+  initVeilAndHandoffChrome,
+  openArboristHandoffDialog,
+} from './pages/living-lens-ui.js';
 import { initToolsCatalogUI } from './pages/tools-ui.js';
 import { initOrdinancesExplorerUI } from './pages/ordinances-ui.js';
 import { initMcpPlaygroundUI } from './pages/mcp-ui.js';
@@ -92,6 +114,8 @@ export {
   estimateTreeAge,
   calculateTreeEcosystemBenefits,
   toGeoJSONFeatureCollection,
+  validateSoilFunction,
+  estimateSoilSpongeCapacity,
   decodePlusCode,
   validateJsonSchema,
   evaluateBiomechanicsAndRhizosphere,
@@ -103,6 +127,11 @@ export {
   compileRcaEvidentiaryMarkdown,
   compilePreservationCounterNotice,
   mintOpenBadgeAttestation,
+  computePhasedStewardshipTriage,
+  compileLeoRcaBrief,
+  verifyLeoRcaNarrative,
+  runLeoRcaSelfAudit,
+  composeArboristHandoffBrief,
   txOrdinances,
   orOrdinances,
   rcaAssessmentSchema,
@@ -334,10 +363,63 @@ export function evaluateCompleteFieldCase(assessment, options = {}) {
     };
   }
 
+  const provenance = inspectMunicipalityProvenance(municipality);
+  const soilInput = assessment.soil_and_microbiome_baseline || {};
+  const soilSponge = estimateSoilSpongeCapacity({
+    tiz_area_m2: Number(biomechanics.root_zones.tiz_area_sqm) || 100,
+    infiltration_mm_hr: Number(soilInput.infiltration_rate_mm_hr ?? 18),
+    organic_matter_percent: Number(soilInput.organic_matter_pct ?? 2.0),
+  });
+
+  const phasedTriage = computePhasedStewardshipTriage(assessment, economics);
+  const leoEvalContext = {
+    biomechanics,
+    valuation,
+    economics,
+    triage: phasedTriage,
+    municipality,
+    rootZones: { crz, srz },
+    assessment_sha256: compiledReport.sha256,
+    evaluatedRow: evaluatedRows[0],
+    permitText,
+    mitigationIfRemoved,
+    provenance,
+  };
+  const leoBrief = compileLeoRcaBrief(assessment, leoEvalContext);
+  const leoVerification = verifyLeoRcaNarrative(
+    leoBrief.brief_markdown,
+    assessment,
+    leoEvalContext
+  );
+  const leoSelfAudit = runLeoRcaSelfAudit(assessment, leoEvalContext);
+
+  const oakWiltFlag = Array.isArray(evaluatedRows[0]?.flags)
+    ? evaluatedRows[0].flags.find((f) => /oak wilt/i.test(f)) || ''
+    : '';
+
+  const handoffBrief = composeArboristHandoffBrief({
+    speciesCommon: sb.species_common || 'Live Oak',
+    speciesScientific: sb.species_scientific || 'Quercus virginiana',
+    dbhInches: biomechanics.dbh_inches,
+    cityLabel: provenance?.municipality_name || municipality?.name || ordId,
+    protectionStatus: statusLabel(evaluatedRows[0]),
+    tOverR: biomechanics.biomechanics.sound_shell_thickness_ratio_t_over_r,
+    crzFeet: crz.radius_feet,
+    holobiontUsd: valuation.holobiont_200yr_biological_equity_usd,
+    ctlaUsd: valuation.ctla_10th_ed_depreciated_usd,
+    cashInLieuUsd: mitigationIfRemoved?.cash_in_lieu_usd || 0,
+    stage1Usd: phasedTriage.stages[0]?.client_price_usd || 0,
+    removalBidUsd: phasedTriage.removal_bid_usd,
+    marginMultiplier: phasedTriage.net_margin_multiplier,
+    oakWiltWarning: oakWiltFlag,
+    shareUrl: options.share_url || 'https://openarbor.org/demo/',
+  });
+
   return {
     schemaValidation,
     lint,
     municipality,
+    provenance,
     compiledReport,
     counterNotice,
     economics,
@@ -345,6 +427,13 @@ export function evaluateCompleteFieldCase(assessment, options = {}) {
     valuation,
     ageEstimate,
     ecosystemBenefits,
+    soilSponge,
+    phasedTriage,
+    leoEvalContext,
+    leoBrief,
+    leoVerification,
+    leoSelfAudit,
+    handoffBrief,
     evaluatedRow: evaluatedRows[0],
     permit,
     permitText,
@@ -500,6 +589,15 @@ export function initFieldToolUI() {
   }
 
   let currentPermalinkHash = '';
+  let isReceiverModeActive = false;
+
+  function escapeUiHtml(str) {
+    return String(str ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
 
   function getCurrentCaseStateFromForm() {
     return {
@@ -574,6 +672,9 @@ export function initFieldToolUI() {
 
     el('input-t-over-r').value = sb.sound_shell_thickness_ratio_t_over_r ?? 0.38;
     el('input-codit').value = sb.codit_wall_response_rating || 'Wall_4_Active_Barrier_Zone';
+    if (el('input-tomogram-uri')) {
+      el('input-tomogram-uri').value = sb.sonic_tomography_or_resistograph_uri || '';
+    }
     el('input-root-flare-cm').value = rh.root_flare_diameter_cm;
     el('input-burial-depth-cm').value = rh.root_flare_burial_depth_cm;
     el('input-sgr-count').value = rh.stem_girdling_root_count;
@@ -592,6 +693,18 @@ export function initFieldToolUI() {
     el('input-soil-ph').value = soil.soil_ph;
     el('input-fb-ratio').value = myco.fungal_to_bacterial_biomass_ratio ?? 0.5;
     el('input-myco-guild').value = myco.dominant_mycorrhizal_guild || 'Ectomycorrhizal_EM';
+    if (el('input-lab-sample-id')) {
+      el('input-lab-sample-id').value = soil.lab_sample_id || 'SOIL-LAB-001';
+    }
+    if (el('input-ref-ecosystem')) {
+      el('input-ref-ecosystem').value =
+        a.understory_and_guild_prescription?.reference_ecosystem_name ||
+        'Central Texas Live Oak Savanna';
+    }
+    if (el('input-stim-hypothesis')) {
+      el('input-stim-hypothesis').value =
+        a.outcome_monitoring_schedule?.stim_hypothesis_statement || '';
+    }
 
     el('input-traq-level').value = traq.assessment_level;
     el('input-traq-part').value = traq.primary_tree_part_of_concern || 'Root_Collar';
@@ -740,6 +853,12 @@ export function initFieldToolUI() {
       Math.max(0.0, Number(el('input-t-over-r').value) || 0.35)
     );
     sb.codit_wall_response_rating = el('input-codit').value.trim() || 'Wall_4_Active_Barrier_Zone';
+    const tomogramUri = el('input-tomogram-uri')?.value.trim() || '';
+    if (tomogramUri) {
+      sb.sonic_tomography_or_resistograph_uri = tomogramUri;
+    } else {
+      delete sb.sonic_tomography_or_resistograph_uri;
+    }
 
     rh.root_flare_diameter_cm = Math.max(1, Number(el('input-root-flare-cm').value) || sb.dbh_cm * 1.25);
     rh.root_flare_burial_depth_cm = Math.max(0, Number(el('input-burial-depth-cm').value) || 0);
@@ -759,6 +878,15 @@ export function initFieldToolUI() {
     soil.soil_ph = Math.min(11, Math.max(2, Number(el('input-soil-ph').value) || 7.2));
     myco.fungal_to_bacterial_biomass_ratio = Math.max(0, Number(el('input-fb-ratio').value) || 0.5);
     myco.dominant_mycorrhizal_guild = el('input-myco-guild').value || 'Ectomycorrhizal_EM';
+    if (el('input-lab-sample-id')?.value.trim()) {
+      soil.lab_sample_id = el('input-lab-sample-id').value.trim();
+    }
+    if (el('input-ref-ecosystem')?.value.trim() && base.understory_and_guild_prescription) {
+      base.understory_and_guild_prescription.reference_ecosystem_name = el('input-ref-ecosystem').value.trim();
+    }
+    if (el('input-stim-hypothesis')?.value.trim() && base.outcome_monitoring_schedule) {
+      base.outcome_monitoring_schedule.stim_hypothesis_statement = el('input-stim-hypothesis').value.trim();
+    }
 
     traq.assessment_level = el('input-traq-level').value;
     traq.primary_tree_part_of_concern = el('input-traq-part').value;
@@ -784,6 +912,7 @@ export function initFieldToolUI() {
         tag: sb.tree_tag,
         dbh_cm: sb.dbh_cm,
         t_over_r: sb.sound_shell_thickness_ratio_t_over_r,
+        tomogramUri,
         disp: disp.recommended_disposition,
         rfd: rh.root_flare_diameter_cm,
         burial: rh.root_flare_burial_depth_cm,
@@ -801,6 +930,7 @@ export function initFieldToolUI() {
         tag: activePreset.assessment.structural_baseline.tree_tag,
         dbh_cm: activePreset.assessment.structural_baseline.dbh_cm,
         t_over_r: activePreset.assessment.structural_baseline.sound_shell_thickness_ratio_t_over_r,
+        tomogramUri: activePreset.assessment.structural_baseline.sonic_tomography_or_resistograph_uri || '',
         disp: activePreset.assessment.structural_baseline.municipal_permit_disposition.recommended_disposition,
         rfd: activePreset.assessment.rhizosphere_and_root_collar.root_flare_diameter_cm,
         burial: activePreset.assessment.rhizosphere_and_root_collar.root_flare_burial_depth_cm,
@@ -1089,8 +1219,8 @@ export function initFieldToolUI() {
         <section class="oa-print-signature-block">
           <h2>Practitioner Evidentiary Attestation &amp; Signature Block</h2>
           <p>
-            <strong>Practitioner Name:</strong> George Steward &nbsp;|&nbsp;
-            <strong>Credential:</strong> ISA Certified Arborist TX-362025A / Oak Wilt Qualified &nbsp;|&nbsp;
+            <strong>Practitioner Name:</strong> ${escapeUiHtml(el('input-assessor-name')?.value.trim() || 'George Steward')} &nbsp;|&nbsp;
+            <strong>Credential:</strong> ${escapeUiHtml(el('input-assessor-credential')?.value.trim() || 'ISA Certified Arborist TX-362025A / Oak Wilt Qualified')} &nbsp;|&nbsp;
             <strong>Assessment Date:</strong> ${sb.assessment_date || '2026-10-28'}
           </p>
           <p><strong>Canonical Evidence SHA-256:</strong> <code>${res.compiledReport.sha256}</code></p>
@@ -1396,7 +1526,165 @@ export function initFieldToolUI() {
       ${lintErrorsHtml}
     `;
 
+    // 5. Arborist Receiver Banner (#shared-brief-receiver-banner) when #oa1= hash is active
+    const sbRec = assessment.structural_baseline || {};
+    const oakFlagText = Array.isArray(row?.flags)
+      ? row.flags.find((f) => /oak wilt/i.test(f)) || ''
+      : '';
+    const liveHandoff = composeArboristHandoffBrief({
+      speciesCommon: sbRec.species_common || 'Live Oak',
+      speciesScientific: sbRec.species_scientific || 'Quercus virginiana',
+      dbhInches: bio.dbh_inches,
+      cityLabel: prov?.municipality_name || `${muni?.name || ''}, ${muni?.state || ''}`,
+      protectionStatus: statusText,
+      tOverR: bio.biomechanics.sound_shell_thickness_ratio_t_over_r,
+      crzFeet: res.rootZones.crz.radius_feet,
+      holobiontUsd: val.holobiont_200yr_biological_equity_usd,
+      ctlaUsd: val.ctla_10th_ed_depreciated_usd,
+      cashInLieuUsd: mitIfRemoved?.cash_in_lieu_usd || 0,
+      stage1Usd: res.phasedTriage.stages[0]?.client_price_usd || 0,
+      removalBidUsd: res.phasedTriage.removal_bid_usd,
+      marginMultiplier: res.phasedTriage.net_margin_multiplier,
+      oakWiltWarning: oakFlagText,
+      shareUrl: fullShareUrl,
+    });
+
+    const receiverBanner = el('shared-brief-receiver-banner');
+    if (receiverBanner) {
+      receiverBanner.hidden = !isReceiverModeActive;
+      if (isReceiverModeActive) {
+        const recHeading = el('receiver-specimen-heading');
+        const recMeta = el('receiver-meta-line');
+        const recTruck = el('receiver-truck-summary');
+        if (recHeading) {
+          recHeading.textContent = `${sbRec.species_common || 'Tree'} (${sbRec.tree_tag || 'T-01'}): ${bio.dbh_inches} in DBH in ${prov?.municipality_name || muni?.name || 'Local Jurisdiction'}`;
+        }
+        if (recMeta) {
+          recMeta.textContent = `Status: ${statusText} | Statutory CRZ: ${res.rootZones.crz.radius_feet} ft | Mattheck t/R: ${bio.biomechanics.sound_shell_thickness_ratio_t_over_r} | Day-1 Stage 1 Triage: $${res.phasedTriage.stages[0]?.client_price_usd.toLocaleString()}`;
+        }
+        if (recTruck) {
+          recTruck.innerHTML = `<pre class="code-preview" style="margin: 0; white-space: pre-wrap;">${escapeUiHtml(liveHandoff.arborist_truck_summary)}</pre>`;
+        }
+      }
+    }
+
+    // 6. Innate LEO-RCA Answer-First Verdict, 3-Stage Phased Stewardship Triage & Soil Sponge
+    const phasedBody = el('phased-triage-body');
+    if (phasedBody && res.leoBrief && res.phasedTriage && res.soilSponge) {
+      const af = res.leoBrief.answer_first;
+      const tr = res.phasedTriage;
+      const sp = res.soilSponge;
+      const stage1 = tr.stages[0];
+      const isSoundShell = bio.biomechanics.mattheck_criterion_satisfied;
+
+      const stageCardsHtml = tr.stages
+        .map(
+          (st) => `
+            <div class="oa-triage-stage">
+              <span class="metric-label">Stage ${st.stage_number} &middot; ${escapeUiHtml(st.window)}</span>
+              <strong>${escapeUiHtml(st.title)}</strong>
+              <strong class="metric-value text-accent">$${st.client_price_usd.toLocaleString()}</strong>
+              <span class="metric-sub">Arborist net margin: $${st.practitioner_net_usd.toLocaleString()}</span>
+              <p class="muni-subtext" style="margin: 4px 0 0;">${escapeUiHtml(st.scope)}</p>
+            </div>
+          `
+        )
+        .join('');
+
+      phasedBody.innerHTML = `
+        <div class="oa-innate-verdict-card${isSoundShell ? '' : ' is-thin-shell'}">
+          <div class="oa-innate-verdict-top">
+            <span class="badge ${isSoundShell ? 'badge-protected' : 'badge-warn'}">${isSoundShell ? 'Mattheck Sound Cylinder (t/R &gt;= 0.30)' : 'Level 3 Tomography Review Required (t/R &lt; 0.30)'}</span>
+            <button type="button" class="btn btn-secondary btn-xs" data-open-handoff-modal="true">Send to Arborist</button>
+          </div>
+          <p class="oa-innate-verdict-headline">${escapeUiHtml(af.headline_verdict)}</p>
+          <p class="oa-innate-verdict-prose"><strong>Structural Truth:</strong> ${escapeUiHtml(af.structural_truth)}</p>
+          <p class="oa-innate-verdict-prose"><strong>Statutory &amp; Seasonal Truth:</strong> ${escapeUiHtml(af.statutory_and_seasonal_truth)}</p>
+          <p class="oa-innate-verdict-prose"><strong>Stewardship vs. Liquidation:</strong> ${escapeUiHtml(af.stewardship_vs_liquidation)}</p>
+          <p class="muni-subtext" style="margin: 4px 0 0;"><strong>Physical Falsifier (STIM Kill Criterion):</strong> ${escapeUiHtml(af.falsifier)}</p>
+        </div>
+
+        <h4 class="sub-heading">3-Stage Phased Stewardship Triage vs. One-Time Chainsaw Removal</h4>
+        <div class="metric-grid metric-grid-4">
+          <div class="metric-box highlight-box">
+            <span class="metric-label">Stage 1 Day-1 Root-Collar Triage</span>
+            <strong class="metric-value text-accent">$${stage1.client_price_usd.toLocaleString()}</strong>
+            <span class="metric-sub">${tr.day_one_undercuts_removal ? `Saves $${tr.day_one_savings_vs_removal_usd.toLocaleString()} vs. Day-1 removal` : 'Immediate diagnostic &amp; collar relief'}</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-label">One-Time Chainsaw Removal</span>
+            <strong class="metric-value">$${tr.removal_bid_usd.toLocaleString()}</strong>
+            <span class="metric-sub">Plus $${(mitIfRemoved?.cash_in_lieu_usd || 0).toLocaleString()} city mitigation exposure</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-label">5-Year Arborist Net Margin Advantage</span>
+            <strong class="metric-value text-accent">${tr.net_margin_multiplier}x ($${tr.full_5yr_practitioner_net_usd.toLocaleString()})</strong>
+            <span class="metric-sub">vs. $${tr.removal_practitioner_net_usd.toLocaleString()} one-time removal net</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-label">Vadose Soil Sponge Capacity</span>
+            <strong class="metric-value">${Math.round(sp.storm_1in_capture_gallons).toLocaleString()} gal / 1-in storm</strong>
+            <span class="metric-sub">${Math.round(sp.som_sponge_capacity_gallons).toLocaleString()} gal SOM reserve (${escapeUiHtml(sp.infiltration_class)})</span>
+          </div>
+        </div>
+
+        <div class="oa-triage-grid">
+          ${stageCardsHtml}
+        </div>
+      `;
+    }
+
+    // 7. Behind the Veil: Live LEO-RCA Epistemic & Anti-Liquidation Oracle Verifier
+    const leoStatusEl = el('leo-status-header');
+    const leoAuditEl = el('leo-self-audit-badge');
+    const leoTextarea = el('leo-narrative-textarea');
+    if (leoStatusEl && res.leoBrief) {
+      leoStatusEl.innerHTML = `<strong>Live Epistemic Header:</strong> <code>${escapeUiHtml(res.leoBrief.status_line)}</code>`;
+    }
+    if (leoAuditEl && res.leoSelfAudit) {
+      const auditOk = res.leoSelfAudit.self_audit_passed;
+      leoAuditEl.innerHTML = auditOk
+        ? `<span class="badge badge-protected">Self-Audit Gate PASS: ${res.leoSelfAudit.fixtures_tested}/3 Negative Sabotage Fixtures Caught</span>`
+        : `<span class="badge badge-danger">Self-Audit Gate Defect (${escapeUiHtml(res.leoSelfAudit.error_code || 'FAILED')})</span>`;
+    }
+    if (leoTextarea && res.leoBrief) {
+      leoTextarea.value = res.leoBrief.brief_markdown;
+    }
+    renderLeoVerificationBanner(res.leoVerification);
+
     renderActivePreview();
+  }
+
+  function renderLeoVerificationBanner(verReport) {
+    const bannerEl = el('leo-verify-result');
+    if (!bannerEl || !verReport) return;
+    if (verReport.valid) {
+      bannerEl.style.borderLeftColor = 'var(--accent-green)';
+      bannerEl.innerHTML = `
+        <div>
+          <span class="metric-label">Deterministic LEO-RCA Oracle Verifier</span>
+          <div class="verdict-title-row">
+            <strong class="verdict-big text-accent">VERIFIED CLEAN (0 Errors)</strong>
+            <span class="badge badge-protected">${verReport.checked_anchors} Oracle Anchors Matched</span>
+          </div>
+          <span class="metric-sub">Reconciled unverified tokens: ${verReport.unverified_count} | Mattheck t/R = ${verReport.t_over_r}</span>
+        </div>
+      `;
+    } else {
+      bannerEl.style.borderLeftColor = 'var(--danger-red)';
+      bannerEl.innerHTML = `
+        <div style="width: 100%;">
+          <span class="metric-label">Deterministic LEO-RCA Oracle Verifier</span>
+          <div class="verdict-title-row">
+            <strong class="verdict-big text-danger">BLOCKED (${verReport.errors.length} Violation${verReport.errors.length === 1 ? '' : 's'} Caught)</strong>
+            <span class="badge badge-danger">Anti-Liquidation &amp; Provenance Gate</span>
+          </div>
+          <ul class="flag-list" style="margin-top: 8px;">
+            ${verReport.errors.map((err) => `<li><code>${escapeUiHtml(err)}</code></li>`).join('')}
+          </ul>
+        </div>
+      `;
+    }
   }
 
   function getActivePreviewContent() {
@@ -1575,12 +1863,163 @@ export function initFieldToolUI() {
     }
   });
 
+  function openCurrentFieldHandoffDialog() {
+    if (!latestAssessment || !latestResult) return;
+    if (!currentPermalinkHash) {
+      currentPermalinkHash = encodeAssessmentPermalink(getCurrentCaseStateFromForm());
+    }
+    const shareUrl =
+      typeof window !== 'undefined' && window.location
+        ? `${window.location.origin}${window.location.pathname}${currentPermalinkHash}`
+        : `https://openarbor.org/demo/${currentPermalinkHash}`;
+    const sb = latestAssessment.structural_baseline || {};
+    const row = latestResult.evaluatedRow;
+    const oakFlag = Array.isArray(row?.flags)
+      ? row.flags.find((f) => /oak wilt/i.test(f)) || ''
+      : '';
+
+    const dlg = el('arborist-handoff-dialog');
+    if (dlg) bindDialogLightDismissFallback(dlg);
+
+    openArboristHandoffDialog({
+      speciesCommon: sb.species_common || 'Live Oak',
+      speciesScientific: sb.species_scientific || 'Quercus virginiana',
+      dbhInches: latestResult.biomechanics.dbh_inches,
+      cityLabel:
+        latestResult.provenance?.municipality_name ||
+        `${latestResult.municipality?.name || ''}, ${latestResult.municipality?.state || ''}`,
+      protectionStatus: statusLabel(row),
+      tOverR: latestResult.biomechanics.biomechanics.sound_shell_thickness_ratio_t_over_r,
+      crzFeet: latestResult.rootZones.crz.radius_feet,
+      holobiontUsd: latestResult.valuation.holobiont_200yr_biological_equity_usd,
+      ctlaUsd: latestResult.valuation.ctla_10th_ed_depreciated_usd,
+      cashInLieuUsd: latestResult.mitigationIfRemoved?.cash_in_lieu_usd || 0,
+      stage1Usd: latestResult.phasedTriage.stages[0]?.client_price_usd || 0,
+      removalBidUsd: latestResult.phasedTriage.removal_bid_usd,
+      marginMultiplier: latestResult.phasedTriage.net_margin_multiplier,
+      oakWiltWarning: oakFlag,
+      shareUrl,
+    });
+  }
+
+  const handoffDialogEl = el('arborist-handoff-dialog');
+  if (handoffDialogEl) {
+    bindDialogLightDismissFallback(handoffDialogEl);
+  }
+
+  el('btn-send-to-arborist')?.addEventListener('click', openCurrentFieldHandoffDialog);
+  el('btn-header-send-arborist')?.addEventListener('click', openCurrentFieldHandoffDialog);
+  el('phased-triage-body')?.addEventListener('click', (e) => {
+    if (e.target.closest('[data-open-handoff-modal]')) {
+      openCurrentFieldHandoffDialog();
+    }
+  });
+
+  el('btn-handoff-print')?.addEventListener('click', () => {
+    const dlg = el('arborist-handoff-dialog');
+    if (dlg && dlg.open) dlg.close();
+    el('btn-export-print-report')?.click();
+  });
+
+  el('btn-receiver-print-sheet')?.addEventListener('click', () => {
+    const deepVeil = el('veil-deep-forensics');
+    if (deepVeil) deepVeil.open = true;
+    const assessorInput = el('input-assessor-name');
+    if (assessorInput) assessorInput.focus();
+    el('btn-export-print-report')?.click();
+  });
+
+  el('btn-receiver-lift-veil')?.addEventListener('click', () => {
+    document.querySelectorAll('details.oa-veil').forEach((d) => {
+      d.open = true;
+    });
+    const veilBtn = el('oa-veil-mode-toggle');
+    if (veilBtn) {
+      veilBtn.setAttribute('aria-pressed', 'true');
+      veilBtn.textContent = 'Veil: Deep Proof';
+    }
+    el('veil-deep-forensics')?.scrollIntoView({ behavior: 'smooth' });
+  });
+
+  // Live LEO-RCA Oracle Verifier & Conflicted Chainsaw Bid Sabotage Simulator
+  el('leo-narrative-textarea')?.addEventListener('input', () => {
+    if (!latestAssessment || !latestResult) return;
+    const raw = el('leo-narrative-textarea')?.value || '';
+    const check = verifyLeoRcaNarrative(raw, latestAssessment, latestResult.leoEvalContext);
+    renderLeoVerificationBanner(check);
+  });
+
+  el('btn-leo-verify-clean')?.addEventListener('click', () => {
+    if (!latestAssessment || !latestResult?.leoBrief) return;
+    const textarea = el('leo-narrative-textarea');
+    if (textarea) {
+      textarea.value = latestResult.leoBrief.brief_markdown;
+    }
+    const cleanCheck = verifyLeoRcaNarrative(
+      latestResult.leoBrief.brief_markdown,
+      latestAssessment,
+      latestResult.leoEvalContext
+    );
+    renderLeoVerificationBanner(cleanCheck);
+  });
+
+  el('btn-leo-sabotage-test')?.addEventListener('click', () => {
+    if (!latestAssessment || !latestResult?.leoBrief) return;
+    const inputTOverR = Number(
+      latestAssessment.structural_baseline?.sound_shell_thickness_ratio_t_over_r ?? 0.34
+    );
+    const soundAssessment =
+      inputTOverR >= 0.30
+        ? latestAssessment
+        : {
+            ...latestAssessment,
+            structural_baseline: {
+              ...(latestAssessment.structural_baseline || {}),
+              sound_shell_thickness_ratio_t_over_r: 0.34,
+            },
+          };
+    const soundContext =
+      inputTOverR >= 0.30
+        ? latestResult.leoEvalContext
+        : {
+            ...latestResult.leoEvalContext,
+            biomechanics: null,
+            valuation: null,
+            economics: null,
+            triage: null,
+          };
+    const baseMarkdown =
+      inputTOverR >= 0.30
+        ? latestResult.leoBrief.brief_markdown
+        : compileLeoRcaBrief(soundAssessment, soundContext).brief_markdown;
+
+    const driftedMarkdown = baseMarkdown.replace(
+      /\[\[oracle:root_zone\.crz_ft=[^\]]+\]\]/,
+      '[[oracle:root_zone.crz_ft=999.9]]'
+    );
+    const sabotagedText = `${driftedMarkdown}\n\nConflicted Removal Bid Addendum: Due to hollow heartwood appearance, we recommend immediate hazard tree removal and claim CRZ = 999.9 ft.`;
+
+    const textarea = el('leo-narrative-textarea');
+    if (textarea) {
+      textarea.value = sabotagedText;
+    }
+    const sabotageCheck = verifyLeoRcaNarrative(sabotagedText, soundAssessment, soundContext);
+    renderLeoVerificationBanner(sabotageCheck);
+  });
+
   function tryRestoreFromUrlHash() {
-    if (typeof window === 'undefined' || !window.location || !window.location.hash) return false;
-    if (!window.location.hash.startsWith('#oa1=')) return false;
+    if (typeof window === 'undefined' || !window.location || !window.location.hash) {
+      isReceiverModeActive = false;
+      return false;
+    }
+    if (!window.location.hash.startsWith('#oa1=')) {
+      isReceiverModeActive = false;
+      return false;
+    }
     try {
       const decoded = decodeAssessmentPermalink(window.location.hash);
       if (decoded && decoded.assessment) {
+        isReceiverModeActive = true;
         document.querySelectorAll('.btn-preset').forEach((b) => {
           b.classList.toggle('active', b.dataset.caseId === decoded.id);
         });
@@ -1590,6 +2029,7 @@ export function initFieldToolUI() {
     } catch {
       // Ignore malformed hash and fall back to default preset
     }
+    isReceiverModeActive = false;
     return false;
   }
 
@@ -1607,6 +2047,8 @@ export function initFieldToolUI() {
 
 function initAllOpenArborPages() {
   initSharedThemeToggle();
+  initLivingLensUI();
+  initVeilAndHandoffChrome();
   initFieldToolUI();
   initDemoExtrasUI();
   initToolsCatalogUI();

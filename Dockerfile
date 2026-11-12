@@ -10,9 +10,11 @@ COPY . .
 
 RUN npm run build:web && \
     npm test && \
+    npm run test:soil && \
     npm run test:mcp && \
     npm run validate:ordinances && \
-    npm run verify:parity
+    npm run verify:parity && \
+    node tests/verify_masterwork_100x.mjs
 
 # Stage 2: Production Static Server (Google Cloud Run)
 FROM nginx:1.27-alpine

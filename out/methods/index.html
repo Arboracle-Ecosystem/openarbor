@@ -9,32 +9,73 @@
       document.querySelector('meta[name="color-scheme"]').content = localStorage.getItem('color-scheme') ?? 'light dark';
     } catch (e) {}
   </script>
-  <title>Falsifiability &amp; Verification Methodology (25 Executable Groups) | Open Arbor v2.0</title>
+  <title>Executable Proof &amp; Falsifiability Ledger (33 Executable Groups) | Open Arbor v2.1</title>
   <meta
     name="description"
-    content="Open Arbor v2.0 Falsifiability & Verification Methodology: 25 executable verification groups across 5 deterministic test runners plus 8 schema-validated municipal ordinance records (84/84 CLI-to-browser parity metrics)."
+    content="Open Arbor v2.1 Executable Proof & Falsifiability Ledger: 33 executable verification groups across 6 deterministic test runners plus 8 schema-validated municipal ordinance records (84/84 CLI-to-browser parity metrics)."
   />
   <link rel="stylesheet" href="../styles.css" />
 </head>
-<body data-total-verification-groups="25" data-total-ordinance-records="8">
+<body data-total-verification-groups="33" data-total-ordinance-records="8">
   <header class="oa-site-header">
     <div class="oa-nav-container">
       <a href="../index.html" class="oa-brand-link">
         <span class="oa-brand-mark">OA</span>
-        <span class="oa-brand-text">Open Arbor <small>v2.0</small></span>
+        <span class="oa-brand-text">Open Arbor <small>v2.1</small></span>
       </a>
       <nav class="oa-main-nav" aria-label="Primary Navigation">
-        <a href="../index.html" class="oa-nav-link">Alliance Portal</a>
-          <a href="../demo/index.html" class="oa-nav-link">Live Engine Demo</a>
-          <a href="../cases/index.html" class="oa-nav-link">Case Gallery</a>
-          <a href="../tools/index.html" class="oa-nav-link">41-Tool Workbench</a>
-          <a href="../ordinances/index.html" class="oa-nav-link">Ordinance Commons</a>
-          <a href="../mcp/index.html" class="oa-nav-link">MCP Playground</a>
-          <a href="../spec/index.html" class="oa-nav-link">RCA-Spec v2.0</a>
-          <a href="../methods/index.html" class="oa-nav-link active" aria-current="page">Falsifiability</a>
+        <a href="../index.html" class="oa-nav-link">Field Home</a>
+        <a href="../demo/index.html" class="oa-nav-link">Field Studio</a>
+        <a href="../cases/index.html" class="oa-nav-link">Case Studies</a>
+        <a href="../ordinances/index.html" class="oa-nav-link">City Tree Laws</a>
+        <button
+          type="button"
+          class="oa-nav-veil-trigger active"
+          popovertarget="oa-deep-stack-popover"
+          aria-expanded="false"
+        >
+          Under the Veil
+        </button>
       </nav>
+      <div id="oa-deep-stack-popover" class="oa-deep-popover" popover>
+        <div class="oa-deep-popover-header">
+          <span>Technical &amp; Scientific Surfaces</span>
+          <span>AGPL-3.0</span>
+        </div>
+        <a href="../tools/index.html" class="oa-deep-popover-item">
+          <strong>41-Tool Forestry &amp; LiDAR Workbench</strong>
+          <span>Point clouds, dendrochronology, fire behavior, and core ESM calculators.</span>
+        </a>
+        <a href="../mcp/index.html" class="oa-deep-popover-item">
+          <strong>MCP Agent Server Playground</strong>
+          <span>JSON-RPC 2.0 inspector so AI agents run verified math instead of guessing.</span>
+        </a>
+        <a href="../spec/index.html" class="oa-deep-popover-item">
+          <strong>RCA-Spec v2.0 &amp; 200-Yr Vault</strong>
+          <span>Ten-section evidentiary standard, primary equations, and Heartwood file vault.</span>
+        </a>
+        <a href="../methods/index.html" class="oa-deep-popover-item active" aria-current="page">
+          <strong>Executable Proof &amp; Falsifiability</strong>
+          <span>Bit-for-bit parity audits, epistemic boundaries, and physical kill criteria.</span>
+        </a>
+      </div>
       <div class="oa-theme-control">
-        <button type="button" id="oa-theme-toggle" class="btn btn-secondary btn-sm" aria-label="Toggle color scheme">Theme: Auto</button>
+        <button
+          type="button"
+          id="oa-veil-mode-toggle"
+          class="btn btn-secondary btn-sm oa-veil-mode-btn"
+          aria-pressed="false"
+        >
+          Veil: Canopy
+        </button>
+        <button
+          type="button"
+          id="oa-theme-toggle"
+          class="btn btn-secondary btn-sm"
+          aria-label="Toggle color scheme"
+        >
+          Theme: Auto
+        </button>
       </div>
     </div>
   </header>
@@ -42,15 +83,15 @@
   <section class="app-header">
     <div class="container header-inner">
       <div>
-        <span class="eyebrow">Deliverable D7 &middot; Live Build-Time Introspection &middot; Zero Unfalsifiable Claims</span>
+        <span class="eyebrow">Executable Proof &amp; Falsifiability Ledger &middot; Live Build-Time Introspection &middot; Zero Unfalsifiable Claims</span>
         <h1>Falsifiability &amp; Deterministic Verification Methodology</h1>
         <p class="subtitle">
-          Every mathematical equation, statutory threshold, cryptographic digest, and security boundary in Open Arbor is backed by an executable test assertion on disk. This page is generated at build time by parsing the live test suites so counts can never drift from reality.
+          Every mathematical equation, statutory threshold, cryptographic digest, and security boundary in Open Arbor is backed by an executable test assertion on disk. This page is generated at build time by parsing and running the live test suites so counts can never drift from reality.
         </p>
       </div>
       <div class="header-actions">
-        <a href="../cases/index.html" class="btn btn-primary">Inspect 5 Static Case Pages</a>
-        <a href="../demo/index.html" class="btn btn-outline">Launch Field Workbench</a>
+        <a href="../cases/index.html" class="btn btn-primary">Inspect Bioregional Cases</a>
+        <a href="../demo/index.html" class="btn btn-outline">Open Field Studio</a>
       </div>
     </div>
   </section>
@@ -60,22 +101,22 @@
     <section
       class="card"
       aria-labelledby="falsifiability-summary-heading"
-      data-total-verification-groups="25"
+      data-total-verification-groups="33"
       data-total-ordinance-records="8"
     >
       <div class="card-header">
         <span class="step-badge">Live Suite Rollup</span>
-        <h2 id="falsifiability-summary-heading">Executive Falsifiability Summary (25 Executable Verification Groups + 8 Validated Ordinance Records)</h2>
+        <h2 id="falsifiability-summary-heading">Executive Falsifiability Summary (33 Executable Verification Groups + 8 Validated Ordinance Records)</h2>
       </div>
       <p class="subtitle">
-        Generated directly from <code>tests/verify_openarbor.mjs</code> (10 groups), <code>tests/verify_mcp.mjs</code> (8 groups), <code>deploy/verify-parity.mjs</code> (4 bioregional parity cases &times; 21 metrics = 84 parity assertions), and <code>tests/verify_masterwork_100x.mjs</code> (7 Masterwork gates), plus <code>scripts/validate-ordinance.mjs</code> (8 municipal ordinance records: 6 <code>Full_Rule_Record</code>, 2 <code>Threshold_And_Fee_Record</code>) = <strong>33 total falsifiable checks</strong>.
+        Generated directly from <code>tests/verify_openarbor.mjs</code> (10 groups), <code>tests/verify_soil_function.mjs</code> (4 groups), <code>tests/verify_mcp.mjs</code> (10 groups), <code>deploy/verify-parity.mjs</code> (4 bioregional parity cases &times; 21 metrics = 84 parity assertions), and <code>tests/verify_masterwork_100x.mjs</code> (9 Masterwork gates), plus <code>scripts/validate-ordinance.mjs</code> (8 municipal ordinance records: 6 <code>Full_Rule_Record</code>, 2 <code>Threshold_And_Fee_Record</code>) = <strong>41 total falsifiable checks</strong>.
       </p>
 
       <div class="metric-grid metric-grid-4">
         <div class="metric-box highlight-box">
           <span class="metric-label">Executable Verification Groups</span>
-          <strong class="metric-value text-accent">25 / 25 Groups</strong>
-          <span class="metric-sub">10 Core + 8 MCP + 7 Masterwork</span>
+          <strong class="metric-value text-accent">33 / 33 Groups</strong>
+          <span class="metric-sub">10 Core + 4 Soil + 10 MCP + 9 Masterwork</span>
         </div>
         <div class="metric-box">
           <span class="metric-label">Validated Municipal Ordinances</span>
@@ -89,7 +130,7 @@
         </div>
         <div class="metric-box">
           <span class="metric-label">Total Falsifiable Checks</span>
-          <strong class="metric-value">33 Checks</strong>
+          <strong class="metric-value">41 Checks</strong>
           <span class="metric-sub">Zero proprietary runtime dependencies</span>
         </div>
       </div>
@@ -99,7 +140,7 @@
           <strong>One-Line Complete Verification Reproduction Command</strong>
           <button type="button" class="btn btn-outline btn-xs" data-copy-target="cmd-reproduce-all">Copy Command</button>
         </div>
-        <pre id="cmd-reproduce-all" class="code-preview">node tests/verify_openarbor.mjs &amp;&amp; node tests/verify_mcp.mjs &amp;&amp; node scripts/validate-ordinance.mjs &amp;&amp; node deploy/verify-parity.mjs &amp;&amp; node tests/verify_masterwork_100x.mjs</pre>
+        <pre id="cmd-reproduce-all" class="code-preview">node tests/verify_openarbor.mjs &amp;&amp; node tests/verify_soil_function.mjs &amp;&amp; node tests/verify_mcp.mjs &amp;&amp; node scripts/validate-ordinance.mjs &amp;&amp; node deploy/verify-parity.mjs &amp;&amp; node tests/verify_masterwork_100x.mjs</pre>
       </div>
     </section>
 
@@ -206,10 +247,71 @@
       </div>
     </section>
 
-    <!-- Table 2: MCP Server & Security Gate Suite -->
+    <!-- Soil Function & Vadose Sponge Verification Suite -->
+    <section class="card" aria-labelledby="suite-soil-heading">
+      <div class="card-header">
+        <span class="step-badge">Runner 2 (4 Groups)</span>
+        <h2 id="suite-soil-heading">Soil Function, Provenance Source Gate &amp; Vadose Sponge Suite (<code>tests/verify_soil_function.mjs</code>)</h2>
+      </div>
+      <div tabindex="0" role="region" aria-labelledby="table-soil-caption" class="table-wrapper">
+        <table
+          class="data-table"
+          style="
+            --label-1: 'Group ID';
+            --label-2: 'Verification Gate';
+            --label-3: 'Soil Physics / Provenance Invariant Proven';
+            --label-4: 'Source File &amp; Line';
+            --label-5: 'CLI Command';
+          "
+        >
+          <caption id="table-soil-caption" class="sr-only">Soil Function and Vadose Sponge Verification Groups in tests/verify_soil_function.mjs</caption>
+          <thead>
+            <tr>
+              <th scope="col">Group ID</th>
+              <th scope="col">Verification Gate</th>
+              <th scope="col">Soil Physics, Provenance, or Prototype-Safety Invariant Proven</th>
+              <th scope="col">Source File &amp; Line</th>
+              <th scope="col">Exact CLI Reproduction Command</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="verification-group-row" data-verification-group="verify_soil_function-1">
+              <th scope="row"><code>verify_soil_function-1</code></th>
+              <td><strong>[PASS] 1. soil_function block is omitted when unsupplied, all-null, or prototype-inherited</strong></td>
+              <td>Proves soil_function block is omitted by default, when all-null, and when inherited via Object.prototype on OGC CRS84 GeoJSON exports.</td>
+              <td><code>tests/verify_soil_function.mjs:111</code></td>
+              <td><code>node tests/verify_soil_function.mjs</code></td>
+            </tr>
+            <tr class="verification-group-row" data-verification-group="verify_soil_function-2">
+              <th scope="row"><code>verify_soil_function-2</code></th>
+              <td><strong>[PASS] 2. soil_function block is attached with source when supplied and compliance numbers are unchanged</strong></td>
+              <td>Proves soil_function block attaches with mandatory source attribution when supplied via metadata or options while leaving municipal mitigation fees unchanged.</td>
+              <td><code>tests/verify_soil_function.mjs:158</code></td>
+              <td><code>node tests/verify_soil_function.mjs</code></td>
+            </tr>
+            <tr class="verification-group-row" data-verification-group="verify_soil_function-3">
+              <th scope="row"><code>verify_soil_function-3</code></th>
+              <td><strong>[PASS] 3. Validation refuses numeric fields without source and rejects invalid dates, methods, and bounds</strong></td>
+              <td>Proves strict validation refusing numeric soil fields without source attribution and rejecting out-of-bounds organic matter, negative infiltration, invalid methods, or inverted ISO dates.</td>
+              <td><code>tests/verify_soil_function.mjs:259</code></td>
+              <td><code>node tests/verify_soil_function.mjs</code></td>
+            </tr>
+            <tr class="verification-group-row" data-verification-group="verify_soil_function-4">
+              <th scope="row"><code>verify_soil_function-4</code></th>
+              <td><strong>[PASS] 4. Vadose storm capture and NRCS SOM sponge capacity verified across all three infiltration classes</strong></td>
+              <td>Proves deterministic vadose 1-inch storm capture and NRCS organic-matter sponge capacity across Compacted (&lt; 15 mm/hr), Moderate (15 to 50 mm/hr), and Living Sponge (&gt; 50 mm/hr) classes.</td>
+              <td><code>tests/verify_soil_function.mjs:293</code></td>
+              <td><code>node tests/verify_soil_function.mjs</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- MCP Server & Security Gate Suite -->
     <section class="card" aria-labelledby="suite2-heading">
       <div class="card-header">
-        <span class="step-badge">Runner 2 (8 Groups)</span>
+        <span class="step-badge">Runner 3 (10 Groups)</span>
         <h2 id="suite2-heading">Model Context Protocol (<code>JSON-RPC 2.0</code>) &amp; Security Gate Suite (<code>tests/verify_mcp.mjs</code>)</h2>
       </div>
       <div tabindex="0" role="region" aria-labelledby="table2-caption" class="table-wrapper">
@@ -236,58 +338,72 @@
           <tbody>
             <tr class="verification-group-row" data-verification-group="verify_mcp-1">
               <th scope="row"><code>verify_mcp-1</code></th>
-              <td><strong>[PASS] 1. MCP initialize handshake completed (server: openarbor-mcp v2.0.0)</strong></td>
-              <td>Spawns server/mcp/openarbor-mcp.mjs over stdio and verifies JSON-RPC 2.0 initialize handshake (protocolVersion 2024-11-05, server openarbor-mcp v2.0.0).</td>
-              <td><code>tests/verify_mcp.mjs:84</code></td>
+              <td><strong>[PASS] 1. MCP initialize handshake completed (server: openarbor-mcp v2.1.0)</strong></td>
+              <td>Spawns server/mcp/openarbor-mcp.mjs over stdio and verifies JSON-RPC 2.0 initialize handshake (protocolVersion 2024-11-05, server openarbor-mcp v2.1.0).</td>
+              <td><code>tests/verify_mcp.mjs:93</code></td>
               <td><code>node tests/verify_mcp.mjs</code></td>
             </tr>
             <tr class="verification-group-row" data-verification-group="verify_mcp-2">
               <th scope="row"><code>verify_mcp-2</code></th>
-              <td><strong>[PASS] 2. tools/list verified (6 tools: calculate_root_zone, evaluate_ordinance, calculate_ecosystem_benefits, rca_biomechanics, rca_lint, lookup_ordinance)</strong></td>
-              <td>Verifies tools/list returns all 6 deterministic MCP tools (calculate_root_zone, evaluate_ordinance, calculate_ecosystem_benefits, rca_biomechanics, rca_lint, lookup_ordinance).</td>
-              <td><code>tests/verify_mcp.mjs:99</code></td>
+              <td><strong>[PASS] 2. tools/list verified across all 8 deterministic MCP tools</strong></td>
+              <td>Verifies tools/list returns all 8 deterministic MCP tools (calculate_root_zone, evaluate_ordinance, calculate_ecosystem_benefits, rca_biomechanics, rca_lint, lookup_ordinance, validate_soil_function, leo_rca_verify).</td>
+              <td><code>tests/verify_mcp.mjs:110</code></td>
               <td><code>node tests/verify_mcp.mjs</code></td>
             </tr>
             <tr class="verification-group-row" data-verification-group="verify_mcp-3">
               <th scope="row"><code>verify_mcp-3</code></th>
-              <td><strong>[PASS] 3. tools/call calculate_root_zone (24 in, US_1_1) -&gt; radius_feet=24, area_sqft=1809.56</strong></td>
+              <td><strong>[PASS] 3. tools/call calculate_root_zone (24 in, US_1_1 -&gt; 24 ft radius, 1809.56 sq ft) verified</strong></td>
               <td>Verifies known-answer tools/call for calculate_root_zone (24 in DBH, US_1_1 -&gt; radius_feet = 24, area_sqft = 1809.56).</td>
-              <td><code>tests/verify_mcp.mjs:117</code></td>
+              <td><code>tests/verify_mcp.mjs:127</code></td>
               <td><code>node tests/verify_mcp.mjs</code></td>
             </tr>
             <tr class="verification-group-row" data-verification-group="verify_mcp-4">
               <th scope="row"><code>verify_mcp-4</code></th>
-              <td><strong>[PASS] 4. tools/call lookup_ordinance positive (or-ashland) &amp; negative-path (xx-nonexistent-city -&gt; UNKNOWN_JURISDICTION, no crash)</strong></td>
+              <td><strong>[PASS] 4. tools/call lookup_ordinance positive (or-ashland) and negative-path (UNKNOWN_JURISDICTION) verified</strong></td>
               <td>Verifies lookup_ordinance positive lookup (or-ashland -&gt; 6 in DBH threshold) and graceful structured error on unknown jurisdiction (UNKNOWN_JURISDICTION) without crashing.</td>
-              <td><code>tests/verify_mcp.mjs:141</code></td>
+              <td><code>tests/verify_mcp.mjs:149</code></td>
               <td><code>node tests/verify_mcp.mjs</code></td>
             </tr>
             <tr class="verification-group-row" data-verification-group="verify_mcp-5">
               <th scope="row"><code>verify_mcp-5</code></th>
               <td><strong>[PASS] 5. tools/call evaluate_ordinance, calculate_ecosystem_benefits, rca_biomechanics, and rca_lint verified</strong></td>
               <td>Verifies known-answer tools/call execution for evaluate_ordinance, calculate_ecosystem_benefits, rca_biomechanics (t/R = 0.34 sound), and rca_lint (valid = true).</td>
-              <td><code>tests/verify_mcp.mjs:207</code></td>
+              <td><code>tests/verify_mcp.mjs:213</code></td>
               <td><code>node tests/verify_mcp.mjs</code></td>
             </tr>
             <tr class="verification-group-row" data-verification-group="verify_mcp-6">
               <th scope="row"><code>verify_mcp-6</code></th>
-              <td><strong>[PASS] 6. MCP input size guards verified (evaluate_ordinance 501 trees -&gt; MAX_TREES_EXCEEDED; lookup_ordinance 133 chars -&gt; JURISDICTION_ID_TOO_LONG)</strong></td>
-              <td>Verifies bounded-input DoS security guards: rejects &gt;500 trees in evaluate_ordinance (MAX_TREES_EXCEEDED) and &gt;128 char jurisdiction IDs (JURISDICTION_ID_TOO_LONG).</td>
-              <td><code>tests/verify_mcp.mjs:239</code></td>
+              <td><strong>[PASS] 6. tools/call validate_soil_function positive sponge capacity and negative sourceless rejection verified</strong></td>
+              <td>Verifies tools/call validate_soil_function positive Living Sponge calculation (1,342 gal storm capture), default omission when unsupplied, and structured INVALID_SOIL_FUNCTION error when source is missing.</td>
+              <td><code>tests/verify_mcp.mjs:262</code></td>
               <td><code>node tests/verify_mcp.mjs</code></td>
             </tr>
             <tr class="verification-group-row" data-verification-group="verify_mcp-7">
               <th scope="row"><code>verify_mcp-7</code></th>
-              <td><strong>[PASS] 7. Ordinance validator prototype-chain negative gates verified (__proto__ and constructor rejected with exit code 1)</strong></td>
-              <td>Verifies prototype-chain pollution security gates in scripts/validate-ordinance.mjs: rejects literal __proto__ and constructor payloads with non-zero exit code.</td>
-              <td><code>tests/verify_mcp.mjs:298</code></td>
+              <td><strong>[PASS] 7. tools/call leo_rca_verify, 3-stage phased triage, sabotage self-audit, and handoff brief verified</strong></td>
+              <td>Verifies tools/call leo_rca_verify 8/8 oracle anchors, 3/3 negative sabotage self-audit, 3-stage phased triage conservation, and house-style-clean Arborist Handoff Brief.</td>
+              <td><code>tests/verify_mcp.mjs:357</code></td>
               <td><code>node tests/verify_mcp.mjs</code></td>
             </tr>
             <tr class="verification-group-row" data-verification-group="verify_mcp-8">
               <th scope="row"><code>verify_mcp-8</code></th>
-              <td><strong>[PASS] 8. MCP shutdown completed cleanly</strong></td>
+              <td><strong>[PASS] 8. MCP bounded-input size guards verified across evaluate_ordinance, lookup_ordinance, and leo_rca_verify</strong></td>
+              <td>Verifies bounded-input DoS security guards across evaluate_ordinance (&gt;500 trees -&gt; MAX_TREES_EXCEEDED), lookup_ordinance (&gt;128 chars -&gt; JURISDICTION_ID_TOO_LONG), and leo_rca_verify (&gt;100,000 chars -&gt; MAX_NARRATIVE_LENGTH_EXCEEDED).</td>
+              <td><code>tests/verify_mcp.mjs:399</code></td>
+              <td><code>node tests/verify_mcp.mjs</code></td>
+            </tr>
+            <tr class="verification-group-row" data-verification-group="verify_mcp-9">
+              <th scope="row"><code>verify_mcp-9</code></th>
+              <td><strong>[PASS] 9. Ordinance validator prototype-chain negative gates verified (__proto__ and constructor rejected)</strong></td>
+              <td>Verifies prototype-chain pollution security gates in scripts/validate-ordinance.mjs: rejects literal __proto__ and constructor payloads with non-zero exit code.</td>
+              <td><code>tests/verify_mcp.mjs:455</code></td>
+              <td><code>node tests/verify_mcp.mjs</code></td>
+            </tr>
+            <tr class="verification-group-row" data-verification-group="verify_mcp-10">
+              <th scope="row"><code>verify_mcp-10</code></th>
+              <td><strong>[PASS] 10. MCP shutdown completed cleanly</strong></td>
               <td>Verifies clean JSON-RPC 2.0 shutdown response and child process termination.</td>
-              <td><code>tests/verify_mcp.mjs:307</code></td>
+              <td><code>tests/verify_mcp.mjs:463</code></td>
               <td><code>node tests/verify_mcp.mjs</code></td>
             </tr>
           </tbody>
@@ -295,10 +411,10 @@
       </div>
     </section>
 
-    <!-- Table 3: Municipal Ordinance Schema Validator -->
+    <!-- Municipal Ordinance Schema Validator -->
     <section class="card" aria-labelledby="suite3-heading">
       <div class="card-header">
-        <span class="step-badge">Runner 3 (8 Records)</span>
+        <span class="step-badge">Runner 4 (8 Records)</span>
         <h2 id="suite3-heading">Municipal Tree Ordinance Schema &amp; Completeness Validator (<code>scripts/validate-ordinance.mjs</code>)</h2>
       </div>
       <div tabindex="0" role="region" aria-labelledby="table3-caption" class="table-wrapper">
@@ -384,10 +500,10 @@
       </div>
     </section>
 
-    <!-- Table 4: CLI-vs-Browser Bundle Parity Runner -->
+    <!-- CLI-vs-Browser Bundle Parity Runner -->
     <section class="card" aria-labelledby="suite4-heading">
       <div class="card-header">
-        <span class="step-badge">Runner 4 (4 Cases / 84 Metrics)</span>
+        <span class="step-badge">Runner 5 (4 Cases / 84 Metrics)</span>
         <h2 id="suite4-heading">Node.js CLI vs. Browser Bundle Bit-for-Bit Parity Suite (<code>deploy/verify-parity.mjs</code>)</h2>
       </div>
       <div tabindex="0" role="region" aria-labelledby="table4-caption" class="table-wrapper">
@@ -445,11 +561,11 @@
       </div>
     </section>
 
-    <!-- Table 5: Masterwork 100x Deliverable Verification Gates -->
+    <!-- Masterwork Deliverable Verification Gates -->
     <section class="card" aria-labelledby="suite5-heading">
       <div class="card-header">
-        <span class="step-badge">Runner 5 (7 Gates)</span>
-        <h2 id="suite5-heading">Masterwork 100x Deliverable Verification Suite (<code>tests/verify_masterwork_100x.mjs</code>)</h2>
+        <span class="step-badge">Runner 6 (9 Gates)</span>
+        <h2 id="suite5-heading">Field Studio, Epistemic Oracle &amp; Handoff Verification Suite (<code>tests/verify_masterwork_100x.mjs</code>)</h2>
       </div>
       <div tabindex="0" role="region" aria-labelledby="table5-caption" class="table-wrapper">
         <table
@@ -462,10 +578,10 @@
             --label-5: 'CLI Command';
           "
         >
-          <caption id="table5-caption" class="sr-only">Masterwork 100x Deliverable Gates D1 through D7</caption>
+          <caption id="table5-caption" class="sr-only">Masterwork Deliverable Verification Gates</caption>
           <thead>
             <tr>
-              <th scope="col">Deliverable ID</th>
+              <th scope="col">Gate ID</th>
               <th scope="col">Verification Gate</th>
               <th scope="col">Architectural &amp; User-Facing Invariant Proven</th>
               <th scope="col">Source File &amp; Line</th>
@@ -477,49 +593,63 @@
               <th scope="row"><code>verify_masterwork_100x-1</code></th>
               <td><strong>[PASS] D1. Shareable Assessment Permalink (#oa1=...) verified across 3 presets (longest URL: 595 chars)</strong></td>
               <td>Proves versioned #oa1= base64url assessment permalink encoding and round-trip decoding across 3 bioregional presets with identical SHA-256 digests, permit verdicts, CRZ radii, and cash-in-lieu fees.</td>
-              <td><code>tests/verify_masterwork_100x.mjs:102</code></td>
+              <td><code>tests/verify_masterwork_100x.mjs:104</code></td>
               <td><code>node tests/verify_masterwork_100x.mjs</code></td>
             </tr>
             <tr class="verification-group-row" data-verification-group="verify_masterwork_100x-2">
               <th scope="row"><code>verify_masterwork_100x-2</code></th>
               <td><strong>[PASS] D2. Sticky Determination Bar (#sticky-determination-bar) &amp; keyboard-reachable controls verified</strong></td>
               <td>Proves sticky determination summary bar (#sticky-determination-bar) DOM contract, live status/DBH/CRZ/replacement/cash-in-lieu readouts, and keyboard-reachable verdict link copy button.</td>
-              <td><code>tests/verify_masterwork_100x.mjs:120</code></td>
+              <td><code>tests/verify_masterwork_100x.mjs:122</code></td>
               <td><code>node tests/verify_masterwork_100x.mjs</code></td>
             </tr>
             <tr class="verification-group-row" data-verification-group="verify_masterwork_100x-3">
               <th scope="row"><code>verify_masterwork_100x-3</code></th>
               <td><strong>[PASS] D3. Static Crawlable Case Gallery verified (1 index + 5 static case pages with JS-off HTML &amp; SVG)</strong></td>
               <td>Proves build-time static crawlable Case Gallery (out/cases/index.html + 5 case pages) containing pre-rendered determinations, inline &lt;svg&gt; root zone maps, and #oa1= links with JavaScript disabled.</td>
-              <td><code>tests/verify_masterwork_100x.mjs:145</code></td>
+              <td><code>tests/verify_masterwork_100x.mjs:147</code></td>
               <td><code>node tests/verify_masterwork_100x.mjs</code></td>
             </tr>
             <tr class="verification-group-row" data-verification-group="verify_masterwork_100x-4">
               <th scope="row"><code>verify_masterwork_100x-4</code></th>
               <td><strong>[PASS] D4. Offline Field Mode Service Worker (out/sw.js) pre-cache manifest &amp; offline fetch handler verified</strong></td>
               <td>Proves offline field mode Service Worker (out/sw.js) pre-caching openarbor-bundle.js, municipal ordinance datasets, schemas, and offline fetch handler.</td>
-              <td><code>tests/verify_masterwork_100x.mjs:158</code></td>
+              <td><code>tests/verify_masterwork_100x.mjs:160</code></td>
               <td><code>node tests/verify_masterwork_100x.mjs</code></td>
             </tr>
             <tr class="verification-group-row" data-verification-group="verify_masterwork_100x-5">
               <th scope="row"><code>verify_masterwork_100x-5</code></th>
               <td><strong>[PASS] D5. Provenance Surface &amp; Epistemic Gap Inspector verified (Cedar Park: 6 gaps, Round Rock: 5 gaps)</strong></td>
               <td>Proves municipal provenance surface and epistemic gap inspector (inspectMunicipalityProvenance) explicitly enumerating UNVERIFIED statutory sub-sections for Cedar Park and Round Rock Threshold_And_Fee_Record entries.</td>
-              <td><code>tests/verify_masterwork_100x.mjs:185</code></td>
+              <td><code>tests/verify_masterwork_100x.mjs:187</code></td>
               <td><code>node tests/verify_masterwork_100x.mjs</code></td>
             </tr>
             <tr class="verification-group-row" data-verification-group="verify_masterwork_100x-6">
               <th scope="row"><code>verify_masterwork_100x-6</code></th>
               <td><strong>[PASS] D6. Evidentiary Print Report (@media print, @page Letter, #evidentiary-print-sheet &amp; signature block) verified</strong></td>
               <td>Proves evidentiary print report stylesheet (@media print, @page Letter) and #evidentiary-print-sheet practitioner attestation &amp; signature block.</td>
-              <td><code>tests/verify_masterwork_100x.mjs:201</code></td>
+              <td><code>tests/verify_masterwork_100x.mjs:203</code></td>
               <td><code>node tests/verify_masterwork_100x.mjs</code></td>
             </tr>
             <tr class="verification-group-row" data-verification-group="verify_masterwork_100x-7">
               <th scope="row"><code>verify_masterwork_100x-7</code></th>
-              <td><strong>[PASS] D7. Falsifiability Page (out/methods/index.html) verified with 25/25 live suite verification groups</strong></td>
-              <td>Proves falsifiability &amp; verification methodology page (out/methods/index.html) generated dynamically from live test suites with 25/25 executable verification groups and zero drift.</td>
-              <td><code>tests/verify_masterwork_100x.mjs:206</code></td>
+              <td><strong>[PASS] D7. Falsifiability Page (out/methods/index.html) verified with 33/33 live suite verification groups</strong></td>
+              <td>Proves falsifiability &amp; verification methodology page (out/methods/index.html) generated dynamically from live test suites with 33/33 executable verification groups and zero drift.</td>
+              <td><code>tests/verify_masterwork_100x.mjs:208</code></td>
+              <td><code>node tests/verify_masterwork_100x.mjs</code></td>
+            </tr>
+            <tr class="verification-group-row" data-verification-group="verify_masterwork_100x-8">
+              <th scope="row"><code>verify_masterwork_100x-8</code></th>
+              <td><strong>[PASS] D8. 3-Stage Phased Stewardship Triage (Austin Day-1 $2261 vs $3140 removal), Arborist Handoff &amp; &lt;dialog closedby=&quot;any&quot;&gt; verified</strong></td>
+              <td>Proves 3-Stage Phased Stewardship Triage (Day-1 Root-Collar Triage undercutting chainsaw removal on Austin and Ashland heritage oaks), dual-voice Arborist Handoff Brief (#oa1=), and native &lt;dialog id=&quot;arborist-handoff-dialog&quot; closedby=&quot;any&quot;&gt; across Field Home and Field Studio.</td>
+              <td><code>tests/verify_masterwork_100x.mjs:389</code></td>
+              <td><code>node tests/verify_masterwork_100x.mjs</code></td>
+            </tr>
+            <tr class="verification-group-row" data-verification-group="verify_masterwork_100x-9">
+              <th scope="row"><code>verify_masterwork_100x-9</code></th>
+              <td><strong>[PASS] D9. LEO-RCA 6-Slot Compiler, Oracle Verifier &amp; 3/3 Sabotage Self-Audit verified (Cedar Park reconciled: 6 UNVERIFIED tokens)</strong></td>
+              <td>Proves deterministic 6-slot LEO-RCA Profile 01 compiler, anti-liquidation oracle verifier (catching Mattheck t/R violations, drifted oracle numbers, and epistemic count mismatches across 3/3 negative sabotage fixtures), Cedar Park Threshold_And_Fee_Record UNVERIFIED[STATUTORY_RULE] reconciliation, and zero raw backticks on Field Home.</td>
+              <td><code>tests/verify_masterwork_100x.mjs:481</code></td>
               <td><code>node tests/verify_masterwork_100x.mjs</code></td>
             </tr>
           </tbody>
@@ -659,7 +789,7 @@
   <footer class="app-footer">
     <div class="container">
       <p>
-        Open Arbor v2.0 &middot; Falsifiability &amp; Verification Methodology &middot; 25 Executable Verification Groups &middot; Licensed under AGPL-3.0-only.
+        Open Arbor v2.1 &middot; Executable Proof &amp; Falsifiability Ledger &middot; 33 Executable Verification Groups &middot; Licensed under AGPL-3.0-only.
       </p>
     </div>
   </footer>

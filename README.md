@@ -133,6 +133,11 @@ const geojson = toGeoJSONFeatureCollection(evaluated, { municipality: 'Liberty H
 
 ---
 
+## License
+
+The Open Arbor engine (`src/`) and web application layer (`web/`, `server/`) are licensed under `AGPL-3.0-only` ([LICENSE](./LICENSE)).
+All files under `schemas/` and `data/` are dedicated to the public domain under `CC0-1.0` ([LICENSE-DATA](./LICENSE-DATA), see [NOTICE](./NOTICE)) so cities and vendors can adopt the data formats without the network clause.
+
 ## Maintainer
 
 **George Steward**  

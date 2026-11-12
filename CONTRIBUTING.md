@@ -1,114 +1,28 @@
 # Contributing to Open Arbor
 
-Open Arbor is governed by ecological principles. The same rules that sustain a healthy forest govern how this codebase grows.
+Open Arbor welcomes statutory updates, peer review on core forestry calculations, and field bug reports. Code contributions under `src/` and `web/` follow `AGPL-3.0-only` ([LICENSE](./LICENSE)); schemas and ordinance datasets under `schemas/` and `data/` are dedicated to the public domain under `CC0-1.0` ([LICENSE-DATA](./LICENSE-DATA), [NOTICE](./NOTICE)).
 
----
+## How to Add a City Ordinance
 
-## The Prime Directive
+Municipal rules live in declarative JSON files under `data/ordinances/` (such as `data/ordinances/central_texas_ordinances.json` and `data/ordinances/rogue_valley_oregon_ordinances.json`) and must conform to the Draft 2020-12 schema at `schemas/municipal-ordinance.schema.json`. Zero city-specific branches belong in `src/core/` code.
 
-**Accumulate, never overwrite.**
+1. **Start from the draft template:** Copy `NEW_MUNICIPALITY_DRAFT_TEMPLATE` from `web/pages/ordinances-ui.js` (also documented in `data/ordinances/CONTRIBUTING_DATA.md` and inspectable interactively on `/ordinances/`).
+2. **Cite every encoded clause:** Populate `primary_citation`, `source_url`, and per-rule statutory citations from the active municipal code. Do not estimate missing figures or copy assumptions from a neighboring jurisdiction.
+3. **Leave unverified sub-sections visible (`UNVERIFIED`):** If only diameter thresholds and mitigation fees are confirmed while site-plan disturbance limits, work-type triggers, or pruning windows have not yet been audited, omit those unverified rule blocks and classify the record accordingly (`Threshold_And_Fee_Record` vs. `Full_Rule_Record`). `inspectMunicipalityProvenance` in `web/pages/masterwork-core.js` surfaces omitted sections explicitly as `UNVERIFIED` gaps rather than silently inventing statutory rules.
+4. **Validate before opening a PR:**
+   ```bash
+   npm run validate:ordinances
+   npm test
+   ```
+   `scripts/validate-ordinance.mjs` validates every file under `data/ordinances/` against `schemas/municipal-ordinance.schema.json`. The `/ordinances/` page also exposes an in-browser draft validator for quick schema checking before committing.
+5. **Confirm UI unit tests if bundles change:**
+   ```bash
+   npm run build:web
+   node tests/verify_masterwork_100x.mjs
+   ```
 
-Every contribution adds to the living record of this platform. We don't delete history — we evolve it. If something is wrong, we correct it with a new commit that explains why. The git log is part of the system's memory.
+## Good First Issue: Upgrade Cedar Park (`tx-cedar-park`) to `Full_Rule_Record`
 
----
-
-## Module Ownership
-
-Each module has a designated steward — a contributor who has demonstrated deep domain knowledge and consistent, reliable contributions over time. Module stewards review PRs for their module and have final say on architectural decisions within their layer.
-
-| Module | Domain | Steward |
-|--------|--------|---------|
-| `modules/arbor` | Arboriculture, ISA standards, field ops | Open |
-| `modules/nursery` | Native plants, propagation, restoration genetics | Open |
-| `modules/forest` | Miyawaki method, afforestation, succession | Open |
-| `modules/sanctuary` | Land tenure, conservation law, stewardship agreements | Open |
-| `core/` | Data models, API contracts, STIM integration | @soilgrowerx |
-
-All steward positions marked **Open** are available. See [becoming a module steward](#becoming-a-module-steward) below.
-
----
-
-## How to Contribute
-
-### 1. Find your entry point
-
-- **Field practitioners** (arborists, nursery operators, land stewards): Your operational knowledge is the most valuable contribution. Open issues describing real workflows we're missing or getting wrong. No code required.
-- **Developers**: Check open issues tagged `good-first-issue` or `module-*`. Read the architecture docs in `docs/` before writing code.
-- **Researchers**: If your work touches forestry, ecology, indigenous land management, or AI alignment — open a discussion. We want your peer review.
-- **Citizen scientists**: Join the [iNaturalist Arboracle Project](https://www.inaturalist.org/projects/arboracle) and tag observations. That data feeds directly into the platform.
-
-### 2. Open an issue first
-
-Before writing code, open an issue describing what you want to build and why. This prevents duplicate work and ensures the contribution fits the architecture. Exception: typo fixes and documentation improvements — just PR those directly.
-
-### 3. Branch naming
-
-```
-feature/module-name/short-description
-fix/module-name/what-was-broken
-docs/what-you-documented
-```
-
-### 4. Commit messages
-
-Write commit messages in the present tense, describing what the commit does — not what you did.
-
-```
-✅ Add soil pH correction workflow to arbor module
-❌ Added soil pH stuff
-```
-
-### 5. Pull request checklist
-
-- [ ] Issue linked in PR description
-- [ ] Tests written for new functionality
-- [ ] Documentation updated if behavior changed
-- [ ] No hardcoded credentials or API keys
-- [ ] STIM Protocol compliance checked (see below)
-
----
-
-## STIM Protocol Compliance
-
-All AI agent interactions built on Open Arbor must comply with the STIM Protocol. This means:
-
-- **Accumulate, never overwrite** — agent memory appends chronologically
-- **Label uncertainty** — inferred outputs are marked `HYPOTHESIS` until outcome-encoded
-- **Encode outcomes** — actions without results are incomplete data
-- **Earn structure** — schema changes require proven pattern evidence, not assumptions
-
-Read the [STIM White Paper (v7.0009)](https://github.com/STIM-Protocol/white-paper/blob/master/STIM_White_Paper_v7.0009.md) before contributing to `core/` or any AI agent code.
-
----
-
-## Becoming a Module Steward
-
-Module stewardship is earned, not assigned. To become a steward:
-
-1. Make 10+ meaningful contributions to the module over at least 60 days
-2. Demonstrate domain expertise — either professional credentials or documented field experience
-3. Be nominated by an existing steward or the founding maintainer
-4. Accept the stewardship responsibilities: reviewing PRs within 5 business days, attending monthly community calls, maintaining the module roadmap
-
-Stewardship is not a status. It is a responsibility.
-
----
-
-## Code of Conduct
-
-This project operates on a single principle: **respect for living systems.**
-
-That means respect for the ecosystems we're building software to protect. It means respect for the indigenous knowledge systems that have stewarded these lands for millennia. It means respect for contributors at every experience level.
-
-Violations of this principle — harassment, bad faith contributions, extraction without reciprocity — result in removal. No warnings for egregious violations.
-
----
-
-## License
-
-By contributing to Open Arbor, you agree that your contributions will be licensed under AGPL v3. Commercial use of Open Arbor code requires enterprise licensing through [Arboracle](https://arboracle.app).
-
----
-
-*Open Arbor is built by practitioners for practitioners.*
-*The forest doesn't ask for your credentials. It asks for your attention.*
+**Target:** `tx-cedar-park` in `data/ordinances/central_texas_ordinances.json`  
+**Current status:** `Threshold_And_Fee_Record` (Verified threshold and fee baseline; missing work-type permit triggers, site-plan CRZ disturbance caps, species overrides, and pruning rules render as visible `UNVERIFIED` gaps).  
+**Task:** Audit Cedar Park Code Chapter 14 primary text, add exact statutory citations for each missing sub-section, validate with `npm run validate:ordinances` (`scripts/validate-ordinance.mjs`), and verify the `/ordinances/` provenance card updates cleanly with zero remaining `UNVERIFIED` gaps.

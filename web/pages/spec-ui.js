@@ -167,14 +167,13 @@ export function initLandingQuickCalculator() {
     }
     if (statusVal) {
       const label = statusLabel(evalRows[0]);
-      const fee = mitIfRemoved?.cash_in_lieu_usd || 0;
-      statusVal.textContent = `${label} (${permit.required ? 'Permit Req.' : 'No Permit'} | Removal Fee: $${fee.toLocaleString()})`;
+      statusVal.textContent = label;
     }
     if (holobiontVal) {
       holobiontVal.textContent = `$${holobiont.holobiont_200yr_biological_equity_usd.toLocaleString()}`;
     }
     if (ctlaVal) {
-      ctlaVal.textContent = `CTLA: $${holobiont.ctla_10th_ed_depreciated_usd.toLocaleString()} | Nowak: $${benefits.total_annual_benefits_usd}/yr`;
+      ctlaVal.textContent = `$${holobiont.ctla_10th_ed_depreciated_usd.toLocaleString()}`;
     }
     if (citationLine) {
       citationLine.textContent = `Authority: ${muni.name}, ${muni.state} (${muni.ordinance_numbers}) | Species: ${speciesCommon}`;

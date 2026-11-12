@@ -496,8 +496,8 @@ function renderCasesIndexHtml(evaluatedCases) {
                 <small>If destroyed: ${escapeHtml(cashIfDestroyed)} (${repHtml})</small>
               </td>
               <td>
-                <strong class="text-accent">${escapeHtml(holobiontUsd)}</strong><br />
-                <small>CTLA: ${escapeHtml(ctlaUsd)} (${escapeHtml(evalResult.valuation.inversion_ratio)}x)</small>
+                <strong class="oa-valuation-appraisal-val">CTLA: ${escapeHtml(ctlaUsd)}</strong><br />
+                <span class="oa-valuation-hypothesis-val">200-Yr Model: ${escapeHtml(holobiontUsd)} (${escapeHtml(evalResult.valuation.inversion_ratio)}x; unvalidated)</span>
               </td>
               <td>
                 <div style="display: flex; flex-direction: column; gap: 6px;">
@@ -536,7 +536,7 @@ function renderCasesIndexHtml(evaluatedCases) {
               <li><strong>Evaluated DBH &amp; Shell Stability:</strong> ${dualHtml(fmtDualInCm, evalResult.biomechanics.dbh_inches, evalResult.biomechanics.dbh_cm)} | Mattheck <code>t/R = ${escapeHtml(evalResult.biomechanics.biomechanics.sound_shell_thickness_ratio_t_over_r)}</code> (Stable)</li>
               <li><strong>Protection Zones:</strong> CRZ ${dualHtml(fmtDualFtM, evalResult.rootZones.crz.radius_feet, evalResult.rootZones.crz.radius_meters)} | AS 4970 SRZ ${dualHtml(fmtDualFtM, evalResult.rootZones.srz.radius_feet, evalResult.rootZones.srz.radius_meters)}</li>
               <li><strong>Permit &amp; Mitigation Liability:</strong> ${escapeHtml(evalResult.permitText)} | Cash-in-lieu if removed: ${escapeHtml(formatUsd(evalResult.mitigationIfRemoved.cash_in_lieu_usd))}</li>
-              <li><strong>Holobiont Equity vs. CTLA:</strong> ${escapeHtml(formatUsd(evalResult.valuation.holobiont_200yr_biological_equity_usd))} vs. ${escapeHtml(formatUsd(evalResult.valuation.ctla_10th_ed_depreciated_usd))} (${escapeHtml(evalResult.valuation.inversion_ratio)}x) | John White Age: ${escapeHtml(evalResult.ageEstimate.estimated_age_years)} yrs</li>
+              <li><strong>Valuation Models:</strong> CTLA 10th Ed. model ${escapeHtml(formatUsd(evalResult.valuation.ctla_10th_ed_depreciated_usd))} | Experimental 200-yr holobiont model ${escapeHtml(formatUsd(evalResult.valuation.holobiont_200yr_biological_equity_usd))} (unvalidated) | John White Age: ${escapeHtml(evalResult.ageEstimate.estimated_age_years)} yrs</li>
               <li><strong>Canonical SHA-256:</strong> <code>${escapeHtml(evalResult.sha256.slice(0, 24))}...</code></li>
             </ul>
           </div>
@@ -932,12 +932,12 @@ ${triageRowsHtml}
       <div class="metric-grid metric-grid-4">
         <div class="metric-box">
           <span class="metric-label">Specimen &amp; Taxon Anchor</span>
-          <strong class="metric-value"><em>${escapeHtml(sb.species_scientific)}</em></strong>
+          <strong class="oa-determination-value"><em>${escapeHtml(sb.species_scientific)}</em></strong>
           <span class="metric-sub">${escapeHtml(sb.species_common)} &middot; iNat Taxon <code>${escapeHtml(sb.inaturalist_taxon_id)}</code></span>
         </div>
         <div class="metric-box">
           <span class="metric-label">Stem Measurement Rule</span>
-          <strong class="metric-value">${
+          <strong class="oa-determination-value">${
             sb.is_multistem
               ? dualUnitSpanHtml(
                   `${sb.multistem_aggregation_method} (${(sb.stem_diameters_cm || []).map((c) => cmToIn(c, 1)).join(', ')} in / ${(sb.stem_diameters_cm || []).join(', ')} cm)`,
@@ -1122,15 +1122,15 @@ ${unverifiedRowsHtml}
       </p>
 
       <div class="metric-grid metric-grid-4">
-        <div class="metric-box highlight-box">
-          <span class="metric-label">200-Yr Holobiont Biological Equity</span>
-          <strong class="metric-value text-accent">${escapeHtml(formatUsd(val.holobiont_200yr_biological_equity_usd))}</strong>
-          <span class="metric-sub">${escapeHtml(val.veteran_keystone_habitat_multiplier)}x Keystone Multiplier (${escapeHtml(val.inversion_ratio)}x CTLA)</span>
+        <div class="metric-box">
+          <span class="metric-label">Regional Appraisal Model (CTLA 10th Ed.)</span>
+          <strong class="oa-valuation-appraisal-val">${escapeHtml(formatUsd(val.ctla_10th_ed_depreciated_usd))}</strong>
+          <span class="oa-model-assumption-note">Trunk Formula model ($65/sq in regional base; allometric structural: ${escapeHtml(formatUsd(eco.structural_value_usd))})</span>
         </div>
         <div class="metric-box">
-          <span class="metric-label">Classical CTLA 10th Ed. Value</span>
-          <strong class="metric-value">${escapeHtml(formatUsd(val.ctla_10th_ed_depreciated_usd))}</strong>
-          <span class="metric-sub">Delta: +${escapeHtml(formatUsd(val.valuation_delta_usd))} living equity</span>
+          <span class="metric-label">Experimental Ecosystem Hypothesis (200-Yr Holobiont)</span>
+          <strong class="oa-valuation-hypothesis-val">${escapeHtml(formatUsd(val.holobiont_200yr_biological_equity_usd))}</strong>
+          <span class="oa-model-assumption-note">Uncalibrated 200-yr model (${escapeHtml(val.veteran_keystone_habitat_multiplier)}x keystone; ${escapeHtml(val.inversion_ratio)}x CTLA; delta +${escapeHtml(formatUsd(val.valuation_delta_usd))}; see docs/LAYERS.md)</span>
         </div>
         <div class="metric-box">
           <span class="metric-label">John White (FCIN12) Veteran Age</span>
@@ -1184,9 +1184,9 @@ ${unverifiedRowsHtml}
               <td>${escapeHtml(mitIfRemoved?.citation || provenance.primary_citation)}</td>
             </tr>
             <tr>
-              <th scope="row">200-Year Holobiont Biological Equity vs. CTLA 10th Ed.</th>
-              <td>N/A (Living Capital Asset)</td>
-              <td><strong class="text-accent">${escapeHtml(formatUsd(val.holobiont_200yr_biological_equity_usd))}</strong> (CTLA: ${escapeHtml(formatUsd(val.ctla_10th_ed_depreciated_usd))})</td>
+              <th scope="row">Valuation Models: CTLA 10th Ed. vs. 200-Year Holobiont Hypothesis</th>
+              <td>N/A (Modeled Asset)</td>
+              <td><strong class="oa-valuation-appraisal-val">CTLA: ${escapeHtml(formatUsd(val.ctla_10th_ed_depreciated_usd))}</strong> <span class="oa-valuation-hypothesis-val">| Experimental 200-Yr Model: ${escapeHtml(formatUsd(val.holobiont_200yr_biological_equity_usd))}</span> <span class="oa-model-assumption-note">Assumes CTLA $65/sq in trunk formula; uncalibrated 200-yr survival assumption</span></td>
               <td>Carbon: ${escapeHtml(formatUsd(val.breakdown.carbon_storage_equity_usd))} | Hydrology: ${escapeHtml(formatUsd(val.breakdown.vadose_hydrology_equity_usd))} | CMN Soil: ${escapeHtml(formatUsd(val.breakdown.cmn_rhizosphere_equity_usd))}</td>
               <td>RCA-Spec v2.0 Dual Valuation (${escapeHtml(val.veteran_keystone_habitat_multiplier)}x Veteran Keystone Multiplier; ${escapeHtml(val.inversion_ratio)}x inversion)</td>
             </tr>

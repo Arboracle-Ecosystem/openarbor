@@ -2137,6 +2137,80 @@ details.oa-veil:not([open])::details-content {
   color: var(--text-muted);
 }
 
+/* 2b. Determination-First Visual Hierarchy & Subordinate Model Disclosure */
+.oa-determination-value {
+  font-size: 1.32rem;
+  font-weight: 800;
+  line-height: 1.18;
+  color: var(--text-main);
+}
+
+.oa-valuation-appraisal-val {
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--text-main);
+}
+
+.oa-valuation-hypothesis-val {
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--text-muted);
+}
+
+.oa-model-assumption-note {
+  display: block;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+details.oa-models-disclosure {
+  border: 1px solid var(--border-main);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  overflow: hidden;
+}
+
+summary.oa-models-summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 12px 14px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-main);
+}
+
+summary.oa-models-summary::-webkit-details-marker {
+  display: none;
+}
+
+summary.oa-models-summary::after {
+  content: "Show models";
+  margin-left: auto;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--accent-copper);
+}
+
+details.oa-models-disclosure[open] > summary.oa-models-summary::after {
+  content: "Hide models";
+}
+
+.oa-models-body {
+  padding: 14px;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 /* 3. Sequoia Opening & Living Tree Lens (#landing-quick-calc) */
 .oa-sequoia-hero {
   background: linear-gradient(180deg, var(--header-grad-top) 0%, var(--bg-deep) 100%);
@@ -2938,6 +3012,7 @@ details.oa-hash-chip[open] .oa-hash-chip-action-closed {
   .citation-callout,
   .oa-signature-block,
   .oa-provenance-panel,
+  .oa-models-disclosure,
   .data-table th,
   .data-table td {
     background: #ffffff !important;

@@ -30,7 +30,9 @@
     "docs/13_*",
     "docs/14_*",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "LICENSE-DATA",
+    "NOTICE"
   ],
   "scripts": {
     "test": "node tests/verify_openarbor.mjs",

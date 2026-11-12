@@ -27,7 +27,7 @@
       <div class="oa-nav-container">
         <a href="./index.html" class="oa-brand-link" aria-current="page">
           <span class="oa-brand-mark"><img src="./icons/icon-68.png" alt="" width="34" height="34" class="oa-brand-logo" decoding="async" /></span>
-          <span class="oa-brand-text">Open Arbor <small>v2.1</small></span>
+          <span class="oa-brand-text">OPEN ARBOR</span>
         </a>
         <nav class="oa-main-nav" aria-label="Primary">
           <a href="./index.html" class="oa-nav-link active" aria-current="page">Field Home</a>
@@ -108,10 +108,10 @@
     <section class="oa-sequoia-hero">
       <div class="container">
         <div class="oa-sequoia-intro">
-          <span class="oa-sequoia-eyebrow">Open Arbor &middot; Forest OS &amp; STIM v7.0011 Showcase Instrument</span>
-          <h1 id="main-content" tabindex="-1" class="oa-sequoia-title">See what your tree is holding up before anyone starts a chainsaw.</h1>
+          <span class="oa-sequoia-eyebrow">OPEN ARBOR</span>
+          <h1 id="main-content" tabindex="-1" class="oa-sequoia-title">City tree code, critical root zone, and permit determination in one glance.</h1>
           <p class="oa-sequoia-lead">
-            Conventional tree appraisals treat a hollow 200-year-old oak as depreciated lumber and stop looking at the grass line. Open Arbor reads the living wood cylinder, the underground root plate, the soil sponge, and your city's tree code in one glance. No account, no paywall, and every number can be checked.
+            Open Arbor reads trunk diameter, species protections, ANSI A300 and AS 4970 root protection zones, and municipal tree ordinances locally with zero account or paywall. Valuation models and practice economics stay separated below the primary determination.
           </p>
         </div>
 
@@ -250,68 +250,113 @@
             </div>
           </div>
 
-          <!-- Scannable Biophysical & Statutory Readout -->
-          <div id="qc-results-grid" class="metric-grid metric-grid-3" aria-live="polite">
+          <!-- Scannable Statutory & Physical Determination Readout (Layer 1 Only) -->
+          <div id="qc-results-grid" class="metric-grid metric-grid-4" aria-live="polite">
             <div class="metric-box">
-              <span class="metric-label">Critical Root Zone &amp; Soil Sponge</span>
-              <strong class="metric-value" id="qc-crz-val">30.0 ft (9.14 m)</strong>
-              <span class="metric-sub" id="qc-tpz-val">2,827 sq ft CRZ | 6,362 sq ft sponge</span>
+              <span class="metric-label">Species &amp; DBH</span>
+              <strong class="oa-determination-value" id="qc-species-val">Live Oak</strong>
+              <span class="metric-sub" id="qc-species-sub">Quercus virginiana &middot; 30 in (76.2 cm)</span>
             </div>
             <div class="metric-box">
-              <span class="metric-label">Windthrow Root Plate &amp; City Tier</span>
-              <strong class="metric-value" id="qc-srz-val">10.5 ft (3.21 m)</strong>
-              <span class="metric-sub" id="qc-status-val">Heritage (Removal Permit Req.)</span>
+              <span class="metric-label">Protected Status</span>
+              <strong class="oa-determination-value" id="qc-status-val">Heritage</strong>
+              <span class="metric-sub" id="qc-tier-sub">Austin LDC § 25-8-604 | Shell t/R = 0.38</span>
+            </div>
+            <div class="metric-box">
+              <span class="metric-label">Permit Requirement</span>
+              <strong class="oa-determination-value" id="qc-permit-val">Removal Permit Req.</strong>
+              <span class="metric-sub" id="qc-permit-sub">Mitigation: $6,000 if removed</span>
             </div>
             <div class="metric-box highlight-box">
-              <span class="metric-label">200-Yr Living Holobiont Equity</span>
-              <strong class="metric-value text-accent" id="qc-holobiont-val">$218,609</strong>
-              <span class="metric-sub" id="qc-ctla-val">CTLA: $13,699 | Nowak: $107/yr</span>
+              <span class="metric-label">Critical Root Zone (CRZ Radius)</span>
+              <strong class="oa-determination-value text-accent" id="qc-crz-val">30.0 ft (9.14 m)</strong>
+              <span class="metric-sub"><span id="qc-tpz-val">2,827 sq ft CRZ</span> | SRZ: <span id="qc-srz-val">10.5 ft (3.21 m)</span></span>
             </div>
           </div>
 
-          <!-- Innate Answer-First Verdict (LEO-RCA Slot 4) -->
+          <!-- Statutory & Biomechanical Determination Summary -->
           <div id="qc-innate-verdict-card" class="oa-innate-verdict-card" aria-live="polite">
             <div class="oa-innate-verdict-top">
-              <span class="eyebrow">Plain-Language Field Verdict &middot; LEO-RCA Answer-First</span>
-              <span class="hint">Updates live from primary biomechanics &amp; municipal code</span>
+              <span class="eyebrow">Primary Statutory &amp; Physical Determination &middot; Layer 1</span>
+              <span class="hint">Updates live from ANSI A300 / AS 4970 biomechanics &amp; municipal code</span>
             </div>
             <p id="qc-innate-verdict-headline" class="oa-innate-verdict-headline">
-              Preserve Live Oak (ATX-QV-101): the outer living wood cylinder exceeds the 0.30 Claus Mattheck stability threshold and qualifies for phased rhizosphere stewardship rather than removal.
+              Preserve Live Oak (ATX-QV-101): Heritage tier requires a removal permit, 30.0 ft CRZ protection, and retains sound outer shell stability (t/R = 0.38 &ge; 0.30).
             </p>
             <p id="qc-innate-verdict-body" class="oa-innate-verdict-prose">
-              At 30 inches DBH (~291 years old), this Live Oak retains a 14.5 cm living outer cylinder (t/R = 0.38, above Claus Mattheck's 0.30 buckling threshold) anchored by a 10.5 ft structural root plate. Under Austin, TX (Austin LDC § 25-8-604), it classifies as Heritage with a 30.0 ft Critical Root Zone and 10% proposed root-zone trenching. Its underground mycorrhizal zone captures 3,962 gallons in a 1-inch rain, and Day-1 Stage 1 root-collar relief ($2,261) costs less than a one-time chainsaw bid ($3,140).
+              At 30 in (76.2 cm) DBH (~291 years estimated age), this Live Oak retains a 14.5 cm living outer cylinder (t/R = 0.38, above Claus Mattheck's 0.30 buckling threshold) anchored by a 10.5 ft (3.21 m) structural root plate. Under Austin, TX (Austin LDC § 25-8-604), it classifies as Heritage with a 30.0 ft (9.14 m) Critical Root Zone and 10% proposed root-zone trenching, capturing an estimated 3,962 gal in a 1-inch rain event.
             </p>
             <span id="qc-innate-falsifier" class="hint">
               Physical check: If Year-1 terminal shoot extension remains below 6 cm or upper crown dieback exceeds 12%, re-inspect for subsurface utility trench root severance or oak wilt vascular streaking.
             </span>
           </div>
 
-          <!-- Two Futures Comparison -->
-          <div class="oa-two-futures-grid">
-            <div class="oa-future-card oa-future-liquidation">
-              <span class="oa-future-kicker">Future A &middot; One-Time Chainsaw Liquidation</span>
-              <div class="oa-future-headline">
-                <span id="qc-future-a-bid">$3,140</span> <small>one-time removal bid</small>
-              </div>
-              <ul class="oa-future-list">
-                <li><strong>City code exposure:</strong> <span id="qc-future-a-mitigation">$6,000 city mitigation fee</span></li>
-                <li><strong>Canopy &amp; watershed loss:</strong> <span id="qc-future-a-lost">$218,609 living equity lost (CTLA lumber value: $13,699)</span></li>
-                <li><strong>Result:</strong> Stump heat island, lost stormwater sponge, and high-hazard crane/rigging exposure.</li>
-              </ul>
+          <!-- Provenance Panel with Visible Statutory Gaps -->
+          <div id="qc-provenance-panel" class="oa-provenance-panel oa-provenance-tier-full" aria-live="polite">
+            <div class="oa-provenance-header">
+              <strong>Provenance &amp; Statutory Coverage: Austin, TX (tx-austin)</strong>
+              <span class="badge badge-protected">Full_Rule_Record</span>
             </div>
-
-            <div class="oa-future-card oa-future-stewardship">
-              <span class="oa-future-kicker">Future B &middot; Phased Regenerative Stewardship</span>
-              <div class="oa-future-headline">
-                <span id="qc-future-b-stage1">$2,261</span> <small>Day-1 Stage 1 root-collar relief</small>
-              </div>
-              <ul class="oa-future-list">
-                <li><strong>Immediate homeowner savings:</strong> <span id="qc-future-b-savings">$879 less than Day-1 removal</span></li>
-                <li><strong>Living soil sponge kept:</strong> <span id="qc-future-b-sponge">3,962 gal / 1-in storm + 4,669 gal SOM reserve</span></li>
-                <li><strong>Working arborist upside:</strong> <span id="qc-future-b-margin">6.35x higher 5-yr arborist net margin ($6,382 vs $1,005)</span></li>
-              </ul>
+            <p class="hint" style="margin: 4px 0 8px 0;">
+              Primary Citation: City of Austin Land Development Code (LDC) Title 25, Chapter 25-8, Subchapter B &middot; Dataset v2.0.0 &middot; Verified 2026-10-23 &middot;
+              <a href="https://library.municode.com/tx/austin/codes/land_development_code" target="_blank" rel="noopener">Primary Code Link</a>
+            </p>
+            <div class="oa-provenance-gaps" style="background: transparent; border-left: 3px solid var(--accent-green); padding: 4px 10px;">
+              <strong>Visible Gaps (UNVERIFIED Sub-Sections):</strong> 0 missing core schema domains (7 statutory sections encoded with section citations; confirm site-specific Heritage variance criteria with City Arborist review).
             </div>
           </div>
+
+          <!-- Secondary Layer Disclosure: Valuation Models & Practice Economics -->
+          <details id="qc-models-disclosure" class="oa-models-disclosure">
+            <summary class="oa-models-summary">
+              <span class="oa-veil-kicker">Secondary Models</span>
+              <span>Valuation Models &amp; Practice Economics (Assumptions &amp; Kill Criteria Declared)</span>
+            </summary>
+            <div class="oa-models-body">
+              <div class="metric-grid metric-grid-2">
+                <div class="metric-box">
+                  <span class="metric-label">Regional Appraisal Model (CTLA 10th Ed.)</span>
+                  <strong class="oa-valuation-appraisal-val" id="qc-ctla-val">$13,699</strong>
+                  <span class="oa-model-assumption-note" id="qc-ctla-note">
+                    CTLA Trunk Formula Method model: assumes $65/sq in regional unit trunk cost, depreciated by species, site, and condition ratings (Nowak annual services estimate: $107/yr).
+                  </span>
+                </div>
+                <div class="metric-box">
+                  <span class="metric-label">Experimental Ecosystem Hypothesis (200-Yr Holobiont)</span>
+                  <strong class="oa-valuation-hypothesis-val" id="qc-holobiont-val">$218,609</strong>
+                  <span class="oa-model-assumption-note" id="qc-holobiont-note">
+                    Experimental 200-yr holobiont ecosystem model: assumes $45/yr baseline services, 2.5x keystone habitat multiplier, and an uncalibrated multi-century survival curve (see docs/LAYERS.md kill criteria).
+                  </span>
+                </div>
+              </div>
+
+              <div class="oa-two-futures-grid">
+                <div class="oa-future-card oa-future-liquidation">
+                  <span class="oa-future-kicker">Practice Economics Model A &middot; One-Time Removal Estimate</span>
+                  <div class="oa-future-headline">
+                    <span id="qc-future-a-bid">$3,140</span> <small>modeled removal bid</small>
+                  </div>
+                  <ul class="oa-future-list">
+                    <li><strong>City code exposure:</strong> <span id="qc-future-a-mitigation">$6,000 city mitigation fee</span></li>
+                    <li><strong>Modeled canopy &amp; appraisal delta:</strong> <span id="qc-future-a-lost">CTLA appraisal model: $13,699 | Experimental 200-yr holobiont hypothesis: $218,609</span></li>
+                    <li><strong>Assumption note:</strong> Illustrative regional crew &amp; disposal rate model; replace with site bid.</li>
+                  </ul>
+                </div>
+
+                <div class="oa-future-card oa-future-stewardship">
+                  <span class="oa-future-kicker">Practice Economics Model B &middot; Phased Stewardship Estimate</span>
+                  <div class="oa-future-headline">
+                    <span id="qc-future-b-stage1">$2,261</span> <small>modeled Stage 1 root-collar relief</small>
+                  </div>
+                  <ul class="oa-future-list">
+                    <li><strong>Modeled Day-1 difference:</strong> <span id="qc-future-b-savings">$879 less than modeled Day-1 removal</span></li>
+                    <li><strong>Soil sponge estimate:</strong> <span id="qc-future-b-sponge">3,962 gal / 1-in storm + 4,669 gal SOM reserve</span></li>
+                    <li><strong>Modeled 5-yr practice margin:</strong> <span id="qc-future-b-margin">6.35x modeled 5-yr arborist net margin ($6,382 vs $1,005, assuming full 5-yr retention)</span></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </details>
 
           <!-- Viral Word-of-Mouth Action Bar -->
           <div class="oa-word-of-mouth-bar">
@@ -522,7 +567,7 @@
       <!-- ACT IV: FOREST OS & STIM v7.0011 SOVEREIGN SUBSTRATE -->
       <section class="card" aria-labelledby="sovereign-substrate-heading">
         <div class="card-header">
-          <span class="step-badge">Forest OS &amp; STIM v7.0011</span>
+          <span class="step-badge">Forest OS &amp; STIM v7.0011 Showcase Instrument</span>
           <h2 id="sovereign-substrate-heading">Cambium &amp; Heartwood: STIM Epistemic Sieve, AI Verification &amp; Open CLI</h2>
         </div>
         <p class="subtitle">
@@ -667,7 +712,7 @@ npx openarbor-mcp</pre>
         <div>
           <strong>Open Arbor Alliance &middot; Software as an Instrument (SaaI)</strong>
           <p class="hint">
-            Governed under AGPL-3.0-only (code) and CC-BY-SA-4.0 (specifications &amp; municipal datasets). Built for a 200-year stewardship horizon (2026 to 2226) with zero cloud lock-in, zero telemetry, and open primary citations.
+            Governed under AGPL-3.0-only (code &amp; web layer) and CC0-1.0 (schemas &amp; municipal datasets). Built for a 200-year stewardship horizon (2026 to 2226) with zero cloud lock-in, zero telemetry, and open primary citations.
           </p>
         </div>
         <nav class="oa-footer-links" aria-label="Footer Navigation">

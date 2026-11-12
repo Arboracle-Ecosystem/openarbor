@@ -1105,7 +1105,7 @@ export function mintOpenBadgeAttestation(practitioner, assessments, rcaAssessmen
       },
       governance_and_fee_benchmark: {
         specification_license: 'CC-BY-SA-4.0',
-        schema_license: 'AGPL-3.0-or-later',
+        schema_license: 'CC0-1.0',
         optional_annual_registry_fee_band_min_usd: 75,
         optional_annual_registry_fee_band_max_usd: 110,
         benchmark_citations: [

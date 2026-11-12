@@ -1661,10 +1661,10 @@ export function initFieldToolUI() {
               </thead>
               <tbody>
                 <tr>
-                  <td>$${val.ctla_10th_ed_depreciated_usd.toLocaleString()}</td>
-                  <td><strong>$${val.holobiont_200yr_biological_equity_usd.toLocaleString()}</strong> (${val.veteran_keystone_habitat_multiplier}x Keystone)</td>
+                  <td><strong class="oa-valuation-appraisal-val">$${val.ctla_10th_ed_depreciated_usd.toLocaleString()}</strong> <span class="oa-model-assumption-note">CTLA Trunk Formula model (assumes $65/sq in regional cost)</span></td>
+                  <td><span class="oa-valuation-hypothesis-val">$${val.holobiont_200yr_biological_equity_usd.toLocaleString()}</span> <span class="oa-model-assumption-note">Experimental 200-yr holobiont model (${val.veteran_keystone_habitat_multiplier}x keystone; uncalibrated survival curve)</span></td>
                   <td>${age.estimated_age_years} yrs (${age.site_condition})</td>
-                  <td>${fmtDualGallons(eco.avoided_runoff_gallons_yr, '/yr')} | ${eco.cooling_savings_kwh_yr} kWh/yr | ${fmtDualMassFromLbs(eco.carbon_storage_lbs, ' C')} ($${eco.total_annual_benefits_usd}/yr)</td>
+                  <td>${fmtDualGallons(eco.avoided_runoff_gallons_yr, '/yr')} | ${eco.cooling_savings_kwh_yr} kWh/yr | ${fmtDualMassFromLbs(eco.carbon_storage_lbs, ' C')} ($${eco.total_annual_benefits_usd}/yr Nowak model)</td>
                 </tr>
               </tbody>
             </table>
@@ -1801,17 +1801,17 @@ export function initFieldToolUI() {
       <div class="metric-grid metric-grid-3">
         <div class="metric-box">
           <span class="metric-label">Critical Root Zone (CRZ)</span>
-          <strong class="metric-value">${fmtDualFtM(res.rootZones.crz.radius_feet, res.rootZones.crz.radius_meters)}</strong>
+          <strong class="oa-determination-value">${fmtDualFtM(res.rootZones.crz.radius_feet, res.rootZones.crz.radius_meters)}</strong>
           <span class="metric-sub">${fmtDualAreaSqftSqm(res.rootZones.crz.area_sqft, res.rootZones.crz.area_sqm)}</span>
         </div>
         <div class="metric-box">
           <span class="metric-label">Structural Root Zone (SRZ)</span>
-          <strong class="metric-value">${fmtDualFtM(res.rootZones.srz.radius_feet, res.rootZones.srz.radius_meters)}</strong>
+          <strong class="oa-determination-value">${fmtDualFtM(res.rootZones.srz.radius_feet, res.rootZones.srz.radius_meters)}</strong>
           <span class="metric-sub">AS 4970 Windthrow Plate</span>
         </div>
         <div class="metric-box">
           <span class="metric-label">Tree Influence Zone (TIZ)</span>
-          <strong class="metric-value">${fmtDualFromMeters(bio.root_zones.tiz_radius_meters)} radius</strong>
+          <strong class="oa-determination-value">${fmtDualFromMeters(bio.root_zones.tiz_radius_meters)} radius</strong>
           <span class="metric-sub">${fmtDualAreaFromSqm(bio.root_zones.tiz_area_sqm)} Holobiont Footprint</span>
         </div>
       </div>
@@ -1856,15 +1856,15 @@ export function initFieldToolUI() {
     const mattheckClass = bio.biomechanics.mattheck_criterion_satisfied ? 'badge-protected' : 'badge-danger';
     el('verdict-valuation-body').innerHTML = `
       <div class="metric-grid metric-grid-4">
-        <div class="metric-box highlight-box">
-          <span class="metric-label">200-Yr Holobiont Biological Equity</span>
-          <strong class="metric-value text-accent">$${val.holobiont_200yr_biological_equity_usd.toLocaleString()}</strong>
-          <span class="metric-sub">${val.veteran_keystone_habitat_multiplier}x Keystone Multiplier (${val.inversion_ratio}x CTLA)</span>
+        <div class="metric-box">
+          <span class="metric-label">Regional Appraisal Model (CTLA 10th Ed.)</span>
+          <strong class="oa-valuation-appraisal-val">$${val.ctla_10th_ed_depreciated_usd.toLocaleString()}</strong>
+          <span class="oa-model-assumption-note">Trunk Formula model ($65/sq in regional base; Allometric structural estimate: $${eco.structural_value_usd.toLocaleString()})</span>
         </div>
         <div class="metric-box">
-          <span class="metric-label">Classical CTLA 10th Ed. Value</span>
-          <strong class="metric-value">$${val.ctla_10th_ed_depreciated_usd.toLocaleString()}</strong>
-          <span class="metric-sub">Allometric Structural: $${eco.structural_value_usd.toLocaleString()}</span>
+          <span class="metric-label">Experimental Ecosystem Hypothesis (200-Yr Holobiont)</span>
+          <strong class="oa-valuation-hypothesis-val">$${val.holobiont_200yr_biological_equity_usd.toLocaleString()}</strong>
+          <span class="oa-model-assumption-note">Uncalibrated 200-yr survival model (${val.veteran_keystone_habitat_multiplier}x keystone multiplier; ${val.inversion_ratio}x CTLA; see docs/LAYERS.md)</span>
         </div>
         <div class="metric-box">
           <span class="metric-label">John White (FCIN12) Est. Age</span>

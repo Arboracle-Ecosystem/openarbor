@@ -1,0 +1,2 @@
+Open Arbor code, engine modules, and web application layer are licensed under AGPL-3.0-only (see LICENSE).
+All files under schemas/ and data/ are dedicated to the public domain under CC0-1.0 (see LICENSE-DATA) so cities and vendors can adopt the format without the AGPL network clause.

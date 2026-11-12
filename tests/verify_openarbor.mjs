@@ -687,13 +687,21 @@ console.log('=== OpenArbor v2.0 Open-Standards Verification Suite ===\n');
     assert.ok(fs.existsSync(path.join(rootDir, rel)), `${rel} must exist`);
   }
 
+  const MAX_BUNDLE_BYTES = 650000;
+  const bundlePath = path.join(rootDir, 'out/openarbor-bundle.js');
+  const bundleBytes = fs.statSync(bundlePath).size;
+  assert.ok(
+    bundleBytes <= MAX_BUNDLE_BYTES,
+    `out/openarbor-bundle.js size (${bundleBytes} bytes) exceeds bundle budget of ${MAX_BUNDLE_BYTES} bytes`
+  );
+
   const parityOut = execFileSync(process.execPath, [path.join(rootDir, 'deploy/verify-parity.mjs')], {
     encoding: 'utf8',
   });
   assert.ok(parityOut.includes('4/4 identical'), `Expected 4/4 identical parity output, got: ${parityOut}`);
   assert.ok(fs.existsSync(path.join(rootDir, 'deploy/VERIFICATION.md')), 'deploy/VERIFICATION.md must exist');
   assert.ok(fs.existsSync(path.join(rootDir, 'deploy/DEPLOY.md')), 'deploy/DEPLOY.md must exist');
-  console.log('[PASS] 10. Static Web Portal & Multi-Route Build (out/) & 4/4 CLI-to-Browser Bundle Parity');
+  console.log(`[PASS] 10. Static Web Portal & Multi-Route Build (out/, bundle ${bundleBytes}/${MAX_BUNDLE_BYTES} bytes) & 4/4 CLI-to-Browser Bundle Parity`);
 }
 
 console.log('\nALL OPENARBOR CORE VERIFICATION CHECKS PASSED (0 proprietary dependencies).');

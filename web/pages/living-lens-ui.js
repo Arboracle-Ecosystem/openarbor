@@ -1163,29 +1163,50 @@ export function initLivingLensUI() {
         : `Affects ~${disturbedAreaLabel} inside the ${fmtDualFtM(crz.radius_feet, crz.radius_meters)} CRZ; protect the inner ${fmtDualFtM(srz.radius_feet, srz.radius_meters)} windthrow plate.`;
     setElText('qc-disturbance-hint', disturbanceHintText);
 
-    // 2. Update Core Metric Grid (preserving legacy #qc-* IDs)
+    // 2. Update Core Layer-1 Determination Grid (preserving #qc-* IDs)
+    setElText('qc-species-val', speciesCommon);
+    setElText('qc-species-sub', `${speciesSci} · ${fmtDualInCm(dbhIn, dbhCm)} DBH`);
+    setElText('qc-status-val', protLabel);
+    setElText('qc-tier-sub', `${muni.ordinance_numbers} | Shell t/R = ${tOverR.toFixed(2)}`);
+
+    const permitLabel = permitIfRemoved.required
+      ? 'Removal Permit Req.'
+      : permitIfRemoved.unknown
+      ? 'Verify City Rule'
+      : 'No Permit Req.';
+    setElText('qc-permit-val', permitLabel);
+    const mitigationSub =
+      cashInLieuUsd > 0
+        ? `Mitigation: ${formatUsd(cashInLieuUsd)} if removed`
+        : mitIfRemoved?.replacement_inches_owed > 0
+        ? `Replacement: ${fmtDualInCm(mitIfRemoved.replacement_inches_owed)} caliper if removed`
+        : permitIfRemoved.unknown
+        ? 'Thresholds verified; verify sub-rules'
+        : 'Protected threshold not triggered';
+    setElText('qc-permit-sub', mitigationSub);
+
     setElText('qc-crz-val', fmtDualFtM(crz.radius_feet, crz.radius_meters));
     setElText(
       'qc-tpz-val',
       imp
-        ? `${Math.round(crz.area_sqft).toLocaleString('en-US')} sq ft CRZ | ${tizAreaSqft.toLocaleString('en-US')} sq ft sponge`
-        : `${round1(crz.area_sqm).toLocaleString('en-US')} m2 CRZ | ${tizAreaM2.toLocaleString('en-US')} m2 sponge`
+        ? `${Math.round(crz.area_sqft).toLocaleString('en-US')} sq ft CRZ`
+        : `${round1(crz.area_sqm).toLocaleString('en-US')} m2 CRZ`
     );
     setElText('qc-srz-val', fmtDualFtM(srz.radius_feet, srz.radius_meters));
-    const permitSuffix = permitIfRemoved.required
-      ? ' (Removal Permit Req.)'
-      : permitIfRemoved.unknown
-      ? ' (Verify City Rule)'
-      : '';
-    setElText('qc-status-val', `${protLabel}${permitSuffix}`);
+
+    setElText('qc-ctla-val', formatUsd(ctlaUsd));
+    setElText(
+      'qc-ctla-note',
+      `CTLA Trunk Formula Method model: assumes regional unit trunk cost ($65/sq in) depreciated by species, site, and condition ratings (Nowak annual ecosystem services estimate: ${formatUsd(ecoBenefits.total_annual_benefits_usd)}/yr).`
+    );
     setElText('qc-holobiont-val', formatUsd(holobiontUsd));
     setElText(
-      'qc-ctla-val',
-      `CTLA: ${formatUsd(ctlaUsd)} | Nowak: ${formatUsd(ecoBenefits.total_annual_benefits_usd)}/yr`
+      'qc-holobiont-note',
+      `Experimental 200-yr holobiont ecosystem model (${valuation.veteran_keystone_habitat_multiplier}x keystone multiplier over base annual flow; uncalibrated long-horizon survival assumption, see docs/LAYERS.md kill criteria).`
     );
     setElText(
       'qc-citation-line',
-      `Citation: ${muni.ordinance_numbers} | ${speciesCommon} (~${ageEst.estimated_age_years} yrs) | Mattheck t/R = ${tOverR.toFixed(2)}`
+      `Citation: ${muni.ordinance_numbers} | ${speciesCommon} (~${ageEst.estimated_age_years} yrs est.) | Mattheck t/R = ${tOverR.toFixed(2)}`
     );
 
     const demoLink = document.getElementById('qc-open-demo-link');
@@ -1211,13 +1232,11 @@ export function initLivingLensUI() {
       });
     }
 
-    // 4. Update Innate Answer-First Verdict (LEO-RCA Slot 4)
+    // 4. Update Primary Statutory & Physical Determination Summary (Layer 1)
     const verdictCard = document.getElementById('qc-innate-verdict-card');
     if (verdictCard) {
       verdictCard.classList.toggle('is-thin-shell', tOverR < 0.30);
     }
-    setElText('qc-innate-verdict-headline', leoBrief.answer_first.headline_verdict);
-
     const dbhDualText = fmtDualInCm(dbhIn, dbhCm);
     const shellDualText = fmtDualFromCm(biomechanics.biomechanics.sound_shell_cm);
     const srzDualText = fmtDualFtM(srz.radius_feet, srz.radius_meters);
@@ -1225,21 +1244,67 @@ export function initLivingLensUI() {
     const stormDualText = fmtDualGallons(sponge.storm_1in_capture_gallons);
     const rainDepthText = imp ? '1-inch (25 mm)' : '25 mm (1-inch)';
 
+    setElText(
+      'qc-innate-verdict-headline',
+      `${speciesCommon} (${activeArchetype?.treeTag || 'SPECIMEN'}): ${protLabel} tier | ${permitLabel} | CRZ ${crzDualText} | Shell t/R = ${tOverR.toFixed(2)}`
+    );
+
     const threeSentenceDiagnosis = [
       `${
         tOverR >= 0.30
-          ? `At ${dbhDualText} DBH (~${ageEst.estimated_age_years} years old), this ${speciesCommon} retains a ${shellDualText} living outer cylinder (t/R = ${tOverR.toFixed(2)}, above Claus Mattheck's 0.30 buckling threshold) anchored by a ${srzDualText} structural root plate.`
-          : `At ${dbhDualText} DBH (~${ageEst.estimated_age_years} years old), the sound wood wall has thinned to ${shellDualText} (t/R = ${tOverR.toFixed(2)}, below Claus Mattheck's 0.30 threshold), so on-site sonic tomography and crown load reduction come before soil work.`
+          ? `At ${dbhDualText} DBH (~${ageEst.estimated_age_years} yrs estimated), this ${speciesCommon} retains a ${shellDualText} living outer cylinder (t/R = ${tOverR.toFixed(2)}, above Claus Mattheck's 0.30 buckling threshold) anchored by a ${srzDualText} structural root plate.`
+          : `At ${dbhDualText} DBH (~${ageEst.estimated_age_years} yrs estimated), the sound wood wall measures ${shellDualText} (t/R = ${tOverR.toFixed(2)}, below Claus Mattheck's 0.30 threshold), so on-site sonic tomography and crown load reduction come before soil work.`
       }`,
-      `Under ${muni.name}, ${muni.state} (${muni.ordinance_numbers}), it classifies as ${protLabel} with a ${crzDualText} Critical Root Zone${
+      `Under ${muni.name}, ${muni.state} (${muni.ordinance_numbers}), it classifies as ${protLabel} (${permitLabel}) with a ${crzDualText} Critical Root Zone${
         disturbancePct > 0 ? ` and ${disturbancePct}% proposed root-zone trenching` : ''
       }.`,
-      `Its underground mycorrhizal zone captures ${stormDualText} in a ${rainDepthText} rain, and Day-1 Stage 1 root-collar relief (${formatUsd(stage1Usd)}) costs less than a one-time chainsaw bid (${formatUsd(triage.removal_bid_usd)}).`,
+      `Modeled soil sponge capture is ${stormDualText} in a ${rainDepthText} rain event.`,
     ].join(' ');
     setElText('qc-innate-verdict-body', threeSentenceDiagnosis);
     setElText('qc-innate-falsifier', `Physical check: ${leoBrief.answer_first.falsifier}`);
 
-    // 5. Update Two Futures Comparison Strip
+    // 4b. Render Municipality Provenance & Visible Gaps Panel on First Screen
+    const provPanel = document.getElementById('qc-provenance-panel');
+    if (provPanel) {
+      const isFull = provenance.record_tier === 'Full_Rule_Record';
+      provPanel.className = `oa-provenance-panel ${
+        isFull ? 'oa-provenance-tier-full' : 'oa-provenance-tier-threshold'
+      }`;
+      const gapCount = provenance.unverified_gaps.length;
+      const gapsHtml =
+        gapCount > 0
+          ? `<div class="oa-provenance-gaps">
+              <strong>Visible Gaps (${gapCount} UNVERIFIED Sub-Section${gapCount === 1 ? '' : 's'}):</strong>
+              <ul class="oa-provenance-list">
+                ${provenance.unverified_gaps
+                  .map(
+                    (g) =>
+                      `<li><code>${escapeHtml(g.field)}</code>: <span class="badge badge-warn">${escapeHtml(g.status)}</span> ${escapeHtml(g.description)}</li>`
+                  )
+                  .join('')}
+              </ul>
+            </div>`
+          : `<div class="oa-provenance-gaps" style="background: transparent; border-left: 3px solid var(--accent-green); padding: 4px 10px;">
+              <strong>Visible Gaps (UNVERIFIED Sub-Sections):</strong> 0 missing core schema domains (${provenance.verified_sections.length} statutory sections encoded with primary citations; verify site-specific variances before construction).
+            </div>`;
+
+      provPanel.innerHTML = `
+        <div class="oa-provenance-header">
+          <strong>Provenance &amp; Statutory Coverage: ${escapeHtml(provenance.municipality_name)} (${escapeHtml(provenance.record_id)})</strong>
+          <span class="badge ${isFull ? 'badge-protected' : 'badge-warn'}">${escapeHtml(provenance.record_tier)}</span>
+        </div>
+        <p class="hint" style="margin: 4px 0 8px 0;">
+          Primary Citation: ${escapeHtml(provenance.primary_citation)} &middot; Dataset ${escapeHtml(provenance.dataset_version)} &middot; Verified ${escapeHtml(provenance.last_verified)}${
+            provenance.source_url
+              ? ` &middot; <a href="${escapeHtml(provenance.source_url)}" target="_blank" rel="noopener">Primary Code Link</a>`
+              : ''
+          }
+        </p>
+        ${gapsHtml}
+      `;
+    }
+
+    // 5. Update Secondary Practice Economics & Valuation Model Strip (inside disclosure)
     setElText('qc-future-a-bid', formatUsd(triage.removal_bid_usd));
     setElText(
       'qc-future-a-mitigation',
@@ -1249,7 +1314,7 @@ export function initLivingLensUI() {
     );
     setElText(
       'qc-future-a-lost',
-      `${formatUsd(holobiontUsd)} living equity lost (CTLA lumber value: ${formatUsd(ctlaUsd)})`
+      `CTLA appraisal model: ${formatUsd(ctlaUsd)} | Experimental 200-yr holobiont hypothesis: ${formatUsd(holobiontUsd)}`
     );
 
     setElText('qc-future-b-stage1', formatUsd(stage1Usd));

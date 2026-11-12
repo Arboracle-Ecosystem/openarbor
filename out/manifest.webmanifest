@@ -1,0 +1,102 @@
+{
+  "id": "./",
+  "name": "Open Arbor: Sovereign Field Studio & Tree Law Engine",
+  "short_name": "Open Arbor",
+  "description": "Offline-capable arboricultural field instrument for ANSI A300 root protection zones, Claus Mattheck t/R shell biomechanics, municipal tree ordinances, and STIM-aligned evidentiary reports.",
+  "lang": "en-US",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#08110b",
+  "theme_color": "#1b4332",
+  "categories": [
+    "utilities",
+    "productivity",
+    "education"
+  ],
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "./icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "./icons/screenshot-mobile.png",
+      "sizes": "540x960",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Open Arbor Living Tree Lens and Mobile Field Studio"
+    },
+    {
+      "src": "./icons/screenshot-desktop.png",
+      "sizes": "1280x800",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Open Arbor Desktop Arboricultural Field Studio and Ordinance Engine"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Open Field Studio",
+      "short_name": "Field Studio",
+      "description": "Run single-tree, multi-tree stand union, or Open Badges 3.0 field workflows",
+      "url": "./demo/",
+      "icons": [
+        {
+          "src": "./icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "City Tree Laws",
+      "short_name": "Ordinances",
+      "description": "Inspect verified Central Texas and Rogue Valley municipal tree codes",
+      "url": "./ordinances/",
+      "icons": [
+        {
+          "src": "./icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "41-Tool Forestry Workbench",
+      "short_name": "Workbench",
+      "description": "Explore sovereign LiDAR, dendrochronology, and core ESM forestry tools",
+      "url": "./tools/",
+      "icons": [
+        {
+          "src": "./icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}

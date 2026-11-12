@@ -4,6 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#08110b" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f5ef" />
     <script>
       try {
         document.querySelector('meta[name="color-scheme"]').content = localStorage.getItem('color-scheme') ?? 'light dark';
@@ -14,16 +16,20 @@
       name="description"
       content="Canonical specification reference for Open Arbor and RCA-Spec v2.0: 10-Section Evidentiary Report Standard, Mattheck t/R and ANSI A300 mathematical foundations, 200-Year Heartwood/Cambium Vault Architecture, and interactive JSON Schema (Draft 2020-12) inspectors."
     />
+    <link rel="manifest" href="../manifest.webmanifest" />
+    <link rel="icon" href="../icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png" />
     <link rel="stylesheet" href="../styles.css" />
   </head>
   <body>
     <header class="oa-site-header">
+      <a href="#main-content" class="skip-link visually-hidden">Skip to main content</a>
       <div class="oa-nav-container">
         <a href="../index.html" class="oa-brand-link">
-          <span class="oa-brand-mark">OA</span>
+          <span class="oa-brand-mark"><img src="../icons/icon-68.png" alt="" width="34" height="34" class="oa-brand-logo" decoding="async" /></span>
           <span class="oa-brand-text">Open Arbor <small>v2.1</small></span>
         </a>
-        <nav class="oa-main-nav" aria-label="Primary Navigation">
+        <nav class="oa-main-nav" aria-label="Primary">
           <a href="../index.html" class="oa-nav-link">Field Home</a>
           <a href="../demo/index.html" class="oa-nav-link">Field Studio</a>
           <a href="../cases/index.html" class="oa-nav-link">Case Studies</a>
@@ -60,6 +66,8 @@
           </a>
         </div>
         <div class="oa-theme-control">
+          <button type="button" id="oa-install-app-btn" class="btn btn-secondary btn-sm" hidden>Install App</button>
+          <span id="oa-install-status" class="visually-hidden" role="status"></span>
           <button
             type="button"
             id="oa-veil-mode-toggle"
@@ -68,16 +76,18 @@
           >
             Layer: Canopy
           </button>
-          <button type="button" id="oa-theme-toggle" class="btn btn-secondary btn-sm" aria-label="Toggle color scheme">Theme: Auto</button>
+          <button type="button" id="oa-units-toggle" class="btn btn-secondary btn-sm" aria-description="Switch measurement system between US Imperial and Metric">Units: US (in, ft)</button>
+          <button type="button" id="oa-theme-toggle" class="btn btn-secondary btn-sm" aria-description="Toggle color scheme">Theme: Auto</button>
         </div>
       </div>
     </header>
 
+    <main>
     <section class="app-header">
       <div class="container header-inner">
         <div>
           <span class="eyebrow">Open Arbor Alliance Standard &middot; CC-BY-SA-4.0 / AGPL-3.0-only &middot; STIM v7.0011</span>
-          <h1>RCA-Spec v2.0 &amp; 200-Year Sovereign Architecture Reference</h1>
+          <h1 id="main-content" tabindex="-1">RCA-Spec v2.0 &amp; 200-Year Sovereign Architecture Reference</h1>
           <p class="subtitle">
             Complete technical reference for the Regenerative Consulting Arborist (<code>RCA-Spec v2.0</code>) 10-section evidentiary standard, primary mathematical formulas, the 2026 to 2226 Heartwood/Cambium Vault architecture, and Draft 2020-12 JSON Schemas.
           </p>
@@ -89,7 +99,7 @@
       </div>
     </section>
 
-    <main id="spec-viewer-root" class="container main-layout">
+    <div id="spec-viewer-root" class="container main-layout">
       <!-- Quick-jump sub-navigation -->
       <nav class="card oa-spec-toc" aria-label="Specification Sections">
         <span class="step-badge">Jump To Section</span>
@@ -381,6 +391,7 @@
           </div>
         </details>
       </section>
+    </div>
     </main>
 
     <footer class="app-footer">

@@ -4,6 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#08110b" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f5ef" />
   <script>
     try {
       document.querySelector('meta[name="color-scheme"]').content = localStorage.getItem('color-scheme') ?? 'light dark';
@@ -14,16 +16,20 @@
     name="description"
     content="Open Arbor v2.1 Executable Proof & Falsifiability Ledger: 33 executable verification groups across 6 deterministic test runners plus 8 schema-validated municipal ordinance records (84/84 CLI-to-browser parity metrics)."
   />
+  <link rel="manifest" href="../manifest.webmanifest" />
+  <link rel="icon" href="../icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png" />
   <link rel="stylesheet" href="../styles.css" />
 </head>
 <body data-total-verification-groups="33" data-total-ordinance-records="8">
   <header class="oa-site-header">
+    <a href="#main-content" class="skip-link visually-hidden">Skip to main content</a>
     <div class="oa-nav-container">
       <a href="../index.html" class="oa-brand-link">
-        <span class="oa-brand-mark">OA</span>
+        <span class="oa-brand-mark"><img src="../icons/icon-68.png" alt="" width="34" height="34" class="oa-brand-logo" decoding="async" /></span>
         <span class="oa-brand-text">Open Arbor <small>v2.1</small></span>
       </a>
-      <nav class="oa-main-nav" aria-label="Primary Navigation">
+      <nav class="oa-main-nav" aria-label="Primary">
         <a href="../index.html" class="oa-nav-link">Field Home</a>
         <a href="../demo/index.html" class="oa-nav-link">Field Studio</a>
         <a href="../cases/index.html" class="oa-nav-link">Case Studies</a>
@@ -62,6 +68,15 @@
       <div class="oa-theme-control">
         <button
           type="button"
+          id="oa-install-app-btn"
+          class="btn btn-secondary btn-sm"
+          hidden
+        >
+          Install App
+        </button>
+        <span id="oa-install-status" class="visually-hidden" role="status"></span>
+        <button
+          type="button"
           id="oa-veil-mode-toggle"
           class="btn btn-secondary btn-sm oa-veil-mode-btn"
           aria-pressed="false"
@@ -70,9 +85,17 @@
         </button>
         <button
           type="button"
+          id="oa-units-toggle"
+          class="btn btn-secondary btn-sm"
+          aria-description="Switch measurement system between US Imperial and Metric"
+        >
+          Units: US (in, ft)
+        </button>
+        <button
+          type="button"
           id="oa-theme-toggle"
           class="btn btn-secondary btn-sm"
-          aria-label="Toggle color scheme"
+          aria-description="Toggle color scheme"
         >
           Theme: Auto
         </button>
@@ -80,11 +103,12 @@
     </div>
   </header>
 
+  <main>
   <section class="app-header">
     <div class="container header-inner">
       <div>
         <span class="eyebrow">Executable Proof &amp; Falsifiability Ledger &middot; Live Build-Time Introspection &middot; Zero Unfalsifiable Claims</span>
-        <h1>Falsifiability &amp; Deterministic Verification Methodology</h1>
+        <h1 id="main-content" tabindex="-1">Falsifiability &amp; Deterministic Verification Methodology</h1>
         <p class="subtitle">
           Every mathematical equation, statutory threshold, cryptographic digest, and security boundary in Open Arbor is backed by an executable test assertion on disk. This page is generated at build time by parsing and running the live test suites so counts can never drift from reality.
         </p>
@@ -96,7 +120,7 @@
     </div>
   </section>
 
-  <main class="container main-layout">
+  <div class="container main-layout">
     <!-- Executive Falsifiability Summary Banner -->
     <section
       class="card"
@@ -784,6 +808,7 @@
         </table>
       </div>
     </section>
+  </div>
   </main>
 
   <footer class="app-footer">

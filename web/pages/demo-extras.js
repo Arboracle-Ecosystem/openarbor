@@ -33,6 +33,19 @@ import {
 } from '../presets.js';
 import { getLatestFieldState } from '../app.js';
 import { renderExpandableHashHtml } from './masterwork-core.js';
+import {
+  getUnitSystem,
+  isImperialUnits,
+  setUnitSystem,
+  fmtDualFromMeters,
+  fmtDualInCm,
+  fmtDualAreaFromSqm,
+  fmtDualParcelFromSqm,
+  inToCm,
+  cmToIn,
+  ftToM,
+  mToFt,
+} from './unit-system.js';
 
 const RIPARIAN_GROVE_STAND_TREES = [
   {
@@ -103,6 +116,21 @@ const RIPARIAN_GROVE_STAND_TREES = [
 
 const round1 = (n) => Math.round(Number(n || 0) * 10) / 10;
 const round2 = (n) => Math.round(Number(n || 0) * 100) / 100;
+
+function labelSvgMarkup(svgHtml, labelText) {
+  const raw = String(svgHtml || '').trim();
+  if (!raw.startsWith('<svg')) return raw;
+  const safe = String(labelText || 'Deterministic Root Protection Map')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+  if (raw.includes('role="img"')) return raw;
+  return raw.replace(
+    /^<svg\b/,
+    `<svg role="img" aria-label="${safe}"`
+  ).replace(/>/, `><title>${safe}</title>`);
+}
 
 /**
  * Pointer-coordinate light-dismiss fallback for <dialog closedby="any">
@@ -178,6 +206,22 @@ export function initSharedThemeToggle() {
     meta.content = stored === 'light' || stored === 'dark' ? stored : 'light dark';
     document.documentElement.dataset.theme = effective;
 
+    const themeColorHex = effective === 'dark' ? '#08110b' : '#f6f5ef';
+    const themeColorMetas = document.querySelectorAll('meta[name="theme-color"]');
+    if (themeColorMetas.length > 0) {
+      themeColorMetas.forEach((m) => {
+        if (!m.hasAttribute('media')) {
+          m.content = themeColorHex;
+        } else if (stored === 'light' || stored === 'dark') {
+          m.content = themeColorHex;
+        } else if (m.getAttribute('media')?.includes('dark')) {
+          m.content = '#08110b';
+        } else {
+          m.content = '#f6f5ef';
+        }
+      });
+    }
+
     if (btn) {
       if (stored === 'dark') {
         btn.textContent = 'Theme: Dark';
@@ -219,10 +263,135 @@ export function initSharedThemeToggle() {
     });
   }
 
+  // Root-level US Imperial / Metric Unit Selector (#oa-units-toggle)
+  setUnitSystem(getUnitSystem(), false);
+  const unitsBtn = document.getElementById('oa-units-toggle');
+  if (unitsBtn && !unitsBtn.dataset.unitsBound) {
+    unitsBtn.dataset.unitsBound = 'true';
+    unitsBtn.addEventListener('click', () => {
+      const nextUnits = getUnitSystem() === 'imperial' ? 'metric' : 'imperial';
+      setUnitSystem(nextUnits, true);
+    });
+  }
+
+  // Progressive-enhancement Web Install control (modern-web-guidance install-web-app)
+  const installBtn = document.getElementById('oa-install-app-btn');
+  const installStatus = document.getElementById('oa-install-status');
+  if (installBtn && !installBtn.dataset.oaInstallBound) {
+    installBtn.dataset.oaInstallBound = 'true';
+    const isStandalone =
+      (typeof window.matchMedia === 'function' &&
+        window.matchMedia('(display-mode: standalone)').matches) ||
+      window.navigator?.standalone === true;
+
+    const markInstallUnavailable = (msg) => {
+      installBtn.setAttribute('aria-disabled', 'true');
+      installBtn.textContent = 'Installed';
+      if (installStatus && msg) {
+        installStatus.textContent = msg;
+      }
+    };
+
+    if (!isStandalone) {
+      if (typeof navigator !== 'undefined' && 'install' in navigator && typeof navigator.install === 'function') {
+        installBtn.hidden = false;
+        installBtn.addEventListener('click', async () => {
+          if (installBtn.getAttribute('aria-disabled') === 'true') return;
+          try {
+            await navigator.install();
+            if (installStatus) {
+              installStatus.textContent = 'Open Arbor field instrument installation initiated.';
+            }
+          } catch (err) {
+            if (err && err.name !== 'AbortError' && installStatus) {
+              installStatus.textContent = 'App installation could not be completed right now.';
+            }
+          }
+        });
+      } else {
+        let deferredInstallPrompt = null;
+        window.addEventListener('beforeinstallprompt', (event) => {
+          // Do not suppress Android Chrome's native Richer Install UI bottom prompt;
+          // also surface our explicit in-header #oa-install-app-btn control.
+          deferredInstallPrompt = event;
+          installBtn.hidden = false;
+          installBtn.classList.remove('btn-secondary');
+          installBtn.classList.add('btn-primary');
+          installBtn.removeAttribute('aria-disabled');
+          installBtn.textContent = 'Install App';
+        });
+
+        installBtn.addEventListener('click', async () => {
+          if (!deferredInstallPrompt || installBtn.getAttribute('aria-disabled') === 'true') {
+            return;
+          }
+          const promptEvent = deferredInstallPrompt;
+          deferredInstallPrompt = null;
+          installBtn.setAttribute('aria-disabled', 'true');
+          try {
+            await promptEvent.prompt();
+            const choice = await promptEvent.userChoice;
+            if (choice && choice.outcome === 'accepted') {
+              markInstallUnavailable('Open Arbor installed for offline field work.');
+            } else {
+              installBtn.removeAttribute('aria-disabled');
+              if (installStatus) {
+                installStatus.textContent = 'Install prompt dismissed. Refresh later to install again.';
+              }
+            }
+          } catch {
+            installBtn.removeAttribute('aria-disabled');
+            if (installStatus) {
+              installStatus.textContent = 'Install prompt unavailable.';
+            }
+          }
+        });
+      }
+
+      window.addEventListener('appinstalled', () => {
+        markInstallUnavailable('Open Arbor installed for offline field work.');
+      });
+    }
+  }
+
+  // Polite Offline / Online Field Mode Indicator Pill
+  const themeControl = document.querySelector('.oa-theme-control');
+  if (themeControl && !document.getElementById('oa-offline-pill')) {
+    const offlinePill = document.createElement('span');
+    offlinePill.id = 'oa-offline-pill';
+    offlinePill.className = 'oa-offline-pill';
+    offlinePill.setAttribute('role', 'status');
+    offlinePill.setAttribute('aria-live', 'polite');
+    offlinePill.hidden = typeof navigator !== 'undefined' ? navigator.onLine !== false : true;
+    offlinePill.textContent = offlinePill.hidden ? '' : 'Offline Field Cache';
+    themeControl.prepend(offlinePill);
+
+    const syncConnectivity = () => {
+      const isOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
+      offlinePill.hidden = !isOffline;
+      offlinePill.textContent = isOffline ? 'Offline Field Cache' : '';
+    };
+    window.addEventListener('offline', syncConnectivity);
+    window.addEventListener('online', syncConnectivity);
+  }
+
   if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+    const hadController = Boolean(navigator.serviceWorker.controller);
+    let reloadingForSw = false;
+    if (hadController) {
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!reloadingForSw) {
+          reloadingForSw = true;
+          window.location.reload();
+        }
+      });
+    }
     window.addEventListener('load', () => {
       const swUrl = new URL('./sw.js', import.meta.url).pathname;
-      navigator.serviceWorker.register(swUrl).catch(() => {});
+      navigator.serviceWorker
+        .register(swUrl, { updateViaCache: 'none' })
+        .then((reg) => reg.update().catch(() => {}))
+        .catch(() => {});
     });
   }
 }
@@ -339,8 +508,14 @@ export function initDemoExtrasUI() {
 
   function setSpatialMapMode(mode) {
     activeMapLayerMode = mode;
-    if (btnMapSvg) btnMapSvg.classList.toggle('active', mode === 'svg');
-    if (btnMapLeaflet) btnMapLeaflet.classList.toggle('active', mode === 'leaflet');
+    if (btnMapSvg) {
+      btnMapSvg.classList.toggle('active', mode === 'svg');
+      btnMapSvg.setAttribute('aria-selected', mode === 'svg' ? 'true' : 'false');
+    }
+    if (btnMapLeaflet) {
+      btnMapLeaflet.classList.toggle('active', mode === 'leaflet');
+      btnMapLeaflet.setAttribute('aria-selected', mode === 'leaflet' ? 'true' : 'false');
+    }
     if (svgMapContainer) svgMapContainer.hidden = mode !== 'svg';
     if (parcelMapPanel) parcelMapPanel.hidden = mode !== 'leaflet';
     if (mode === 'leaflet') {
@@ -440,7 +615,7 @@ export function initDemoExtrasUI() {
         fillOpacity: 0.08,
       })
         .bindPopup(
-          `<strong>${sb.tree_tag || 'Tree'} Tree Influence Zone (TIZ / TPZ 1.5x)</strong><br>Radius: ${tpzMeters} m (${round1(tpzMeters / 0.3048)} ft)`
+          `<strong>${sb.tree_tag || 'Tree'} Tree Influence Zone (TIZ / TPZ 1.5x)</strong><br>Radius: ${fmtDualFromMeters(tpzMeters)}`
         )
         .addTo(leafletVectorGroup);
 
@@ -453,7 +628,7 @@ export function initDemoExtrasUI() {
         fillOpacity: 0.18,
       })
         .bindPopup(
-          `<strong>${sb.tree_tag || 'Tree'} Critical Root Zone (CRZ)</strong><br>Radius: ${crzMeters} m (${round1(crzMeters / 0.3048)} ft)<br>Species: <em>${sb.species_scientific || 'Quercus virginiana'}</em>`
+          `<strong>${sb.tree_tag || 'Tree'} Critical Root Zone (CRZ)</strong><br>Radius: ${fmtDualFromMeters(crzMeters)}<br>Species: <em>${sb.species_scientific || 'Quercus virginiana'}</em>`
         )
         .addTo(leafletVectorGroup);
 
@@ -467,7 +642,7 @@ export function initDemoExtrasUI() {
         fillOpacity: 0.25,
       })
         .bindPopup(
-          `<strong>${sb.tree_tag || 'Tree'} Structural Root Zone (AS 4970 SRZ)</strong><br>Radius: ${srzMeters} m (${round1(srzMeters / 0.3048)} ft)`
+          `<strong>${sb.tree_tag || 'Tree'} Structural Root Zone (AS 4970 SRZ)</strong><br>Radius: ${fmtDualFromMeters(srzMeters)}`
         )
         .addTo(leafletVectorGroup);
 
@@ -478,12 +653,12 @@ export function initDemoExtrasUI() {
         fillOpacity: 1,
       })
         .bindPopup(
-          `<strong>${sb.tree_tag || 'Tree'} (${sb.species_common || 'Live Oak'})</strong><br>DBH: ${round1(dbhIn)} in (${sb.dbh_cm} cm)<br>Plus Code: <code>${sb.plus_code_global}</code>`
+          `<strong>${sb.tree_tag || 'Tree'} (${sb.species_common || 'Live Oak'})</strong><br>DBH: ${fmtDualInCm(dbhIn, sb.dbh_cm)}<br>Plus Code: <code>${sb.plus_code_global}</code>`
         )
         .addTo(leafletVectorGroup);
 
       if (parcelStatus) {
-        parcelStatus.textContent = `Rendered OGC CRS84 GeoJSON rings at (${lat.toFixed(4)}, ${lng.toFixed(4)}): SRZ = ${srzMeters} m, CRZ = ${crzMeters} m, TIZ/TPZ = ${tpzMeters} m.`;
+        parcelStatus.textContent = `Rendered OGC CRS84 GeoJSON rings at (${lat.toFixed(4)}, ${lng.toFixed(4)}): SRZ = ${fmtDualFromMeters(srzMeters)}, CRZ = ${fmtDualFromMeters(crzMeters)}, TIZ/TPZ = ${fmtDualFromMeters(tpzMeters)}.`;
       }
     } catch (err) {
       if (parcelStatus) {
@@ -503,14 +678,63 @@ export function initDemoExtrasUI() {
   // 3. MODE 2: MULTI-TREE STAND UNION & SANCTUARY SCORECARD ROLLUP
   // =========================================================================
   let standTrees = JSON.parse(JSON.stringify(DEFAULT_STAND_TREES));
+  let canonicalStandParcelSqm = 4047;
+  const standTableEl = document.getElementById('stand-builder-table');
   const standTbody = document.getElementById('stand-builder-tbody');
+  const thStandDbh = document.getElementById('th-stand-dbh');
+  const thStandX = document.getElementById('th-stand-x');
+  const thStandY = document.getElementById('th-stand-y');
   const btnStandAdd = document.getElementById('btn-stand-add-tree');
   const btnStandReset = document.getElementById('btn-stand-reset');
   const btnStandLoadGrove = document.getElementById('btn-stand-load-grove');
   const inputStandParcelSqm = document.getElementById('input-stand-parcel-sqm');
+  const labelStandParcel = document.getElementById('label-stand-parcel');
+  const hintStandParcel = document.getElementById('hint-stand-parcel');
+
+  function syncStandParcelInputUI() {
+    if (!inputStandParcelSqm) return;
+    const imp = isImperialUnits();
+    if (imp) {
+      if (labelStandParcel) labelStandParcel.textContent = 'Parcel Footprint Area (acres)';
+      if (hintStandParcel) {
+        hintStandParcel.textContent =
+          'Default: 1.00 acre (43,560 sq ft / 4,047 m2) for Sanctuary Scorecard rollup';
+      }
+      inputStandParcelSqm.min = '0.02';
+      inputStandParcelSqm.max = '250';
+      inputStandParcelSqm.step = '0.05';
+      inputStandParcelSqm.value = String(round2(canonicalStandParcelSqm / 4046.8564224));
+    } else {
+      if (labelStandParcel) labelStandParcel.textContent = 'Parcel Footprint Area (m2)';
+      if (hintStandParcel) {
+        hintStandParcel.textContent =
+          'Default: 4,047 m2 (1.00 acre / 43,560 sq ft) for Sanctuary Scorecard rollup';
+      }
+      inputStandParcelSqm.min = '100';
+      inputStandParcelSqm.max = '1000000';
+      inputStandParcelSqm.step = '50';
+      inputStandParcelSqm.value = String(Math.round(canonicalStandParcelSqm));
+    }
+  }
+
+  syncStandParcelInputUI();
 
   function renderStandTableRows() {
     if (!standTbody) return;
+    const imp = isImperialUnits();
+    const dbhColLabel = imp ? 'DBH (in)' : 'DBH (cm)';
+    const xColLabel = imp ? 'Local X (ft)' : 'Local X (m)';
+    const yColLabel = imp ? 'Local Y (ft)' : 'Local Y (m)';
+
+    if (thStandDbh) thStandDbh.textContent = dbhColLabel;
+    if (thStandX) thStandX.textContent = xColLabel;
+    if (thStandY) thStandY.textContent = yColLabel;
+    if (standTableEl) {
+      standTableEl.style.setProperty('--label-3', `'${dbhColLabel}'`);
+      standTableEl.style.setProperty('--label-4', `'${xColLabel}'`);
+      standTableEl.style.setProperty('--label-5', `'${yColLabel}'`);
+    }
+
     const caseOptions = FIXED_PARITY_CASES.map(
       (c) => `<option value="${c.id}">${c.label}</option>`
     ).join('');
@@ -527,6 +751,13 @@ export function initDemoExtrasUI() {
           return `<option value="${val}"${sel}>${s.common} (${s.scientific})</option>`;
         }).join('');
 
+        const dbhDisplay = imp ? t.dbh_inches : inToCm(t.dbh_inches, 1);
+        const xDisplay = imp ? t.x_ft : ftToM(t.x_ft, 2);
+        const yDisplay = imp ? t.y_ft : ftToM(t.y_ft, 2);
+        const dbhMax = imp ? '200' : '508';
+        const xyBound = imp ? '500' : '152';
+        const xyStep = imp ? '1' : '0.5';
+
         return `
         <tr data-stand-idx="${idx}">
           <td>
@@ -539,13 +770,13 @@ export function initDemoExtrasUI() {
             </select>
           </td>
           <td>
-            <input type="number" class="stand-input-dbh" min="1" max="200" step="0.5" value="${t.dbh_inches}" aria-label="DBH inches row ${idx + 1}">
+            <input type="number" class="stand-input-dbh" min="1" max="${dbhMax}" step="0.5" value="${dbhDisplay}" aria-label="${dbhColLabel} row ${idx + 1}">
           </td>
           <td>
-            <input type="number" class="stand-input-x" min="-500" max="500" step="1" value="${t.x_ft}" aria-label="Local X feet row ${idx + 1}">
+            <input type="number" class="stand-input-x" min="-${xyBound}" max="${xyBound}" step="${xyStep}" value="${xDisplay}" aria-label="${xColLabel} row ${idx + 1}">
           </td>
           <td>
-            <input type="number" class="stand-input-y" min="-500" max="500" step="1" value="${t.y_ft}" aria-label="Local Y feet row ${idx + 1}">
+            <input type="number" class="stand-input-y" min="-${xyBound}" max="${xyBound}" step="${xyStep}" value="${yDisplay}" aria-label="${yColLabel} row ${idx + 1}">
           </td>
           <td>
             <select class="stand-input-case" aria-label="Diagnostic template row ${idx + 1}">
@@ -571,11 +802,16 @@ export function initDemoExtrasUI() {
     const item = standTrees[idx];
     if (!item) return;
 
+    const imp = isImperialUnits();
+    const rawDbh = Number(row.querySelector('.stand-input-dbh')?.value) || (imp ? 12 : 30.5);
+    const rawX = Number(row.querySelector('.stand-input-x')?.value) || 0;
+    const rawY = Number(row.querySelector('.stand-input-y')?.value) || 0;
+
     item.tag = row.querySelector('.stand-input-tag')?.value.trim() || `T-${idx + 1}`;
     item.species = row.querySelector('.stand-input-species')?.value || item.species;
-    item.dbh_inches = Math.max(1, Number(row.querySelector('.stand-input-dbh')?.value) || 12);
-    item.x_ft = Number(row.querySelector('.stand-input-x')?.value) || 0;
-    item.y_ft = Number(row.querySelector('.stand-input-y')?.value) || 0;
+    item.dbh_inches = Math.max(1, imp ? rawDbh : cmToIn(rawDbh, 2));
+    item.x_ft = imp ? rawX : mToFt(rawX, 2);
+    item.y_ft = imp ? rawY : mToFt(rawY, 2);
     item.case_id = row.querySelector('.stand-input-case')?.value || FIXED_PARITY_CASES[0].id;
 
     renderStandUnionOutputs();
@@ -626,18 +862,34 @@ export function initDemoExtrasUI() {
 
   btnStandReset?.addEventListener('click', () => {
     standTrees = JSON.parse(JSON.stringify(DEFAULT_STAND_TREES));
-    if (inputStandParcelSqm) inputStandParcelSqm.value = '4047';
+    canonicalStandParcelSqm = 4047;
+    syncStandParcelInputUI();
     renderStandUnionAndScorecard();
   });
 
   btnStandLoadGrove?.addEventListener('click', () => {
     standTrees = JSON.parse(JSON.stringify(RIPARIAN_GROVE_STAND_TREES));
-    if (inputStandParcelSqm) inputStandParcelSqm.value = '6070';
+    canonicalStandParcelSqm = 6070;
+    syncStandParcelInputUI();
     renderStandUnionAndScorecard();
   });
 
   inputStandParcelSqm?.addEventListener('input', () => {
+    const rawVal = Number(inputStandParcelSqm.value);
+    if (Number.isFinite(rawVal) && rawVal > 0) {
+      canonicalStandParcelSqm = isImperialUnits()
+        ? Math.max(100, rawVal * 4046.8564224)
+        : Math.max(100, rawVal);
+    }
     renderStandUnionOutputs();
+  });
+
+  window.addEventListener('oa:unitschange', () => {
+    syncStandParcelInputUI();
+    renderStandUnionAndScorecard();
+    if (activeMode === 'single' && activeMapLayerMode === 'leaflet') {
+      refreshLeafletParcelMap();
+    }
   });
 
   function renderStandUnionAndScorecard() {
@@ -653,6 +905,7 @@ export function initDemoExtrasUI() {
     const scTbodyEl = document.getElementById('stand-scorecard-tbody');
     if (!metricsEl || !svgWrapEl || !scTbodyEl) return;
 
+    const imp = isImperialUnits();
     const baseLat = 30.2672;
     const baseLng = -97.7431;
     const FT_PER_DEG_LAT = 364000;
@@ -683,34 +936,67 @@ export function initDemoExtrasUI() {
     const unionCrzAreaSqFt = unionRes.area_sqft;
     const overlapReductionSqFt = unionRes.overlap_saved_sqft;
     const overlapPct = grossCrzAreaSqFt > 0 ? round1((overlapReductionSqFt / grossCrzAreaSqFt) * 100) : 0;
+    const grossSqm = round1(grossCrzAreaSqFt * 0.09290304);
+    const unionSqm = round1(unionCrzAreaSqFt * 0.09290304);
+    const savedSqm = round1(overlapReductionSqFt * 0.09290304);
+    const totalDbhIn = round1(locatedTrees.reduce((s, r) => s + r.dbh, 0));
 
-    metricsEl.innerHTML = `
+    metricsEl.innerHTML = imp
+      ? `
       <div class="metric-box">
         <span class="metric-label">Gross Summed CRZ Area</span>
         <strong class="metric-value"><span id="gross_crz_area_sq_ft">${grossCrzAreaSqFt.toLocaleString()}</span> sq ft</strong>
-        <span class="metric-sub">${round1(grossCrzAreaSqFt * 0.092903)} m2 un-deduplicated sum</span>
+        <span class="metric-sub">${grossSqm.toLocaleString()} m2 un-deduplicated sum</span>
       </div>
       <div class="metric-box highlight-box">
         <span class="metric-label">1-ft Grid De-Duplicated Union Area</span>
         <strong class="metric-value text-accent"><span id="union_crz_area_sq_ft">${unionCrzAreaSqFt.toLocaleString()}</span> sq ft</strong>
-        <span class="metric-sub">${round1(unionCrzAreaSqFt * 0.092903)} m2 net rhizosphere footprint</span>
+        <span class="metric-sub">${unionSqm.toLocaleString()} m2 net rhizosphere footprint</span>
       </div>
       <div class="metric-box">
         <span class="metric-label">Overlap Saved (De-Duplicated)</span>
         <strong class="metric-value"><span id="overlap_reduction_sq_ft">${overlapReductionSqFt.toLocaleString()}</span> sq ft (${overlapPct}%)</strong>
-        <span class="metric-sub">Prevents double-billing mulch &amp; AirSpade work</span>
+        <span class="metric-sub">${savedSqm.toLocaleString()} m2 saved; prevents double-billing mulch &amp; AirSpade</span>
       </div>
       <div class="metric-box">
         <span class="metric-label">Stand Tree Count &amp; Total DBH</span>
-        <strong class="metric-value">${locatedTrees.length} trees (${round1(locatedTrees.reduce((s, r) => s + r.dbh, 0))} in)</strong>
+        <strong class="metric-value">${locatedTrees.length} trees (${fmtDualInCm(totalDbhIn)})</strong>
+        <span class="metric-sub">1-ft Cartesian grid union verified</span>
+      </div>
+    `
+      : `
+      <div class="metric-box">
+        <span class="metric-label">Gross Summed CRZ Area</span>
+        <strong class="metric-value">${grossSqm.toLocaleString()} m2</strong>
+        <span class="metric-sub"><span id="gross_crz_area_sq_ft">${grossCrzAreaSqFt.toLocaleString()}</span> sq ft un-deduplicated sum</span>
+      </div>
+      <div class="metric-box highlight-box">
+        <span class="metric-label">1-ft Grid De-Duplicated Union Area</span>
+        <strong class="metric-value text-accent">${unionSqm.toLocaleString()} m2</strong>
+        <span class="metric-sub"><span id="union_crz_area_sq_ft">${unionCrzAreaSqFt.toLocaleString()}</span> sq ft net rhizosphere footprint</span>
+      </div>
+      <div class="metric-box">
+        <span class="metric-label">Overlap Saved (De-Duplicated)</span>
+        <strong class="metric-value">${savedSqm.toLocaleString()} m2 (${overlapPct}%)</strong>
+        <span class="metric-sub"><span id="overlap_reduction_sq_ft">${overlapReductionSqFt.toLocaleString()}</span> sq ft saved; prevents double-billing mulch &amp; AirSpade</span>
+      </div>
+      <div class="metric-box">
+        <span class="metric-label">Stand Tree Count &amp; Total DBH</span>
+        <strong class="metric-value">${locatedTrees.length} trees (${fmtDualInCm(totalDbhIn)})</strong>
         <span class="metric-sub">1-ft Cartesian grid union verified</span>
       </div>
     `;
 
-    const svgMarkup = renderSiteMapSVG(locatedTrees, { width: 680, height: 340 });
+    const rawSvgMarkup = renderSiteMapSVG(locatedTrees, { width: 680, height: 340 });
+    const svgMarkup = labelSvgMarkup(
+      rawSvgMarkup,
+      `Multi-tree stand root-zone overlap map for ${locatedTrees.length} specimens (net union CRZ ${unionCrzAreaSqFt.toLocaleString()} sq ft)`
+    );
     svgWrapEl.innerHTML = svgMarkup || '<p class="hint">Add located trees to render the SVG stand union map.</p>';
     if (svgSummaryEl) {
-      svgSummaryEl.innerHTML = `Net Union CRZ: <strong>${unionCrzAreaSqFt.toLocaleString()} sq ft</strong> | Overlap Saved: <strong>${overlapReductionSqFt.toLocaleString()} sq ft (${overlapPct}%)</strong>`;
+      svgSummaryEl.innerHTML = imp
+        ? `Net Union CRZ: <strong>${unionCrzAreaSqFt.toLocaleString()} sq ft (${unionSqm} m2)</strong> | Overlap Saved: <strong>${overlapReductionSqFt.toLocaleString()} sq ft (${overlapPct}%)</strong>`
+        : `Net Union CRZ: <strong>${unionSqm} m2 (${unionCrzAreaSqFt.toLocaleString()} sq ft)</strong> | Overlap Saved: <strong>${savedSqm} m2 (${overlapPct}%)</strong>`;
     }
 
     // Build RCA_v2 assessments for each tree in the stand to run computeSanctuaryScorecardRollup
@@ -728,11 +1014,14 @@ export function initDemoExtrasUI() {
       return clone;
     });
 
-    const parcelSqm = Math.max(100, Number(inputStandParcelSqm?.value) || 4047);
+    const parcelSqm = Math.max(100, Math.round(canonicalStandParcelSqm));
     const rollup = computeSanctuaryScorecardRollup(standAssessments, parcelSqm);
     const sc = rollup.sanctuary_scorecard;
     const eq = rollup.ecological_equity;
     const compositeTier = getEcologicalTier(sc.composite_sanctuary_score);
+
+    const canopyAreaStr = fmtDualAreaFromSqm(rollup.spatial_coverage.total_canopy_projection_sqm);
+    const parcelAreaStr = fmtDualParcelFromSqm(rollup.parcel_area_sqm);
 
     if (scSummaryEl) {
       scSummaryEl.innerHTML = `
@@ -746,7 +1035,7 @@ export function initDemoExtrasUI() {
         </div>
         <div class="verdict-right">
           <span class="metric-label">Canopy Coverage of Parcel</span>
-          <strong>${rollup.spatial_coverage.canopy_coverage_parcel_pct}% (${rollup.spatial_coverage.total_canopy_projection_sqm} m2 / ${rollup.parcel_area_sqm} m2)</strong>
+          <strong>${rollup.spatial_coverage.canopy_coverage_parcel_pct}% (${canopyAreaStr} across ${parcelAreaStr})</strong>
         </div>
       `;
     }
@@ -755,12 +1044,12 @@ export function initDemoExtrasUI() {
       {
         name: 'Soil Health Index',
         score: sc.soil_health_index,
-        driver: 'Top-15cm bulk density (g/cm3), steady-state infiltration (mm/hr), SOM (%), and F:B fungal ratio weighted by TIZ area',
+        driver: 'Top-15cm bulk density (lb/cu ft & g/cm3), steady-state infiltration (in/hr & mm/hr), SOM (%), and F:B fungal ratio weighted by TIZ area',
       },
       {
         name: 'Canopy Coverage',
         score: sc.canopy_coverage_index,
-        driver: `Live Crown Ratio-weighted dripline projection (${rollup.spatial_coverage.total_canopy_projection_sqm} m2 across ${rollup.parcel_area_sqm} m2 parcel)`,
+        driver: `Live Crown Ratio-weighted dripline projection (${canopyAreaStr} across ${parcelAreaStr} parcel)`,
       },
       {
         name: 'Water Dynamics',
@@ -784,7 +1073,7 @@ export function initDemoExtrasUI() {
         const tier = getEcologicalTier(d.score);
         return `
           <tr>
-            <td><strong>${d.name}</strong></td>
+            <th scope="row">${d.name}</th>
             <td><strong>${d.score} / 100</strong></td>
             <td><span class="badge ${tier.badgeClass}">${tier.label}</span></td>
             <td>${d.driver}</td>

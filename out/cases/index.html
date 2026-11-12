@@ -4,6 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#08110b" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f5ef" />
   <script>
     try {
       document.querySelector('meta[name="color-scheme"]').content = localStorage.getItem('color-scheme') ?? 'light dark';
@@ -14,16 +16,20 @@
     name="description"
     content="Five pre-rendered, crawlable arboricultural evidentiary case determinations across Central Texas (Austin, Georgetown, Liberty Hill) and Rogue Valley, Oregon (Ashland, Medford). 100% readable with JavaScript disabled."
   />
+  <link rel="manifest" href="../manifest.webmanifest" />
+  <link rel="icon" href="../icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png" />
   <link rel="stylesheet" href="../styles.css" />
 </head>
 <body>
   <header class="oa-site-header">
+    <a href="#main-content" class="skip-link visually-hidden">Skip to main content</a>
     <div class="oa-nav-container">
       <a href="../index.html" class="oa-brand-link">
-        <span class="oa-brand-mark">OA</span>
+        <span class="oa-brand-mark"><img src="../icons/icon-68.png" alt="" width="34" height="34" class="oa-brand-logo" decoding="async" /></span>
         <span class="oa-brand-text">Open Arbor <small>v2.1</small></span>
       </a>
-      <nav class="oa-main-nav" aria-label="Primary Navigation">
+      <nav class="oa-main-nav" aria-label="Primary">
         <a href="../index.html" class="oa-nav-link">Field Home</a>
         <a href="../demo/index.html" class="oa-nav-link">Field Studio</a>
         <a href="../cases/index.html" class="oa-nav-link active" aria-current="page">Case Studies</a>
@@ -62,6 +68,15 @@
       <div class="oa-theme-control">
         <button
           type="button"
+          id="oa-install-app-btn"
+          class="btn btn-secondary btn-sm"
+          hidden
+        >
+          Install App
+        </button>
+        <span id="oa-install-status" class="visually-hidden" role="status"></span>
+        <button
+          type="button"
           id="oa-veil-mode-toggle"
           class="btn btn-secondary btn-sm oa-veil-mode-btn"
           aria-pressed="false"
@@ -70,9 +85,17 @@
         </button>
         <button
           type="button"
+          id="oa-units-toggle"
+          class="btn btn-secondary btn-sm"
+          aria-description="Switch measurement system between US Imperial and Metric"
+        >
+          Units: US (in, ft)
+        </button>
+        <button
+          type="button"
           id="oa-theme-toggle"
           class="btn btn-secondary btn-sm"
-          aria-label="Toggle color scheme"
+          aria-description="Toggle color scheme"
         >
           Theme: Auto
         </button>
@@ -80,11 +103,12 @@
     </div>
   </header>
 
+  <main>
   <section class="app-header">
     <div class="container header-inner">
       <div>
         <span class="eyebrow">Verified Bioregional Field Cases &middot; Zero-JS Crawlable Evidentiary Determinations &middot; RCA-Spec v2.0</span>
-        <h1>Bioregional Reference Case Gallery (Central Texas &amp; Rogue Valley, Oregon)</h1>
+        <h1 id="main-content" tabindex="-1">Bioregional Reference Case Gallery (Central Texas &amp; Rogue Valley, Oregon)</h1>
         <p class="subtitle">
           Five benchmark municipal tree determinations pre-rendered at build time directly from the certified ECMAScript core engines. Every case page includes plain-language stewardship triage, full statutory citations, inline vector <code>&lt;svg&gt;</code> root protection maps, provenance boundaries, and cryptographic <code>SHA-256</code> digests with JavaScript disabled.
         </p>
@@ -96,7 +120,7 @@
     </div>
   </section>
 
-  <main class="container main-layout">
+  <div class="container main-layout">
     <section class="card" aria-labelledby="comparison-matrix-heading">
       <div class="card-header">
         <span class="step-badge">5 Benchmark Cases</span>
@@ -106,7 +130,7 @@
         Compare municipal protection tiers, ANSI A300 and AS 4970 root zone radii, permit determinations, replacement mitigation liabilities, and 200-year Holobiont Biological Equity across Austin, Georgetown, Liberty Hill, Ashland, and Medford.
       </p>
 
-      <div tabindex="0" role="region" aria-labelledby="cases-table-caption" class="table-wrapper table-scroll">
+      <div tabindex="0" role="region" aria-labelledby="cases-table-caption" class="table-wrapper oa-wide-matrix table-scroll">
         <table
           class="data-table"
           style="
@@ -145,15 +169,15 @@
               </td>
               <td>
                 <span class="badge badge-heritage">Heritage</span><br />
-                <small>30 in (76.2 cm)</small>
+                <small><span data-oa-imp="30 in (76.2 cm)" data-oa-met="76.2 cm (30 in)">30 in (76.2 cm)</span></small>
               </td>
               <td>
-                <strong>CRZ:</strong> 30 ft (9.14 m)<br />
-                <small><strong>SRZ:</strong> 10.77 ft (3.28 m) &middot; <strong>t/R:</strong> 0.38</small>
+                <strong>CRZ:</strong> <span data-oa-imp="30 ft (9.14 m)" data-oa-met="9.14 m (30 ft)">30 ft (9.14 m)</span><br />
+                <small><strong>SRZ:</strong> <span data-oa-imp="10.8 ft (3.28 m)" data-oa-met="3.28 m (10.8 ft)">10.8 ft (3.28 m)</span> &middot; <strong>t/R:</strong> 0.38</small>
               </td>
               <td>
                 <strong>Permit Required</strong><br />
-                <small>If destroyed: $18,000 (90 in)</small>
+                <small>If destroyed: $18,000 (<span data-oa-imp="90 in (NaN cm)" data-oa-met="90 in (NaN cm)">90 in (NaN cm)</span>)</small>
               </td>
               <td>
                 <strong class="text-accent">$218,609</strong><br />
@@ -177,15 +201,15 @@
               </td>
               <td>
                 <span class="badge badge-heritage">Heritage</span><br />
-                <small>27 in (68.58 cm)</small>
+                <small><span data-oa-imp="27 in (68.6 cm)" data-oa-met="68.6 cm (27 in)">27 in (68.6 cm)</span></small>
               </td>
               <td>
-                <strong>CRZ:</strong> 27 ft (8.23 m)<br />
-                <small><strong>SRZ:</strong> 10.19 ft (3.11 m) &middot; <strong>t/R:</strong> 0.46</small>
+                <strong>CRZ:</strong> <span data-oa-imp="27 ft (8.23 m)" data-oa-met="8.23 m (27 ft)">27 ft (8.23 m)</span><br />
+                <small><strong>SRZ:</strong> <span data-oa-imp="10.2 ft (3.11 m)" data-oa-met="3.11 m (10.2 ft)">10.2 ft (3.11 m)</span> &middot; <strong>t/R:</strong> 0.46</small>
               </td>
               <td>
                 <strong>Permit Required</strong><br />
-                <small>If destroyed: $8,100 (81 in)</small>
+                <small>If destroyed: $8,100 (<span data-oa-imp="81 in (NaN cm)" data-oa-met="81 in (NaN cm)">81 in (NaN cm)</span>)</small>
               </td>
               <td>
                 <strong class="text-accent">$124,448</strong><br />
@@ -209,15 +233,15 @@
               </td>
               <td>
                 <span class="badge badge-protected">Protected</span><br />
-                <small>20 in (50.8 cm)</small>
+                <small><span data-oa-imp="20 in (50.8 cm)" data-oa-met="50.8 cm (20 in)">20 in (50.8 cm)</span></small>
               </td>
               <td>
-                <strong>CRZ:</strong> 20 ft (6.1 m)<br />
-                <small><strong>SRZ:</strong> 9 ft (2.74 m) &middot; <strong>t/R:</strong> 0.32</small>
+                <strong>CRZ:</strong> <span data-oa-imp="20 ft (6.1 m)" data-oa-met="6.1 m (20 ft)">20 ft (6.1 m)</span><br />
+                <small><strong>SRZ:</strong> <span data-oa-imp="9 ft (2.74 m)" data-oa-met="2.74 m (9 ft)">9 ft (2.74 m)</span> &middot; <strong>t/R:</strong> 0.32</small>
               </td>
               <td>
                 <strong>No Permit Triggered</strong><br />
-                <small>If destroyed: $4,500 (40 in)</small>
+                <small>If destroyed: $4,500 (<span data-oa-imp="40 in (NaN cm)" data-oa-met="40 in (NaN cm)">40 in (NaN cm)</span>)</small>
               </td>
               <td>
                 <strong class="text-accent">$69,172</strong><br />
@@ -241,15 +265,15 @@
               </td>
               <td>
                 <span class="badge badge-heritage">Heritage</span><br />
-                <small>41.34 in (105 cm)</small>
+                <small><span data-oa-imp="41.3 in (105 cm)" data-oa-met="105 cm (41.3 in)">41.3 in (105 cm)</span></small>
               </td>
               <td>
-                <strong>CRZ:</strong> 41.34 ft (12.6 m)<br />
-                <small><strong>SRZ:</strong> 12.35 ft (3.77 m) &middot; <strong>t/R:</strong> 0.34</small>
+                <strong>CRZ:</strong> <span data-oa-imp="41.3 ft (12.6 m)" data-oa-met="12.6 m (41.3 ft)">41.3 ft (12.6 m)</span><br />
+                <small><strong>SRZ:</strong> <span data-oa-imp="12.4 ft (3.77 m)" data-oa-met="3.77 m (12.4 ft)">12.4 ft (3.77 m)</span> &middot; <strong>t/R:</strong> 0.34</small>
               </td>
               <td>
                 <strong>Permit Required</strong><br />
-                <small>If destroyed: $6,201 (82.68 in)</small>
+                <small>If destroyed: $6,201 (<span data-oa-imp="82.7 in (NaN cm)" data-oa-met="82.7 in (NaN cm)">82.7 in (NaN cm)</span>)</small>
               </td>
               <td>
                 <strong class="text-accent">$427,039</strong><br />
@@ -273,15 +297,15 @@
               </td>
               <td>
                 <span class="badge badge-heritage">Heritage</span><br />
-                <small>26 in (66.04 cm)</small>
+                <small><span data-oa-imp="26 in (66 cm)" data-oa-met="66 cm (26 in)">26 in (66 cm)</span></small>
               </td>
               <td>
-                <strong>CRZ:</strong> 26 ft (7.92 m)<br />
-                <small><strong>SRZ:</strong> 10.19 ft (3.11 m) &middot; <strong>t/R:</strong> 0.41</small>
+                <strong>CRZ:</strong> <span data-oa-imp="26 ft (7.92 m)" data-oa-met="7.92 m (26 ft)">26 ft (7.92 m)</span><br />
+                <small><strong>SRZ:</strong> <span data-oa-imp="10.2 ft (3.11 m)" data-oa-met="3.11 m (10.2 ft)">10.2 ft (3.11 m)</span> &middot; <strong>t/R:</strong> 0.41</small>
               </td>
               <td>
                 <strong>Permit Required</strong><br />
-                <small>If destroyed: $2,600 (52 in)</small>
+                <small>If destroyed: $2,600 (<span data-oa-imp="52 in (NaN cm)" data-oa-met="52 in (NaN cm)">52 in (NaN cm)</span>)</small>
               </td>
               <td>
                 <strong class="text-accent">$111,332</strong><br />
@@ -319,8 +343,8 @@
               <strong>Statutory Authority:</strong> City of Austin Land Development Code (LDC) Title 25, Chapter 25-8, Subchapter B (Tree and Natural Area Protection); Environmental Criteria Manual (ECM) Section 3 (Full_Rule_Record).
             </p>
             <ul class="oa-pillar-list" style="margin-top: 10px;">
-              <li><strong>Evaluated DBH &amp; Shell Stability:</strong> 30 in (76.2 cm) | Mattheck <code>t/R = 0.38</code> (Stable)</li>
-              <li><strong>Protection Zones:</strong> CRZ 30 ft (9.14 m) | AS 4970 SRZ 10.77 ft (3.28 m)</li>
+              <li><strong>Evaluated DBH &amp; Shell Stability:</strong> <span data-oa-imp="30 in (76.2 cm)" data-oa-met="76.2 cm (30 in)">30 in (76.2 cm)</span> | Mattheck <code>t/R = 0.38</code> (Stable)</li>
+              <li><strong>Protection Zones:</strong> CRZ <span data-oa-imp="30 ft (9.14 m)" data-oa-met="9.14 m (30 ft)">30 ft (9.14 m)</span> | AS 4970 SRZ <span data-oa-imp="10.8 ft (3.28 m)" data-oa-met="3.28 m (10.8 ft)">10.8 ft (3.28 m)</span></li>
               <li><strong>Permit &amp; Mitigation Liability:</strong> Permit required: ATX-QV-101 Live Oak (pruning). | Cash-in-lieu if removed: $18,000</li>
               <li><strong>Holobiont Equity vs. CTLA:</strong> $218,609 vs. $13,699 (15.96x) | John White Age: 291 yrs</li>
               <li><strong>Canonical SHA-256:</strong> <code>035bccca002d2569205cfad3...</code></li>
@@ -346,8 +370,8 @@
               <strong>Statutory Authority:</strong> Georgetown Unified Development Code (UDC) Chapter 8 (Tree Preservation, Landscaping, and Fencing) (Full_Rule_Record).
             </p>
             <ul class="oa-pillar-list" style="margin-top: 10px;">
-              <li><strong>Evaluated DBH &amp; Shell Stability:</strong> 27 in (68.58 cm) | Mattheck <code>t/R = 0.46</code> (Stable)</li>
-              <li><strong>Protection Zones:</strong> CRZ 27 ft (8.23 m) | AS 4970 SRZ 10.19 ft (3.11 m)</li>
+              <li><strong>Evaluated DBH &amp; Shell Stability:</strong> <span data-oa-imp="27 in (68.6 cm)" data-oa-met="68.6 cm (27 in)">27 in (68.6 cm)</span> | Mattheck <code>t/R = 0.46</code> (Stable)</li>
+              <li><strong>Protection Zones:</strong> CRZ <span data-oa-imp="27 ft (8.23 m)" data-oa-met="8.23 m (27 ft)">27 ft (8.23 m)</span> | AS 4970 SRZ <span data-oa-imp="10.2 ft (3.11 m)" data-oa-met="3.11 m (10.2 ft)">10.2 ft (3.11 m)</span></li>
               <li><strong>Permit &amp; Mitigation Liability:</strong> Permit required: GTN-CI-204 Pecan (pruning). | Cash-in-lieu if removed: $8,100</li>
               <li><strong>Holobiont Equity vs. CTLA:</strong> $124,448 vs. $13,432 (9.27x) | John White Age: 315 yrs</li>
               <li><strong>Canonical SHA-256:</strong> <code>5e52af5dfc4ff7755ae424d0...</code></li>
@@ -373,8 +397,8 @@
               <strong>Statutory Authority:</strong> Liberty Hill Unified Development Code (UDC) § 6.07.01 (Tree Preservation and Mitigation), Ord. 09-O-02 / 22-O-04.06-01 (Full_Rule_Record).
             </p>
             <ul class="oa-pillar-list" style="margin-top: 10px;">
-              <li><strong>Evaluated DBH &amp; Shell Stability:</strong> 20 in (50.8 cm) | Mattheck <code>t/R = 0.32</code> (Stable)</li>
-              <li><strong>Protection Zones:</strong> CRZ 20 ft (6.1 m) | AS 4970 SRZ 9 ft (2.74 m)</li>
+              <li><strong>Evaluated DBH &amp; Shell Stability:</strong> <span data-oa-imp="20 in (50.8 cm)" data-oa-met="50.8 cm (20 in)">20 in (50.8 cm)</span> | Mattheck <code>t/R = 0.32</code> (Stable)</li>
+              <li><strong>Protection Zones:</strong> CRZ <span data-oa-imp="20 ft (6.1 m)" data-oa-met="6.1 m (20 ft)">20 ft (6.1 m)</span> | AS 4970 SRZ <span data-oa-imp="9 ft (2.74 m)" data-oa-met="2.74 m (9 ft)">9 ft (2.74 m)</span></li>
               <li><strong>Permit &amp; Mitigation Liability:</strong> No permit-triggering work on protected trees. | Cash-in-lieu if removed: $4,500</li>
               <li><strong>Holobiont Equity vs. CTLA:</strong> $69,172 vs. $5,127 (13.49x) | John White Age: 279 yrs</li>
               <li><strong>Canonical SHA-256:</strong> <code>2bd6bb1783a760e3b44b99e3...</code></li>
@@ -400,8 +424,8 @@
               <strong>Statutory Authority:</strong> Ashland Municipal Code (AMC) Chapter 18.4.5 (Tree Preservation and Protection), Chapter 18.5.7 (Tree Removal Permits), and AMC 18.3.10.090.D (Hillside Development) (Full_Rule_Record).
             </p>
             <ul class="oa-pillar-list" style="margin-top: 10px;">
-              <li><strong>Evaluated DBH &amp; Shell Stability:</strong> 41.34 in (105 cm) | Mattheck <code>t/R = 0.34</code> (Stable)</li>
-              <li><strong>Protection Zones:</strong> CRZ 41.34 ft (12.6 m) | AS 4970 SRZ 12.35 ft (3.77 m)</li>
+              <li><strong>Evaluated DBH &amp; Shell Stability:</strong> <span data-oa-imp="41.3 in (105 cm)" data-oa-met="105 cm (41.3 in)">41.3 in (105 cm)</span> | Mattheck <code>t/R = 0.34</code> (Stable)</li>
+              <li><strong>Protection Zones:</strong> CRZ <span data-oa-imp="41.3 ft (12.6 m)" data-oa-met="12.6 m (41.3 ft)">41.3 ft (12.6 m)</span> | AS 4970 SRZ <span data-oa-imp="12.4 ft (3.77 m)" data-oa-met="3.77 m (12.4 ft)">12.4 ft (3.77 m)</span></li>
               <li><strong>Permit &amp; Mitigation Liability:</strong> Permit required: ASH-QG-105 Oregon White Oak (pruning). | Cash-in-lieu if removed: $6,201</li>
               <li><strong>Holobiont Equity vs. CTLA:</strong> $427,039 vs. $23,273 (18.35x) | John White Age: 446 yrs</li>
               <li><strong>Canonical SHA-256:</strong> <code>c87412851e02c8a64e697684...</code></li>
@@ -427,8 +451,8 @@
               <strong>Statutory Authority:</strong> Medford Municipal Code (MMC) Sections 6.700 to 6.750 (Public and Street Trees); Medford Land Development Code (MLDC) § 10.780 (Landscaping); City of Medford Tree Protection Guidelines (April 2026) (Full_Rule_Record).
             </p>
             <ul class="oa-pillar-list" style="margin-top: 10px;">
-              <li><strong>Evaluated DBH &amp; Shell Stability:</strong> 26 in (66.04 cm) | Mattheck <code>t/R = 0.41</code> (Stable)</li>
-              <li><strong>Protection Zones:</strong> CRZ 26 ft (7.92 m) | AS 4970 SRZ 10.19 ft (3.11 m)</li>
+              <li><strong>Evaluated DBH &amp; Shell Stability:</strong> <span data-oa-imp="26 in (66 cm)" data-oa-met="66 cm (26 in)">26 in (66 cm)</span> | Mattheck <code>t/R = 0.41</code> (Stable)</li>
+              <li><strong>Protection Zones:</strong> CRZ <span data-oa-imp="26 ft (7.92 m)" data-oa-met="7.92 m (26 ft)">26 ft (7.92 m)</span> | AS 4970 SRZ <span data-oa-imp="10.2 ft (3.11 m)" data-oa-met="3.11 m (10.2 ft)">10.2 ft (3.11 m)</span></li>
               <li><strong>Permit &amp; Mitigation Liability:</strong> Permit required: MFD-PP-208 Ponderosa Pine (pruning). | Cash-in-lieu if removed: $2,600</li>
               <li><strong>Holobiont Equity vs. CTLA:</strong> $111,332 vs. $11,102 (10.03x) | John White Age: 225 yrs</li>
               <li><strong>Canonical SHA-256:</strong> <code>607b4b310c63c5a3e2b65f57...</code></li>
@@ -441,6 +465,7 @@
         </article>
       </div>
     </section>
+  </div>
   </main>
 
   <footer class="app-footer">

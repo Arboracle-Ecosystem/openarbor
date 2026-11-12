@@ -96,6 +96,29 @@ import {
   inspectMunicipalityProvenance,
   renderExpandableHashHtml,
 } from './pages/masterwork-core.js';
+import {
+  getUnitSystem,
+  isImperialUnits,
+  setUnitSystem,
+  cmToIn,
+  inToCm,
+  mToFt,
+  ftToM,
+  mmHrToInHr,
+  inHrToMmHr,
+  fmtDualInCm,
+  fmtDualFromCm,
+  fmtDualFtM,
+  fmtDualFromMeters,
+  fmtDualAreaSqftSqm,
+  fmtDualAreaFromSqm,
+  fmtDualSoilVolFromM3,
+  fmtDualBiocharFromLiters,
+  fmtDualGallons,
+  fmtDualMassFromKg,
+  fmtDualMassFromLbs,
+  fmtDualPressureFromPsi,
+} from './pages/unit-system.js';
 
 export {
   calculateCRZ,
@@ -152,6 +175,8 @@ export {
   formatStickyDeterminationSummary,
   inspectMunicipalityProvenance,
   renderExpandableHashHtml,
+  getUnitSystem,
+  setUnitSystem,
 };
 
 const OLC_CHARS = '23456789CFGHJMPQRVWX';
@@ -539,26 +564,60 @@ export function initFieldToolUI() {
 
   let activePreset = JSON.parse(JSON.stringify(FIXED_PARITY_CASES[0]));
   let activePreviewTab = 'geojson';
+  let canonicalFieldState = {
+    dbh_cm: 76.2,
+    stem_diameters_cm: [76.2],
+    height_m: 16.5,
+    spread_ns_m: 22.0,
+    spread_ew_m: 24.0,
+    cutfill_in: 2,
+    root_flare_cm: 98.0,
+    burial_depth_cm: 16.0,
+    trench_length_m: 8.5,
+    trench_width_cm: 30.0,
+    trench_depth_cm: 35.0,
+    rce_radius_m: 1.0,
+    infiltration_mm_hr: 16.0,
+    airspade_psi: 150,
+  };
 
   const el = (id) => document.getElementById(id);
 
   // Populate Municipality dropdown with ALL 8 municipalities grouped by TX and OR
   const muniSelect = el('input-ordinance-id');
-  if (muniSelect) {
+  function populateMunicipalitySelect() {
+    if (!muniSelect) return;
+    const prevVal = muniSelect.value;
+    const imp = isImperialUnits();
+    const fmtMuniThresholds = (m) => {
+      const pStr = imp
+        ? `${m.dbh_threshold_inches} in`
+        : `${inToCm(m.dbh_threshold_inches, 1)} cm / ${m.dbh_threshold_inches} in`;
+      const hStr =
+        m.heritage_threshold_inches !== null && m.heritage_threshold_inches !== undefined
+          ? imp
+            ? `${m.heritage_threshold_inches} in`
+            : `${inToCm(m.heritage_threshold_inches, 1)} cm / ${m.heritage_threshold_inches} in`
+          : 'N/A';
+      return `${m.name}, ${m.state} (Protected &gt;= ${pStr}, Heritage &gt;= ${hStr})`;
+    };
+
     const txOptions = CENTRAL_TEXAS_MUNICIPALITIES.map(
-      (m) =>
-        `<option value="${m.id}">${m.name}, ${m.state} (Protected &gt;= ${m.dbh_threshold_inches} in, Heritage &gt;= ${m.heritage_threshold_inches} in)</option>`
+      (m) => `<option value="${m.id}">${fmtMuniThresholds(m)}</option>`
     ).join('');
     const orOptions = ROGUE_VALLEY_MUNICIPALITIES.map(
-      (m) =>
-        `<option value="${m.id}">${m.name}, ${m.state} (Protected &gt;= ${m.dbh_threshold_inches} in, Heritage &gt;= ${m.heritage_threshold_inches} in)</option>`
+      (m) => `<option value="${m.id}">${fmtMuniThresholds(m)}</option>`
     ).join('');
 
     muniSelect.innerHTML = [
       `<optgroup label="Central Texas (TX)">${txOptions}</optgroup>`,
       `<optgroup label="Rogue Valley, Oregon (OR)">${orOptions}</optgroup>`,
     ].join('');
+    if (prevVal) {
+      muniSelect.value = prevVal;
+    }
   }
+  populateMunicipalitySelect();
 
   // Populate Species preset dropdown
   const speciesSelect = el('input-species-preset');
@@ -601,6 +660,281 @@ export function initFieldToolUI() {
       .replace(/"/g, '&quot;');
   }
 
+  function setInputMeta(inputId, labelId, hintId, meta) {
+    const input = el(inputId);
+    const label = el(labelId);
+    const hint = el(hintId);
+    if (label && meta.label) label.textContent = meta.label;
+    if (hint && meta.hint) hint.textContent = meta.hint;
+    if (input) {
+      if (meta.min !== undefined) input.min = String(meta.min);
+      if (meta.max !== undefined) input.max = String(meta.max);
+      if (meta.step !== undefined) input.step = String(meta.step);
+      if (meta.value !== undefined) input.value = String(meta.value);
+    }
+  }
+
+  function syncUnitInputsUI() {
+    const imp = isImperialUnits();
+    const dbhInEl = el('input-dbh-inches');
+    const dbhCmEl = el('input-dbh-cm');
+    const dbhInVal = Math.round((canonicalFieldState.dbh_cm / 2.54) * 100) / 100;
+
+    if (imp) {
+      if (dbhInEl) {
+        dbhInEl.readOnly = false;
+        dbhInEl.required = true;
+      }
+      if (dbhCmEl) {
+        dbhCmEl.readOnly = true;
+        dbhCmEl.required = false;
+      }
+      setInputMeta('input-dbh-inches', 'label-dbh-in', 'hint-dbh-in', {
+        label: 'Trunk DBH (Inches)',
+        hint: 'Diameter at 4.5 ft (0.5 to 500 in)',
+        min: 0.5,
+        max: 500,
+        step: 0.1,
+        value: dbhInVal,
+      });
+      setInputMeta('input-dbh-cm', 'label-dbh-cm', 'hint-dbh-cm', {
+        label: 'Synced DBH (cm)',
+        hint: 'Synced metric diameter (cm)',
+        min: 1,
+        max: 1500,
+        step: 0.01,
+        value: canonicalFieldState.dbh_cm,
+      });
+      setInputMeta('input-stems-inches', 'label-stems', 'hint-stems', {
+        label: 'Stem Diameters (Inches, comma-separated)',
+        hint: 'Example: 20, 14, 10 (in)',
+        value: canonicalFieldState.stem_diameters_cm.map((cm) => cmToIn(cm, 1)).join(', '),
+      });
+      setInputMeta('input-height-m', 'label-height', 'hint-height', {
+        label: 'Tree Height (ft)',
+        hint: `Total height (${mToFt(canonicalFieldState.height_m, 1)} ft = ${canonicalFieldState.height_m} m)`,
+        min: 1.5,
+        max: 450,
+        step: 0.5,
+        value: mToFt(canonicalFieldState.height_m, 1),
+      });
+      setInputMeta('input-infiltration', 'label-inf', 'hint-inf', {
+        label: 'Soil Infiltration (in/hr)',
+        hint: `Ring infiltrometer (${mmHrToInHr(canonicalFieldState.infiltration_mm_hr)} in/hr = ${canonicalFieldState.infiltration_mm_hr} mm/hr)`,
+        min: 0,
+        max: 80,
+        step: 0.05,
+        value: mmHrToInHr(canonicalFieldState.infiltration_mm_hr),
+      });
+      setInputMeta('input-spread-ns-m', 'label-spread-ns', 'hint-ns', {
+        label: 'Crown Spread N-S (ft)',
+        hint: 'North-South dripline (ft)',
+        min: 1.5,
+        max: 450,
+        step: 0.5,
+        value: mToFt(canonicalFieldState.spread_ns_m, 1),
+      });
+      setInputMeta('input-spread-ew-m', 'label-spread-ew', 'hint-ew', {
+        label: 'Crown Spread E-W (ft)',
+        hint: 'East-West dripline (ft)',
+        min: 1.5,
+        max: 450,
+        step: 0.5,
+        value: mToFt(canonicalFieldState.spread_ew_m, 1),
+      });
+      setInputMeta('input-cutfill-in', 'label-cutfill', 'hint-cutfill', {
+        label: 'Cut/Fill Depth Inside 1/2 CRZ (in)',
+        hint: 'Typically max 4 in (10.2 cm) allowed',
+        min: 0,
+        max: 60,
+        step: 0.5,
+        value: Math.round(canonicalFieldState.cutfill_in * 100) / 100,
+      });
+      setInputMeta('input-root-flare-cm', 'label-rfd', 'hint-rfd', {
+        label: 'Root Flare Diameter (in)',
+        hint: 'Basal flare for AS 4970 SRZ (in)',
+        min: 0.5,
+        max: 1000,
+        step: 0.2,
+        value: cmToIn(canonicalFieldState.root_flare_cm, 1),
+      });
+      setInputMeta('input-burial-depth-cm', 'label-burial', 'hint-burial', {
+        label: 'Root Flare Burial Depth (in)',
+        hint: 'Soil or mulch burial above flare (in)',
+        min: 0,
+        max: 80,
+        step: 0.2,
+        value: cmToIn(canonicalFieldState.burial_depth_cm, 1),
+      });
+      setInputMeta('input-trench-length-m', 'label-trench-len', 'hint-trench-len', {
+        label: 'Trench Length (ft)',
+        hint: 'Mean spoke length (ft)',
+        min: 0,
+        max: 165,
+        step: 0.5,
+        value: mToFt(canonicalFieldState.trench_length_m, 1),
+      });
+      setInputMeta('input-trench-width-cm', 'label-tw', 'hint-tw', {
+        label: 'Trench Width (in)',
+        hint: 'Default 11.8 in (30 cm)',
+        min: 0,
+        max: 40,
+        step: 0.2,
+        value: cmToIn(canonicalFieldState.trench_width_cm, 1),
+      });
+      setInputMeta('input-trench-depth-cm', 'label-td', 'hint-td', {
+        label: 'Trench Depth (in)',
+        hint: 'Default 13.8 in (35 cm)',
+        min: 0,
+        max: 40,
+        step: 0.2,
+        value: cmToIn(canonicalFieldState.trench_depth_cm, 1),
+      });
+      setInputMeta('input-rce-radius-m', 'label-rce', 'hint-rce', {
+        label: 'Root Collar Basin Radius (ft)',
+        hint: 'Excavation radius around flare (ft)',
+        min: 0,
+        max: 35,
+        step: 0.2,
+        value: mToFt(canonicalFieldState.rce_radius_m, 1),
+      });
+      setInputMeta('input-airspade-psi', 'label-psi', 'hint-psi', {
+        label: 'AirSpade Pressure (psi)',
+        hint: `Supersonic nozzle (${Math.round(canonicalFieldState.airspade_psi)} psi = ${Math.round(canonicalFieldState.airspade_psi * 0.0689476 * 10) / 10} bar)`,
+        min: 0,
+        max: 250,
+        step: 5,
+        value: Math.round(canonicalFieldState.airspade_psi),
+      });
+    } else {
+      if (dbhCmEl) {
+        dbhCmEl.readOnly = false;
+        dbhCmEl.required = true;
+      }
+      if (dbhInEl) {
+        dbhInEl.readOnly = true;
+        dbhInEl.required = false;
+      }
+      setInputMeta('input-dbh-inches', 'label-dbh-in', 'hint-dbh-in', {
+        label: 'Synced DBH (Inches)',
+        hint: 'Synced US Imperial diameter (in)',
+        min: 0.5,
+        max: 500,
+        step: 0.1,
+        value: dbhInVal,
+      });
+      setInputMeta('input-dbh-cm', 'label-dbh-cm', 'hint-dbh-cm', {
+        label: 'Trunk DBH (cm)',
+        hint: 'Diameter at 1.37 m (1.3 to 1270 cm)',
+        min: 1,
+        max: 1500,
+        step: 0.1,
+        value: canonicalFieldState.dbh_cm,
+      });
+      setInputMeta('input-stems-inches', 'label-stems', 'hint-stems', {
+        label: 'Stem Diameters (cm, comma-separated)',
+        hint: 'Example: 50.8, 35.6, 25.4 (cm)',
+        value: canonicalFieldState.stem_diameters_cm.join(', '),
+      });
+      setInputMeta('input-height-m', 'label-height', 'hint-height', {
+        label: 'Tree Height (m)',
+        hint: `Total height (${canonicalFieldState.height_m} m = ${mToFt(canonicalFieldState.height_m, 1)} ft)`,
+        min: 0.5,
+        max: 140,
+        step: 0.1,
+        value: canonicalFieldState.height_m,
+      });
+      setInputMeta('input-infiltration', 'label-inf', 'hint-inf', {
+        label: 'Soil Infiltration (mm/hr)',
+        hint: `Ring infiltrometer (${canonicalFieldState.infiltration_mm_hr} mm/hr = ${mmHrToInHr(canonicalFieldState.infiltration_mm_hr)} in/hr)`,
+        min: 0,
+        max: 2000,
+        step: 0.5,
+        value: canonicalFieldState.infiltration_mm_hr,
+      });
+      setInputMeta('input-spread-ns-m', 'label-spread-ns', 'hint-ns', {
+        label: 'Crown Spread N-S (m)',
+        hint: 'North-South dripline (m)',
+        min: 0.5,
+        max: 140,
+        step: 0.5,
+        value: canonicalFieldState.spread_ns_m,
+      });
+      setInputMeta('input-spread-ew-m', 'label-spread-ew', 'hint-ew', {
+        label: 'Crown Spread E-W (m)',
+        hint: 'East-West dripline (m)',
+        min: 0.5,
+        max: 140,
+        step: 0.5,
+        value: canonicalFieldState.spread_ew_m,
+      });
+      setInputMeta('input-cutfill-in', 'label-cutfill', 'hint-cutfill', {
+        label: 'Cut/Fill Depth Inside 1/2 CRZ (cm)',
+        hint: 'Typically max 10.2 cm (4 in) allowed',
+        min: 0,
+        max: 150,
+        step: 0.5,
+        value: inToCm(canonicalFieldState.cutfill_in, 1),
+      });
+      setInputMeta('input-root-flare-cm', 'label-rfd', 'hint-rfd', {
+        label: 'Root Flare Diameter (cm)',
+        hint: 'Basal flare for AS 4970 SRZ (cm)',
+        min: 1,
+        max: 2500,
+        step: 0.5,
+        value: canonicalFieldState.root_flare_cm,
+      });
+      setInputMeta('input-burial-depth-cm', 'label-burial', 'hint-burial', {
+        label: 'Root Flare Burial Depth (cm)',
+        hint: 'Soil or mulch burial above flare (cm)',
+        min: 0,
+        max: 200,
+        step: 0.5,
+        value: canonicalFieldState.burial_depth_cm,
+      });
+      setInputMeta('input-trench-length-m', 'label-trench-len', 'hint-trench-len', {
+        label: 'Trench Length (m)',
+        hint: 'Mean spoke length (m)',
+        min: 0,
+        max: 50,
+        step: 0.1,
+        value: canonicalFieldState.trench_length_m,
+      });
+      setInputMeta('input-trench-width-cm', 'label-tw', 'hint-tw', {
+        label: 'Trench Width (cm)',
+        hint: 'Default 30 cm (11.8 in)',
+        min: 0,
+        max: 100,
+        step: 1,
+        value: canonicalFieldState.trench_width_cm,
+      });
+      setInputMeta('input-trench-depth-cm', 'label-td', 'hint-td', {
+        label: 'Trench Depth (cm)',
+        hint: 'Default 35 cm (13.8 in)',
+        min: 0,
+        max: 100,
+        step: 1,
+        value: canonicalFieldState.trench_depth_cm,
+      });
+      setInputMeta('input-rce-radius-m', 'label-rce', 'hint-rce', {
+        label: 'Root Collar Basin Radius (m)',
+        hint: 'Excavation radius around flare (m)',
+        min: 0,
+        max: 10,
+        step: 0.05,
+        value: canonicalFieldState.rce_radius_m,
+      });
+      setInputMeta('input-airspade-psi', 'label-psi', 'hint-psi', {
+        label: 'AirSpade Pressure (bar)',
+        hint: `Supersonic nozzle (${Math.round(canonicalFieldState.airspade_psi * 0.0689476 * 10) / 10} bar = ${Math.round(canonicalFieldState.airspade_psi)} psi)`,
+        min: 0,
+        max: 18,
+        step: 0.5,
+        value: Math.round(canonicalFieldState.airspade_psi * 0.0689476 * 10) / 10,
+      });
+    }
+  }
+
   function getCurrentCaseStateFromForm() {
     return {
       id: activePreset?.id || 'field-case',
@@ -611,7 +945,7 @@ export function initFieldToolUI() {
       proposed_removal: Boolean(el('input-proposed-removal')?.checked),
       pruning_date: el('input-pruning-date')?.value || '',
       crz_disturbed_pct: Number(el('input-crz-disturbed-pct')?.value) || 0,
-      cutfill_depth_in: Number(el('input-cutfill-in')?.value) || 0,
+      cutfill_depth_in: Math.max(0, Number(canonicalFieldState.cutfill_in) || 0),
       impervious_pct: Number(el('input-impervious-pct')?.value) || 0,
       crown_removal_pct: Number(el('input-crown-removal-pct')?.value) || 0,
       assessment: latestAssessment,
@@ -644,22 +978,28 @@ export function initFieldToolUI() {
 
     const isMulti = Boolean(sb.is_multistem);
     el('input-multistem-mode').value = isMulti ? sb.multistem_aggregation_method || 'largest_plus_half' : 'single_stem';
-    if (isMulti && Array.isArray(sb.stem_diameters_cm) && sb.stem_diameters_cm.length > 0) {
-      el('input-stems-inches').value = sb.stem_diameters_cm
-        .map((cm) => Math.round((cm / 2.54) * 10) / 10)
-        .join(', ');
-    } else {
-      const inches = Math.round((sb.dbh_cm / 2.54) * 100) / 100;
-      el('input-stems-inches').value = String(inches);
-    }
-    el('input-dbh-inches').value = Math.round((sb.dbh_cm / 2.54) * 100) / 100;
-    el('input-dbh-cm').value = sb.dbh_cm;
+    canonicalFieldState = {
+      dbh_cm: sb.dbh_cm,
+      stem_diameters_cm:
+        isMulti && Array.isArray(sb.stem_diameters_cm) && sb.stem_diameters_cm.length > 0
+          ? [...sb.stem_diameters_cm]
+          : [sb.dbh_cm],
+      height_m: sb.height_m,
+      spread_ns_m: sb.crown_spread_ns_m,
+      spread_ew_m: sb.crown_spread_ew_m,
+      cutfill_in: activePreset.cutfill_depth_in ?? 0,
+      root_flare_cm: rh.root_flare_diameter_cm,
+      burial_depth_cm: rh.root_flare_burial_depth_cm,
+      trench_length_m: air.trench_length_m,
+      trench_width_cm: air.trench_width_cm,
+      trench_depth_cm: air.trench_depth_cm,
+      rce_radius_m: air.root_collar_excavation_radius_m,
+      infiltration_mm_hr: soil.infiltration_rate_mm_hr,
+      airspade_psi: air.operating_pressure_psi,
+    };
 
     el('input-condition-class').value = activePreset.condition_class || 'Good';
     el('input-site-condition').value = activePreset.site_condition || 'Open Grown / Parkland';
-    el('input-height-m').value = sb.height_m;
-    el('input-spread-ns-m').value = sb.crown_spread_ns_m;
-    el('input-spread-ew-m').value = sb.crown_spread_ew_m;
     el('input-lcr-pct').value = sb.live_crown_ratio_pct;
 
     el('input-disposition').value = disp.recommended_disposition || 'Preservation_With_Rhizosphere_Remediation';
@@ -668,7 +1008,6 @@ export function initFieldToolUI() {
       disp.recommended_disposition === 'Removal_Last_Resort_Unmitigable_Hazard';
     el('input-pruning-date').value = activePreset.pruning_date || '';
     el('input-crz-disturbed-pct').value = activePreset.crz_disturbed_pct ?? 0;
-    el('input-cutfill-in').value = activePreset.cutfill_depth_in ?? 0;
     el('input-impervious-pct').value = activePreset.impervious_pct ?? 0;
     el('input-crown-removal-pct').value = activePreset.crown_removal_pct ?? 0;
 
@@ -677,20 +1016,12 @@ export function initFieldToolUI() {
     if (el('input-tomogram-uri')) {
       el('input-tomogram-uri').value = sb.sonic_tomography_or_resistograph_uri || '';
     }
-    el('input-root-flare-cm').value = rh.root_flare_diameter_cm;
-    el('input-burial-depth-cm').value = rh.root_flare_burial_depth_cm;
     el('input-sgr-count').value = rh.stem_girdling_root_count;
     el('input-sgr-severity').value = rh.stem_girdling_root_severity;
 
     el('input-trench-count').value = air.trench_count;
-    el('input-trench-length-m').value = air.trench_length_m;
-    el('input-trench-width-cm').value = air.trench_width_cm;
-    el('input-trench-depth-cm').value = air.trench_depth_cm;
-    el('input-rce-radius-m').value = air.root_collar_excavation_radius_m;
-    el('input-airspade-psi').value = air.operating_pressure_psi;
 
     el('input-bulk-density').value = soil.bulk_density_g_cm3;
-    el('input-infiltration').value = soil.infiltration_rate_mm_hr;
     el('input-som-pct').value = soil.organic_matter_pct;
     el('input-soil-ph').value = soil.soil_ph;
     el('input-fb-ratio').value = myco.fungal_to_bacterial_biomass_ratio ?? 0.5;
@@ -717,6 +1048,7 @@ export function initFieldToolUI() {
     el('input-traq-overall').value = traq.overall_risk_rating;
     el('input-traq-residual').value = traq.residual_risk_rating || 'Low';
 
+    syncUnitInputsUI();
     toggleMultiStemInputs();
     recalculateAndRender();
   }
@@ -754,32 +1086,127 @@ export function initFieldToolUI() {
 
   function syncDbhFromInputs() {
     const mode = el('input-multistem-mode').value;
+    const imp = isImperialUnits();
     if (mode === 'single_stem') {
-      const dbhIn = Math.max(0.1, Number(el('input-dbh-inches').value) || 20);
-      const dbhCm = Math.round(dbhIn * 2.54 * 100) / 100;
-      el('input-dbh-cm').value = dbhCm;
+      if (imp) {
+        const dbhIn = Math.max(0.1, Number(el('input-dbh-inches').value) || 20);
+        canonicalFieldState.dbh_cm = Math.round(dbhIn * 2.54 * 100) / 100;
+        el('input-dbh-cm').value = String(canonicalFieldState.dbh_cm);
+      } else {
+        const dbhCm = Math.max(0.5, Number(el('input-dbh-cm').value) || 50.8);
+        canonicalFieldState.dbh_cm = Math.round(dbhCm * 100) / 100;
+        el('input-dbh-inches').value = String(Math.round((canonicalFieldState.dbh_cm / 2.54) * 100) / 100);
+      }
     } else {
       const rawStems = String(el('input-stems-inches').value || '')
         .split(',')
         .map((s) => Number(s.trim()))
         .filter((n) => n > 0);
-      const aggIn = rawStems.length > 0 ? calculateMultiStemDBH(rawStems, mode) : 20;
-      const aggCm = Math.round(aggIn * 2.54 * 100) / 100;
-      el('input-dbh-inches').value = aggIn;
-      el('input-dbh-cm').value = aggCm;
+      const stemsIn = imp
+        ? rawStems.length > 0
+          ? rawStems
+          : [20, 14]
+        : rawStems.length > 0
+        ? rawStems.map((cm) => cm / 2.54)
+        : [20, 14];
+      const aggIn = calculateMultiStemDBH(stemsIn, mode);
+      canonicalFieldState.stem_diameters_cm = stemsIn.map(
+        (d) => Math.round(d * 2.54 * 100) / 100
+      );
+      canonicalFieldState.dbh_cm = Math.round(aggIn * 2.54 * 100) / 100;
+      el('input-dbh-inches').value = String(aggIn);
+      el('input-dbh-cm').value = String(canonicalFieldState.dbh_cm);
     }
   }
 
-  el('input-dbh-inches')?.addEventListener('input', () => {
-    const dbhIn = Math.max(0.1, Number(el('input-dbh-inches').value) || 0.1);
-    el('input-dbh-cm').value = Math.round(dbhIn * 2.54 * 100) / 100;
-    recalculateAndRender();
-  });
-
-  el('input-stems-inches')?.addEventListener('input', () => {
-    syncDbhFromInputs();
-    recalculateAndRender();
-  });
+  function handleUnitFieldInput(target) {
+    if (!target || !target.id) return;
+    const imp = isImperialUnits();
+    const raw = Number(target.value);
+    switch (target.id) {
+      case 'input-dbh-inches':
+        if (imp && Number.isFinite(raw) && raw > 0) {
+          canonicalFieldState.dbh_cm = Math.round(raw * 2.54 * 100) / 100;
+          el('input-dbh-cm').value = String(canonicalFieldState.dbh_cm);
+        }
+        break;
+      case 'input-dbh-cm':
+        if (!imp && Number.isFinite(raw) && raw > 0) {
+          canonicalFieldState.dbh_cm = Math.round(raw * 100) / 100;
+          el('input-dbh-inches').value = String(
+            Math.round((canonicalFieldState.dbh_cm / 2.54) * 100) / 100
+          );
+        }
+        break;
+      case 'input-stems-inches':
+        syncDbhFromInputs();
+        break;
+      case 'input-height-m':
+        if (Number.isFinite(raw) && raw > 0) {
+          canonicalFieldState.height_m = imp ? ftToM(raw, 2) : Math.round(raw * 100) / 100;
+        }
+        break;
+      case 'input-infiltration':
+        if (Number.isFinite(raw) && raw >= 0) {
+          canonicalFieldState.infiltration_mm_hr = imp ? inHrToMmHr(raw) : Math.round(raw * 10) / 10;
+        }
+        break;
+      case 'input-spread-ns-m':
+        if (Number.isFinite(raw) && raw > 0) {
+          canonicalFieldState.spread_ns_m = imp ? ftToM(raw, 2) : Math.round(raw * 100) / 100;
+        }
+        break;
+      case 'input-spread-ew-m':
+        if (Number.isFinite(raw) && raw > 0) {
+          canonicalFieldState.spread_ew_m = imp ? ftToM(raw, 2) : Math.round(raw * 100) / 100;
+        }
+        break;
+      case 'input-cutfill-in':
+        if (Number.isFinite(raw) && raw >= 0) {
+          canonicalFieldState.cutfill_in = imp ? raw : cmToIn(raw, 2);
+        }
+        break;
+      case 'input-root-flare-cm':
+        if (Number.isFinite(raw) && raw > 0) {
+          canonicalFieldState.root_flare_cm = imp ? inToCm(raw, 1) : Math.round(raw * 10) / 10;
+        }
+        break;
+      case 'input-burial-depth-cm':
+        if (Number.isFinite(raw) && raw >= 0) {
+          canonicalFieldState.burial_depth_cm = imp ? inToCm(raw, 1) : Math.round(raw * 10) / 10;
+        }
+        break;
+      case 'input-trench-length-m':
+        if (Number.isFinite(raw) && raw >= 0) {
+          canonicalFieldState.trench_length_m = imp ? ftToM(raw, 2) : Math.round(raw * 100) / 100;
+        }
+        break;
+      case 'input-trench-width-cm':
+        if (Number.isFinite(raw) && raw >= 0) {
+          canonicalFieldState.trench_width_cm = imp ? inToCm(raw, 1) : Math.round(raw * 10) / 10;
+        }
+        break;
+      case 'input-trench-depth-cm':
+        if (Number.isFinite(raw) && raw >= 0) {
+          canonicalFieldState.trench_depth_cm = imp ? inToCm(raw, 1) : Math.round(raw * 10) / 10;
+        }
+        break;
+      case 'input-rce-radius-m':
+        if (Number.isFinite(raw) && raw >= 0) {
+          canonicalFieldState.rce_radius_m = imp ? ftToM(raw, 2) : Math.round(raw * 100) / 100;
+        }
+        break;
+      case 'input-airspade-psi':
+        if (Number.isFinite(raw) && raw >= 0) {
+          canonicalFieldState.airspade_psi = imp
+            ? Math.round(raw)
+            : Math.round(raw / 0.0689476);
+        }
+        break;
+      default:
+        break;
+    }
+  }
 
   // GPS-to-Plus-Code button
   el('btn-gps-locate')?.addEventListener('click', () => {
@@ -831,23 +1258,22 @@ export function initFieldToolUI() {
       sb.is_multistem = false;
       sb.multistem_aggregation_method = 'single_stem';
       delete sb.stem_diameters_cm;
-      sb.dbh_cm = Math.max(0.5, Number(el('input-dbh-cm').value) || 50.8);
+      sb.dbh_cm = Math.max(0.5, Number(canonicalFieldState.dbh_cm) || 50.8);
     } else {
-      const rawStemsIn = String(el('input-stems-inches').value || '')
-        .split(',')
-        .map((s) => Number(s.trim()))
-        .filter((n) => n > 0);
-      const validStemsIn = rawStemsIn.length > 0 ? rawStemsIn : [20, 14];
-      const aggIn = calculateMultiStemDBH(validStemsIn, mode);
+      const validStemsCm =
+        Array.isArray(canonicalFieldState.stem_diameters_cm) &&
+        canonicalFieldState.stem_diameters_cm.length > 0
+          ? canonicalFieldState.stem_diameters_cm
+          : [50.8, 35.56];
       sb.is_multistem = true;
       sb.multistem_aggregation_method = mode;
-      sb.stem_diameters_cm = validStemsIn.map((d) => Math.round(d * 2.54 * 100) / 100);
-      sb.dbh_cm = Math.round(aggIn * 2.54 * 100) / 100;
+      sb.stem_diameters_cm = [...validStemsCm];
+      sb.dbh_cm = Math.max(0.5, Number(canonicalFieldState.dbh_cm) || 50.8);
     }
 
-    sb.height_m = Math.max(0.5, Number(el('input-height-m').value) || 15);
-    sb.crown_spread_ns_m = Math.max(0.5, Number(el('input-spread-ns-m').value) || 15);
-    sb.crown_spread_ew_m = Math.max(0.5, Number(el('input-spread-ew-m').value) || 15);
+    sb.height_m = Math.max(0.5, Number(canonicalFieldState.height_m) || 15);
+    sb.crown_spread_ns_m = Math.max(0.5, Number(canonicalFieldState.spread_ns_m) || 15);
+    sb.crown_spread_ew_m = Math.max(0.5, Number(canonicalFieldState.spread_ew_m) || 15);
     sb.live_crown_ratio_pct = Math.min(100, Math.max(0, Number(el('input-lcr-pct').value) || 70));
 
     sb.sound_shell_thickness_ratio_t_over_r = Math.min(
@@ -862,20 +1288,26 @@ export function initFieldToolUI() {
       delete sb.sonic_tomography_or_resistograph_uri;
     }
 
-    rh.root_flare_diameter_cm = Math.max(1, Number(el('input-root-flare-cm').value) || sb.dbh_cm * 1.25);
-    rh.root_flare_burial_depth_cm = Math.max(0, Number(el('input-burial-depth-cm').value) || 0);
+    rh.root_flare_diameter_cm = Math.max(
+      1,
+      Number(canonicalFieldState.root_flare_cm) || sb.dbh_cm * 1.25
+    );
+    rh.root_flare_burial_depth_cm = Math.max(0, Number(canonicalFieldState.burial_depth_cm) || 0);
     rh.stem_girdling_root_count = Math.max(0, Math.round(Number(el('input-sgr-count').value) || 0));
     rh.stem_girdling_root_severity = el('input-sgr-severity').value || 'None';
 
     air.trench_count = Math.max(0, Math.round(Number(el('input-trench-count').value) || 6));
-    air.trench_length_m = Math.max(0, Number(el('input-trench-length-m').value) || 6.5);
-    air.trench_width_cm = Math.max(0, Number(el('input-trench-width-cm').value) || 30);
-    air.trench_depth_cm = Math.max(0, Number(el('input-trench-depth-cm').value) || 35);
-    air.root_collar_excavation_radius_m = Math.max(0, Number(el('input-rce-radius-m').value) || 0.9);
-    air.operating_pressure_psi = Math.max(0, Number(el('input-airspade-psi').value) || 150);
+    air.trench_length_m = Math.max(0, Number(canonicalFieldState.trench_length_m) || 6.5);
+    air.trench_width_cm = Math.max(0, Number(canonicalFieldState.trench_width_cm) || 30);
+    air.trench_depth_cm = Math.max(0, Number(canonicalFieldState.trench_depth_cm) || 35);
+    air.root_collar_excavation_radius_m = Math.max(
+      0,
+      Number(canonicalFieldState.rce_radius_m) || 0.9
+    );
+    air.operating_pressure_psi = Math.max(0, Number(canonicalFieldState.airspade_psi) || 150);
 
     soil.bulk_density_g_cm3 = Math.min(2.65, Math.max(0.1, Number(el('input-bulk-density').value) || 1.45));
-    soil.infiltration_rate_mm_hr = Math.max(0, Number(el('input-infiltration').value) || 20);
+    soil.infiltration_rate_mm_hr = Math.max(0, Number(canonicalFieldState.infiltration_mm_hr) || 20);
     soil.organic_matter_pct = Math.min(100, Math.max(0, Number(el('input-som-pct').value) || 2.8));
     soil.soil_ph = Math.min(11, Math.max(2, Number(el('input-soil-ph').value) || 7.2));
     myco.fungal_to_bacterial_biomass_ratio = Math.max(0, Number(el('input-fb-ratio').value) || 0.5);
@@ -1004,7 +1436,7 @@ export function initFieldToolUI() {
         proposed_removal: el('input-proposed-removal').checked,
         pruning_date: el('input-pruning-date').value || null,
         crz_disturbed_pct: Number(el('input-crz-disturbed-pct').value) || 0,
-        cutfill_depth_in: Number(el('input-cutfill-in').value) || 0,
+        cutfill_depth_in: Math.max(0, Number(canonicalFieldState.cutfill_in) || 0),
         impervious_pct: Number(el('input-impervious-pct').value) || 0,
         crown_removal_pct: Number(el('input-crown-removal-pct').value) || 0,
       };
@@ -1030,6 +1462,7 @@ export function initFieldToolUI() {
     const errBanner = el('error-banner');
     if (errBanner) errBanner.hidden = true;
 
+    const imp = isImperialUnits();
     const muni = res.municipality;
     const row = res.evaluatedRow;
     const bio = res.biomechanics;
@@ -1039,6 +1472,16 @@ export function initFieldToolUI() {
     const age = res.ageEstimate;
     const mitIfRemoved = res.mitigationIfRemoved;
     const mitActive = res.mitigationActive;
+    const labeledSiteMapSvg = (() => {
+      const raw = String(res.svgSiteMap || '').trim();
+      if (!raw.startsWith('<svg') || raw.includes('role="img"')) return raw;
+      const safeLabel = escapeUiHtml(
+        `ANSI A300 Part 5 and AS 4970 root protection map for ${assessment?.structural_baseline?.tree_tag || 'specimen'} (CRZ radius ${fmtDualFtM(res.rootZones.crz.radius_feet, res.rootZones.crz.radius_meters)}, SRZ radius ${fmtDualFtM(res.rootZones.srz.radius_feet, res.rootZones.srz.radius_meters)})`
+      );
+      return raw
+        .replace(/^<svg\b/, `<svg role="img" aria-label="${safeLabel}"`)
+        .replace(/>/, `><title>${safeLabel}</title>`);
+    })();
 
     // 0. D1 Permalink & D2 Sticky Determination Bar Updates
     currentPermalinkHash = encodeAssessmentPermalink(getCurrentCaseStateFromForm());
@@ -1064,9 +1507,13 @@ export function initFieldToolUI() {
       const stRep = el('sticky-replacement-val');
       const stCash = el('sticky-cash-val');
       if (stStatus) stStatus.textContent = `${sticky.status} (${sticky.permit_required})`;
-      if (stDbh) stDbh.textContent = sticky.dbh;
-      if (stCrz) stCrz.textContent = sticky.crz;
-      if (stRep) stRep.textContent = sticky.replacement_owed;
+      if (stDbh) stDbh.textContent = imp ? sticky.dbh : fmtDualInCm(bio.dbh_inches, bio.dbh_cm);
+      if (stCrz) stCrz.textContent = imp ? sticky.crz : fmtDualFtM(res.rootZones.crz.radius_feet, res.rootZones.crz.radius_meters);
+      if (stRep) {
+        stRep.textContent = imp
+          ? sticky.replacement_owed
+          : fmtDualInCm(mitIfRemoved?.replacement_inches_owed || 0);
+      }
       if (stCash) stCash.textContent = sticky.cash_in_lieu;
     }
 
@@ -1120,8 +1567,8 @@ export function initFieldToolUI() {
               .join('')}</ul>`;
 
       printBodyEl.innerHTML = `
-        <header class="oa-print-header">
-          <h1>Open Arbor Evidentiary Determination Report</h1>
+        <div class="oa-print-header">
+          <h2 class="oa-print-title">Open Arbor Evidentiary Determination Report</h2>
           <p class="oa-print-subtitle">
             <strong>Tree Tag:</strong> ${sb.tree_tag || 'T-01'} |
             <strong>Species:</strong> ${sb.species_common || 'Live Oak'} (<em>${sb.species_scientific || 'Quercus virginiana'}</em>) |
@@ -1137,30 +1584,30 @@ export function initFieldToolUI() {
             <strong>Canonical SHA-256 Digest:</strong> ${renderExpandableHashHtml(res.compiledReport.sha256)}<br>
             <strong>Shareable Permalink Address:</strong> ${renderExpandableHashHtml(fullShareUrl, { headChars: 28, tailChars: 12 })}
           </p>
-        </header>
+        </div>
 
         <section class="oa-print-section">
-          <h2>Table 1. Tree Structural &amp; Biomechanical Baseline</h2>
+          <h3>Table 1. Tree Structural &amp; Biomechanical Baseline</h3>
           <div tabindex="0" role="region" aria-label="Table 1. Tree Structural and Biomechanical Baseline" class="table-wrapper">
             <table class="data-table" style="--label-1: 'DBH &amp; Method'; --label-2: 'Height &amp; Spread'; --label-3: 'Plus Code'; --label-4: 'Mattheck t/R'; --label-5: 'Flare Burial'; --label-6: 'SRZ / CRZ / TIZ';">
               <thead>
                 <tr>
-                  <th>DBH &amp; Method</th>
-                  <th>Height &amp; Crown Spread</th>
-                  <th>Global Plus Code</th>
-                  <th>Mattheck t/R &amp; Stability</th>
-                  <th>Root Flare Burial</th>
-                  <th>Protection Zone Radii (SRZ / CRZ / TIZ)</th>
+                  <th scope="col">DBH &amp; Method</th>
+                  <th scope="col">Height &amp; Crown Spread</th>
+                  <th scope="col">Global Plus Code</th>
+                  <th scope="col">Mattheck t/R &amp; Stability</th>
+                  <th scope="col">Root Flare Burial</th>
+                  <th scope="col">Protection Zone Radii (SRZ / CRZ / TIZ)</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td>${bio.dbh_inches} in (${bio.dbh_cm} cm) [${sb.multistem_aggregation_method || 'single_stem'}]</td>
-                  <td>H: ${sb.height_m} m | N-S: ${sb.crown_spread_ns_m} m | E-W: ${sb.crown_spread_ew_m} m</td>
+                  <td>${fmtDualInCm(bio.dbh_inches, bio.dbh_cm)} [${sb.multistem_aggregation_method || 'single_stem'}]</td>
+                  <td>H: ${fmtDualFromMeters(sb.height_m)} | N-S: ${fmtDualFromMeters(sb.crown_spread_ns_m)} | E-W: ${fmtDualFromMeters(sb.crown_spread_ew_m)}</td>
                   <td><code>${sb.plus_code_global}</code></td>
                   <td>t/R = ${bio.biomechanics.sound_shell_thickness_ratio_t_over_r} (${bio.biomechanics.mattheck_criterion_satisfied ? 'Stable >= 0.30' : 'Thinning < 0.30'})</td>
-                  <td>${rh.root_flare_burial_depth_cm ?? 0} cm burial (Flare: ${rh.root_flare_diameter_cm} cm)</td>
-                  <td>SRZ: ${res.rootZones.srz.radius_feet} ft (${res.rootZones.srz.radius_meters} m) | CRZ: ${res.rootZones.crz.radius_feet} ft (${res.rootZones.crz.radius_meters} m) | TIZ: ${bio.root_zones.tiz_radius_meters} m</td>
+                  <td>${fmtDualFromCm(rh.root_flare_burial_depth_cm ?? 0)} burial (Flare: ${fmtDualFromCm(rh.root_flare_diameter_cm)})</td>
+                  <td>SRZ: ${fmtDualFtM(res.rootZones.srz.radius_feet, res.rootZones.srz.radius_meters)} | CRZ: ${fmtDualFtM(res.rootZones.crz.radius_feet, res.rootZones.crz.radius_meters)} | TIZ: ${fmtDualFromMeters(bio.root_zones.tiz_radius_meters)}</td>
                 </tr>
               </tbody>
             </table>
@@ -1168,22 +1615,22 @@ export function initFieldToolUI() {
         </section>
 
         <section class="oa-print-section">
-          <h2>Table 2. Municipal Ordinance Determination, Mitigation Schedule &amp; Epistemic Boundaries</h2>
+          <h3>Table 2. Municipal Ordinance Determination, Mitigation Schedule &amp; Epistemic Boundaries</h3>
           <div tabindex="0" role="region" aria-label="Table 2. Municipal Ordinance Determination and Mitigation Schedule" class="table-wrapper">
             <table class="data-table" style="--label-1: 'Protection Status'; --label-2: 'Permit Verdict'; --label-3: 'Replacement Owed'; --label-4: 'Cash-in-Lieu';">
               <thead>
                 <tr>
-                  <th>Protection Status</th>
-                  <th>Permit Verdict</th>
-                  <th>Replacement Inches Owed (If Removed)</th>
-                  <th>Cash-in-Lieu Obligation (If Removed)</th>
+                  <th scope="col">Protection Status</th>
+                  <th scope="col">Permit Verdict</th>
+                  <th scope="col">Replacement Caliper Owed (If Removed)</th>
+                  <th scope="col">Cash-in-Lieu Obligation (If Removed)</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
                   <td><strong>${statusLabel(row)}</strong></td>
                   <td><strong>${res.permit.unknown ? 'Verify with City (UNVERIFIED)' : res.permit.required ? 'PERMIT REQUIRED' : 'No Permit Triggered'}</strong> (${res.permitText})</td>
-                  <td>${mitIfRemoved ? `${mitIfRemoved.replacement_inches_owed} in (${mitIfRemoved.replacement_trees_owed} trees)` : '0 in'}</td>
+                  <td>${mitIfRemoved ? `${fmtDualInCm(mitIfRemoved.replacement_inches_owed)} (${mitIfRemoved.replacement_trees_owed} trees)` : '0 in'}</td>
                   <td><strong>$${Number(mitIfRemoved?.cash_in_lieu_usd || 0).toLocaleString()}</strong></td>
                 </tr>
               </tbody>
@@ -1196,20 +1643,20 @@ export function initFieldToolUI() {
         </section>
 
         <section class="oa-print-section">
-          <h2>Figure 1. Deterministic Root Protection Zone Map (ANSI A300 Part 5 / AS 4970)</h2>
-          <div id="print-svg-map-holder" class="oa-print-map">${res.svgSiteMap || ''}</div>
+          <h3>Figure 1. Deterministic Root Protection Zone Map (ANSI A300 Part 5 / AS 4970)</h3>
+          <div id="print-svg-map-holder" class="oa-print-map">${labeledSiteMapSvg}</div>
         </section>
 
         <section class="oa-print-section">
-          <h2>Table 3. Dual Valuation &amp; Allometric Ecosystem Services</h2>
+          <h3>Table 3. Dual Valuation &amp; Allometric Ecosystem Services</h3>
           <div tabindex="0" role="region" aria-label="Table 3. Dual Valuation and Allometric Ecosystem Services" class="table-wrapper">
             <table class="data-table" style="--label-1: 'CTLA 10th Ed. Value'; --label-2: '200-Yr Holobiont Equity'; --label-3: 'John White Est. Age'; --label-4: 'Annual Services';">
               <thead>
                 <tr>
-                  <th>CTLA 10th Ed. Depreciated Value</th>
-                  <th>200-Yr Holobiont Biological Equity</th>
-                  <th>John White (FCIN12) Est. Age</th>
-                  <th>Annual Stormwater / Energy / Carbon Flow</th>
+                  <th scope="col">CTLA 10th Ed. Depreciated Value</th>
+                  <th scope="col">200-Yr Holobiont Biological Equity</th>
+                  <th scope="col">John White (FCIN12) Est. Age</th>
+                  <th scope="col">Annual Stormwater / Energy / Carbon Flow</th>
                 </tr>
               </thead>
               <tbody>
@@ -1217,7 +1664,7 @@ export function initFieldToolUI() {
                   <td>$${val.ctla_10th_ed_depreciated_usd.toLocaleString()}</td>
                   <td><strong>$${val.holobiont_200yr_biological_equity_usd.toLocaleString()}</strong> (${val.veteran_keystone_habitat_multiplier}x Keystone)</td>
                   <td>${age.estimated_age_years} yrs (${age.site_condition})</td>
-                  <td>${eco.avoided_runoff_gallons_yr.toLocaleString()} gal/yr | ${eco.cooling_savings_kwh_yr} kWh/yr | ${eco.carbon_storage_lbs.toLocaleString()} lbs C ($${eco.total_annual_benefits_usd}/yr)</td>
+                  <td>${fmtDualGallons(eco.avoided_runoff_gallons_yr, '/yr')} | ${eco.cooling_savings_kwh_yr} kWh/yr | ${fmtDualMassFromLbs(eco.carbon_storage_lbs, ' C')} ($${eco.total_annual_benefits_usd}/yr)</td>
                 </tr>
               </tbody>
             </table>
@@ -1225,7 +1672,7 @@ export function initFieldToolUI() {
         </section>
 
         <section class="oa-print-signature-block">
-          <h2>Practitioner Evidentiary Attestation &amp; Signature Block</h2>
+          <h3>Practitioner Evidentiary Attestation &amp; Signature Block</h3>
           <p>
             <strong>Practitioner Name:</strong> ${escapeUiHtml(el('input-assessor-name')?.value.trim() || 'George Steward')} &nbsp;|&nbsp;
             <strong>Credential:</strong> ${escapeUiHtml(el('input-assessor-credential')?.value.trim() || 'ISA Certified Arborist TX-362025A / Oak Wilt Qualified')} &nbsp;|&nbsp;
@@ -1270,6 +1717,12 @@ export function initFieldToolUI() {
         ? `Permitted Oak pruning months: ${oakMonths.join(', ')} (${muni.plan_rules?.pruning?.citation || 'Oak Wilt Rule'})`
         : `${muni.plan_rules?.pruning?.standard || 'ANSI A300 Part 1'} (${muni.plan_rules?.pruning?.citation || 'Verify seasonal Oak Wilt window with local forester'})`;
 
+      const protThreshStr = fmtDualInCm(muni.dbh_threshold_inches);
+      const heritThreshStr =
+        muni.heritage_threshold_inches !== null && muni.heritage_threshold_inches !== undefined
+          ? fmtDualInCm(muni.heritage_threshold_inches)
+          : 'N/A';
+
       el('muni-lookup-card').innerHTML = `
         <div class="muni-header">
           <div>
@@ -1282,11 +1735,11 @@ export function initFieldToolUI() {
         <div class="metric-grid metric-grid-4">
           <div class="metric-box">
             <span class="metric-label">Protected Threshold</span>
-            <strong class="metric-value">${muni.dbh_threshold_inches} in DBH</strong>
+            <strong class="metric-value">${protThreshStr} DBH</strong>
           </div>
           <div class="metric-box">
             <span class="metric-label">Heritage Threshold</span>
-            <strong class="metric-value">${muni.heritage_threshold_inches} in DBH</strong>
+            <strong class="metric-value">${heritThreshStr} DBH</strong>
           </div>
           <div class="metric-box">
             <span class="metric-label">Multi-Stem Formula</span>
@@ -1294,7 +1747,7 @@ export function initFieldToolUI() {
           </div>
           <div class="metric-box">
             <span class="metric-label">CRZ Disturbance Trigger</span>
-            <strong class="metric-value">${muni.plan_rules?.root_zone?.removal_if_disturbed_pct ? `&gt;${muni.plan_rules.root_zone.removal_if_disturbed_pct}% = Removal` : '1.0 ft / in DBH'}</strong>
+            <strong class="metric-value">${muni.plan_rules?.root_zone?.removal_if_disturbed_pct ? `&gt;${muni.plan_rules.root_zone.removal_if_disturbed_pct}% = Removal` : imp ? '1.0 ft / in DBH' : '0.12 m / cm DBH (1.0 ft/in)'}</strong>
           </div>
         </div>
         <p class="muni-subtext"><strong>Oak Wilt &amp; Pruning:</strong> ${oakWindowText}</p>
@@ -1321,10 +1774,10 @@ export function initFieldToolUI() {
     const svgMapMarkup = `
       <div class="svg-map-wrap">
         <div class="svg-map-header">
-          <span><strong>ANSI A300 Part 5 / ISA BMP To-Scale Root Protection Map</strong> (Fence Radius: ${row.fence_ft} ft)</span>
+          <span><strong>ANSI A300 Part 5 / ISA BMP To-Scale Root Protection Map</strong> (Fence Radius: ${fmtDualFtM(row.fence_ft)})</span>
           <span>Soil Invigoration Budget: <strong>$${res.soilRemediation.total_usd.toLocaleString()}</strong></span>
         </div>
-        ${res.svgSiteMap || ''}
+        ${labeledSiteMapSvg}
       </div>
     `;
 
@@ -1334,7 +1787,7 @@ export function initFieldToolUI() {
           <span class="metric-label">Evaluated Municipal Status</span>
           <div class="verdict-title-row">
             <strong class="verdict-big">${statusText}</strong>
-            <span class="badge ${statusClass}">${row.dbh} in DBH (${bio.dbh_cm} cm)</span>
+            <span class="badge ${statusClass}">${fmtDualInCm(row.dbh, bio.dbh_cm)} DBH</span>
           </div>
         </div>
         <div class="verdict-right">
@@ -1348,44 +1801,44 @@ export function initFieldToolUI() {
       <div class="metric-grid metric-grid-3">
         <div class="metric-box">
           <span class="metric-label">Critical Root Zone (CRZ)</span>
-          <strong class="metric-value">${res.rootZones.crz.radius_feet} ft (${res.rootZones.crz.radius_meters} m)</strong>
-          <span class="metric-sub">${res.rootZones.crz.area_sqft.toLocaleString()} sq ft (${res.rootZones.crz.area_sqm} m2)</span>
+          <strong class="metric-value">${fmtDualFtM(res.rootZones.crz.radius_feet, res.rootZones.crz.radius_meters)}</strong>
+          <span class="metric-sub">${fmtDualAreaSqftSqm(res.rootZones.crz.area_sqft, res.rootZones.crz.area_sqm)}</span>
         </div>
         <div class="metric-box">
           <span class="metric-label">Structural Root Zone (SRZ)</span>
-          <strong class="metric-value">${res.rootZones.srz.radius_feet} ft (${res.rootZones.srz.radius_meters} m)</strong>
+          <strong class="metric-value">${fmtDualFtM(res.rootZones.srz.radius_feet, res.rootZones.srz.radius_meters)}</strong>
           <span class="metric-sub">AS 4970 Windthrow Plate</span>
         </div>
         <div class="metric-box">
           <span class="metric-label">Tree Influence Zone (TIZ)</span>
-          <strong class="metric-value">${bio.root_zones.tiz_radius_meters} m radius</strong>
-          <span class="metric-sub">${bio.root_zones.tiz_area_sqm} m2 Holobiont Footprint</span>
+          <strong class="metric-value">${fmtDualFromMeters(bio.root_zones.tiz_radius_meters)} radius</strong>
+          <span class="metric-sub">${fmtDualAreaFromSqm(bio.root_zones.tiz_area_sqm)} Holobiont Footprint</span>
         </div>
       </div>
 
-      <div class="table-scroll">
-        <table class="data-table">
+      <div tabindex="0" role="region" aria-label="Municipal Mitigation Scenarios" class="table-wrapper">
+        <table class="data-table" style="--label-1: 'Mitigation Scenario'; --label-2: 'Exemption Cap'; --label-3: 'Replacement Owed'; --label-4: 'Cash-in-Lieu Fee'; --label-5: 'Unpermitted Penalty';">
           <thead>
             <tr>
-              <th>Mitigation Scenario (${muni?.mitigation_fee_schedule?.citation || 'Ordinance'})</th>
-              <th>Exemption Cap</th>
-              <th>Replacement Owed</th>
-              <th>Cash-in-Lieu Fee</th>
-              <th>Unpermitted Penalty</th>
+              <th scope="col">Mitigation Scenario (${muni?.mitigation_fee_schedule?.citation || 'Ordinance'})</th>
+              <th scope="col">Exemption Cap</th>
+              <th scope="col">Replacement Owed</th>
+              <th scope="col">Cash-in-Lieu Fee</th>
+              <th scope="col">Unpermitted Penalty</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td><strong>Current Field Plan (${row.removal ? 'Removal Triggered' : 'Preserved'})</strong></td>
-              <td>${mitActive ? `${mitActive.exemption_cap_inches} in (${mitActive.exemption_pct}%)` : 'N/A'}</td>
-              <td>${mitActive ? `${mitActive.replacement_inches_owed} in (${mitActive.replacement_trees_owed} trees)` : '0 in'}</td>
+              <th scope="row">Current Field Plan (${row.removal ? 'Removal Triggered' : 'Preserved'})</th>
+              <td>${mitActive ? `${fmtDualInCm(mitActive.exemption_cap_inches)} (${mitActive.exemption_pct}%)` : 'N/A'}</td>
+              <td>${mitActive ? `${fmtDualInCm(mitActive.replacement_inches_owed)} (${mitActive.replacement_trees_owed} trees)` : '0 in'}</td>
               <td><strong>$${(mitActive?.cash_in_lieu_usd || 0).toLocaleString()}</strong></td>
               <td>$${(mitActive?.unpermitted_penalty?.total_penalty_usd || 0).toLocaleString()}</td>
             </tr>
             <tr>
-              <td><strong>Liability If Tree Liquidated / Destroyed</strong></td>
-              <td>${mitIfRemoved ? `${mitIfRemoved.exemption_cap_inches} in (${mitIfRemoved.exemption_pct}%)` : 'N/A'}</td>
-              <td>${mitIfRemoved ? `${mitIfRemoved.replacement_inches_owed} in (${mitIfRemoved.replacement_trees_owed} trees)` : '0 in'}</td>
+              <th scope="row">Liability If Tree Liquidated / Destroyed</th>
+              <td>${mitIfRemoved ? `${fmtDualInCm(mitIfRemoved.exemption_cap_inches)} (${mitIfRemoved.exemption_pct}%)` : 'N/A'}</td>
+              <td>${mitIfRemoved ? `${fmtDualInCm(mitIfRemoved.replacement_inches_owed)} (${mitIfRemoved.replacement_trees_owed} trees)` : '0 in'}</td>
               <td><strong class="text-danger">$${(mitIfRemoved?.cash_in_lieu_usd || 0).toLocaleString()}</strong></td>
               <td class="text-danger">$${(mitIfRemoved?.unpermitted_penalty?.total_penalty_usd || 0).toLocaleString()}</td>
             </tr>
@@ -1425,22 +1878,22 @@ export function initFieldToolUI() {
         </div>
       </div>
 
-      <h4 class="sub-heading">Annual &amp; 20-Year Allometric Ecosystem Services (Nowak / McPherson / Xiao)</h4>
+      <h3 class="sub-heading">Annual &amp; 20-Year Allometric Ecosystem Services (Nowak / McPherson / Xiao)</h3>
       <div class="metric-grid metric-grid-4">
         <div class="metric-box">
           <span class="metric-label">Carbon Stored</span>
-          <strong class="metric-value">${eco.carbon_storage_lbs.toLocaleString()} lbs</strong>
-          <span class="metric-sub">$${eco.carbon_storage_value_usd.toLocaleString()} (${eco.co2_equivalent_lbs_yr} lbs CO2/yr)</span>
+          <strong class="metric-value">${fmtDualMassFromLbs(eco.carbon_storage_lbs)}</strong>
+          <span class="metric-sub">$${eco.carbon_storage_value_usd.toLocaleString()} (${fmtDualMassFromLbs(eco.co2_equivalent_lbs_yr, ' CO2/yr')})</span>
         </div>
         <div class="metric-box">
           <span class="metric-label">Stormwater Intercepted</span>
-          <strong class="metric-value">${eco.avoided_runoff_gallons_yr.toLocaleString()} gal/yr</strong>
-          <span class="metric-sub">Canopy Cover: ${eco.canopy_cover_sqft.toLocaleString()} sq ft</span>
+          <strong class="metric-value">${fmtDualGallons(eco.avoided_runoff_gallons_yr, '/yr')}</strong>
+          <span class="metric-sub">Canopy Cover: ${fmtDualAreaSqftSqm(eco.canopy_cover_sqft)}</span>
         </div>
         <div class="metric-box">
           <span class="metric-label">Cooling &amp; Air Quality</span>
           <strong class="metric-value">${eco.cooling_savings_kwh_yr} kWh/yr</strong>
-          <span class="metric-sub">${eco.pollution_removal_lbs_yr} lbs/yr pollutants removed</span>
+          <span class="metric-sub">${fmtDualMassFromLbs(eco.pollution_removal_lbs_yr, '/yr')} pollutants removed</span>
         </div>
         <div class="metric-box">
           <span class="metric-label">Projected 20-Yr Service Value</span>
@@ -1449,28 +1902,28 @@ export function initFieldToolUI() {
         </div>
       </div>
 
-      <h4 class="sub-heading">5-Year Practice Economics: Regenerative Stewardship vs. One-Time Tree Removal</h4>
-      <div class="table-scroll">
-        <table class="data-table">
+      <h3 class="sub-heading">5-Year Practice Economics: Regenerative Stewardship vs. One-Time Tree Removal</h3>
+      <div tabindex="0" role="region" aria-label="5-Year Practice Economics Comparison" class="table-wrapper">
+        <table class="data-table" style="--label-1: 'Practice Model'; --label-2: '5-Yr Gross Revenue'; --label-3: 'Practitioner Net Margin'; --label-4: 'Recurring Revenue Share'; --label-5: 'Client Holobiont Equity Impact';">
           <thead>
             <tr>
-              <th>Practice Model</th>
-              <th>5-Yr Gross Revenue</th>
-              <th>Practitioner Net Margin</th>
-              <th>Recurring Revenue Share</th>
-              <th>Client Holobiont Equity Impact</th>
+              <th scope="col">Practice Model</th>
+              <th scope="col">5-Yr Gross Revenue</th>
+              <th scope="col">Practitioner Net Margin</th>
+              <th scope="col">Recurring Revenue Share</th>
+              <th scope="col">Client Holobiont Equity Impact</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td><strong>RCA 5-Year Regenerative Stewardship</strong></td>
+              <th scope="row">RCA 5-Year Regenerative Stewardship</th>
               <td>$${econ.regenerative_stewardship_model.five_year_gross_revenue_usd.toLocaleString()}</td>
               <td><strong class="text-accent">$${econ.regenerative_stewardship_model.net_practitioner_margin_usd.toLocaleString()} (${econ.comparison.margin_multiplier}x)</strong></td>
               <td>${econ.regenerative_stewardship_model.recurring_revenue_share_pct}%</td>
               <td>Preserves <strong>$${econ.regenerative_stewardship_model.client_biological_equity_preserved_usd.toLocaleString()}</strong></td>
             </tr>
             <tr>
-              <td><strong>Legacy Contractor Removal Bid</strong></td>
+              <th scope="row">Legacy Contractor Removal Bid</th>
               <td>$${econ.legacy_removal_model.one_time_gross_bid_usd.toLocaleString()}</td>
               <td>$${econ.legacy_removal_model.net_practitioner_margin_usd.toLocaleString()}</td>
               <td>0%</td>
@@ -1480,27 +1933,27 @@ export function initFieldToolUI() {
         </table>
       </div>
 
-      <h4 class="sub-heading">Engine-Scaled Pneumatic Rhizosphere &amp; Bio-Amendment Bill of Materials</h4>
+      <h3 class="sub-heading">Engine-Scaled Pneumatic Rhizosphere &amp; Bio-Amendment Bill of Materials</h3>
       <div class="metric-grid metric-grid-4">
         <div class="metric-box">
           <span class="metric-label">Decompacted Soil Volume</span>
-          <strong class="metric-value">${bio.rhizosphere_prescription.total_decompacted_soil_m3} m3</strong>
-          <span class="metric-sub">AirSpade @ ${bio.rhizosphere_prescription.operating_pressure_psi} psi</span>
+          <strong class="metric-value">${fmtDualSoilVolFromM3(bio.rhizosphere_prescription.total_decompacted_soil_m3)}</strong>
+          <span class="metric-sub">AirSpade @ ${fmtDualPressureFromPsi(bio.rhizosphere_prescription.operating_pressure_psi)}</span>
         </div>
         <div class="metric-box">
           <span class="metric-label">Pre-Charged Biochar</span>
-          <strong class="metric-value">${bio.rhizosphere_prescription.amendments.precharged_biochar_liters} L</strong>
-          <span class="metric-sub">Humate: ${bio.rhizosphere_prescription.amendments.fungal_humate_kg} kg</span>
+          <strong class="metric-value">${fmtDualBiocharFromLiters(bio.rhizosphere_prescription.amendments.precharged_biochar_liters)}</strong>
+          <span class="metric-sub">Humate: ${fmtDualMassFromKg(bio.rhizosphere_prescription.amendments.fungal_humate_kg)}</span>
         </div>
         <div class="metric-box">
           <span class="metric-label">Fungal Compost</span>
-          <strong class="metric-value">${bio.rhizosphere_prescription.amendments.fungal_compost_m3} m3</strong>
+          <strong class="metric-value">${fmtDualSoilVolFromM3(bio.rhizosphere_prescription.amendments.fungal_compost_m3)}</strong>
           <span class="metric-sub">SGR Relief Ratio: ${bio.rhizosphere_prescription.vascular_constriction_relief_ratio}</span>
         </div>
         <div class="metric-box">
           <span class="metric-label">Ramial Woodchip Mulch</span>
-          <strong class="metric-value">${bio.rhizosphere_prescription.amendments.ramial_woodchip_mulch_m3} m3</strong>
-          <span class="metric-sub">8 cm horizon across TIZ</span>
+          <strong class="metric-value">${fmtDualSoilVolFromM3(bio.rhizosphere_prescription.amendments.ramial_woodchip_mulch_m3)}</strong>
+          <span class="metric-sub">${fmtDualFromCm(8)} horizon across TIZ</span>
         </div>
       </div>
     `;
@@ -1565,10 +2018,10 @@ export function initFieldToolUI() {
         const recMeta = el('receiver-meta-line');
         const recTruck = el('receiver-truck-summary');
         if (recHeading) {
-          recHeading.textContent = `${sbRec.species_common || 'Tree'} (${sbRec.tree_tag || 'T-01'}): ${bio.dbh_inches} in DBH in ${prov?.municipality_name || muni?.name || 'Local Jurisdiction'}`;
+          recHeading.textContent = `${sbRec.species_common || 'Tree'} (${sbRec.tree_tag || 'T-01'}): ${fmtDualInCm(bio.dbh_inches, bio.dbh_cm)} DBH in ${prov?.municipality_name || muni?.name || 'Local Jurisdiction'}`;
         }
         if (recMeta) {
-          recMeta.textContent = `Status: ${statusText} | Statutory CRZ: ${res.rootZones.crz.radius_feet} ft | Mattheck t/R: ${bio.biomechanics.sound_shell_thickness_ratio_t_over_r} | Day-1 Stage 1 Triage: $${res.phasedTriage.stages[0]?.client_price_usd.toLocaleString()}`;
+          recMeta.textContent = `Status: ${statusText} | Statutory CRZ: ${fmtDualFtM(res.rootZones.crz.radius_feet, res.rootZones.crz.radius_meters)} | Mattheck t/R: ${bio.biomechanics.sound_shell_thickness_ratio_t_over_r} | Day-1 Stage 1 Triage: $${res.phasedTriage.stages[0]?.client_price_usd.toLocaleString()}`;
         }
         if (recTruck) {
           recTruck.innerHTML = `<pre class="code-preview" style="margin: 0; white-space: pre-wrap;">${escapeUiHtml(liveHandoff.arborist_truck_summary)}</pre>`;
@@ -1584,6 +2037,7 @@ export function initFieldToolUI() {
       const sp = res.soilSponge;
       const stage1 = tr.stages[0];
       const isSoundShell = bio.biomechanics.mattheck_criterion_satisfied;
+      const stormLabel = imp ? ' / 1-in storm' : ' / 25 mm storm';
 
       const stageCardsHtml = tr.stages
         .map(
@@ -1612,7 +2066,7 @@ export function initFieldToolUI() {
           <p class="muni-subtext" style="margin: 4px 0 0;"><strong>Physical Falsifier (STIM Kill Criterion):</strong> ${escapeUiHtml(af.falsifier)}</p>
         </div>
 
-        <h4 class="sub-heading">3-Stage Phased Stewardship Triage vs. One-Time Chainsaw Removal</h4>
+        <h3 class="sub-heading">3-Stage Phased Stewardship Triage vs. One-Time Chainsaw Removal</h3>
         <div class="metric-grid metric-grid-4">
           <div class="metric-box highlight-box">
             <span class="metric-label">Stage 1 Day-1 Root-Collar Triage</span>
@@ -1631,8 +2085,8 @@ export function initFieldToolUI() {
           </div>
           <div class="metric-box">
             <span class="metric-label">Vadose Soil Sponge Capacity</span>
-            <strong class="metric-value">${Math.round(sp.storm_1in_capture_gallons).toLocaleString()} gal / 1-in storm</strong>
-            <span class="metric-sub">${Math.round(sp.som_sponge_capacity_gallons).toLocaleString()} gal SOM reserve (${escapeUiHtml(sp.infiltration_class)})</span>
+            <strong class="metric-value">${fmtDualGallons(sp.storm_1in_capture_gallons)}${stormLabel}</strong>
+            <span class="metric-sub">${fmtDualGallons(sp.som_sponge_capacity_gallons)} SOM reserve (${escapeUiHtml(sp.infiltration_class)})</span>
           </div>
         </div>
 
@@ -1722,8 +2176,11 @@ export function initFieldToolUI() {
   // Preview tab switching
   document.querySelectorAll('[data-preview-tab]').forEach((tabBtn) => {
     tabBtn.addEventListener('click', () => {
-      document.querySelectorAll('[data-preview-tab]').forEach((b) => b.classList.remove('active'));
-      tabBtn.classList.add('active');
+      document.querySelectorAll('[data-preview-tab]').forEach((b) => {
+        const isCurrent = b === tabBtn;
+        b.classList.toggle('active', isCurrent);
+        b.setAttribute('aria-selected', isCurrent ? 'true' : 'false');
+      });
       activePreviewTab = tabBtn.dataset.previewTab;
       renderActivePreview();
     });
@@ -1826,13 +2283,27 @@ export function initFieldToolUI() {
   });
 
   // Live update on any form input or change
-  form.addEventListener('input', () => recalculateAndRender());
-  form.addEventListener('change', () => recalculateAndRender());
+  form.addEventListener('input', (e) => {
+    handleUnitFieldInput(e.target);
+    recalculateAndRender();
+  });
+  form.addEventListener('change', (e) => {
+    handleUnitFieldInput(e.target);
+    recalculateAndRender();
+  });
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     recalculateAndRender();
     el('results-section')?.scrollIntoView({ behavior: 'smooth' });
   });
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('oa:unitschange', () => {
+      populateMunicipalitySelect();
+      syncUnitInputsUI();
+      recalculateAndRender();
+    });
+  }
 
   // Wire Copy Verdict Link & Export Print Report controls (D1, D2, D6)
   async function handleCopyVerdictLink(btnEl) {

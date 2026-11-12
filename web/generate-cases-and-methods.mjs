@@ -65,8 +65,31 @@ import {
   inspectMunicipalityProvenance,
   renderExpandableHashHtml,
 } from '../web/pages/masterwork-core.js';
+import {
+  dualUnitSpanHtml,
+  cmToIn,
+  mToFt,
+  fmtDualInCm,
+  fmtDualFromCm,
+  fmtDualFtM,
+  fmtDualFromMeters,
+  fmtDualAreaSqftSqm,
+  fmtDualAreaFromSqm,
+  fmtDualSoilVolFromM3,
+  fmtDualBiocharFromLiters,
+  fmtDualGallons,
+  fmtDualMassFromKg,
+  fmtDualMassFromLbs,
+  fmtDualInfiltrationFromMmHr,
+  fmtDualBulkDensity,
+  fmtDualPressureFromPsi,
+} from '../web/pages/unit-system.js';
 
 import { validateOrdinanceFile } from '../scripts/validate-ordinance.mjs';
+
+function dualHtml(formatter, ...args) {
+  return dualUnitSpanHtml(formatter(...args, 'imperial'), formatter(...args, 'metric'));
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -351,12 +374,13 @@ function renderSharedHeader(relRoot, activeRoute) {
   const veilTriggerActive = veilItems.some((item) => item.id === activeRoute);
 
   return `  <header class="oa-site-header">
+    <a href="#main-content" class="skip-link visually-hidden">Skip to main content</a>
     <div class="oa-nav-container">
       <a href="${relRoot}/index.html" class="oa-brand-link">
-        <span class="oa-brand-mark">OA</span>
+        <span class="oa-brand-mark"><img src="${relRoot}/icons/icon-68.png" alt="" width="34" height="34" class="oa-brand-logo" decoding="async" /></span>
         <span class="oa-brand-text">Open Arbor <small>v2.1</small></span>
       </a>
-      <nav class="oa-main-nav" aria-label="Primary Navigation">
+      <nav class="oa-main-nav" aria-label="Primary">
         ${primaryHtml}
         <button
           type="button"
@@ -377,6 +401,15 @@ ${popoverHtml}
       <div class="oa-theme-control">
         <button
           type="button"
+          id="oa-install-app-btn"
+          class="btn btn-secondary btn-sm"
+          hidden
+        >
+          Install App
+        </button>
+        <span id="oa-install-status" class="visually-hidden" role="status"></span>
+        <button
+          type="button"
           id="oa-veil-mode-toggle"
           class="btn btn-secondary btn-sm oa-veil-mode-btn"
           aria-pressed="false"
@@ -385,9 +418,17 @@ ${popoverHtml}
         </button>
         <button
           type="button"
+          id="oa-units-toggle"
+          class="btn btn-secondary btn-sm"
+          aria-description="Switch measurement system between US Imperial and Metric"
+        >
+          Units: US (in, ft)
+        </button>
+        <button
+          type="button"
           id="oa-theme-toggle"
           class="btn btn-secondary btn-sm"
-          aria-label="Toggle color scheme"
+          aria-description="Toggle color scheme"
         >
           Theme: Auto
         </button>
@@ -409,9 +450,25 @@ function renderCasesIndexHtml(evaluatedCases) {
         : evalResult.evaluatedRow.protected
         ? 'badge-protected'
         : 'badge-neutral';
-      const dbhText = `${evalResult.biomechanics.dbh_inches} in (${evalResult.biomechanics.dbh_cm} cm)`;
-      const crzText = `${evalResult.rootZones.crz.radius_feet} ft (${evalResult.rootZones.crz.radius_meters} m)`;
-      const srzText = `${evalResult.rootZones.srz.radius_feet} ft (${evalResult.rootZones.srz.radius_meters} m)`;
+      const dbhHtml = dualHtml(
+        fmtDualInCm,
+        evalResult.biomechanics.dbh_inches,
+        evalResult.biomechanics.dbh_cm
+      );
+      const crzHtml = dualHtml(
+        fmtDualFtM,
+        evalResult.rootZones.crz.radius_feet,
+        evalResult.rootZones.crz.radius_meters
+      );
+      const srzHtml = dualHtml(
+        fmtDualFtM,
+        evalResult.rootZones.srz.radius_feet,
+        evalResult.rootZones.srz.radius_meters
+      );
+      const repHtml = dualHtml(
+        fmtDualInCm,
+        evalResult.mitigationIfRemoved.replacement_inches_owed
+      );
       const tOverR = evalResult.biomechanics.biomechanics.sound_shell_thickness_ratio_t_over_r;
       const cashIfDestroyed = formatUsd(evalResult.mitigationIfRemoved.cash_in_lieu_usd);
       const holobiontUsd = formatUsd(evalResult.valuation.holobiont_200yr_biological_equity_usd);
@@ -428,15 +485,15 @@ function renderCasesIndexHtml(evaluatedCases) {
               </td>
               <td>
                 <span class="badge ${badgeClass}">${escapeHtml(status)}</span><br />
-                <small>${escapeHtml(dbhText)}</small>
+                <small>${dbhHtml}</small>
               </td>
               <td>
-                <strong>CRZ:</strong> ${escapeHtml(crzText)}<br />
-                <small><strong>SRZ:</strong> ${escapeHtml(srzText)} &middot; <strong>t/R:</strong> ${escapeHtml(tOverR)}</small>
+                <strong>CRZ:</strong> ${crzHtml}<br />
+                <small><strong>SRZ:</strong> ${srzHtml} &middot; <strong>t/R:</strong> ${escapeHtml(tOverR)}</small>
               </td>
               <td>
                 <strong>${escapeHtml(evalResult.permit.required ? 'Permit Required' : 'No Permit Triggered')}</strong><br />
-                <small>If destroyed: ${escapeHtml(cashIfDestroyed)} (${escapeHtml(evalResult.mitigationIfRemoved.replacement_inches_owed)} in)</small>
+                <small>If destroyed: ${escapeHtml(cashIfDestroyed)} (${repHtml})</small>
               </td>
               <td>
                 <strong class="text-accent">${escapeHtml(holobiontUsd)}</strong><br />
@@ -476,8 +533,8 @@ function renderCasesIndexHtml(evaluatedCases) {
               <strong>Statutory Authority:</strong> ${escapeHtml(provenance.primary_citation)} (${escapeHtml(provenance.record_tier)}).
             </p>
             <ul class="oa-pillar-list" style="margin-top: 10px;">
-              <li><strong>Evaluated DBH &amp; Shell Stability:</strong> ${escapeHtml(evalResult.biomechanics.dbh_inches)} in (${escapeHtml(evalResult.biomechanics.dbh_cm)} cm) | Mattheck <code>t/R = ${escapeHtml(evalResult.biomechanics.biomechanics.sound_shell_thickness_ratio_t_over_r)}</code> (Stable)</li>
-              <li><strong>Protection Zones:</strong> CRZ ${escapeHtml(evalResult.rootZones.crz.radius_feet)} ft (${escapeHtml(evalResult.rootZones.crz.radius_meters)} m) | AS 4970 SRZ ${escapeHtml(evalResult.rootZones.srz.radius_feet)} ft (${escapeHtml(evalResult.rootZones.srz.radius_meters)} m)</li>
+              <li><strong>Evaluated DBH &amp; Shell Stability:</strong> ${dualHtml(fmtDualInCm, evalResult.biomechanics.dbh_inches, evalResult.biomechanics.dbh_cm)} | Mattheck <code>t/R = ${escapeHtml(evalResult.biomechanics.biomechanics.sound_shell_thickness_ratio_t_over_r)}</code> (Stable)</li>
+              <li><strong>Protection Zones:</strong> CRZ ${dualHtml(fmtDualFtM, evalResult.rootZones.crz.radius_feet, evalResult.rootZones.crz.radius_meters)} | AS 4970 SRZ ${dualHtml(fmtDualFtM, evalResult.rootZones.srz.radius_feet, evalResult.rootZones.srz.radius_meters)}</li>
               <li><strong>Permit &amp; Mitigation Liability:</strong> ${escapeHtml(evalResult.permitText)} | Cash-in-lieu if removed: ${escapeHtml(formatUsd(evalResult.mitigationIfRemoved.cash_in_lieu_usd))}</li>
               <li><strong>Holobiont Equity vs. CTLA:</strong> ${escapeHtml(formatUsd(evalResult.valuation.holobiont_200yr_biological_equity_usd))} vs. ${escapeHtml(formatUsd(evalResult.valuation.ctla_10th_ed_depreciated_usd))} (${escapeHtml(evalResult.valuation.inversion_ratio)}x) | John White Age: ${escapeHtml(evalResult.ageEstimate.estimated_age_years)} yrs</li>
               <li><strong>Canonical SHA-256:</strong> <code>${escapeHtml(evalResult.sha256.slice(0, 24))}...</code></li>
@@ -497,6 +554,8 @@ function renderCasesIndexHtml(evaluatedCases) {
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#08110b" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f5ef" />
   <script>
     try {
       document.querySelector('meta[name="color-scheme"]').content = localStorage.getItem('color-scheme') ?? 'light dark';
@@ -507,16 +566,20 @@ function renderCasesIndexHtml(evaluatedCases) {
     name="description"
     content="Five pre-rendered, crawlable arboricultural evidentiary case determinations across Central Texas (Austin, Georgetown, Liberty Hill) and Rogue Valley, Oregon (Ashland, Medford). 100% readable with JavaScript disabled."
   />
+  <link rel="manifest" href="../manifest.webmanifest" />
+  <link rel="icon" href="../icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png" />
   <link rel="stylesheet" href="../styles.css" />
 </head>
 <body>
 ${renderSharedHeader('..', 'cases')}
 
+  <main>
   <section class="app-header">
     <div class="container header-inner">
       <div>
         <span class="eyebrow">Verified Bioregional Field Cases &middot; Zero-JS Crawlable Evidentiary Determinations &middot; RCA-Spec v2.0</span>
-        <h1>Bioregional Reference Case Gallery (Central Texas &amp; Rogue Valley, Oregon)</h1>
+        <h1 id="main-content" tabindex="-1">Bioregional Reference Case Gallery (Central Texas &amp; Rogue Valley, Oregon)</h1>
         <p class="subtitle">
           Five benchmark municipal tree determinations pre-rendered at build time directly from the certified ECMAScript core engines. Every case page includes plain-language stewardship triage, full statutory citations, inline vector <code>&lt;svg&gt;</code> root protection maps, provenance boundaries, and cryptographic <code>SHA-256</code> digests with JavaScript disabled.
         </p>
@@ -528,7 +591,7 @@ ${renderSharedHeader('..', 'cases')}
     </div>
   </section>
 
-  <main class="container main-layout">
+  <div class="container main-layout">
     <section class="card" aria-labelledby="comparison-matrix-heading">
       <div class="card-header">
         <span class="step-badge">5 Benchmark Cases</span>
@@ -538,7 +601,7 @@ ${renderSharedHeader('..', 'cases')}
         Compare municipal protection tiers, ANSI A300 and AS 4970 root zone radii, permit determinations, replacement mitigation liabilities, and 200-year Holobiont Biological Equity across Austin, Georgetown, Liberty Hill, Ashland, and Medford.
       </p>
 
-      <div tabindex="0" role="region" aria-labelledby="cases-table-caption" class="table-wrapper table-scroll">
+      <div tabindex="0" role="region" aria-labelledby="cases-table-caption" class="table-wrapper oa-wide-matrix table-scroll">
         <table
           class="data-table"
           style="
@@ -581,6 +644,7 @@ ${tableRowsHtml}
 ${cardsHtml}
       </div>
     </section>
+  </div>
   </main>
 
   <footer class="app-footer">
@@ -689,12 +753,25 @@ function renderSingleCaseHtml({ caseObj, evalResult, permalinkHash, stickySummar
     )
     .join('\n');
 
+  const labeledCaseSvg = (() => {
+    const rawSvg = String(evalResult.svgSiteMap || '').trim();
+    if (!rawSvg.startsWith('<svg') || rawSvg.includes('role="img"')) return rawSvg;
+    const svgLabel = escapeHtml(
+      `ANSI A300 Part 5 root protection map for ${sb.tree_tag} (${sb.species_common}): ${rz.crz.radius_feet} ft CRZ radius and ${rz.srz.radius_feet} ft SRZ radius`
+    );
+    return rawSvg
+      .replace(/^<svg\b/, `<svg role="img" aria-label="${svgLabel}"`)
+      .replace(/(<svg[^>]*>)/, `$1<title>${svgLabel}</title>`);
+  })();
+
   return `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#08110b" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f5ef" />
   <script>
     try {
       document.querySelector('meta[name="color-scheme"]').content = localStorage.getItem('color-scheme') ?? 'light dark';
@@ -705,19 +782,23 @@ function renderSingleCaseHtml({ caseObj, evalResult, permalinkHash, stickySummar
     name="description"
     content="Static pre-rendered arboricultural determination for ${escapeHtml(sb.tree_tag)} (${escapeHtml(sb.species_scientific)}) in ${escapeHtml(provenance.municipality_name)}: ${escapeHtml(stickySummary.one_line_text)}."
   />
+  <link rel="manifest" href="../../manifest.webmanifest" />
+  <link rel="icon" href="../../icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="../../icons/apple-touch-icon.png" />
   <link rel="stylesheet" href="../../styles.css" />
 </head>
 <body>
 ${renderSharedHeader('../..', 'cases')}
 
+  <main>
   <!-- Sticky Determination Summary Bar -->
   <div id="sticky-determination-bar" class="oa-sticky-determination-bar" role="region" aria-label="Sticky Determination Summary">
     <div class="container oa-sticky-bar-inner" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; background: var(--bg-elevated); border-bottom: 1px solid var(--border-main);">
       <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: 0.86rem;">
         <span><strong>Status:</strong> <span id="sticky-status-val" class="badge ${badgeClass}">${escapeHtml(stickySummary.status)} (${escapeHtml(stickySummary.permit_required)})</span></span>
-        <span><strong>DBH:</strong> <strong id="sticky-dbh-val">${escapeHtml(stickySummary.dbh)}</strong></span>
-        <span><strong>CRZ:</strong> <strong id="sticky-crz-val">${escapeHtml(stickySummary.crz)}</strong></span>
-        <span><strong>Replacement Owed:</strong> <strong id="sticky-replacement-val">${escapeHtml(stickySummary.replacement_owed)}</strong></span>
+        <span><strong>DBH:</strong> <strong id="sticky-dbh-val">${dualHtml(fmtDualInCm, bio.dbh_inches, bio.dbh_cm)}</strong></span>
+        <span><strong>CRZ:</strong> <strong id="sticky-crz-val">${dualHtml(fmtDualFtM, rz.crz.radius_feet, rz.crz.radius_meters)}</strong></span>
+        <span><strong>Replacement Owed:</strong> <strong id="sticky-replacement-val">${dualHtml(fmtDualInCm, row.removal ? mitActive?.replacement_inches_owed || 0 : mitIfRemoved?.replacement_inches_owed || 0)}</strong></span>
         <span><strong>Cash in Lieu:</strong> <strong id="sticky-cash-val" class="text-danger">${escapeHtml(stickySummary.cash_in_lieu)}</strong></span>
       </div>
       <div style="display: flex; flex-wrap: wrap; gap: 8px;">
@@ -731,7 +812,7 @@ ${renderSharedHeader('../..', 'cases')}
     <div class="container header-inner">
       <div>
         <span class="eyebrow">Verified Bioregional Field Case &middot; ${escapeHtml(provenance.municipality_name)} &middot; Plus Code ${escapeHtml(sb.plus_code_global)}</span>
-        <h1>${escapeHtml(caseObj.label)}</h1>
+        <h1 id="main-content" tabindex="-1">${escapeHtml(caseObj.label)}</h1>
         <p class="subtitle">
           Specimen <code>${escapeHtml(sb.tree_tag)}</code> (<em>${escapeHtml(sb.species_scientific)}</em>, ${escapeHtml(sb.species_common)}) &middot; Assessed <code>${escapeHtml(sb.assessment_date)}</code> &middot; Canonical SHA-256: ${renderExpandableHashHtml(evalResult.sha256)}
         </p>
@@ -743,7 +824,7 @@ ${renderSharedHeader('../..', 'cases')}
     </div>
   </section>
 
-  <main class="container main-layout">
+  <div class="container main-layout">
     <!-- INNATE SUMMARY: Plain-Language Answer-First Verdict & 3-Stage Phased Stewardship Triage -->
     <section id="innate-stewardship-triage" class="card" aria-labelledby="innate-triage-heading">
       <div class="card-header">
@@ -778,8 +859,8 @@ ${renderSharedHeader('../..', 'cases')}
         </div>
         <div class="metric-box">
           <span class="metric-label">Vadose Soil Sponge Capacity</span>
-          <strong class="metric-value">${escapeHtml(sponge.storm_1in_capture_gallons.toLocaleString())} gal</strong>
-          <span class="metric-sub">1-in storm capture &middot; SOM sponge: ${escapeHtml(sponge.som_sponge_capacity_gallons.toLocaleString())} gal (${escapeHtml(sponge.infiltration_class)})</span>
+          <strong class="metric-value">${dualHtml(fmtDualGallons, sponge.storm_1in_capture_gallons)}</strong>
+          <span class="metric-sub">${dualUnitSpanHtml('1-in (25 mm) storm capture', '25 mm (1-in) storm capture')} &middot; SOM sponge: ${dualHtml(fmtDualGallons, sponge.som_sponge_capacity_gallons)} (${escapeHtml(sponge.infiltration_class)})</span>
         </div>
       </div>
 
@@ -826,7 +907,7 @@ ${triageRowsHtml}
           <span class="metric-label">Evaluated Statutory Protection Tier</span>
           <div class="verdict-title-row">
             <strong class="verdict-big">${escapeHtml(status)} Tree</strong>
-            <span class="badge ${badgeClass}">${escapeHtml(bio.dbh_inches)} in DBH (${escapeHtml(bio.dbh_cm)} cm)</span>
+            <span class="badge ${badgeClass}">${dualHtml(fmtDualInCm, bio.dbh_inches, bio.dbh_cm)} DBH</span>
             <span class="badge badge-protected">RCA Linter: ${escapeHtml(evalResult.lint.valid ? `PASS (${evalResult.lint.passed_checks.length} checks)` : 'BLOCKED')}</span>
           </div>
           <p class="muni-subtext">
@@ -856,8 +937,15 @@ ${triageRowsHtml}
         </div>
         <div class="metric-box">
           <span class="metric-label">Stem Measurement Rule</span>
-          <strong class="metric-value">${escapeHtml(sb.is_multistem ? `${sb.multistem_aggregation_method} (${(sb.stem_diameters_cm || []).join(', ')} cm)` : 'Single Stem (1.37 m)')}</strong>
-          <span class="metric-sub">Height: ${escapeHtml(sb.height_m)} m &middot; Crown: ${escapeHtml(sb.crown_spread_ns_m)}x${escapeHtml(sb.crown_spread_ew_m)} m</span>
+          <strong class="metric-value">${
+            sb.is_multistem
+              ? dualUnitSpanHtml(
+                  `${sb.multistem_aggregation_method} (${(sb.stem_diameters_cm || []).map((c) => cmToIn(c, 1)).join(', ')} in / ${(sb.stem_diameters_cm || []).join(', ')} cm)`,
+                  `${sb.multistem_aggregation_method} (${(sb.stem_diameters_cm || []).join(', ')} cm / ${(sb.stem_diameters_cm || []).map((c) => cmToIn(c, 1)).join(', ')} in)`
+                )
+              : dualUnitSpanHtml('Single Stem (4.5 ft / 1.37 m)', 'Single Stem (1.37 m / 4.5 ft)')
+          }</strong>
+          <span class="metric-sub">Height: ${dualHtml(fmtDualFromMeters, sb.height_m)} &middot; Crown: ${dualUnitSpanHtml(`${mToFt(sb.crown_spread_ns_m, 1)}x${mToFt(sb.crown_spread_ew_m, 1)} ft (${sb.crown_spread_ns_m}x${sb.crown_spread_ew_m} m)`, `${sb.crown_spread_ns_m}x${sb.crown_spread_ew_m} m (${mToFt(sb.crown_spread_ns_m, 1)}x${mToFt(sb.crown_spread_ew_m, 1)} ft)`)}</span>
         </div>
         <div class="metric-box">
           <span class="metric-label">ISA TRAQ Risk Matrix</span>
@@ -947,10 +1035,10 @@ ${unverifiedRowsHtml}
 
       <div class="svg-map-wrap">
         <div class="svg-map-header">
-          <span><strong>ANSI A300 Part 5 / ISA BMP To-Scale Vector Protection Map</strong> (Fence Radius: ${escapeHtml(row.fence_ft)} ft | Plus Code: <code>${escapeHtml(sb.plus_code_global)}</code>)</span>
+          <span><strong>ANSI A300 Part 5 / ISA BMP To-Scale Vector Protection Map</strong> (Fence Radius: ${dualHtml(fmtDualFtM, row.fence_ft)} | Plus Code: <code>${escapeHtml(sb.plus_code_global)}</code>)</span>
           <span>Retained Root-Zone Invigoration Budget: <strong>${escapeHtml(formatUsd(evalResult.soilRemediation.total_usd))}</strong></span>
         </div>
-        ${evalResult.svgSiteMap || ''}
+        ${labeledCaseSvg}
       </div>
 
       <h3 class="sub-heading">Root Protection Zones, Mattheck Shell Physics &amp; Pneumatic AirSpade Prescription</h3>
@@ -970,7 +1058,7 @@ ${unverifiedRowsHtml}
           <thead>
             <tr>
               <th scope="col">Biomechanical / Root Zone Parameter</th>
-              <th scope="col">Computed Value (Imperial &amp; Metric)</th>
+              <th scope="col">Computed Value (US Imperial &amp; Metric)</th>
               <th scope="col">Governing Standard / Formula</th>
               <th scope="col">Diagnostic Finding &amp; Field Prescription</th>
             </tr>
@@ -978,43 +1066,43 @@ ${unverifiedRowsHtml}
           <tbody>
             <tr>
               <th scope="row">Structural Root Zone (<code>SRZ</code>)</th>
-              <td><strong>${escapeHtml(rz.srz.radius_feet)} ft (${escapeHtml(rz.srz.radius_meters)} m)</strong><br /><small>Area: ${escapeHtml(rz.srz.area_sqft.toLocaleString())} sq ft (${escapeHtml(rz.srz.area_sqm)} m2)</small></td>
+              <td><strong>${dualHtml(fmtDualFtM, rz.srz.radius_feet, rz.srz.radius_meters)}</strong><br /><small>Area: ${dualHtml(fmtDualAreaSqftSqm, rz.srz.area_sqft, rz.srz.area_sqm)}</small></td>
               <td><code>AS 4970-2009 § 3.3.5</code> / Mattheck Windthrow Plate</td>
-              <td>Basal root flare diameter ${escapeHtml(rh.root_flare_diameter_cm)} cm; zero mechanical trenching or grade lowering permitted inside SRZ.</td>
+              <td>Basal root flare diameter ${dualHtml(fmtDualFromCm, rh.root_flare_diameter_cm)}; zero mechanical trenching or grade lowering permitted inside SRZ.</td>
             </tr>
             <tr>
               <th scope="row">Critical Root Zone (<code>CRZ</code>)</th>
-              <td><strong>${escapeHtml(rz.crz.radius_feet)} ft (${escapeHtml(rz.crz.radius_meters)} m)</strong><br /><small>Area: ${escapeHtml(rz.crz.area_sqft.toLocaleString())} sq ft (${escapeHtml(rz.crz.area_sqm)} m2) | 1/2 CRZ: ${escapeHtml(rz.crz.half_radius_feet)} ft</small></td>
+              <td><strong>${dualHtml(fmtDualFtM, rz.crz.radius_feet, rz.crz.radius_meters)}</strong><br /><small>Area: ${dualHtml(fmtDualAreaSqftSqm, rz.crz.area_sqft, rz.crz.area_sqm)} | 1/2 CRZ: ${dualHtml(fmtDualFtM, rz.crz.half_radius_feet)}</small></td>
               <td><code>ANSI A300 Part 5</code> / Municipal Code (${escapeHtml(evalResult.municipality?.plan_rules?.root_zone?.crz_ft_per_inch || 1.0)} ft/in DBH)</td>
-              <td>Protective fencing required at ${escapeHtml(row.fence_ft)} ft radius; current CRZ disturbance is ${escapeHtml(caseObj.crz_disturbed_pct)}%.</td>
+              <td>Protective fencing required at ${dualHtml(fmtDualFtM, row.fence_ft)} radius; current CRZ disturbance is ${escapeHtml(caseObj.crz_disturbed_pct)}%.</td>
             </tr>
             <tr>
               <th scope="row">International TPZ Comparisons</th>
-              <td><strong>AS 4970:</strong> ${escapeHtml(rz.tpzAs4970.radius_meters)} m (${escapeHtml(rz.tpzAs4970.radius_feet)} ft)<br /><strong>BS 5837:</strong> ${escapeHtml(rz.tpzBs5837.radius_meters)} m | <strong>US 1.5:1:</strong> ${escapeHtml(rz.tpzUs115.radius_feet)} ft</td>
+              <td><strong>AS 4970:</strong> ${dualHtml(fmtDualFtM, rz.tpzAs4970.radius_feet, rz.tpzAs4970.radius_meters)}<br /><strong>BS 5837:</strong> ${dualHtml(fmtDualFromMeters, rz.tpzBs5837.radius_meters)} | <strong>US 1.5:1:</strong> ${dualHtml(fmtDualFtM, rz.tpzUs115.radius_feet)}</td>
               <td><code>AS 4970</code> (12x DBH) / <code>UK BS 5837:2012</code> / <code>ISA BMP 1.5:1</code></td>
               <td>Cross-standard protection radii for mature and sensitive tree preservation specifications.</td>
             </tr>
             <tr>
               <th scope="row">Tree Influence Zone (<code>TIZ</code>)</th>
-              <td><strong>${escapeHtml(bio.root_zones.tiz_radius_meters)} m radius</strong><br /><small>Footprint Area: ${escapeHtml(bio.root_zones.tiz_area_sqm)} m2</small></td>
+              <td><strong>${dualHtml(fmtDualFromMeters, bio.root_zones.tiz_radius_meters)} radius</strong><br /><small>Footprint Area: ${dualHtml(fmtDualAreaFromSqm, bio.root_zones.tiz_area_sqm)}</small></td>
               <td><code>RCA-Spec v2.0</code> Holobiont Mycorrhizal Catchment</td>
-              <td>Defines the 8 cm coarse ramial woodchip mulch horizon (${escapeHtml(bio.rhizosphere_prescription.amendments.ramial_woodchip_mulch_m3)} m3) and native companion guild zone.</td>
+              <td>Defines the ${dualHtml(fmtDualFromCm, 8)} coarse ramial woodchip mulch horizon (${dualHtml(fmtDualSoilVolFromM3, bio.rhizosphere_prescription.amendments.ramial_woodchip_mulch_m3)}) and native companion guild zone.</td>
             </tr>
             <tr>
               <th scope="row">Mattheck Hollow-Shell Ratio (<code>t/R</code>) &amp; CODIT</th>
-              <td><strong><code>t/R = ${escapeHtml(bio.biomechanics.sound_shell_thickness_ratio_t_over_r)}</code></strong><br /><small>Sound shell: ${escapeHtml(bio.biomechanics.sound_shell_cm)} cm / Radius: ${escapeHtml(bio.biomechanics.trunk_radius_cm)} cm</small></td>
+              <td><strong><code>t/R = ${escapeHtml(bio.biomechanics.sound_shell_thickness_ratio_t_over_r)}</code></strong><br /><small>Sound shell: ${dualHtml(fmtDualFromCm, bio.biomechanics.sound_shell_cm)} / Radius: ${dualHtml(fmtDualFromCm, bio.biomechanics.trunk_radius_cm)}</small></td>
               <td>Mattheck (1994) <code>t/R &ge; 0.30</code> Criterion &amp; Shigo CODIT</td>
               <td><strong>${escapeHtml(bio.biomechanics.stability_rating)}</strong> | CODIT: <code>${escapeHtml(bio.biomechanics.codit_wall_response_rating)}</code>.</td>
             </tr>
             <tr>
               <th scope="row">Supersonic AirSpade Radial Trenching &amp; SGR Relief</th>
-              <td><strong>${escapeHtml(bio.rhizosphere_prescription.total_decompacted_soil_m3)} m3 decompacted</strong><br /><small>${escapeHtml(air.trench_count)} spokes (${escapeHtml(air.trench_length_m)} m x ${escapeHtml(air.trench_width_cm)} cm x ${escapeHtml(air.trench_depth_cm)} cm @ ${escapeHtml(bio.rhizosphere_prescription.operating_pressure_psi)} psi)</small></td>
+              <td><strong>${dualHtml(fmtDualSoilVolFromM3, bio.rhizosphere_prescription.total_decompacted_soil_m3)} decompacted</strong><br /><small>${escapeHtml(air.trench_count)} spokes (${dualUnitSpanHtml(`${mToFt(air.trench_length_m, 1)} ft x ${cmToIn(air.trench_width_cm, 1)} in x ${cmToIn(air.trench_depth_cm, 1)} in (${air.trench_length_m} m x ${air.trench_width_cm} cm x ${air.trench_depth_cm} cm)`, `${air.trench_length_m} m x ${air.trench_width_cm} cm x ${air.trench_depth_cm} cm (${mToFt(air.trench_length_m, 1)} ft x ${cmToIn(air.trench_width_cm, 1)} in x ${cmToIn(air.trench_depth_cm, 1)} in)`)} @ ${dualHtml(fmtDualPressureFromPsi, bio.rhizosphere_prescription.operating_pressure_psi)})</small></td>
               <td><code>ANSI A300 Part 2</code> / <code>RCA-Spec v2.0</code> Domain 2 &amp; 4</td>
-              <td>Root flare burial ${escapeHtml(rh.root_flare_burial_depth_cm)} cm; SGR count: ${escapeHtml(bio.rhizosphere_prescription.stem_girdling_root_count)} (<code>${escapeHtml(bio.rhizosphere_prescription.stem_girdling_root_severity)}</code>, relief ratio ${escapeHtml(bio.rhizosphere_prescription.vascular_constriction_relief_ratio)}). Amendments: ${escapeHtml(bio.rhizosphere_prescription.amendments.precharged_biochar_liters)} L biochar, ${escapeHtml(bio.rhizosphere_prescription.amendments.fungal_compost_m3)} m3 compost, ${escapeHtml(bio.rhizosphere_prescription.amendments.fungal_humate_kg)} kg humate.</td>
+              <td>Root flare burial ${dualHtml(fmtDualFromCm, rh.root_flare_burial_depth_cm)}; SGR count: ${escapeHtml(bio.rhizosphere_prescription.stem_girdling_root_count)} (<code>${escapeHtml(bio.rhizosphere_prescription.stem_girdling_root_severity)}</code>, relief ratio ${escapeHtml(bio.rhizosphere_prescription.vascular_constriction_relief_ratio)}). Amendments: ${dualHtml(fmtDualBiocharFromLiters, bio.rhizosphere_prescription.amendments.precharged_biochar_liters)} biochar, ${dualHtml(fmtDualSoilVolFromM3, bio.rhizosphere_prescription.amendments.fungal_compost_m3)} compost, ${dualHtml(fmtDualMassFromKg, bio.rhizosphere_prescription.amendments.fungal_humate_kg)} humate.</td>
             </tr>
             <tr>
               <th scope="row">Soil Physics &amp; Mycorrhizal Microbiome Baseline</th>
-              <td><strong>Bulk Density:</strong> ${escapeHtml(soil.bulk_density_g_cm3)} g/cm3 | <strong>Infiltration:</strong> ${escapeHtml(soil.infiltration_rate_mm_hr)} mm/hr<br /><small>SOM: ${escapeHtml(soil.organic_matter_pct)}% | pH: ${escapeHtml(soil.soil_ph)} | F:B Ratio: ${escapeHtml(myco.fungal_to_bacterial_biomass_ratio)}</small></td>
+              <td><strong>Bulk Density:</strong> ${dualHtml(fmtDualBulkDensity, soil.bulk_density_g_cm3)} | <strong>Infiltration:</strong> ${dualHtml(fmtDualInfiltrationFromMmHr, soil.infiltration_rate_mm_hr)}<br /><small>SOM: ${escapeHtml(soil.organic_matter_pct)}% | pH: ${escapeHtml(soil.soil_ph)} | F:B Ratio: ${escapeHtml(myco.fungal_to_bacterial_biomass_ratio)}</small></td>
               <td>Lab Sample <code>${escapeHtml(soil.lab_sample_id)}</code> &middot; Guild: <code>${escapeHtml(myco.dominant_mycorrhizal_guild)}</code></td>
               <td>STIM Hypothesis: ${escapeHtml(mon.stim_hypothesis_statement)}</td>
             </tr>
@@ -1052,7 +1140,7 @@ ${unverifiedRowsHtml}
         <div class="metric-box">
           <span class="metric-label">Nowak / McPherson Annual Flow</span>
           <strong class="metric-value">${escapeHtml(formatUsd(eco.total_annual_benefits_usd))}/yr</strong>
-          <span class="metric-sub">20-Yr Projected: ${escapeHtml(formatUsd(eco.projected_20yr_benefits_usd))} | Carbon: ${escapeHtml(eco.carbon_storage_lbs.toLocaleString())} lbs</span>
+          <span class="metric-sub">20-Yr Projected: ${escapeHtml(formatUsd(eco.projected_20yr_benefits_usd))} | Carbon: ${dualHtml(fmtDualMassFromLbs, eco.carbon_storage_lbs)}</span>
         </div>
       </div>
 
@@ -1062,7 +1150,7 @@ ${unverifiedRowsHtml}
           class="data-table"
           style="
             --label-1: 'Scenario / Model';
-            --label-2: 'Replacement Inches';
+            --label-2: 'Replacement Caliper';
             --label-3: 'Cash-in-Lieu / Value';
             --label-4: 'Penalty / Equity Impact';
             --label-5: 'Statutory / Scientific Basis';
@@ -1083,14 +1171,14 @@ ${unverifiedRowsHtml}
           <tbody>
             <tr>
               <th scope="row">Current Preservation Plan (${escapeHtml(row.removal ? 'Removal Triggered' : 'Tree Retained & Remediated')})</th>
-              <td>${escapeHtml(mitActive ? `${mitActive.replacement_inches_owed} in (${mitActive.replacement_trees_owed} trees)` : '0 in')}</td>
+              <td>${mitActive ? `${dualHtml(fmtDualInCm, mitActive.replacement_inches_owed)} (${escapeHtml(mitActive.replacement_trees_owed)} trees)` : dualHtml(fmtDualInCm, 0)}</td>
               <td><strong>${escapeHtml(formatUsd(mitActive?.cash_in_lieu_usd || 0))}</strong></td>
               <td>Penalty: ${escapeHtml(formatUsd(mitActive?.unpermitted_penalty?.total_penalty_usd || 0))}</td>
-              <td>${escapeHtml(mitActive?.citation || provenance.primary_citation)} (Exemption cap: ${escapeHtml(mitActive?.exemption_cap_inches || 0)} in)</td>
+              <td>${escapeHtml(mitActive?.citation || provenance.primary_citation)} (Exemption cap: ${dualHtml(fmtDualInCm, mitActive?.exemption_cap_inches || 0)})</td>
             </tr>
             <tr>
               <th scope="row">Municipal Liability If Tree Removed / Destroyed</th>
-              <td><strong>${escapeHtml(mitIfRemoved ? `${mitIfRemoved.replacement_inches_owed} in (${mitIfRemoved.replacement_trees_owed} trees)` : '0 in')}</strong></td>
+              <td><strong>${mitIfRemoved ? `${dualHtml(fmtDualInCm, mitIfRemoved.replacement_inches_owed)} (${escapeHtml(mitIfRemoved.replacement_trees_owed)} trees)` : dualHtml(fmtDualInCm, 0)}</strong></td>
               <td><strong class="text-danger">${escapeHtml(formatUsd(mitIfRemoved?.cash_in_lieu_usd || 0))}</strong></td>
               <td class="text-danger">Unpermitted Total: ${escapeHtml(formatUsd(mitIfRemoved?.unpermitted_penalty?.total_penalty_usd || 0))}</td>
               <td>${escapeHtml(mitIfRemoved?.citation || provenance.primary_citation)}</td>
@@ -1104,9 +1192,9 @@ ${unverifiedRowsHtml}
             </tr>
             <tr>
               <th scope="row">Nowak / McPherson / Xiao Allometric Services</th>
-              <td>Canopy: ${escapeHtml(eco.canopy_cover_sqft.toLocaleString())} sq ft</td>
+              <td>Canopy: ${dualHtml(fmtDualAreaSqftSqm, eco.canopy_cover_sqft)}</td>
               <td><strong>${escapeHtml(formatUsd(eco.projected_20yr_benefits_usd))}</strong> (20-yr) | ${escapeHtml(formatUsd(eco.total_annual_benefits_usd))}/yr</td>
-              <td>Carbon stored: ${escapeHtml(eco.carbon_storage_lbs.toLocaleString())} lbs | Stormwater: ${escapeHtml(eco.avoided_runoff_gallons_yr.toLocaleString())} gal/yr | Cooling: ${escapeHtml(eco.cooling_savings_kwh_yr)} kWh/yr</td>
+              <td>Carbon stored: ${dualHtml(fmtDualMassFromLbs, eco.carbon_storage_lbs)} | Stormwater: ${dualHtml(fmtDualGallons, eco.avoided_runoff_gallons_yr, '/yr')} | Cooling: ${escapeHtml(eco.cooling_savings_kwh_yr)} kWh/yr</td>
               <td>Nowak (1994, 2006), Cairns et al. (1997), Xiao et al. (2000), McPherson &amp; Simpson (1999)</td>
             </tr>
             <tr>
@@ -1212,6 +1300,7 @@ ${companionRowsHtml}
         </div>
       </div>
     </section>
+  </div>
   </main>
 
   <footer class="app-footer">
@@ -1559,6 +1648,8 @@ ${renderGroupRows(soilGroups)}
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#08110b" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f5ef" />
   <script>
     try {
       document.querySelector('meta[name="color-scheme"]').content = localStorage.getItem('color-scheme') ?? 'light dark';
@@ -1569,16 +1660,20 @@ ${renderGroupRows(soilGroups)}
     name="description"
     content="Open Arbor v2.1 Executable Proof & Falsifiability Ledger: ${totalVerificationGroups} executable verification groups across ${runnerCount} deterministic test runners plus ${totalOrdinanceRecords} schema-validated municipal ordinance records (${totalParityAssertions}/${totalParityAssertions} CLI-to-browser parity metrics)."
   />
+  <link rel="manifest" href="../manifest.webmanifest" />
+  <link rel="icon" href="../icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png" />
   <link rel="stylesheet" href="../styles.css" />
 </head>
 <body data-total-verification-groups="${totalVerificationGroups}" data-total-ordinance-records="${totalOrdinanceRecords}">
 ${renderSharedHeader('..', 'methods')}
 
+  <main>
   <section class="app-header">
     <div class="container header-inner">
       <div>
         <span class="eyebrow">Executable Proof &amp; Falsifiability Ledger &middot; Live Build-Time Introspection &middot; Zero Unfalsifiable Claims</span>
-        <h1>Falsifiability &amp; Deterministic Verification Methodology</h1>
+        <h1 id="main-content" tabindex="-1">Falsifiability &amp; Deterministic Verification Methodology</h1>
         <p class="subtitle">
           Every mathematical equation, statutory threshold, cryptographic digest, and security boundary in Open Arbor is backed by an executable test assertion on disk. This page is generated at build time by parsing and running the live test suites so counts can never drift from reality.
         </p>
@@ -1590,7 +1685,7 @@ ${renderSharedHeader('..', 'methods')}
     </div>
   </section>
 
-  <main class="container main-layout">
+  <div class="container main-layout">
     <!-- Executive Falsifiability Summary Banner -->
     <section
       class="card"
@@ -1860,6 +1955,7 @@ ${boundaryRowsHtml}
         </table>
       </div>
     </section>
+  </div>
   </main>
 
   <footer class="app-footer">

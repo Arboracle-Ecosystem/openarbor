@@ -47,6 +47,15 @@ import txOrdinances from '../../data/ordinances/central_texas_ordinances.json';
 import orOrdinances from '../../data/ordinances/rogue_valley_oregon_ordinances.json';
 import { FIXED_PARITY_CASES } from '../presets.js';
 import { encodeAssessmentPermalink, inspectMunicipalityProvenance } from './masterwork-core.js';
+import {
+  isImperialUnits,
+  fmtDualInCm,
+  fmtDualFromCm,
+  fmtDualFtM,
+  fmtDualAreaSqftSqm,
+  fmtDualGallons,
+  ftToM,
+} from './unit-system.js';
 
 const ALL_MUNICIPALITIES = [
   ...(txOrdinances.municipalities || []),
@@ -536,6 +545,53 @@ export function initVeilAndHandoffChrome() {
     });
   }
 
+  // 4c. Delegated WAI-ARIA Tablist Keyboard Navigation (ArrowLeft, ArrowRight, Home, End)
+  if (document.documentElement.dataset.oaTablistKeybound !== 'true') {
+    document.documentElement.dataset.oaTablistKeybound = 'true';
+    document.addEventListener('keydown', (event) => {
+      const key = event.key;
+      if (
+        key !== 'ArrowRight' &&
+        key !== 'ArrowLeft' &&
+        key !== 'Home' &&
+        key !== 'End'
+      ) {
+        return;
+      }
+      const target = event.target;
+      const tab = target && target.closest ? target.closest('[role="tab"]') : null;
+      if (!tab) return;
+      const tablist = tab.closest('[role="tablist"]');
+      if (!tablist) return;
+
+      const tabs = Array.from(tablist.querySelectorAll('[role="tab"]')).filter(
+        (el) => !el.hidden && el.getAttribute('aria-disabled') !== 'true' && !el.disabled
+      );
+      if (tabs.length < 2) return;
+
+      const currentIndex = tabs.indexOf(tab);
+      if (currentIndex === -1) return;
+
+      event.preventDefault();
+      let nextIndex = currentIndex;
+      if (key === 'ArrowRight') {
+        nextIndex = (currentIndex + 1) % tabs.length;
+      } else if (key === 'ArrowLeft') {
+        nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+      } else if (key === 'Home') {
+        nextIndex = 0;
+      } else if (key === 'End') {
+        nextIndex = tabs.length - 1;
+      }
+
+      const nextTab = tabs[nextIndex];
+      if (nextTab) {
+        nextTab.focus();
+        nextTab.click();
+      }
+    });
+  }
+
   // 5. Ensure handoff dialog is ready if already rendered in DOM
   if (document.getElementById('arborist-handoff-dialog')) {
     ensureArboristHandoffDialog();
@@ -597,12 +653,13 @@ function renderLivingLensSVG({
   const shellBadgeFill = isSound ? 'var(--highlight-bg)' : 'var(--danger-bg)';
   const shellBadgeStroke = isSound ? 'var(--accent-green)' : 'var(--danger-red)';
   const shellBadgeText = isSound ? 'var(--accent-bright)' : 'var(--danger-red)';
+  const imp = isImperialUnits();
   const shellVerdictLabel = isSound
     ? `SOUND SHELL · t/R = ${tOverR.toFixed(2)} (>= 0.30)`
     : `THIN SHELL · t/R = ${tOverR.toFixed(2)} (< 0.30)`;
   const shellSubLabel = isSound
-    ? `${soundShellCm.toFixed(1)} cm live wall holds full windload bending`
-    : `${soundShellCm.toFixed(1)} cm wall; run Level 3 sonic tomogram`;
+    ? `${fmtDualFromCm(soundShellCm)} live wall holds windload`
+    : `${fmtDualFromCm(soundShellCm)} wall; run Level 3 tomogram`;
 
   const trenchMarkup =
     disturbancePct > 0
@@ -770,13 +827,13 @@ function renderLivingLensSVG({
 
         <!-- Zone Labels Below Grade -->
         <text x="${cxTree}" y="${gradeY + 39}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--text-main)">
-          SRZ Windthrow Plate: ${srzFt.toFixed(1)} ft
+          SRZ Windthrow Plate: ${fmtDualFtM(srzFt)}
         </text>
         <text x="${cxTree}" y="${gradeY + 66}" text-anchor="middle" font-size="10.4" font-weight="700" fill="var(--accent-bright)">
-          ANSI A300 CRZ: ${crzFt.toFixed(1)} ft radius
+          ANSI A300 CRZ: ${fmtDualFtM(crzFt)} radius
         </text>
-        <text x="${cxTree}" y="${gradeY + 86}" text-anchor="middle" font-size="9.8" font-weight="600" fill="var(--accent-copper)">
-          1.5x Mycorrhizal Sponge (TIZ: ${tizFt.toFixed(1)} ft · ${Math.round(stormGallons).toLocaleString('en-US')} gal / 1-in storm)
+        <text x="${cxTree}" y="${gradeY + 86}" text-anchor="middle" font-size="9.5" font-weight="600" fill="var(--accent-copper)">
+          1.5x Sponge (TIZ: ${imp ? `${tizFt.toFixed(1)} ft` : `${ftToM(tizFt, 1)} m`} · ${fmtDualGallons(stormGallons)} / storm)
         </text>
       </svg>
 
@@ -835,8 +892,8 @@ function renderLivingLensSVG({
         <text x="${ringCx}" y="${ringCy + 13}" text-anchor="middle" font-size="9.8" font-weight="600" fill="var(--text-muted)">
           ${cavityPct === 0 ? 'Solid cylinder' : `${cavityPct}% hollow width`}
         </text>
-        <text x="${ringCx}" y="${ringCy + 27}" text-anchor="middle" font-size="9.2" font-weight="600" fill="var(--text-muted)">
-          R = ${trunkRadiusCm.toFixed(1)} cm
+        <text x="${ringCx}" y="${ringCy + 27}" text-anchor="middle" font-size="8.8" font-weight="600" fill="var(--text-muted)">
+          R = ${fmtDualFromCm(trunkRadiusCm)}
         </text>
 
         <!-- Structural Verdict Pill -->
@@ -1065,16 +1122,19 @@ export function initLivingLensUI() {
     const stage1Usd = Math.round(Number(triage.stages[0]?.client_price_usd) || 0);
 
     // 1. Update Control Readouts
+    const imp = isImperialUnits();
     const setElText = (id, val) => {
       const node = document.getElementById(id);
       if (node) node.textContent = val;
     };
 
-    setElText('qc-dbh-display', `${dbhIn} in`);
-    setElText('qc-dbh-cm-display', `${dbhCm.toFixed(1)} cm`);
+    setElText('qc-dbh-display', imp ? `${dbhIn} in` : `${dbhCm.toFixed(1)} cm`);
+    setElText('qc-dbh-cm-display', imp ? `${dbhCm.toFixed(1)} cm` : `${dbhIn} in`);
     setElText(
       'qc-tape-circumference',
-      `Tape around trunk at 4.5 ft: ${circumferenceIn.toFixed(1)} in (${circFeet} ft ${circRemIn.toFixed(1)} in)`
+      imp
+        ? `Tape around trunk at 4.5 ft: ${circumferenceIn.toFixed(1)} in (${circFeet} ft ${circRemIn.toFixed(1)} in)`
+        : `Tape around trunk at 1.37 m: ${round1(dbhCm * Math.PI)} cm (${round2((dbhCm * Math.PI) / 100)} m / ${circumferenceIn.toFixed(1)} in)`
     );
     setElText(
       'qc-cavity-display',
@@ -1091,23 +1151,27 @@ export function initLivingLensUI() {
 
     setElText('qc-disturbance-display', `${disturbancePct}% of CRZ`);
     const disturbedSqft = Math.round((crz.area_sqft * disturbancePct) / 100);
+    const disturbedAreaLabel = fmtDualAreaSqftSqm(disturbedSqft);
+    const pressureLabel = imp ? '150 psi (10.3 bar)' : '10.3 bar (150 psi)';
     const disturbanceHintText =
       disturbancePct === 0
         ? 'Zero trenching or grade cut inside the Critical Root Zone.'
         : disturbancePct <= 15
-        ? `Affects ~${disturbedSqft.toLocaleString('en-US')} sq ft of outer feeder roots; specify 150 psi AirSpade trenching rather than mechanical cutting.`
+        ? `Affects ~${disturbedAreaLabel} of outer feeder roots; specify ${pressureLabel} AirSpade trenching rather than mechanical cutting.`
         : rootRuleViolated
-        ? `Affects ~${disturbedSqft.toLocaleString('en-US')} sq ft and exceeds the ${maxAllowedCrzPct}% CRZ disturbance threshold (${muni.name}).`
-        : `Affects ~${disturbedSqft.toLocaleString('en-US')} sq ft inside the ${crz.radius_feet.toFixed(1)} ft CRZ; protect the inner ${srz.radius_feet.toFixed(1)} ft windthrow plate.`;
+        ? `Affects ~${disturbedAreaLabel} and exceeds the ${maxAllowedCrzPct}% CRZ disturbance threshold (${muni.name}).`
+        : `Affects ~${disturbedAreaLabel} inside the ${fmtDualFtM(crz.radius_feet, crz.radius_meters)} CRZ; protect the inner ${fmtDualFtM(srz.radius_feet, srz.radius_meters)} windthrow plate.`;
     setElText('qc-disturbance-hint', disturbanceHintText);
 
     // 2. Update Core Metric Grid (preserving legacy #qc-* IDs)
-    setElText('qc-crz-val', `${crz.radius_feet.toFixed(1)} ft (${crz.radius_meters.toFixed(2)} m)`);
+    setElText('qc-crz-val', fmtDualFtM(crz.radius_feet, crz.radius_meters));
     setElText(
       'qc-tpz-val',
-      `${Math.round(crz.area_sqft).toLocaleString('en-US')} sq ft CRZ | ${tizAreaSqft.toLocaleString('en-US')} sq ft sponge`
+      imp
+        ? `${Math.round(crz.area_sqft).toLocaleString('en-US')} sq ft CRZ | ${tizAreaSqft.toLocaleString('en-US')} sq ft sponge`
+        : `${round1(crz.area_sqm).toLocaleString('en-US')} m2 CRZ | ${tizAreaM2.toLocaleString('en-US')} m2 sponge`
     );
-    setElText('qc-srz-val', `${srz.radius_feet.toFixed(1)} ft (${srz.radius_meters.toFixed(2)} m)`);
+    setElText('qc-srz-val', fmtDualFtM(srz.radius_feet, srz.radius_meters));
     const permitSuffix = permitIfRemoved.required
       ? ' (Removal Permit Req.)'
       : permitIfRemoved.unknown
@@ -1154,16 +1218,23 @@ export function initLivingLensUI() {
     }
     setElText('qc-innate-verdict-headline', leoBrief.answer_first.headline_verdict);
 
+    const dbhDualText = fmtDualInCm(dbhIn, dbhCm);
+    const shellDualText = fmtDualFromCm(biomechanics.biomechanics.sound_shell_cm);
+    const srzDualText = fmtDualFtM(srz.radius_feet, srz.radius_meters);
+    const crzDualText = fmtDualFtM(crz.radius_feet, crz.radius_meters);
+    const stormDualText = fmtDualGallons(sponge.storm_1in_capture_gallons);
+    const rainDepthText = imp ? '1-inch (25 mm)' : '25 mm (1-inch)';
+
     const threeSentenceDiagnosis = [
       `${
         tOverR >= 0.30
-          ? `At ${dbhIn} inches DBH (~${ageEst.estimated_age_years} years old), this ${speciesCommon} retains a ${biomechanics.biomechanics.sound_shell_cm} cm living outer cylinder (t/R = ${tOverR.toFixed(2)}, above Claus Mattheck's 0.30 buckling threshold) anchored by a ${srz.radius_feet.toFixed(1)} ft structural root plate.`
-          : `At ${dbhIn} inches DBH (~${ageEst.estimated_age_years} years old), the sound wood wall has thinned to ${biomechanics.biomechanics.sound_shell_cm} cm (t/R = ${tOverR.toFixed(2)}, below Claus Mattheck's 0.30 threshold), so on-site sonic tomography and crown load reduction come before soil work.`
+          ? `At ${dbhDualText} DBH (~${ageEst.estimated_age_years} years old), this ${speciesCommon} retains a ${shellDualText} living outer cylinder (t/R = ${tOverR.toFixed(2)}, above Claus Mattheck's 0.30 buckling threshold) anchored by a ${srzDualText} structural root plate.`
+          : `At ${dbhDualText} DBH (~${ageEst.estimated_age_years} years old), the sound wood wall has thinned to ${shellDualText} (t/R = ${tOverR.toFixed(2)}, below Claus Mattheck's 0.30 threshold), so on-site sonic tomography and crown load reduction come before soil work.`
       }`,
-      `Under ${muni.name}, ${muni.state} (${muni.ordinance_numbers}), it classifies as ${protLabel} with a ${crz.radius_feet.toFixed(1)} ft Critical Root Zone${
+      `Under ${muni.name}, ${muni.state} (${muni.ordinance_numbers}), it classifies as ${protLabel} with a ${crzDualText} Critical Root Zone${
         disturbancePct > 0 ? ` and ${disturbancePct}% proposed root-zone trenching` : ''
       }.`,
-      `Its underground mycorrhizal zone captures ${Math.round(sponge.storm_1in_capture_gallons).toLocaleString('en-US')} gallons in a 1-inch rain, and Day-1 Stage 1 root-collar relief (${formatUsd(stage1Usd)}) costs less than a one-time chainsaw bid (${formatUsd(triage.removal_bid_usd)}).`,
+      `Its underground mycorrhizal zone captures ${stormDualText} in a ${rainDepthText} rain, and Day-1 Stage 1 root-collar relief (${formatUsd(stage1Usd)}) costs less than a one-time chainsaw bid (${formatUsd(triage.removal_bid_usd)}).`,
     ].join(' ');
     setElText('qc-innate-verdict-body', threeSentenceDiagnosis);
     setElText('qc-innate-falsifier', `Physical check: ${leoBrief.answer_first.falsifier}`);
@@ -1174,7 +1245,7 @@ export function initLivingLensUI() {
       'qc-future-a-mitigation',
       cashInLieuUsd > 0
         ? `${formatUsd(cashInLieuUsd)} city mitigation fee`
-        : `${round1(mitIfRemoved?.replacement_inches_owed || 0)} caliper in replacement`
+        : `${fmtDualInCm(mitIfRemoved?.replacement_inches_owed || 0)} caliper replacement`
     );
     setElText(
       'qc-future-a-lost',
@@ -1190,7 +1261,7 @@ export function initLivingLensUI() {
     );
     setElText(
       'qc-future-b-sponge',
-      `${Math.round(sponge.storm_1in_capture_gallons).toLocaleString('en-US')} gal / 1-in storm + ${Math.round(sponge.som_sponge_capacity_gallons).toLocaleString('en-US')} gal SOM reserve`
+      `${fmtDualGallons(sponge.storm_1in_capture_gallons)}${imp ? ' / 1-in storm' : ' / 25 mm storm'} + ${fmtDualGallons(sponge.som_sponge_capacity_gallons)} SOM reserve`
     );
     setElText(
       'qc-future-b-margin',
@@ -1277,6 +1348,11 @@ export function initLivingLensUI() {
   qcRoot.addEventListener('change', () => {
     updateLivingLens();
   });
+  if (typeof window !== 'undefined') {
+    window.addEventListener('oa:unitschange', () => {
+      updateLivingLens();
+    });
+  }
 
   // Wire "Send This Tree to Your Arborist" button
   const openHandoffBtn = document.getElementById('btn-open-handoff-dialog');

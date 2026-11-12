@@ -4,6 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#08110b" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f5ef" />
   <script>
     try {
       document.querySelector('meta[name="color-scheme"]').content = localStorage.getItem('color-scheme') ?? 'light dark';
@@ -14,16 +16,20 @@
     name="description"
     content="Static pre-rendered arboricultural determination for LBH-QS-309 (Quercus stellata) in Liberty Hill, TX: Protected (No Permit Triggered) | DBH: 20 in (50.8 cm) | CRZ: 20 ft (6.1 m) | Replacement Owed: 40 in | Cash in Lieu: $4,500."
   />
+  <link rel="manifest" href="../../manifest.webmanifest" />
+  <link rel="icon" href="../../icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="../../icons/apple-touch-icon.png" />
   <link rel="stylesheet" href="../../styles.css" />
 </head>
 <body>
   <header class="oa-site-header">
+    <a href="#main-content" class="skip-link visually-hidden">Skip to main content</a>
     <div class="oa-nav-container">
       <a href="../../index.html" class="oa-brand-link">
-        <span class="oa-brand-mark">OA</span>
+        <span class="oa-brand-mark"><img src="../../icons/icon-68.png" alt="" width="34" height="34" class="oa-brand-logo" decoding="async" /></span>
         <span class="oa-brand-text">Open Arbor <small>v2.1</small></span>
       </a>
-      <nav class="oa-main-nav" aria-label="Primary Navigation">
+      <nav class="oa-main-nav" aria-label="Primary">
         <a href="../../index.html" class="oa-nav-link">Field Home</a>
         <a href="../../demo/index.html" class="oa-nav-link">Field Studio</a>
         <a href="../../cases/index.html" class="oa-nav-link active" aria-current="page">Case Studies</a>
@@ -62,6 +68,15 @@
       <div class="oa-theme-control">
         <button
           type="button"
+          id="oa-install-app-btn"
+          class="btn btn-secondary btn-sm"
+          hidden
+        >
+          Install App
+        </button>
+        <span id="oa-install-status" class="visually-hidden" role="status"></span>
+        <button
+          type="button"
           id="oa-veil-mode-toggle"
           class="btn btn-secondary btn-sm oa-veil-mode-btn"
           aria-pressed="false"
@@ -70,9 +85,17 @@
         </button>
         <button
           type="button"
+          id="oa-units-toggle"
+          class="btn btn-secondary btn-sm"
+          aria-description="Switch measurement system between US Imperial and Metric"
+        >
+          Units: US (in, ft)
+        </button>
+        <button
+          type="button"
           id="oa-theme-toggle"
           class="btn btn-secondary btn-sm"
-          aria-label="Toggle color scheme"
+          aria-description="Toggle color scheme"
         >
           Theme: Auto
         </button>
@@ -80,14 +103,15 @@
     </div>
   </header>
 
+  <main>
   <!-- Sticky Determination Summary Bar -->
   <div id="sticky-determination-bar" class="oa-sticky-determination-bar" role="region" aria-label="Sticky Determination Summary">
     <div class="container oa-sticky-bar-inner" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; background: var(--bg-elevated); border-bottom: 1px solid var(--border-main);">
       <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: 0.86rem;">
         <span><strong>Status:</strong> <span id="sticky-status-val" class="badge badge-protected">Protected (No Permit Triggered)</span></span>
-        <span><strong>DBH:</strong> <strong id="sticky-dbh-val">20 in (50.8 cm)</strong></span>
-        <span><strong>CRZ:</strong> <strong id="sticky-crz-val">20 ft (6.1 m)</strong></span>
-        <span><strong>Replacement Owed:</strong> <strong id="sticky-replacement-val">40 in</strong></span>
+        <span><strong>DBH:</strong> <strong id="sticky-dbh-val"><span data-oa-imp="20 in (50.8 cm)" data-oa-met="50.8 cm (20 in)">20 in (50.8 cm)</span></strong></span>
+        <span><strong>CRZ:</strong> <strong id="sticky-crz-val"><span data-oa-imp="20 ft (6.1 m)" data-oa-met="6.1 m (20 ft)">20 ft (6.1 m)</span></strong></span>
+        <span><strong>Replacement Owed:</strong> <strong id="sticky-replacement-val"><span data-oa-imp="40 in (NaN cm)" data-oa-met="40 in (NaN cm)">40 in (NaN cm)</span></strong></span>
         <span><strong>Cash in Lieu:</strong> <strong id="sticky-cash-val" class="text-danger">$4,500</strong></span>
       </div>
       <div style="display: flex; flex-wrap: wrap; gap: 8px;">
@@ -101,7 +125,7 @@
     <div class="container header-inner">
       <div>
         <span class="eyebrow">Verified Bioregional Field Case &middot; Liberty Hill, TX &middot; Plus Code 8624M38F+4X</span>
-        <h1>Case 3: Liberty Hill Protected Post Oak (20 in DBH)</h1>
+        <h1 id="main-content" tabindex="-1">Case 3: Liberty Hill Protected Post Oak (20 in DBH)</h1>
         <p class="subtitle">
           Specimen <code>LBH-QS-309</code> (<em>Quercus stellata</em>, Post Oak) &middot; Assessed <code>2026-10-28</code> &middot; Canonical SHA-256: <details class="oa-hash-chip"><summary class="oa-hash-chip-summary"><code class="oa-hash-chip-short">2bd6bb1783...05a9004b</code><span class="oa-hash-chip-action-closed">Expand</span><span class="oa-hash-chip-action-open">Collapse</span></summary><div class="oa-hash-chip-panel"><code class="oa-hash-chip-full">2bd6bb1783a760e3b44b99e38d3ef1adfc046e03da694fec7b004f1b05a9004b</code><button type="button" class="btn btn-outline btn-xs oa-hash-copy-btn" data-copy-hash="2bd6bb1783a760e3b44b99e38d3ef1adfc046e03da694fec7b004f1b05a9004b">Copy</button></div></details>
         </p>
@@ -113,7 +137,7 @@
     </div>
   </section>
 
-  <main class="container main-layout">
+  <div class="container main-layout">
     <!-- INNATE SUMMARY: Plain-Language Answer-First Verdict & 3-Stage Phased Stewardship Triage -->
     <section id="innate-stewardship-triage" class="card" aria-labelledby="innate-triage-heading">
       <div class="card-header">
@@ -144,8 +168,8 @@
         </div>
         <div class="metric-box">
           <span class="metric-label">Vadose Soil Sponge Capacity</span>
-          <strong class="metric-value">1,764.9 gal</strong>
-          <span class="metric-sub">1-in storm capture &middot; SOM sponge: 1,169.9 gal (Compacted (&lt; 15 mm/hr))</span>
+          <strong class="metric-value"><span data-oa-imp="1,765 galimperial (6,681 Limperial)" data-oa-met="1,765 galmetric (6,681 Lmetric)">1,765 galimperial (6,681 Limperial)</span></strong>
+          <span class="metric-sub"><span data-oa-imp="1-in (25 mm) storm capture" data-oa-met="25 mm (1-in) storm capture">1-in (25 mm) storm capture</span> &middot; SOM sponge: <span data-oa-imp="1,170 galimperial (4,429 Limperial)" data-oa-met="1,170 galmetric (4,429 Lmetric)">1,170 galimperial (4,429 Limperial)</span> (Compacted (&lt; 15 mm/hr))</span>
         </div>
       </div>
 
@@ -209,7 +233,7 @@
           <span class="metric-label">Evaluated Statutory Protection Tier</span>
           <div class="verdict-title-row">
             <strong class="verdict-big">Protected Tree</strong>
-            <span class="badge badge-protected">20 in DBH (50.8 cm)</span>
+            <span class="badge badge-protected"><span data-oa-imp="20 in (50.8 cm)" data-oa-met="50.8 cm (20 in)">20 in (50.8 cm)</span> DBH</span>
             <span class="badge badge-protected">RCA Linter: PASS (9 checks)</span>
           </div>
           <p class="muni-subtext">
@@ -239,8 +263,8 @@
         </div>
         <div class="metric-box">
           <span class="metric-label">Stem Measurement Rule</span>
-          <strong class="metric-value">Single Stem (1.37 m)</strong>
-          <span class="metric-sub">Height: 13.5 m &middot; Crown: 14.5x15 m</span>
+          <strong class="metric-value"><span data-oa-imp="Single Stem (4.5 ft / 1.37 m)" data-oa-met="Single Stem (1.37 m / 4.5 ft)">Single Stem (4.5 ft / 1.37 m)</span></strong>
+          <span class="metric-sub">Height: <span data-oa-imp="44.3 ft (13.5 m)" data-oa-met="13.5 m (44.3 ft)">44.3 ft (13.5 m)</span> &middot; Crown: <span data-oa-imp="47.6x49.2 ft (14.5x15 m)" data-oa-met="14.5x15 m (47.6x49.2 ft)">47.6x49.2 ft (14.5x15 m)</span></span>
         </div>
         <div class="metric-box">
           <span class="metric-label">ISA TRAQ Risk Matrix</span>
@@ -375,10 +399,10 @@
 
       <div class="svg-map-wrap">
         <div class="svg-map-header">
-          <span><strong>ANSI A300 Part 5 / ISA BMP To-Scale Vector Protection Map</strong> (Fence Radius: 20 ft | Plus Code: <code>8624M38F+4X</code>)</span>
+          <span><strong>ANSI A300 Part 5 / ISA BMP To-Scale Vector Protection Map</strong> (Fence Radius: <span data-oa-imp="20 ft (NaN m)" data-oa-met="20 ft (NaN m)">20 ft (NaN m)</span> | Plus Code: <code>8624M38F+4X</code>)</span>
           <span>Retained Root-Zone Invigoration Budget: <strong>$1,740.4</strong></span>
         </div>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 320" width="600" height="320" style="background:#0C1A0E;border:1px solid #2D6A4F;">
+        <svg role="img" aria-label="ANSI A300 Part 5 root protection map for LBH-QS-309 (Post Oak): 20 ft CRZ radius and 9 ft SRZ radius" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 320" width="600" height="320" style="background:#0C1A0E;border:1px solid #2D6A4F;"><title>ANSI A300 Part 5 root protection map for LBH-QS-309 (Post Oak): 20 ft CRZ radius and 9 ft SRZ radius</title>
   <circle cx="160" cy="160" r="91.4" fill="none" stroke="#2D6A4F" stroke-width="1.5" />
   <circle cx="160" cy="160" r="3" fill="#0C1A0E" stroke="#2D6A4F" stroke-width="1.5" />
   <text x="165" y="155" font-family="monospace" font-size="10" fill="#F5F0E8">LBH-QS-309</text>
@@ -405,7 +429,7 @@
           <thead>
             <tr>
               <th scope="col">Biomechanical / Root Zone Parameter</th>
-              <th scope="col">Computed Value (Imperial &amp; Metric)</th>
+              <th scope="col">Computed Value (US Imperial &amp; Metric)</th>
               <th scope="col">Governing Standard / Formula</th>
               <th scope="col">Diagnostic Finding &amp; Field Prescription</th>
             </tr>
@@ -413,43 +437,43 @@
           <tbody>
             <tr>
               <th scope="row">Structural Root Zone (<code>SRZ</code>)</th>
-              <td><strong>9 ft (2.74 m)</strong><br /><small>Area: 254.57 sq ft (23.65 m2)</small></td>
+              <td><strong><span data-oa-imp="9 ft (2.74 m)" data-oa-met="2.74 m (9 ft)">9 ft (2.74 m)</span></strong><br /><small>Area: <span data-oa-imp="255 sq ft (23.7 m2)" data-oa-met="23.7 m2 (255 sq ft)">255 sq ft (23.7 m2)</span></small></td>
               <td><code>AS 4970-2009 § 3.3.5</code> / Mattheck Windthrow Plate</td>
-              <td>Basal root flare diameter 64 cm; zero mechanical trenching or grade lowering permitted inside SRZ.</td>
+              <td>Basal root flare diameter <span data-oa-imp="25.2 in (64 cm)" data-oa-met="64 cm (25.2 in)">25.2 in (64 cm)</span>; zero mechanical trenching or grade lowering permitted inside SRZ.</td>
             </tr>
             <tr>
               <th scope="row">Critical Root Zone (<code>CRZ</code>)</th>
-              <td><strong>20 ft (6.1 m)</strong><br /><small>Area: 1,256.64 sq ft (116.75 m2) | 1/2 CRZ: 10 ft</small></td>
+              <td><strong><span data-oa-imp="20 ft (6.1 m)" data-oa-met="6.1 m (20 ft)">20 ft (6.1 m)</span></strong><br /><small>Area: <span data-oa-imp="1,257 sq ft (116.8 m2)" data-oa-met="116.8 m2 (1,257 sq ft)">1,257 sq ft (116.8 m2)</span> | 1/2 CRZ: <span data-oa-imp="10 ft (NaN m)" data-oa-met="10 ft (NaN m)">10 ft (NaN m)</span></small></td>
               <td><code>ANSI A300 Part 5</code> / Municipal Code (1 ft/in DBH)</td>
-              <td>Protective fencing required at 20 ft radius; current CRZ disturbance is 22%.</td>
+              <td>Protective fencing required at <span data-oa-imp="20 ft (NaN m)" data-oa-met="20 ft (NaN m)">20 ft (NaN m)</span> radius; current CRZ disturbance is 22%.</td>
             </tr>
             <tr>
               <th scope="row">International TPZ Comparisons</th>
-              <td><strong>AS 4970:</strong> 6.1 m (20 ft)<br /><strong>BS 5837:</strong> 6.1 m | <strong>US 1.5:1:</strong> 30 ft</td>
+              <td><strong>AS 4970:</strong> <span data-oa-imp="20 ft (6.1 m)" data-oa-met="6.1 m (20 ft)">20 ft (6.1 m)</span><br /><strong>BS 5837:</strong> <span data-oa-imp="20 ft (6.1 m)" data-oa-met="6.1 m (20 ft)">20 ft (6.1 m)</span> | <strong>US 1.5:1:</strong> <span data-oa-imp="30 ft (NaN m)" data-oa-met="30 ft (NaN m)">30 ft (NaN m)</span></td>
               <td><code>AS 4970</code> (12x DBH) / <code>UK BS 5837:2012</code> / <code>ISA BMP 1.5:1</code></td>
               <td>Cross-standard protection radii for mature and sensitive tree preservation specifications.</td>
             </tr>
             <tr>
               <th scope="row">Tree Influence Zone (<code>TIZ</code>)</th>
-              <td><strong>9.15 m radius</strong><br /><small>Footprint Area: 263.02 m2</small></td>
+              <td><strong><span data-oa-imp="30 ft (9.15 m)" data-oa-met="9.15 m (30 ft)">30 ft (9.15 m)</span> radius</strong><br /><small>Footprint Area: <span data-oa-imp="2,831 sq ft (263 m2)" data-oa-met="263 m2 (2,831 sq ft)">2,831 sq ft (263 m2)</span></small></td>
               <td><code>RCA-Spec v2.0</code> Holobiont Mycorrhizal Catchment</td>
-              <td>Defines the 8 cm coarse ramial woodchip mulch horizon (21.04 m3) and native companion guild zone.</td>
+              <td>Defines the <span data-oa-imp="3.1 in (8 cm)" data-oa-met="8 cm (3.1 in)">3.1 in (8 cm)</span> coarse ramial woodchip mulch horizon (<span data-oa-imp="27.5 cu yd (21.04 m3)" data-oa-met="21.04 m3 (27.5 cu yd)">27.5 cu yd (21.04 m3)</span>) and native companion guild zone.</td>
             </tr>
             <tr>
               <th scope="row">Mattheck Hollow-Shell Ratio (<code>t/R</code>) &amp; CODIT</th>
-              <td><strong><code>t/R = 0.32</code></strong><br /><small>Sound shell: 8.1 cm / Radius: 25.4 cm</small></td>
+              <td><strong><code>t/R = 0.32</code></strong><br /><small>Sound shell: <span data-oa-imp="3.2 in (8.1 cm)" data-oa-met="8.1 cm (3.2 in)">3.2 in (8.1 cm)</span> / Radius: <span data-oa-imp="10 in (25.4 cm)" data-oa-met="25.4 cm (10 in)">10 in (25.4 cm)</span></small></td>
               <td>Mattheck (1994) <code>t/R &ge; 0.30</code> Criterion &amp; Shigo CODIT</td>
               <td><strong>Structurally Sound (t/R &gt;= 0.30 Mattheck Criterion Satisfied)</strong> | CODIT: <code>Wall_3_Ray_Compartmentalization</code>.</td>
             </tr>
             <tr>
               <th scope="row">Supersonic AirSpade Radial Trenching &amp; SGR Relief</th>
-              <td><strong>6.02 m3 decompacted</strong><br /><small>8 spokes (6.5 m x 30 cm x 35 cm @ 150 psi)</small></td>
+              <td><strong><span data-oa-imp="7.9 cu yd (6.02 m3)" data-oa-met="6.02 m3 (7.9 cu yd)">7.9 cu yd (6.02 m3)</span> decompacted</strong><br /><small>8 spokes (<span data-oa-imp="21.3 ft x 11.8 in x 13.8 in (6.5 m x 30 cm x 35 cm)" data-oa-met="6.5 m x 30 cm x 35 cm (21.3 ft x 11.8 in x 13.8 in)">21.3 ft x 11.8 in x 13.8 in (6.5 m x 30 cm x 35 cm)</span> @ <span data-oa-imp="150 psi (10.3 bar)" data-oa-met="10.3 bar (150 psi)">150 psi (10.3 bar)</span>)</small></td>
               <td><code>ANSI A300 Part 2</code> / <code>RCA-Spec v2.0</code> Domain 2 &amp; 4</td>
-              <td>Root flare burial 22 cm; SGR count: 3 (<code>Severe_Over_50_Pct_Circumference</code>, relief ratio 0.6). Amendments: 482 L biochar, 0.9 m3 compost, 9.03 kg humate.</td>
+              <td>Root flare burial <span data-oa-imp="8.7 in (22 cm)" data-oa-met="22 cm (8.7 in)">8.7 in (22 cm)</span>; SGR count: 3 (<code>Severe_Over_50_Pct_Circumference</code>, relief ratio 0.6). Amendments: <span data-oa-imp="17 cu ft / 127 gal (482 L)" data-oa-met="482 L (17 cu ft / 127 gal)">17 cu ft / 127 gal (482 L)</span> biochar, <span data-oa-imp="1.2 cu yd (0.9 m3)" data-oa-met="0.9 m3 (1.2 cu yd)">1.2 cu yd (0.9 m3)</span> compost, <span data-oa-imp="19.8 lbs (9 kg)" data-oa-met="9 kg (19.8 lbs)">19.8 lbs (9 kg)</span> humate.</td>
             </tr>
             <tr>
               <th scope="row">Soil Physics &amp; Mycorrhizal Microbiome Baseline</th>
-              <td><strong>Bulk Density:</strong> 1.64 g/cm3 | <strong>Infiltration:</strong> 10 mm/hr<br /><small>SOM: 1.9% | pH: 7.6 | F:B Ratio: 0.31</small></td>
+              <td><strong>Bulk Density:</strong> <span data-oa-imp="102.4 lb/cu ft (1.64 g/cm3)" data-oa-met="1.64 g/cm3 (102.4 lb/cu ft)">102.4 lb/cu ft (1.64 g/cm3)</span> | <strong>Infiltration:</strong> <span data-oa-imp="0.39 in/hr (10 mm/hr)" data-oa-met="10 mm/hr (0.39 in/hr)">0.39 in/hr (10 mm/hr)</span><br /><small>SOM: 1.9% | pH: 7.6 | F:B Ratio: 0.31</small></td>
               <td>Lab Sample <code>TAMU-CTX-2026-309</code> &middot; Guild: <code>Ectomycorrhizal_EM</code></td>
               <td>STIM Hypothesis: Post Oak construction intolerance requires zero mechanical root cutting; supersonic AirSpade radial trenching (8 spokes at 150 psi), staged SGR relief, and native Cross Timbers grass/forb guild establishment will lower bulk density from 1.64 to &lt;= 1.30 g/cm3 and raise F:B ratio from 0.31 to &gt;= 1.15 within 60 months.</td>
             </tr>
@@ -487,7 +511,7 @@
         <div class="metric-box">
           <span class="metric-label">Nowak / McPherson Annual Flow</span>
           <strong class="metric-value">$148.97/yr</strong>
-          <span class="metric-sub">20-Yr Projected: $3,218 | Carbon: 1,346 lbs</span>
+          <span class="metric-sub">20-Yr Projected: $3,218 | Carbon: <span data-oa-imp="1,346 lbsimperial (610.5 kgimperial)" data-oa-met="1,346 lbsmetric (610.5 kgmetric)">1,346 lbsimperial (610.5 kgimperial)</span></span>
         </div>
       </div>
 
@@ -497,7 +521,7 @@
           class="data-table"
           style="
             --label-1: 'Scenario / Model';
-            --label-2: 'Replacement Inches';
+            --label-2: 'Replacement Caliper';
             --label-3: 'Cash-in-Lieu / Value';
             --label-4: 'Penalty / Equity Impact';
             --label-5: 'Statutory / Scientific Basis';
@@ -518,14 +542,14 @@
           <tbody>
             <tr>
               <th scope="row">Current Preservation Plan (Tree Retained &amp; Remediated)</th>
-              <td>0 in (0 trees)</td>
+              <td><span data-oa-imp="0 in (NaN cm)" data-oa-met="0 in (NaN cm)">0 in (NaN cm)</span> (0 trees)</td>
               <td><strong>$0</strong></td>
               <td>Penalty: $0</td>
-              <td>Liberty Hill UDC § 6.07.01(c)(5) (Exemption cap: 4 in)</td>
+              <td>Liberty Hill UDC § 6.07.01(c)(5) (Exemption cap: <span data-oa-imp="4 in (NaN cm)" data-oa-met="4 in (NaN cm)">4 in (NaN cm)</span>)</td>
             </tr>
             <tr>
               <th scope="row">Municipal Liability If Tree Removed / Destroyed</th>
-              <td><strong>40 in (2 trees)</strong></td>
+              <td><strong><span data-oa-imp="40 in (NaN cm)" data-oa-met="40 in (NaN cm)">40 in (NaN cm)</span> (2 trees)</strong></td>
               <td><strong class="text-danger">$4,500</strong></td>
               <td class="text-danger">Unpermitted Total: $10,000</td>
               <td>Liberty Hill UDC § 6.07.01(c)(5)</td>
@@ -539,9 +563,9 @@
             </tr>
             <tr>
               <th scope="row">Nowak / McPherson / Xiao Allometric Services</th>
-              <td>Canopy: 1,840 sq ft</td>
+              <td>Canopy: <span data-oa-imp="1,840 sq ft (NaN m2)" data-oa-met="1,840 sq ft (NaN m2)">1,840 sq ft (NaN m2)</span></td>
               <td><strong>$3,218</strong> (20-yr) | $148.97/yr</td>
-              <td>Carbon stored: 1,346 lbs | Stormwater: 4,853 gal/yr | Cooling: 136.9 kWh/yr</td>
+              <td>Carbon stored: <span data-oa-imp="1,346 lbsimperial (610.5 kgimperial)" data-oa-met="1,346 lbsmetric (610.5 kgmetric)">1,346 lbsimperial (610.5 kgimperial)</span> | Stormwater: <span data-oa-imp="4,853 gal/yr (18,371 L/yr)" data-oa-met="18,371 L/yr (4,853 gal/yr)">4,853 gal/yr (18,371 L/yr)</span> | Cooling: 136.9 kWh/yr</td>
               <td>Nowak (1994, 2006), Cairns et al. (1997), Xiao et al. (2000), McPherson &amp; Simpson (1999)</td>
             </tr>
             <tr>
@@ -707,6 +731,7 @@
         </div>
       </div>
     </section>
+  </div>
   </main>
 
   <footer class="app-footer">

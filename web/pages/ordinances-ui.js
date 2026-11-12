@@ -11,6 +11,7 @@ import txOrdinances from '../../data/ordinances/central_texas_ordinances.json';
 import orOrdinances from '../../data/ordinances/rogue_valley_oregon_ordinances.json';
 import municipalOrdinanceSchema from '../../schemas/municipal-ordinance.schema.json';
 import { inspectMunicipalityProvenance } from './masterwork-core.js';
+import { dualUnitSpanHtml, inToCm, applyStaticUnitSwaps } from './unit-system.js';
 
 const MONTH_ABBR = [
   '',
@@ -402,10 +403,17 @@ export function initOrdinancesExplorerUI() {
           : `<span class="badge badge-warn">CONTAINS UNVERIFIED FIELDS (${unverifiedList.length})</span>`;
 
         const cityLabel = `${muni.name}, ${muni.state}`;
-        const regDbh = `${muni.dbh_threshold_inches}" DBH`;
-        const heritageDbh =
+        const regCm = inToCm(muni.dbh_threshold_inches, 1);
+        const regDbhHtml = dualUnitSpanHtml(
+          `${muni.dbh_threshold_inches}" DBH (${regCm} cm)`,
+          `${regCm} cm DBH (${muni.dbh_threshold_inches}")`
+        );
+        const heritageDbhHtml =
           muni.heritage_threshold_inches !== null && muni.heritage_threshold_inches !== undefined
-            ? `${muni.heritage_threshold_inches}" DBH`
+            ? dualUnitSpanHtml(
+                `${muni.heritage_threshold_inches}" DBH (${inToCm(muni.heritage_threshold_inches, 1)} cm)`,
+                `${inToCm(muni.heritage_threshold_inches, 1)} cm DBH (${muni.heritage_threshold_inches}")`
+              )
             : 'N/A';
 
         return `
@@ -418,8 +426,8 @@ export function initOrdinancesExplorerUI() {
                 Primary Statute Source
               </a>
             </td>
-            <td><strong>${escapeHtml(regDbh)}</strong></td>
-            <td><strong>${escapeHtml(heritageDbh)}</strong></td>
+            <td><strong>${regDbhHtml}</strong></td>
+            <td><strong>${heritageDbhHtml}</strong></td>
             <td>${escapeHtml(formatReplacementRatio(muni))}</td>
             <td>${escapeHtml(formatCashInLieuRate(muni))}</td>
             <td>${escapeHtml(formatPathogenWindow(muni))}</td>
@@ -439,6 +447,7 @@ export function initOrdinancesExplorerUI() {
         `;
       })
       .join('');
+    applyStaticUnitSwaps(tbody);
 
     tbody.querySelectorAll('[data-load-muni]').forEach((btn) => {
       btn.addEventListener('click', () => {
@@ -516,6 +525,7 @@ export function initOrdinancesExplorerUI() {
         `;
       })
       .join('');
+    applyStaticUnitSwaps(tbody);
   }
 
   function setActivePresetButton(activeBtn) {

@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#08110b" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f5ef" />
   <script>
     try {
       document.querySelector('meta[name="color-scheme"]').content = localStorage.getItem('color-scheme') ?? 'light dark';
@@ -11,16 +13,20 @@
   </script>
   <title>Open Arbor v2.1 | Field Studio &amp; Arborist Workbench</title>
   <meta name="description" content="Zero-dependency, open-standards arboricultural Field Studio: ANSI A300 Part 5 root-zone protection, LEO-RCA phased stewardship triage, soil sponge capacity, municipal tree laws, multi-tree stand union rollup, and Open Badges 3.0 attestation.">
+  <link rel="manifest" href="../manifest.webmanifest" />
+  <link rel="icon" href="../icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png" />
   <link rel="stylesheet" href="../styles.css" />
 </head>
 <body>
   <header class="oa-site-header">
+    <a href="#main-content" class="skip-link visually-hidden">Skip to main content</a>
     <div class="oa-nav-container">
       <a href="../index.html" class="oa-brand-link">
-        <span class="oa-brand-mark">OA</span>
+        <span class="oa-brand-mark"><img src="../icons/icon-68.png" alt="" width="34" height="34" class="oa-brand-logo" decoding="async" /></span>
         <span class="oa-brand-text">Open Arbor <small>v2.1</small></span>
       </a>
-      <nav class="oa-main-nav" aria-label="Primary Navigation">
+      <nav class="oa-main-nav" aria-label="Primary">
         <a href="../index.html" class="oa-nav-link">Field Home</a>
         <a href="./index.html" class="oa-nav-link active" aria-current="page">Field Studio</a>
         <a href="../cases/index.html" class="oa-nav-link">Case Studies</a>
@@ -50,12 +56,16 @@
         </a>
       </div>
       <div class="oa-theme-control">
+        <button type="button" id="oa-install-app-btn" class="btn btn-secondary btn-sm" hidden>Install App</button>
+        <span id="oa-install-status" class="visually-hidden" role="status"></span>
         <button type="button" id="oa-veil-mode-toggle" class="btn btn-secondary btn-sm oa-veil-mode-btn" aria-pressed="false">Layer: Canopy</button>
-        <button type="button" id="oa-theme-toggle" class="btn btn-secondary btn-sm" aria-label="Toggle color scheme">Theme: Auto</button>
+        <button type="button" id="oa-units-toggle" class="btn btn-secondary btn-sm" aria-description="Switch measurement system between US Imperial and Metric">Units: US (in, ft)</button>
+        <button type="button" id="oa-theme-toggle" class="btn btn-secondary btn-sm" aria-description="Toggle color scheme">Theme: Auto</button>
       </div>
     </div>
   </header>
 
+  <main>
   <div id="sticky-determination-bar" class="oa-sticky-verdict-bar no-print" role="region" aria-label="Live Determination Summary" tabindex="0">
     <div class="oa-sticky-verdict-inner">
       <div class="oa-sticky-metrics oa-sticky-verdict-metrics">
@@ -99,7 +109,7 @@
     <div class="container header-inner">
       <div>
         <span class="eyebrow">AGPL-3.0 Open Standards | Forest OS &amp; STIM v7.0011 | ANSI A300 / RCA-Spec v2.0</span>
-        <h1>Open Arbor Field Studio</h1>
+        <h1 id="main-content" tabindex="-1">Open Arbor Field Studio</h1>
         <p class="subtitle">Canopy essentials above, full 5-domain Cambium and Heartwood studio below. Evaluate municipal permits, root protection zones, phased root-collar triage, soil sponge capacity, multi-tree stand unions, and Open Badges 3.0 credentials locally in your browser.</p>
       </div>
       <div class="header-actions">
@@ -107,13 +117,13 @@
         <button type="button" id="btn-header-send-arborist" class="btn btn-outline">Send to Arborist</button>
         <label class="btn btn-outline" for="input-import-json">
           Import RCA JSON
-          <input type="file" id="input-import-json" accept=".json,application/json" hidden>
+          <input type="file" id="input-import-json" class="visually-hidden" accept=".json,application/json">
         </label>
       </div>
     </div>
   </section>
 
-  <main class="container main-layout">
+  <div class="container main-layout">
     <!-- 3-MODE WORKSPACE SWITCHER -->
     <section class="card demo-mode-switcher-card" aria-label="Field Studio Mode Switcher">
       <div class="section-header-compact">
@@ -207,20 +217,20 @@
             </div>
 
             <div class="field" id="singlestem-input-wrap">
-              <label for="input-dbh-inches">Trunk DBH (Inches)</label>
+              <label for="input-dbh-inches" id="label-dbh-in">Trunk DBH (Inches)</label>
               <span id="hint-dbh-in" class="hint">Diameter at 4.5 ft (0.5 to 500 in)</span>
               <input type="number" id="input-dbh-inches" inputmode="decimal" min="0.5" max="500" step="0.1" required aria-describedby="hint-dbh-in" value="30">
               <div class="error-msg">DBH must be between 0.5 and 500 inches.</div>
             </div>
 
             <div class="field" id="multistem-input-wrap" hidden>
-              <label for="input-stems-inches">Stem Diameters (Inches, comma-separated)</label>
+              <label for="input-stems-inches" id="label-stems">Stem Diameters (Inches, comma-separated)</label>
               <span id="hint-stems" class="hint">Example: 20, 14, 10</span>
               <input type="text" id="input-stems-inches" aria-describedby="hint-stems" value="20, 14">
             </div>
 
             <div class="field">
-              <label for="input-dbh-cm">Computed DBH (cm)</label>
+              <label for="input-dbh-cm" id="label-dbh-cm">Synced DBH (cm)</label>
               <span id="hint-dbh-cm" class="hint">Synced metric diameter (cm)</span>
               <input type="number" id="input-dbh-cm" inputmode="decimal" min="1" max="1500" step="0.01" readonly aria-describedby="hint-dbh-cm" value="76.2">
             </div>
@@ -256,14 +266,14 @@
               </select>
             </div>
             <div class="field">
-              <label for="input-height-m">Tree Height (m)</label>
-              <span id="hint-height" class="hint">Total height (0.5 to 150 m)</span>
-              <input type="number" id="input-height-m" inputmode="decimal" min="0.5" max="150" step="0.5" required aria-describedby="hint-height" value="16.5">
+              <label for="input-height-m" id="label-height">Tree Height (ft)</label>
+              <span id="hint-height" class="hint">Total height (54.1 ft = 16.5 m)</span>
+              <input type="number" id="input-height-m" inputmode="decimal" min="1.5" max="450" step="0.5" required aria-describedby="hint-height" value="54.1">
             </div>
             <div class="field">
-              <label for="input-infiltration">Soil Infiltration (mm/hr)</label>
-              <span id="hint-inf" class="hint">Ring infiltrometer rate</span>
-              <input type="number" id="input-infiltration" inputmode="decimal" min="0" max="2000" step="1" aria-describedby="hint-inf" value="16">
+              <label for="input-infiltration" id="label-inf">Soil Infiltration (in/hr)</label>
+              <span id="hint-inf" class="hint">Ring infiltrometer (0.63 in/hr = 16 mm/hr)</span>
+              <input type="number" id="input-infiltration" inputmode="decimal" min="0" max="80" step="0.05" aria-describedby="hint-inf" value="0.63">
             </div>
             <div class="field">
               <label for="input-som-pct">Soil Organic Matter (%)</label>
@@ -348,14 +358,14 @@
 
               <div class="field-row field-row-4">
                 <div class="field">
-                  <label for="input-spread-ns-m">Crown Spread N-S (m)</label>
-                  <span id="hint-ns" class="hint">North-South dripline (m)</span>
-                  <input type="number" id="input-spread-ns-m" inputmode="decimal" min="0.5" max="150" step="0.5" required aria-describedby="hint-ns" value="22.0">
+                  <label for="input-spread-ns-m" id="label-spread-ns">Crown Spread N-S (ft)</label>
+                  <span id="hint-ns" class="hint">North-South dripline (ft)</span>
+                  <input type="number" id="input-spread-ns-m" inputmode="decimal" min="1.5" max="450" step="0.5" required aria-describedby="hint-ns" value="72.2">
                 </div>
                 <div class="field">
-                  <label for="input-spread-ew-m">Crown Spread E-W (m)</label>
-                  <span id="hint-ew" class="hint">East-West dripline (m)</span>
-                  <input type="number" id="input-spread-ew-m" inputmode="decimal" min="0.5" max="150" step="0.5" required aria-describedby="hint-ew" value="24.0">
+                  <label for="input-spread-ew-m" id="label-spread-ew">Crown Spread E-W (ft)</label>
+                  <span id="hint-ew" class="hint">East-West dripline (ft)</span>
+                  <input type="number" id="input-spread-ew-m" inputmode="decimal" min="1.5" max="450" step="0.5" required aria-describedby="hint-ew" value="78.7">
                 </div>
                 <div class="field">
                   <label for="input-lcr-pct">Live Crown Ratio (%)</label>
@@ -391,8 +401,8 @@
 
             <div class="field-row field-row-3">
               <div class="field">
-                <label for="input-cutfill-in">Cut/Fill Depth Inside 1/2 CRZ (in)</label>
-                <span id="hint-cutfill" class="hint">Typically max 4 in allowed</span>
+                <label for="input-cutfill-in" id="label-cutfill">Cut/Fill Depth Inside 1/2 CRZ (in)</label>
+                <span id="hint-cutfill" class="hint">Typically max 4 in (10.2 cm) allowed</span>
                 <input type="number" id="input-cutfill-in" inputmode="decimal" min="0" max="60" step="0.5" aria-describedby="hint-cutfill" value="2">
               </div>
               <div class="field">
@@ -409,14 +419,14 @@
 
             <div class="field-row field-row-4">
               <div class="field">
-                <label for="input-root-flare-cm">Root Flare Diameter (cm)</label>
-                <span id="hint-rfd" class="hint">Basal flare for AS 4970 SRZ</span>
-                <input type="number" id="input-root-flare-cm" inputmode="decimal" min="1" max="2500" step="0.5" aria-describedby="hint-rfd" value="98.0">
+                <label for="input-root-flare-cm" id="label-rfd">Root Flare Diameter (in)</label>
+                <span id="hint-rfd" class="hint">Basal flare for AS 4970 SRZ (in)</span>
+                <input type="number" id="input-root-flare-cm" inputmode="decimal" min="0.5" max="1000" step="0.2" aria-describedby="hint-rfd" value="38.6">
               </div>
               <div class="field">
-                <label for="input-burial-depth-cm">Root Flare Burial Depth (cm)</label>
-                <span id="hint-burial" class="hint">Soil or mulch burial above flare</span>
-                <input type="number" id="input-burial-depth-cm" inputmode="decimal" min="0" max="200" step="1" aria-describedby="hint-burial" value="16">
+                <label for="input-burial-depth-cm" id="label-burial">Root Flare Burial Depth (in)</label>
+                <span id="hint-burial" class="hint">Soil or mulch burial above flare (in)</span>
+                <input type="number" id="input-burial-depth-cm" inputmode="decimal" min="0" max="80" step="0.2" aria-describedby="hint-burial" value="6.3">
               </div>
               <div class="field">
                 <label for="input-sgr-count">Stem-Girdling Root (SGR) Count</label>
@@ -442,36 +452,36 @@
                 <input type="number" id="input-trench-count" inputmode="numeric" min="0" max="64" step="1" aria-describedby="hint-trench-cnt" value="8">
               </div>
               <div class="field">
-                <label for="input-trench-length-m">Trench Length (m)</label>
-                <span id="hint-trench-len" class="hint">Mean spoke length (m)</span>
-                <input type="number" id="input-trench-length-m" inputmode="decimal" min="0" max="50" step="0.5" aria-describedby="hint-trench-len" value="8.5">
+                <label for="input-trench-length-m" id="label-trench-len">Trench Length (ft)</label>
+                <span id="hint-trench-len" class="hint">Mean spoke length (ft)</span>
+                <input type="number" id="input-trench-length-m" inputmode="decimal" min="0" max="165" step="0.5" aria-describedby="hint-trench-len" value="27.9">
               </div>
               <div class="field">
-                <label for="input-trench-width-cm">Trench Width (cm)</label>
-                <span id="hint-tw" class="hint">Default 30 cm</span>
-                <input type="number" id="input-trench-width-cm" inputmode="decimal" min="0" max="100" step="1" aria-describedby="hint-tw" value="30">
+                <label for="input-trench-width-cm" id="label-tw">Trench Width (in)</label>
+                <span id="hint-tw" class="hint">Default 11.8 in (30 cm)</span>
+                <input type="number" id="input-trench-width-cm" inputmode="decimal" min="0" max="40" step="0.2" aria-describedby="hint-tw" value="11.8">
               </div>
               <div class="field">
-                <label for="input-trench-depth-cm">Trench Depth (cm)</label>
-                <span id="hint-td" class="hint">Default 35 cm</span>
-                <input type="number" id="input-trench-depth-cm" inputmode="decimal" min="0" max="100" step="1" aria-describedby="hint-td" value="35">
+                <label for="input-trench-depth-cm" id="label-td">Trench Depth (in)</label>
+                <span id="hint-td" class="hint">Default 13.8 in (35 cm)</span>
+                <input type="number" id="input-trench-depth-cm" inputmode="decimal" min="0" max="40" step="0.2" aria-describedby="hint-td" value="13.8">
               </div>
               <div class="field">
-                <label for="input-rce-radius-m">Root Collar Basin Radius (m)</label>
-                <span id="hint-rce" class="hint">Excavation radius around flare</span>
-                <input type="number" id="input-rce-radius-m" inputmode="decimal" min="0" max="10" step="0.1" aria-describedby="hint-rce" value="1.0">
+                <label for="input-rce-radius-m" id="label-rce">Root Collar Basin Radius (ft)</label>
+                <span id="hint-rce" class="hint">Excavation radius around flare (ft)</span>
+                <input type="number" id="input-rce-radius-m" inputmode="decimal" min="0" max="35" step="0.2" aria-describedby="hint-rce" value="3.3">
               </div>
             </div>
 
             <div class="field-row field-row-4">
               <div class="field">
-                <label for="input-airspade-psi">AirSpade Pressure (psi)</label>
-                <span id="hint-psi" class="hint">Supersonic nozzle pressure</span>
+                <label for="input-airspade-psi" id="label-psi">AirSpade Pressure (psi)</label>
+                <span id="hint-psi" class="hint">Supersonic nozzle (150 psi = 10.3 bar)</span>
                 <input type="number" id="input-airspade-psi" inputmode="numeric" min="0" max="250" step="5" aria-describedby="hint-psi" value="150">
               </div>
               <div class="field">
                 <label for="input-bulk-density">Soil Bulk Density (g/cm3)</label>
-                <span id="hint-bd" class="hint">0 to 15 cm horizon (0.1 to 2.65)</span>
+                <span id="hint-bd" class="hint">Top 6 in / 15 cm (1.54 g/cm3 = 96.1 lb/cu ft)</span>
                 <input type="number" id="input-bulk-density" inputmode="decimal" min="0.1" max="2.65" step="0.01" aria-describedby="hint-bd" value="1.54">
               </div>
               <div class="field">
@@ -654,10 +664,10 @@
             <div class="svg-map-header">
               <span><strong>Spatial Protection Zone Visualization Layer</strong></span>
               <div class="preview-tabs" role="tablist" aria-label="Spatial Map Layer Switcher">
-                <button type="button" class="tab-btn active" id="btn-map-mode-svg" data-map-layer="svg">
+                <button type="button" class="tab-btn active" role="tab" aria-selected="true" id="btn-map-mode-svg" data-map-layer="svg">
                   Deterministic SVG CAD Map (Default)
                 </button>
-                <button type="button" class="tab-btn" id="btn-map-mode-leaflet" data-map-layer="leaflet">
+                <button type="button" class="tab-btn" role="tab" aria-selected="false" id="btn-map-mode-leaflet" data-map-layer="leaflet">
                   Interactive Parcel Map (Leaflet/OSM + Optional Google Satellite)
                 </button>
               </div>
@@ -749,14 +759,14 @@
             <button type="button" id="btn-copy-preview" class="btn btn-outline">Copy Active Output</button>
           </div>
 
-          <div class="preview-tabs" role="tablist">
-            <button type="button" class="tab-btn active" data-preview-tab="geojson">OGC CRS84 GeoJSON</button>
-            <button type="button" class="tab-btn" data-preview-tab="report">RCA Evidentiary Report (.md)</button>
-            <button type="button" class="tab-btn" data-preview-tab="counternotice">Scientific Counter-Notice (.md)</button>
-            <button type="button" class="tab-btn" data-preview-tab="json">RCA_v2 Assessment JSON</button>
+          <div class="preview-tabs" role="tablist" aria-label="Export Format Preview">
+            <button type="button" role="tab" aria-selected="true" class="tab-btn active" data-preview-tab="geojson">OGC CRS84 GeoJSON</button>
+            <button type="button" role="tab" aria-selected="false" class="tab-btn" data-preview-tab="report">RCA Evidentiary Report (.md)</button>
+            <button type="button" role="tab" aria-selected="false" class="tab-btn" data-preview-tab="counternotice">Scientific Counter-Notice (.md)</button>
+            <button type="button" role="tab" aria-selected="false" class="tab-btn" data-preview-tab="json">RCA_v2 Assessment JSON</button>
           </div>
 
-          <pre id="export-preview-code" class="code-preview"></pre>
+          <pre id="export-preview-code" class="code-preview" role="tabpanel" aria-label="Active Export Preview"></pre>
         </div>
       </section>
     </div>
@@ -776,9 +786,9 @@
 
         <div class="field-row field-row-4">
           <div class="field">
-            <label for="input-stand-parcel-sqm">Parcel Footprint Area (m2)</label>
-            <span class="hint">Default: 4047 m2 (1.0 acre) for Sanctuary Scorecard canopy rollup</span>
-            <input type="number" id="input-stand-parcel-sqm" min="100" max="1000000" step="50" value="4047">
+            <label for="input-stand-parcel-sqm" id="label-stand-parcel">Parcel Footprint Area (acres)</label>
+            <span class="hint" id="hint-stand-parcel">Default: 1.00 acre (43,560 sq ft / 4,047 m2) for Sanctuary Scorecard rollup</span>
+            <input type="number" id="input-stand-parcel-sqm" inputmode="decimal" min="0.02" max="250" step="0.05" value="1.00">
           </div>
           <div class="field">
             <label for="btn-stand-add-tree">Add Specimen</label>
@@ -797,17 +807,17 @@
           </div>
         </div>
 
-        <div tabindex="0" role="region" aria-label="Editable Multi-Tree Stand Inventory" class="table-wrapper oa-stand-table-wrapper">
-          <table class="data-table" style="--label-1: 'Tree Tag'; --label-2: 'Species'; --label-3: 'DBH (in)'; --label-4: 'Local X (ft)'; --label-5: 'Local Y (ft)'; --label-6: 'RCA Diagnostic Template'; --label-7: 'Actions';">
+        <div tabindex="0" role="region" aria-label="Editable Multi-Tree Stand Inventory" class="table-wrapper oa-wide-matrix oa-stand-table-wrapper">
+          <table id="stand-builder-table" class="data-table" style="--label-1: 'Tree Tag'; --label-2: 'Species'; --label-3: 'DBH (in)'; --label-4: 'Local X (ft)'; --label-5: 'Local Y (ft)'; --label-6: 'RCA Diagnostic Template'; --label-7: 'Actions';">
             <thead>
               <tr>
-                <th>Tree Tag</th>
-                <th>Species</th>
-                <th>DBH (in)</th>
-                <th>Local X (ft)</th>
-                <th>Local Y (ft)</th>
-                <th>RCA Diagnostic Template</th>
-                <th>Actions</th>
+                <th scope="col">Tree Tag</th>
+                <th scope="col">Species</th>
+                <th scope="col" id="th-stand-dbh">DBH (in)</th>
+                <th scope="col" id="th-stand-x">Local X (ft)</th>
+                <th scope="col" id="th-stand-y">Local Y (ft)</th>
+                <th scope="col">RCA Diagnostic Template</th>
+                <th scope="col">Actions</th>
               </tr>
             </thead>
             <tbody id="stand-builder-tbody"></tbody>
@@ -838,16 +848,16 @@
         <div id="stand-scorecard-summary" class="verdict-banner"></div>
 
         <div tabindex="0" role="region" aria-labelledby="stand-table-caption" class="table-wrapper table-scroll">
-          <table class="data-table">
+          <table class="data-table" style="--label-1: 'Scorecard Dimension'; --label-2: 'Rollup Score'; --label-3: 'Ecological Tier'; --label-4: 'Biophysical Driver &amp; Standard';">
             <caption id="stand-table-caption" class="sub-heading" style="text-align: left; caption-side: top;">
               Open Sanctuary Scorecard 5-Dimension Ecological Rollup &amp; Holobiont Equity Summary
             </caption>
             <thead>
               <tr>
-                <th>Sanctuary Scorecard Dimension</th>
-                <th>Rollup Score (/100)</th>
-                <th>Ecological Tier</th>
-                <th>Primary Biophysical Driver &amp; Standard</th>
+                <th scope="col">Sanctuary Scorecard Dimension</th>
+                <th scope="col">Rollup Score (/100)</th>
+                <th scope="col">Ecological Tier</th>
+                <th scope="col">Primary Biophysical Driver &amp; Standard</th>
               </tr>
             </thead>
             <tbody id="stand-scorecard-tbody"></tbody>
@@ -936,10 +946,10 @@
     <!-- ===================================================================== -->
     <section id="evidentiary-print-sheet" class="oa-print-sheet" aria-label="Evidentiary Print Report">
       <div id="print-report-dynamic-body">
-        <header class="oa-print-header">
-          <h1>Open Arbor Evidentiary Determination Report</h1>
+        <div class="oa-print-header">
+          <h2 class="oa-print-title">Open Arbor Evidentiary Determination Report</h2>
           <p class="oa-print-subtitle">ANSI A300 Part 5 | ISA BMP | AS 4970 | RCA-Spec v2.0 | Dataset Version 2.0.0 (Last Verified: 2026-10-23)</p>
-        </header>
+        </div>
         <div id="print-svg-map-holder" class="oa-print-map"></div>
         <div class="oa-print-signature-block">
           <h3>Practitioner Evidentiary Attestation &amp; Signature Block</h3>
@@ -948,6 +958,7 @@
         </div>
       </div>
     </section>
+  </div>
   </main>
 
   <!-- ARBORIST HANDOFF MODAL DIALOG (Native <dialog closedby="any">) -->

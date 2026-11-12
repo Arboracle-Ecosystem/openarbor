@@ -9,28 +9,37 @@
 | File Path | Size (Bytes) | Role |
 | :--- | :--- | :--- |
 | `out/.nojekyll` | `0` | GitHub Pages Jekyll bypass marker |
-| `out/cases/ashland-oregon-white-oak/index.html` | `47870` | GitHub Pages Jekyll bypass marker |
-| `out/cases/austin-heritage-live-oak/index.html` | `47417` | GitHub Pages Jekyll bypass marker |
-| `out/cases/georgetown-multistem-pecan/index.html` | `46344` | GitHub Pages Jekyll bypass marker |
-| `out/cases/index.html` | `30523` | GitHub Pages Jekyll bypass marker |
-| `out/cases/liberty-hill-post-oak/index.html` | `46715` | GitHub Pages Jekyll bypass marker |
-| `out/cases/medford-ponderosa-pine/index.html` | `47282` | GitHub Pages Jekyll bypass marker |
+| `out/cases/ashland-oregon-white-oak/index.html` | `53350` | GitHub Pages Jekyll bypass marker |
+| `out/cases/austin-heritage-live-oak/index.html` | `52824` | GitHub Pages Jekyll bypass marker |
+| `out/cases/georgetown-multistem-pecan/index.html` | `51785` | GitHub Pages Jekyll bypass marker |
+| `out/cases/index.html` | `34222` | GitHub Pages Jekyll bypass marker |
+| `out/cases/liberty-hill-post-oak/index.html` | `52057` | GitHub Pages Jekyll bypass marker |
+| `out/cases/medford-ponderosa-pine/index.html` | `52679` | GitHub Pages Jekyll bypass marker |
 | `out/data/catalog/forestry-tools.json` | `22781` | Published open dataset JSON |
 | `out/data/ordinances/central_texas_ordinances.json` | `10712` | Published open dataset JSON |
 | `out/data/ordinances/rogue_valley_oregon_ordinances.json` | `7531` | Published open dataset JSON |
-| `out/demo/index.html` | `58740` | Interactive 3-mode Open Arbor engine demo (`/demo/`) |
-| `out/index.html` | `37203` | Open Arbor (`openarbor.org`) root landing and alliance portal |
-| `out/mcp/index.html` | `10485` | 6-Tool MCP Server Playground & JSON-RPC 2.0 Inspector (`/mcp/`) |
-| `out/methods/index.html` | `58773` | GitHub Pages Jekyll bypass marker |
-| `out/openarbor-bundle.js` | `557582` | Compiled ESM browser bundle (engines + ordinances + catalog + schemas + UI) |
-| `out/ordinances/index.html` | `12337` | 8-City Municipal Ordinance Commons & Schema Validator (`/ordinances/`) |
+| `out/demo/index.html` | `60863` | Interactive 3-mode Open Arbor engine demo (`/demo/`) |
+| `out/icons/apple-touch-icon.png` | `50286` | GitHub Pages Jekyll bypass marker |
+| `out/icons/icon-192.png` | `65521` | GitHub Pages Jekyll bypass marker |
+| `out/icons/icon-512.png` | `394034` | GitHub Pages Jekyll bypass marker |
+| `out/icons/icon-68.png` | `10726` | GitHub Pages Jekyll bypass marker |
+| `out/icons/icon-maskable-512.png` | `335298` | GitHub Pages Jekyll bypass marker |
+| `out/icons/icon.svg` | `5008` | GitHub Pages Jekyll bypass marker |
+| `out/icons/screenshot-desktop.png` | `216969` | GitHub Pages Jekyll bypass marker |
+| `out/icons/screenshot-mobile.png` | `147971` | GitHub Pages Jekyll bypass marker |
+| `out/index.html` | `38372` | Open Arbor (`openarbor.org`) root landing and alliance portal |
+| `out/manifest.webmanifest` | `2656` | GitHub Pages Jekyll bypass marker |
+| `out/mcp/index.html` | `11492` | 6-Tool MCP Server Playground & JSON-RPC 2.0 Inspector (`/mcp/`) |
+| `out/methods/index.html` | `59896` | GitHub Pages Jekyll bypass marker |
+| `out/openarbor-bundle.js` | `595561` | Compiled ESM browser bundle (engines + ordinances + catalog + schemas + UI) |
+| `out/ordinances/index.html` | `13359` | 8-City Municipal Ordinance Commons & Schema Validator (`/ordinances/`) |
 | `out/schemas/municipal-ordinance.schema.json` | `3630` | Published JSON Schema (Draft 2020-12) |
 | `out/schemas/rca_assessment.schema.json` | `41996` | Published JSON Schema (Draft 2020-12) |
 | `out/schemas/rca_openbadge_v3.schema.json` | `26205` | Published JSON Schema (Draft 2020-12) |
-| `out/spec/index.html` | `26929` | RCA-Spec v2.0 & 200-Year Architecture Reference (`/spec/`) |
-| `out/styles.css` | `55396` | Shared Sunlight Field & Canopy Dark design system stylesheet |
-| `out/sw.js` | `4493` | GitHub Pages Jekyll bypass marker |
-| `out/tools/index.html` | `12352` | 41-tool Open-Source Forestry & Arboriculture Workbench (`/tools/`) |
+| `out/spec/index.html` | `27936` | RCA-Spec v2.0 & 200-Year Architecture Reference (`/spec/`) |
+| `out/styles.css` | `62244` | Shared Sunlight Field & Canopy Dark design system stylesheet |
+| `out/sw.js` | `4593` | GitHub Pages Jekyll bypass marker |
+| `out/tools/index.html` | `13418` | 41-tool Open-Source Forestry & Arboriculture Workbench (`/tools/`) |
 
 ## 2. Executive Summary of 4 Fixed Bioregional Input Cases (Texas & Oregon)
 

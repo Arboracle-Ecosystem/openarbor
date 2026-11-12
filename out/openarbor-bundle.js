@@ -5958,6 +5958,192 @@ function renderExpandableHashHtml(rawValue, options = {}) {
   return `<details class="oa-hash-chip${dangerClass}"><summary class="oa-hash-chip-summary"><code class="oa-hash-chip-short">${shortPreview}</code><span class="oa-hash-chip-action-closed">Expand</span><span class="oa-hash-chip-action-open">Collapse</span></summary><div class="oa-hash-chip-panel"><code${codeId} class="oa-hash-chip-full">${escapedFull}</code><button type="button" class="btn btn-outline btn-xs oa-hash-copy-btn" data-copy-hash="${escapedFull}">Copy</button></div></details>`;
 }
 
+// web/pages/unit-system.js
+var UNIT_STORAGE_KEY = "openarbor-unit-system";
+var r1 = (n) => Math.round(Number(n || 0) * 10) / 10;
+var r2 = (n) => Math.round(Number(n || 0) * 100) / 100;
+function escapeAttr(str) {
+  return String(str ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function getUnitSystem() {
+  if (typeof document !== "undefined" && document.documentElement?.dataset?.units) {
+    const ds = document.documentElement.dataset.units;
+    if (ds === "imperial" || ds === "metric") return ds;
+  }
+  if (typeof localStorage !== "undefined") {
+    try {
+      const saved = localStorage.getItem(UNIT_STORAGE_KEY);
+      if (saved === "imperial" || saved === "metric") return saved;
+    } catch {
+    }
+  }
+  return "imperial";
+}
+function isImperialUnits(sys = getUnitSystem()) {
+  return sys !== "metric";
+}
+function applyStaticUnitSwaps(root = typeof document !== "undefined" ? document : null, sys = getUnitSystem()) {
+  if (!root || typeof root.querySelectorAll !== "function") return;
+  const imp = isImperialUnits(sys);
+  root.querySelectorAll("[data-oa-imp][data-oa-met]").forEach((node) => {
+    const nextText = imp ? node.getAttribute("data-oa-imp") : node.getAttribute("data-oa-met");
+    if (nextText !== null && node.textContent !== nextText) {
+      node.textContent = nextText;
+    }
+  });
+}
+function setUnitSystem(nextSys, persist = true) {
+  const normalized = nextSys === "metric" ? "metric" : "imperial";
+  if (typeof document !== "undefined" && document.documentElement) {
+    document.documentElement.dataset.units = normalized;
+  }
+  if (persist && typeof localStorage !== "undefined") {
+    try {
+      localStorage.setItem(UNIT_STORAGE_KEY, normalized);
+    } catch {
+    }
+  }
+  if (typeof document !== "undefined") {
+    const btn = document.getElementById("oa-units-toggle");
+    if (btn) {
+      btn.textContent = normalized === "imperial" ? "Units: US (in, ft)" : "Units: Metric (cm, m)";
+    }
+    applyStaticUnitSwaps(document, normalized);
+  }
+  if (typeof window !== "undefined" && typeof window.dispatchEvent === "function") {
+    window.dispatchEvent(
+      new CustomEvent("oa:unitschange", { detail: { units: normalized } })
+    );
+  }
+  return normalized;
+}
+function dualUnitSpanHtml(impText, metText) {
+  return `<span data-oa-imp="${escapeAttr(impText)}" data-oa-met="${escapeAttr(metText)}">${escapeAttr(impText)}</span>`;
+}
+function cmToIn(cm, decimals = 1) {
+  const val = Number(cm || 0) / 2.54;
+  return decimals === 2 ? r2(val) : r1(val);
+}
+function inToCm(inches, decimals = 2) {
+  const val = Number(inches || 0) * 2.54;
+  return decimals === 1 ? r1(val) : r2(val);
+}
+function mToFt(meters, decimals = 1) {
+  const val = Number(meters || 0) / 0.3048;
+  return decimals === 2 ? r2(val) : r1(val);
+}
+function ftToM(feet, decimals = 2) {
+  const val = Number(feet || 0) * 0.3048;
+  return decimals === 1 ? r1(val) : r2(val);
+}
+function sqmToSqft(sqm) {
+  return Math.round(Number(sqm || 0) * 10.7639104);
+}
+function sqftToSqm(sqft) {
+  return r1(Number(sqft || 0) * 0.09290304);
+}
+function m3ToCuYd(m3) {
+  return r2(Number(m3 || 0) * 1.30795062);
+}
+function litersToGal(liters) {
+  return r1(Number(liters || 0) * 0.26417205);
+}
+function galToLiters(gal) {
+  return Math.round(Number(gal || 0) * 3.78541178);
+}
+function litersToCuFt(liters) {
+  return r1(Number(liters || 0) * 0.03531467);
+}
+function kgToLbs(kg) {
+  return r1(Number(kg || 0) * 2.20462262);
+}
+function lbsToKg(lbs) {
+  return r1(Number(lbs || 0) * 0.45359237);
+}
+function mmHrToInHr(mmHr) {
+  return r2(Number(mmHr || 0) / 25.4);
+}
+function inHrToMmHr(inHr) {
+  return r1(Number(inHr || 0) * 25.4);
+}
+function fmtDualInCm(inches, cm = inToCm(inches, 1), sys = getUnitSystem()) {
+  const inStr = `${r1(inches)} in`;
+  const cmStr = `${r1(cm)} cm`;
+  return isImperialUnits(sys) ? `${inStr} (${cmStr})` : `${cmStr} (${inStr})`;
+}
+function fmtDualFromCm(cm, sys = getUnitSystem()) {
+  return fmtDualInCm(cmToIn(cm, 1), cm, sys);
+}
+function fmtDualFtM(feet, meters = ftToM(feet, 2), sys = getUnitSystem()) {
+  const ftStr = `${r1(feet)} ft`;
+  const mStr = `${r2(meters)} m`;
+  return isImperialUnits(sys) ? `${ftStr} (${mStr})` : `${mStr} (${ftStr})`;
+}
+function fmtDualFromMeters(meters, sys = getUnitSystem()) {
+  const mVal = Number(meters || 0);
+  const ftStr = `${mToFt(mVal, 1)} ft`;
+  const mStr = `${r2(mVal)} m`;
+  return isImperialUnits(sys) ? `${ftStr} (${mStr})` : `${mStr} (${ftStr})`;
+}
+function fmtDualAreaSqftSqm(sqft, sqm = sqftToSqm(sqft), sys = getUnitSystem()) {
+  const sfStr = `${Math.round(Number(sqft || 0)).toLocaleString("en-US")} sq ft`;
+  const smStr = `${r1(sqm).toLocaleString("en-US")} m2`;
+  return isImperialUnits(sys) ? `${sfStr} (${smStr})` : `${smStr} (${sfStr})`;
+}
+function fmtDualAreaFromSqm(sqm, sys = getUnitSystem()) {
+  return fmtDualAreaSqftSqm(sqmToSqft(sqm), sqm, sys);
+}
+function fmtDualParcelFromSqm(sqm, sys = getUnitSystem()) {
+  const sm = Math.round(Number(sqm || 0));
+  const sqft = sqmToSqft(sm);
+  const acres = r2(sm / 4046.8564224);
+  if (isImperialUnits(sys)) {
+    return `${acres} ac / ${sqft.toLocaleString("en-US")} sq ft (${sm.toLocaleString("en-US")} m2)`;
+  }
+  return `${sm.toLocaleString("en-US")} m2 (${acres} ac / ${sqft.toLocaleString("en-US")} sq ft)`;
+}
+function fmtDualSoilVolFromM3(m3, sys = getUnitSystem()) {
+  const mVal = r2(m3);
+  const ydVal = m3ToCuYd(mVal);
+  const impStr = `${r1(ydVal)} cu yd`;
+  const metStr = `${mVal} m3`;
+  return isImperialUnits(sys) ? `${impStr} (${metStr})` : `${metStr} (${impStr})`;
+}
+function fmtDualBiocharFromLiters(liters, sys = getUnitSystem()) {
+  const lVal = r1(liters);
+  const cuFt = litersToCuFt(lVal);
+  const gal = Math.round(litersToGal(lVal));
+  const impStr = `${cuFt} cu ft / ${gal.toLocaleString("en-US")} gal`;
+  const metStr = `${lVal.toLocaleString("en-US")} L`;
+  return isImperialUnits(sys) ? `${impStr} (${metStr})` : `${metStr} (${impStr})`;
+}
+function fmtDualGallons(gallons, suffix = "", sys = getUnitSystem()) {
+  const gal = Math.round(Number(gallons || 0));
+  const lit = galToLiters(gal);
+  const impStr = `${gal.toLocaleString("en-US")} gal${suffix}`;
+  const metStr = `${lit.toLocaleString("en-US")} L${suffix}`;
+  return isImperialUnits(sys) ? `${impStr} (${metStr})` : `${metStr} (${impStr})`;
+}
+function fmtDualMassFromKg(kg, sys = getUnitSystem()) {
+  const kgVal = r1(kg);
+  const lbVal = kgToLbs(kgVal);
+  const impStr = `${lbVal.toLocaleString("en-US")} lbs`;
+  const metStr = `${kgVal.toLocaleString("en-US")} kg`;
+  return isImperialUnits(sys) ? `${impStr} (${metStr})` : `${metStr} (${impStr})`;
+}
+function fmtDualMassFromLbs(lbs, suffix = "", sys = getUnitSystem()) {
+  const lbVal = r1(lbs);
+  const kgVal = lbsToKg(lbVal);
+  const impStr = `${lbVal.toLocaleString("en-US")} lbs${suffix}`;
+  const metStr = `${kgVal.toLocaleString("en-US")} kg${suffix}`;
+  return isImperialUnits(sys) ? `${impStr} (${metStr})` : `${metStr} (${impStr})`;
+}
+function fmtDualPressureFromPsi(psi, sys = getUnitSystem()) {
+  const pVal = Math.round(Number(psi || 0));
+  const barVal = r1(pVal * 0.0689476);
+  return isImperialUnits(sys) ? `${pVal} psi (${barVal} bar)` : `${barVal} bar (${pVal} psi)`;
+}
+
 // web/pages/demo-extras.js
 var RIPARIAN_GROVE_STAND_TREES = [
   {
@@ -6027,6 +6213,16 @@ var RIPARIAN_GROVE_STAND_TREES = [
 ];
 var round16 = (n) => Math.round(Number(n || 0) * 10) / 10;
 var round27 = (n) => Math.round(Number(n || 0) * 100) / 100;
+function labelSvgMarkup(svgHtml, labelText) {
+  const raw = String(svgHtml || "").trim();
+  if (!raw.startsWith("<svg")) return raw;
+  const safe = String(labelText || "Deterministic Root Protection Map").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  if (raw.includes('role="img"')) return raw;
+  return raw.replace(
+    /^<svg\b/,
+    `<svg role="img" aria-label="${safe}"`
+  ).replace(/>/, `><title>${safe}</title>`);
+}
 function bindDialogLightDismissFallback(dialog) {
   if (!dialog || typeof HTMLDialogElement === "undefined") return;
   if ("closedBy" in HTMLDialogElement.prototype) return;
@@ -6073,6 +6269,21 @@ function initSharedThemeToggle() {
     const effective = stored === "light" || stored === "dark" ? stored : sys;
     meta.content = stored === "light" || stored === "dark" ? stored : "light dark";
     document.documentElement.dataset.theme = effective;
+    const themeColorHex = effective === "dark" ? "#08110b" : "#f6f5ef";
+    const themeColorMetas = document.querySelectorAll('meta[name="theme-color"]');
+    if (themeColorMetas.length > 0) {
+      themeColorMetas.forEach((m) => {
+        if (!m.hasAttribute("media")) {
+          m.content = themeColorHex;
+        } else if (stored === "light" || stored === "dark") {
+          m.content = themeColorHex;
+        } else if (m.getAttribute("media")?.includes("dark")) {
+          m.content = "#08110b";
+        } else {
+          m.content = "#f6f5ef";
+        }
+      });
+    }
     if (btn) {
       if (stored === "dark") {
         btn.textContent = "Theme: Dark";
@@ -6108,10 +6319,117 @@ function initSharedThemeToggle() {
       applyThemeState();
     });
   }
+  setUnitSystem(getUnitSystem(), false);
+  const unitsBtn = document.getElementById("oa-units-toggle");
+  if (unitsBtn && !unitsBtn.dataset.unitsBound) {
+    unitsBtn.dataset.unitsBound = "true";
+    unitsBtn.addEventListener("click", () => {
+      const nextUnits = getUnitSystem() === "imperial" ? "metric" : "imperial";
+      setUnitSystem(nextUnits, true);
+    });
+  }
+  const installBtn = document.getElementById("oa-install-app-btn");
+  const installStatus = document.getElementById("oa-install-status");
+  if (installBtn && !installBtn.dataset.oaInstallBound) {
+    installBtn.dataset.oaInstallBound = "true";
+    const isStandalone = typeof window.matchMedia === "function" && window.matchMedia("(display-mode: standalone)").matches || window.navigator?.standalone === true;
+    const markInstallUnavailable = (msg) => {
+      installBtn.setAttribute("aria-disabled", "true");
+      installBtn.textContent = "Installed";
+      if (installStatus && msg) {
+        installStatus.textContent = msg;
+      }
+    };
+    if (!isStandalone) {
+      if (typeof navigator !== "undefined" && "install" in navigator && typeof navigator.install === "function") {
+        installBtn.hidden = false;
+        installBtn.addEventListener("click", async () => {
+          if (installBtn.getAttribute("aria-disabled") === "true") return;
+          try {
+            await navigator.install();
+            if (installStatus) {
+              installStatus.textContent = "Open Arbor field instrument installation initiated.";
+            }
+          } catch (err) {
+            if (err && err.name !== "AbortError" && installStatus) {
+              installStatus.textContent = "App installation could not be completed right now.";
+            }
+          }
+        });
+      } else {
+        let deferredInstallPrompt = null;
+        window.addEventListener("beforeinstallprompt", (event) => {
+          deferredInstallPrompt = event;
+          installBtn.hidden = false;
+          installBtn.classList.remove("btn-secondary");
+          installBtn.classList.add("btn-primary");
+          installBtn.removeAttribute("aria-disabled");
+          installBtn.textContent = "Install App";
+        });
+        installBtn.addEventListener("click", async () => {
+          if (!deferredInstallPrompt || installBtn.getAttribute("aria-disabled") === "true") {
+            return;
+          }
+          const promptEvent = deferredInstallPrompt;
+          deferredInstallPrompt = null;
+          installBtn.setAttribute("aria-disabled", "true");
+          try {
+            await promptEvent.prompt();
+            const choice = await promptEvent.userChoice;
+            if (choice && choice.outcome === "accepted") {
+              markInstallUnavailable("Open Arbor installed for offline field work.");
+            } else {
+              installBtn.removeAttribute("aria-disabled");
+              if (installStatus) {
+                installStatus.textContent = "Install prompt dismissed. Refresh later to install again.";
+              }
+            }
+          } catch {
+            installBtn.removeAttribute("aria-disabled");
+            if (installStatus) {
+              installStatus.textContent = "Install prompt unavailable.";
+            }
+          }
+        });
+      }
+      window.addEventListener("appinstalled", () => {
+        markInstallUnavailable("Open Arbor installed for offline field work.");
+      });
+    }
+  }
+  const themeControl = document.querySelector(".oa-theme-control");
+  if (themeControl && !document.getElementById("oa-offline-pill")) {
+    const offlinePill = document.createElement("span");
+    offlinePill.id = "oa-offline-pill";
+    offlinePill.className = "oa-offline-pill";
+    offlinePill.setAttribute("role", "status");
+    offlinePill.setAttribute("aria-live", "polite");
+    offlinePill.hidden = typeof navigator !== "undefined" ? navigator.onLine !== false : true;
+    offlinePill.textContent = offlinePill.hidden ? "" : "Offline Field Cache";
+    themeControl.prepend(offlinePill);
+    const syncConnectivity = () => {
+      const isOffline = typeof navigator !== "undefined" && navigator.onLine === false;
+      offlinePill.hidden = !isOffline;
+      offlinePill.textContent = isOffline ? "Offline Field Cache" : "";
+    };
+    window.addEventListener("offline", syncConnectivity);
+    window.addEventListener("online", syncConnectivity);
+  }
   if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
+    const hadController = Boolean(navigator.serviceWorker.controller);
+    let reloadingForSw = false;
+    if (hadController) {
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (!reloadingForSw) {
+          reloadingForSw = true;
+          window.location.reload();
+        }
+      });
+    }
     window.addEventListener("load", () => {
       const swUrl = new URL("./sw.js", import.meta.url).pathname;
-      navigator.serviceWorker.register(swUrl).catch(() => {
+      navigator.serviceWorker.register(swUrl, { updateViaCache: "none" }).then((reg) => reg.update().catch(() => {
+      })).catch(() => {
       });
     });
   }
@@ -6204,8 +6522,14 @@ function initDemoExtrasUI() {
   const parcelStatus = document.getElementById("parcel-map-status");
   function setSpatialMapMode(mode) {
     activeMapLayerMode = mode;
-    if (btnMapSvg) btnMapSvg.classList.toggle("active", mode === "svg");
-    if (btnMapLeaflet) btnMapLeaflet.classList.toggle("active", mode === "leaflet");
+    if (btnMapSvg) {
+      btnMapSvg.classList.toggle("active", mode === "svg");
+      btnMapSvg.setAttribute("aria-selected", mode === "svg" ? "true" : "false");
+    }
+    if (btnMapLeaflet) {
+      btnMapLeaflet.classList.toggle("active", mode === "leaflet");
+      btnMapLeaflet.setAttribute("aria-selected", mode === "leaflet" ? "true" : "false");
+    }
     if (svgMapContainer) svgMapContainer.hidden = mode !== "svg";
     if (parcelMapPanel) parcelMapPanel.hidden = mode !== "leaflet";
     if (mode === "leaflet") {
@@ -6288,7 +6612,7 @@ function initDemoExtrasUI() {
         fillColor: "#e9c46a",
         fillOpacity: 0.08
       }).bindPopup(
-        `<strong>${sb.tree_tag || "Tree"} Tree Influence Zone (TIZ / TPZ 1.5x)</strong><br>Radius: ${tpzMeters} m (${round16(tpzMeters / 0.3048)} ft)`
+        `<strong>${sb.tree_tag || "Tree"} Tree Influence Zone (TIZ / TPZ 1.5x)</strong><br>Radius: ${fmtDualFromMeters(tpzMeters)}`
       ).addTo(leafletVectorGroup);
       L.circle([lat, lng], {
         radius: crzMeters,
@@ -6297,7 +6621,7 @@ function initDemoExtrasUI() {
         fillColor: "#52b788",
         fillOpacity: 0.18
       }).bindPopup(
-        `<strong>${sb.tree_tag || "Tree"} Critical Root Zone (CRZ)</strong><br>Radius: ${crzMeters} m (${round16(crzMeters / 0.3048)} ft)<br>Species: <em>${sb.species_scientific || "Quercus virginiana"}</em>`
+        `<strong>${sb.tree_tag || "Tree"} Critical Root Zone (CRZ)</strong><br>Radius: ${fmtDualFromMeters(crzMeters)}<br>Species: <em>${sb.species_scientific || "Quercus virginiana"}</em>`
       ).addTo(leafletVectorGroup);
       L.circle([lat, lng], {
         radius: srzMeters,
@@ -6307,7 +6631,7 @@ function initDemoExtrasUI() {
         fillColor: "#e63946",
         fillOpacity: 0.25
       }).bindPopup(
-        `<strong>${sb.tree_tag || "Tree"} Structural Root Zone (AS 4970 SRZ)</strong><br>Radius: ${srzMeters} m (${round16(srzMeters / 0.3048)} ft)`
+        `<strong>${sb.tree_tag || "Tree"} Structural Root Zone (AS 4970 SRZ)</strong><br>Radius: ${fmtDualFromMeters(srzMeters)}`
       ).addTo(leafletVectorGroup);
       L.circleMarker([lat, lng], {
         radius: 5,
@@ -6315,10 +6639,10 @@ function initDemoExtrasUI() {
         fillColor: "#2d6a4f",
         fillOpacity: 1
       }).bindPopup(
-        `<strong>${sb.tree_tag || "Tree"} (${sb.species_common || "Live Oak"})</strong><br>DBH: ${round16(dbhIn)} in (${sb.dbh_cm} cm)<br>Plus Code: <code>${sb.plus_code_global}</code>`
+        `<strong>${sb.tree_tag || "Tree"} (${sb.species_common || "Live Oak"})</strong><br>DBH: ${fmtDualInCm(dbhIn, sb.dbh_cm)}<br>Plus Code: <code>${sb.plus_code_global}</code>`
       ).addTo(leafletVectorGroup);
       if (parcelStatus) {
-        parcelStatus.textContent = `Rendered OGC CRS84 GeoJSON rings at (${lat.toFixed(4)}, ${lng.toFixed(4)}): SRZ = ${srzMeters} m, CRZ = ${crzMeters} m, TIZ/TPZ = ${tpzMeters} m.`;
+        parcelStatus.textContent = `Rendered OGC CRS84 GeoJSON rings at (${lat.toFixed(4)}, ${lng.toFixed(4)}): SRZ = ${fmtDualFromMeters(srzMeters)}, CRZ = ${fmtDualFromMeters(crzMeters)}, TIZ/TPZ = ${fmtDualFromMeters(tpzMeters)}.`;
       }
     } catch (err) {
       if (parcelStatus) {
@@ -6332,13 +6656,56 @@ function initDemoExtrasUI() {
     }
   });
   let standTrees = JSON.parse(JSON.stringify(DEFAULT_STAND_TREES));
+  let canonicalStandParcelSqm = 4047;
+  const standTableEl = document.getElementById("stand-builder-table");
   const standTbody = document.getElementById("stand-builder-tbody");
+  const thStandDbh = document.getElementById("th-stand-dbh");
+  const thStandX = document.getElementById("th-stand-x");
+  const thStandY = document.getElementById("th-stand-y");
   const btnStandAdd = document.getElementById("btn-stand-add-tree");
   const btnStandReset = document.getElementById("btn-stand-reset");
   const btnStandLoadGrove = document.getElementById("btn-stand-load-grove");
   const inputStandParcelSqm = document.getElementById("input-stand-parcel-sqm");
+  const labelStandParcel = document.getElementById("label-stand-parcel");
+  const hintStandParcel = document.getElementById("hint-stand-parcel");
+  function syncStandParcelInputUI() {
+    if (!inputStandParcelSqm) return;
+    const imp = isImperialUnits();
+    if (imp) {
+      if (labelStandParcel) labelStandParcel.textContent = "Parcel Footprint Area (acres)";
+      if (hintStandParcel) {
+        hintStandParcel.textContent = "Default: 1.00 acre (43,560 sq ft / 4,047 m2) for Sanctuary Scorecard rollup";
+      }
+      inputStandParcelSqm.min = "0.02";
+      inputStandParcelSqm.max = "250";
+      inputStandParcelSqm.step = "0.05";
+      inputStandParcelSqm.value = String(round27(canonicalStandParcelSqm / 4046.8564224));
+    } else {
+      if (labelStandParcel) labelStandParcel.textContent = "Parcel Footprint Area (m2)";
+      if (hintStandParcel) {
+        hintStandParcel.textContent = "Default: 4,047 m2 (1.00 acre / 43,560 sq ft) for Sanctuary Scorecard rollup";
+      }
+      inputStandParcelSqm.min = "100";
+      inputStandParcelSqm.max = "1000000";
+      inputStandParcelSqm.step = "50";
+      inputStandParcelSqm.value = String(Math.round(canonicalStandParcelSqm));
+    }
+  }
+  syncStandParcelInputUI();
   function renderStandTableRows() {
     if (!standTbody) return;
+    const imp = isImperialUnits();
+    const dbhColLabel = imp ? "DBH (in)" : "DBH (cm)";
+    const xColLabel = imp ? "Local X (ft)" : "Local X (m)";
+    const yColLabel = imp ? "Local Y (ft)" : "Local Y (m)";
+    if (thStandDbh) thStandDbh.textContent = dbhColLabel;
+    if (thStandX) thStandX.textContent = xColLabel;
+    if (thStandY) thStandY.textContent = yColLabel;
+    if (standTableEl) {
+      standTableEl.style.setProperty("--label-3", `'${dbhColLabel}'`);
+      standTableEl.style.setProperty("--label-4", `'${xColLabel}'`);
+      standTableEl.style.setProperty("--label-5", `'${yColLabel}'`);
+    }
     const caseOptions = FIXED_PARITY_CASES.map(
       (c) => `<option value="${c.id}">${c.label}</option>`
     ).join("");
@@ -6352,6 +6719,12 @@ function initDemoExtrasUI() {
         const sel = val === t.species ? " selected" : "";
         return `<option value="${val}"${sel}>${s.common} (${s.scientific})</option>`;
       }).join("");
+      const dbhDisplay = imp ? t.dbh_inches : inToCm(t.dbh_inches, 1);
+      const xDisplay = imp ? t.x_ft : ftToM(t.x_ft, 2);
+      const yDisplay = imp ? t.y_ft : ftToM(t.y_ft, 2);
+      const dbhMax = imp ? "200" : "508";
+      const xyBound = imp ? "500" : "152";
+      const xyStep = imp ? "1" : "0.5";
       return `
         <tr data-stand-idx="${idx}">
           <td>
@@ -6364,13 +6737,13 @@ function initDemoExtrasUI() {
             </select>
           </td>
           <td>
-            <input type="number" class="stand-input-dbh" min="1" max="200" step="0.5" value="${t.dbh_inches}" aria-label="DBH inches row ${idx + 1}">
+            <input type="number" class="stand-input-dbh" min="1" max="${dbhMax}" step="0.5" value="${dbhDisplay}" aria-label="${dbhColLabel} row ${idx + 1}">
           </td>
           <td>
-            <input type="number" class="stand-input-x" min="-500" max="500" step="1" value="${t.x_ft}" aria-label="Local X feet row ${idx + 1}">
+            <input type="number" class="stand-input-x" min="-${xyBound}" max="${xyBound}" step="${xyStep}" value="${xDisplay}" aria-label="${xColLabel} row ${idx + 1}">
           </td>
           <td>
-            <input type="number" class="stand-input-y" min="-500" max="500" step="1" value="${t.y_ft}" aria-label="Local Y feet row ${idx + 1}">
+            <input type="number" class="stand-input-y" min="-${xyBound}" max="${xyBound}" step="${xyStep}" value="${yDisplay}" aria-label="${yColLabel} row ${idx + 1}">
           </td>
           <td>
             <select class="stand-input-case" aria-label="Diagnostic template row ${idx + 1}">
@@ -6393,11 +6766,15 @@ function initDemoExtrasUI() {
     const idx = Number(row.dataset.standIdx);
     const item = standTrees[idx];
     if (!item) return;
+    const imp = isImperialUnits();
+    const rawDbh = Number(row.querySelector(".stand-input-dbh")?.value) || (imp ? 12 : 30.5);
+    const rawX = Number(row.querySelector(".stand-input-x")?.value) || 0;
+    const rawY = Number(row.querySelector(".stand-input-y")?.value) || 0;
     item.tag = row.querySelector(".stand-input-tag")?.value.trim() || `T-${idx + 1}`;
     item.species = row.querySelector(".stand-input-species")?.value || item.species;
-    item.dbh_inches = Math.max(1, Number(row.querySelector(".stand-input-dbh")?.value) || 12);
-    item.x_ft = Number(row.querySelector(".stand-input-x")?.value) || 0;
-    item.y_ft = Number(row.querySelector(".stand-input-y")?.value) || 0;
+    item.dbh_inches = Math.max(1, imp ? rawDbh : cmToIn(rawDbh, 2));
+    item.x_ft = imp ? rawX : mToFt(rawX, 2);
+    item.y_ft = imp ? rawY : mToFt(rawY, 2);
     item.case_id = row.querySelector(".stand-input-case")?.value || FIXED_PARITY_CASES[0].id;
     renderStandUnionOutputs();
   };
@@ -6442,16 +6819,29 @@ function initDemoExtrasUI() {
   });
   btnStandReset?.addEventListener("click", () => {
     standTrees = JSON.parse(JSON.stringify(DEFAULT_STAND_TREES));
-    if (inputStandParcelSqm) inputStandParcelSqm.value = "4047";
+    canonicalStandParcelSqm = 4047;
+    syncStandParcelInputUI();
     renderStandUnionAndScorecard();
   });
   btnStandLoadGrove?.addEventListener("click", () => {
     standTrees = JSON.parse(JSON.stringify(RIPARIAN_GROVE_STAND_TREES));
-    if (inputStandParcelSqm) inputStandParcelSqm.value = "6070";
+    canonicalStandParcelSqm = 6070;
+    syncStandParcelInputUI();
     renderStandUnionAndScorecard();
   });
   inputStandParcelSqm?.addEventListener("input", () => {
+    const rawVal = Number(inputStandParcelSqm.value);
+    if (Number.isFinite(rawVal) && rawVal > 0) {
+      canonicalStandParcelSqm = isImperialUnits() ? Math.max(100, rawVal * 4046.8564224) : Math.max(100, rawVal);
+    }
     renderStandUnionOutputs();
+  });
+  window.addEventListener("oa:unitschange", () => {
+    syncStandParcelInputUI();
+    renderStandUnionAndScorecard();
+    if (activeMode === "single" && activeMapLayerMode === "leaflet") {
+      refreshLeafletParcelMap();
+    }
   });
   function renderStandUnionAndScorecard() {
     renderStandTableRows();
@@ -6464,6 +6854,7 @@ function initDemoExtrasUI() {
     const scSummaryEl = document.getElementById("stand-scorecard-summary");
     const scTbodyEl = document.getElementById("stand-scorecard-tbody");
     if (!metricsEl || !svgWrapEl || !scTbodyEl) return;
+    const imp = isImperialUnits();
     const baseLat = 30.2672;
     const baseLng = -97.7431;
     const FT_PER_DEG_LAT = 364e3;
@@ -6492,32 +6883,61 @@ function initDemoExtrasUI() {
     const unionCrzAreaSqFt = unionRes.area_sqft;
     const overlapReductionSqFt = unionRes.overlap_saved_sqft;
     const overlapPct = grossCrzAreaSqFt > 0 ? round16(overlapReductionSqFt / grossCrzAreaSqFt * 100) : 0;
-    metricsEl.innerHTML = `
+    const grossSqm = round16(grossCrzAreaSqFt * 0.09290304);
+    const unionSqm = round16(unionCrzAreaSqFt * 0.09290304);
+    const savedSqm = round16(overlapReductionSqFt * 0.09290304);
+    const totalDbhIn = round16(locatedTrees.reduce((s, r) => s + r.dbh, 0));
+    metricsEl.innerHTML = imp ? `
       <div class="metric-box">
         <span class="metric-label">Gross Summed CRZ Area</span>
         <strong class="metric-value"><span id="gross_crz_area_sq_ft">${grossCrzAreaSqFt.toLocaleString()}</span> sq ft</strong>
-        <span class="metric-sub">${round16(grossCrzAreaSqFt * 0.092903)} m2 un-deduplicated sum</span>
+        <span class="metric-sub">${grossSqm.toLocaleString()} m2 un-deduplicated sum</span>
       </div>
       <div class="metric-box highlight-box">
         <span class="metric-label">1-ft Grid De-Duplicated Union Area</span>
         <strong class="metric-value text-accent"><span id="union_crz_area_sq_ft">${unionCrzAreaSqFt.toLocaleString()}</span> sq ft</strong>
-        <span class="metric-sub">${round16(unionCrzAreaSqFt * 0.092903)} m2 net rhizosphere footprint</span>
+        <span class="metric-sub">${unionSqm.toLocaleString()} m2 net rhizosphere footprint</span>
       </div>
       <div class="metric-box">
         <span class="metric-label">Overlap Saved (De-Duplicated)</span>
         <strong class="metric-value"><span id="overlap_reduction_sq_ft">${overlapReductionSqFt.toLocaleString()}</span> sq ft (${overlapPct}%)</strong>
-        <span class="metric-sub">Prevents double-billing mulch &amp; AirSpade work</span>
+        <span class="metric-sub">${savedSqm.toLocaleString()} m2 saved; prevents double-billing mulch &amp; AirSpade</span>
       </div>
       <div class="metric-box">
         <span class="metric-label">Stand Tree Count &amp; Total DBH</span>
-        <strong class="metric-value">${locatedTrees.length} trees (${round16(locatedTrees.reduce((s, r) => s + r.dbh, 0))} in)</strong>
+        <strong class="metric-value">${locatedTrees.length} trees (${fmtDualInCm(totalDbhIn)})</strong>
+        <span class="metric-sub">1-ft Cartesian grid union verified</span>
+      </div>
+    ` : `
+      <div class="metric-box">
+        <span class="metric-label">Gross Summed CRZ Area</span>
+        <strong class="metric-value">${grossSqm.toLocaleString()} m2</strong>
+        <span class="metric-sub"><span id="gross_crz_area_sq_ft">${grossCrzAreaSqFt.toLocaleString()}</span> sq ft un-deduplicated sum</span>
+      </div>
+      <div class="metric-box highlight-box">
+        <span class="metric-label">1-ft Grid De-Duplicated Union Area</span>
+        <strong class="metric-value text-accent">${unionSqm.toLocaleString()} m2</strong>
+        <span class="metric-sub"><span id="union_crz_area_sq_ft">${unionCrzAreaSqFt.toLocaleString()}</span> sq ft net rhizosphere footprint</span>
+      </div>
+      <div class="metric-box">
+        <span class="metric-label">Overlap Saved (De-Duplicated)</span>
+        <strong class="metric-value">${savedSqm.toLocaleString()} m2 (${overlapPct}%)</strong>
+        <span class="metric-sub"><span id="overlap_reduction_sq_ft">${overlapReductionSqFt.toLocaleString()}</span> sq ft saved; prevents double-billing mulch &amp; AirSpade</span>
+      </div>
+      <div class="metric-box">
+        <span class="metric-label">Stand Tree Count &amp; Total DBH</span>
+        <strong class="metric-value">${locatedTrees.length} trees (${fmtDualInCm(totalDbhIn)})</strong>
         <span class="metric-sub">1-ft Cartesian grid union verified</span>
       </div>
     `;
-    const svgMarkup = renderSiteMapSVG(locatedTrees, { width: 680, height: 340 });
+    const rawSvgMarkup = renderSiteMapSVG(locatedTrees, { width: 680, height: 340 });
+    const svgMarkup = labelSvgMarkup(
+      rawSvgMarkup,
+      `Multi-tree stand root-zone overlap map for ${locatedTrees.length} specimens (net union CRZ ${unionCrzAreaSqFt.toLocaleString()} sq ft)`
+    );
     svgWrapEl.innerHTML = svgMarkup || '<p class="hint">Add located trees to render the SVG stand union map.</p>';
     if (svgSummaryEl) {
-      svgSummaryEl.innerHTML = `Net Union CRZ: <strong>${unionCrzAreaSqFt.toLocaleString()} sq ft</strong> | Overlap Saved: <strong>${overlapReductionSqFt.toLocaleString()} sq ft (${overlapPct}%)</strong>`;
+      svgSummaryEl.innerHTML = imp ? `Net Union CRZ: <strong>${unionCrzAreaSqFt.toLocaleString()} sq ft (${unionSqm} m2)</strong> | Overlap Saved: <strong>${overlapReductionSqFt.toLocaleString()} sq ft (${overlapPct}%)</strong>` : `Net Union CRZ: <strong>${unionSqm} m2 (${unionCrzAreaSqFt.toLocaleString()} sq ft)</strong> | Overlap Saved: <strong>${savedSqm} m2 (${overlapPct}%)</strong>`;
     }
     const standAssessments = locatedTrees.map((t) => {
       const matchedCase = FIXED_PARITY_CASES.find((c) => c.id === t.case_id) || FIXED_PARITY_CASES[0];
@@ -6531,11 +6951,13 @@ function initDemoExtrasUI() {
       clone.rhizosphere_and_root_collar.tiz_radius_m = round27(crzM * 1.5);
       return clone;
     });
-    const parcelSqm = Math.max(100, Number(inputStandParcelSqm?.value) || 4047);
+    const parcelSqm = Math.max(100, Math.round(canonicalStandParcelSqm));
     const rollup = computeSanctuaryScorecardRollup(standAssessments, parcelSqm);
     const sc = rollup.sanctuary_scorecard;
     const eq = rollup.ecological_equity;
     const compositeTier = getEcologicalTier(sc.composite_sanctuary_score);
+    const canopyAreaStr = fmtDualAreaFromSqm(rollup.spatial_coverage.total_canopy_projection_sqm);
+    const parcelAreaStr = fmtDualParcelFromSqm(rollup.parcel_area_sqm);
     if (scSummaryEl) {
       scSummaryEl.innerHTML = `
         <div>
@@ -6548,7 +6970,7 @@ function initDemoExtrasUI() {
         </div>
         <div class="verdict-right">
           <span class="metric-label">Canopy Coverage of Parcel</span>
-          <strong>${rollup.spatial_coverage.canopy_coverage_parcel_pct}% (${rollup.spatial_coverage.total_canopy_projection_sqm} m2 / ${rollup.parcel_area_sqm} m2)</strong>
+          <strong>${rollup.spatial_coverage.canopy_coverage_parcel_pct}% (${canopyAreaStr} across ${parcelAreaStr})</strong>
         </div>
       `;
     }
@@ -6556,12 +6978,12 @@ function initDemoExtrasUI() {
       {
         name: "Soil Health Index",
         score: sc.soil_health_index,
-        driver: "Top-15cm bulk density (g/cm3), steady-state infiltration (mm/hr), SOM (%), and F:B fungal ratio weighted by TIZ area"
+        driver: "Top-15cm bulk density (lb/cu ft & g/cm3), steady-state infiltration (in/hr & mm/hr), SOM (%), and F:B fungal ratio weighted by TIZ area"
       },
       {
         name: "Canopy Coverage",
         score: sc.canopy_coverage_index,
-        driver: `Live Crown Ratio-weighted dripline projection (${rollup.spatial_coverage.total_canopy_projection_sqm} m2 across ${rollup.parcel_area_sqm} m2 parcel)`
+        driver: `Live Crown Ratio-weighted dripline projection (${canopyAreaStr} across ${parcelAreaStr} parcel)`
       },
       {
         name: "Water Dynamics",
@@ -6583,7 +7005,7 @@ function initDemoExtrasUI() {
       const tier = getEcologicalTier(d.score);
       return `
           <tr>
-            <td><strong>${d.name}</strong></td>
+            <th scope="row">${d.name}</th>
             <td><strong>${d.score} / 100</strong></td>
             <td><span class="badge ${tier.badgeClass}">${tier.label}</span></td>
             <td>${d.driver}</td>
@@ -7184,6 +7606,42 @@ function initVeilAndHandoffChrome() {
       }
     });
   }
+  if (document.documentElement.dataset.oaTablistKeybound !== "true") {
+    document.documentElement.dataset.oaTablistKeybound = "true";
+    document.addEventListener("keydown", (event) => {
+      const key = event.key;
+      if (key !== "ArrowRight" && key !== "ArrowLeft" && key !== "Home" && key !== "End") {
+        return;
+      }
+      const target = event.target;
+      const tab = target && target.closest ? target.closest('[role="tab"]') : null;
+      if (!tab) return;
+      const tablist = tab.closest('[role="tablist"]');
+      if (!tablist) return;
+      const tabs = Array.from(tablist.querySelectorAll('[role="tab"]')).filter(
+        (el) => !el.hidden && el.getAttribute("aria-disabled") !== "true" && !el.disabled
+      );
+      if (tabs.length < 2) return;
+      const currentIndex = tabs.indexOf(tab);
+      if (currentIndex === -1) return;
+      event.preventDefault();
+      let nextIndex = currentIndex;
+      if (key === "ArrowRight") {
+        nextIndex = (currentIndex + 1) % tabs.length;
+      } else if (key === "ArrowLeft") {
+        nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+      } else if (key === "Home") {
+        nextIndex = 0;
+      } else if (key === "End") {
+        nextIndex = tabs.length - 1;
+      }
+      const nextTab = tabs[nextIndex];
+      if (nextTab) {
+        nextTab.focus();
+        nextTab.click();
+      }
+    });
+  }
   if (document.getElementById("arborist-handoff-dialog")) {
     ensureArboristHandoffDialog();
   }
@@ -7228,8 +7686,9 @@ function renderLivingLensSVG({
   const shellBadgeFill = isSound ? "var(--highlight-bg)" : "var(--danger-bg)";
   const shellBadgeStroke = isSound ? "var(--accent-green)" : "var(--danger-red)";
   const shellBadgeText = isSound ? "var(--accent-bright)" : "var(--danger-red)";
+  const imp = isImperialUnits();
   const shellVerdictLabel = isSound ? `SOUND SHELL \xB7 t/R = ${tOverR.toFixed(2)} (>= 0.30)` : `THIN SHELL \xB7 t/R = ${tOverR.toFixed(2)} (< 0.30)`;
-  const shellSubLabel = isSound ? `${soundShellCm.toFixed(1)} cm live wall holds full windload bending` : `${soundShellCm.toFixed(1)} cm wall; run Level 3 sonic tomogram`;
+  const shellSubLabel = isSound ? `${fmtDualFromCm(soundShellCm)} live wall holds windload` : `${fmtDualFromCm(soundShellCm)} wall; run Level 3 tomogram`;
   const trenchMarkup = disturbancePct > 0 ? `
       <rect
         x="${trenchX}"
@@ -7392,13 +7851,13 @@ function renderLivingLensSVG({
 
         <!-- Zone Labels Below Grade -->
         <text x="${cxTree}" y="${gradeY + 39}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--text-main)">
-          SRZ Windthrow Plate: ${srzFt.toFixed(1)} ft
+          SRZ Windthrow Plate: ${fmtDualFtM(srzFt)}
         </text>
         <text x="${cxTree}" y="${gradeY + 66}" text-anchor="middle" font-size="10.4" font-weight="700" fill="var(--accent-bright)">
-          ANSI A300 CRZ: ${crzFt.toFixed(1)} ft radius
+          ANSI A300 CRZ: ${fmtDualFtM(crzFt)} radius
         </text>
-        <text x="${cxTree}" y="${gradeY + 86}" text-anchor="middle" font-size="9.8" font-weight="600" fill="var(--accent-copper)">
-          1.5x Mycorrhizal Sponge (TIZ: ${tizFt.toFixed(1)} ft \xB7 ${Math.round(stormGallons).toLocaleString("en-US")} gal / 1-in storm)
+        <text x="${cxTree}" y="${gradeY + 86}" text-anchor="middle" font-size="9.5" font-weight="600" fill="var(--accent-copper)">
+          1.5x Sponge (TIZ: ${imp ? `${tizFt.toFixed(1)} ft` : `${ftToM(tizFt, 1)} m`} \xB7 ${fmtDualGallons(stormGallons)} / storm)
         </text>
       </svg>
 
@@ -7453,8 +7912,8 @@ function renderLivingLensSVG({
         <text x="${ringCx}" y="${ringCy + 13}" text-anchor="middle" font-size="9.8" font-weight="600" fill="var(--text-muted)">
           ${cavityPct === 0 ? "Solid cylinder" : `${cavityPct}% hollow width`}
         </text>
-        <text x="${ringCx}" y="${ringCy + 27}" text-anchor="middle" font-size="9.2" font-weight="600" fill="var(--text-muted)">
-          R = ${trunkRadiusCm.toFixed(1)} cm
+        <text x="${ringCx}" y="${ringCy + 27}" text-anchor="middle" font-size="8.8" font-weight="600" fill="var(--text-muted)">
+          R = ${fmtDualFromCm(trunkRadiusCm)}
         </text>
 
         <!-- Structural Verdict Pill -->
@@ -7633,15 +8092,16 @@ function initLivingLensUI() {
     );
     const ctlaUsd = Math.round(Number(valuation.ctla_10th_ed_depreciated_usd) || 0);
     const stage1Usd = Math.round(Number(triage.stages[0]?.client_price_usd) || 0);
+    const imp = isImperialUnits();
     const setElText = (id, val) => {
       const node = document.getElementById(id);
       if (node) node.textContent = val;
     };
-    setElText("qc-dbh-display", `${dbhIn} in`);
-    setElText("qc-dbh-cm-display", `${dbhCm.toFixed(1)} cm`);
+    setElText("qc-dbh-display", imp ? `${dbhIn} in` : `${dbhCm.toFixed(1)} cm`);
+    setElText("qc-dbh-cm-display", imp ? `${dbhCm.toFixed(1)} cm` : `${dbhIn} in`);
     setElText(
       "qc-tape-circumference",
-      `Tape around trunk at 4.5 ft: ${circumferenceIn.toFixed(1)} in (${circFeet} ft ${circRemIn.toFixed(1)} in)`
+      imp ? `Tape around trunk at 4.5 ft: ${circumferenceIn.toFixed(1)} in (${circFeet} ft ${circRemIn.toFixed(1)} in)` : `Tape around trunk at 1.37 m: ${round17(dbhCm * Math.PI)} cm (${round28(dbhCm * Math.PI / 100)} m / ${circumferenceIn.toFixed(1)} in)`
     );
     setElText(
       "qc-cavity-display",
@@ -7654,14 +8114,16 @@ function initLivingLensUI() {
     }
     setElText("qc-disturbance-display", `${disturbancePct}% of CRZ`);
     const disturbedSqft = Math.round(crz.area_sqft * disturbancePct / 100);
-    const disturbanceHintText = disturbancePct === 0 ? "Zero trenching or grade cut inside the Critical Root Zone." : disturbancePct <= 15 ? `Affects ~${disturbedSqft.toLocaleString("en-US")} sq ft of outer feeder roots; specify 150 psi AirSpade trenching rather than mechanical cutting.` : rootRuleViolated ? `Affects ~${disturbedSqft.toLocaleString("en-US")} sq ft and exceeds the ${maxAllowedCrzPct}% CRZ disturbance threshold (${muni.name}).` : `Affects ~${disturbedSqft.toLocaleString("en-US")} sq ft inside the ${crz.radius_feet.toFixed(1)} ft CRZ; protect the inner ${srz.radius_feet.toFixed(1)} ft windthrow plate.`;
+    const disturbedAreaLabel = fmtDualAreaSqftSqm(disturbedSqft);
+    const pressureLabel = imp ? "150 psi (10.3 bar)" : "10.3 bar (150 psi)";
+    const disturbanceHintText = disturbancePct === 0 ? "Zero trenching or grade cut inside the Critical Root Zone." : disturbancePct <= 15 ? `Affects ~${disturbedAreaLabel} of outer feeder roots; specify ${pressureLabel} AirSpade trenching rather than mechanical cutting.` : rootRuleViolated ? `Affects ~${disturbedAreaLabel} and exceeds the ${maxAllowedCrzPct}% CRZ disturbance threshold (${muni.name}).` : `Affects ~${disturbedAreaLabel} inside the ${fmtDualFtM(crz.radius_feet, crz.radius_meters)} CRZ; protect the inner ${fmtDualFtM(srz.radius_feet, srz.radius_meters)} windthrow plate.`;
     setElText("qc-disturbance-hint", disturbanceHintText);
-    setElText("qc-crz-val", `${crz.radius_feet.toFixed(1)} ft (${crz.radius_meters.toFixed(2)} m)`);
+    setElText("qc-crz-val", fmtDualFtM(crz.radius_feet, crz.radius_meters));
     setElText(
       "qc-tpz-val",
-      `${Math.round(crz.area_sqft).toLocaleString("en-US")} sq ft CRZ | ${tizAreaSqft.toLocaleString("en-US")} sq ft sponge`
+      imp ? `${Math.round(crz.area_sqft).toLocaleString("en-US")} sq ft CRZ | ${tizAreaSqft.toLocaleString("en-US")} sq ft sponge` : `${round17(crz.area_sqm).toLocaleString("en-US")} m2 CRZ | ${tizAreaM2.toLocaleString("en-US")} m2 sponge`
     );
-    setElText("qc-srz-val", `${srz.radius_feet.toFixed(1)} ft (${srz.radius_meters.toFixed(2)} m)`);
+    setElText("qc-srz-val", fmtDualFtM(srz.radius_feet, srz.radius_meters));
     const permitSuffix = permitIfRemoved.required ? " (Removal Permit Req.)" : permitIfRemoved.unknown ? " (Verify City Rule)" : "";
     setElText("qc-status-val", `${protLabel}${permitSuffix}`);
     setElText("qc-holobiont-val", formatUsd2(holobiontUsd));
@@ -7698,17 +8160,23 @@ function initLivingLensUI() {
       verdictCard.classList.toggle("is-thin-shell", tOverR < 0.3);
     }
     setElText("qc-innate-verdict-headline", leoBrief.answer_first.headline_verdict);
+    const dbhDualText = fmtDualInCm(dbhIn, dbhCm);
+    const shellDualText = fmtDualFromCm(biomechanics.biomechanics.sound_shell_cm);
+    const srzDualText = fmtDualFtM(srz.radius_feet, srz.radius_meters);
+    const crzDualText = fmtDualFtM(crz.radius_feet, crz.radius_meters);
+    const stormDualText = fmtDualGallons(sponge.storm_1in_capture_gallons);
+    const rainDepthText = imp ? "1-inch (25 mm)" : "25 mm (1-inch)";
     const threeSentenceDiagnosis = [
-      `${tOverR >= 0.3 ? `At ${dbhIn} inches DBH (~${ageEst.estimated_age_years} years old), this ${speciesCommon} retains a ${biomechanics.biomechanics.sound_shell_cm} cm living outer cylinder (t/R = ${tOverR.toFixed(2)}, above Claus Mattheck's 0.30 buckling threshold) anchored by a ${srz.radius_feet.toFixed(1)} ft structural root plate.` : `At ${dbhIn} inches DBH (~${ageEst.estimated_age_years} years old), the sound wood wall has thinned to ${biomechanics.biomechanics.sound_shell_cm} cm (t/R = ${tOverR.toFixed(2)}, below Claus Mattheck's 0.30 threshold), so on-site sonic tomography and crown load reduction come before soil work.`}`,
-      `Under ${muni.name}, ${muni.state} (${muni.ordinance_numbers}), it classifies as ${protLabel} with a ${crz.radius_feet.toFixed(1)} ft Critical Root Zone${disturbancePct > 0 ? ` and ${disturbancePct}% proposed root-zone trenching` : ""}.`,
-      `Its underground mycorrhizal zone captures ${Math.round(sponge.storm_1in_capture_gallons).toLocaleString("en-US")} gallons in a 1-inch rain, and Day-1 Stage 1 root-collar relief (${formatUsd2(stage1Usd)}) costs less than a one-time chainsaw bid (${formatUsd2(triage.removal_bid_usd)}).`
+      `${tOverR >= 0.3 ? `At ${dbhDualText} DBH (~${ageEst.estimated_age_years} years old), this ${speciesCommon} retains a ${shellDualText} living outer cylinder (t/R = ${tOverR.toFixed(2)}, above Claus Mattheck's 0.30 buckling threshold) anchored by a ${srzDualText} structural root plate.` : `At ${dbhDualText} DBH (~${ageEst.estimated_age_years} years old), the sound wood wall has thinned to ${shellDualText} (t/R = ${tOverR.toFixed(2)}, below Claus Mattheck's 0.30 threshold), so on-site sonic tomography and crown load reduction come before soil work.`}`,
+      `Under ${muni.name}, ${muni.state} (${muni.ordinance_numbers}), it classifies as ${protLabel} with a ${crzDualText} Critical Root Zone${disturbancePct > 0 ? ` and ${disturbancePct}% proposed root-zone trenching` : ""}.`,
+      `Its underground mycorrhizal zone captures ${stormDualText} in a ${rainDepthText} rain, and Day-1 Stage 1 root-collar relief (${formatUsd2(stage1Usd)}) costs less than a one-time chainsaw bid (${formatUsd2(triage.removal_bid_usd)}).`
     ].join(" ");
     setElText("qc-innate-verdict-body", threeSentenceDiagnosis);
     setElText("qc-innate-falsifier", `Physical check: ${leoBrief.answer_first.falsifier}`);
     setElText("qc-future-a-bid", formatUsd2(triage.removal_bid_usd));
     setElText(
       "qc-future-a-mitigation",
-      cashInLieuUsd > 0 ? `${formatUsd2(cashInLieuUsd)} city mitigation fee` : `${round17(mitIfRemoved?.replacement_inches_owed || 0)} caliper in replacement`
+      cashInLieuUsd > 0 ? `${formatUsd2(cashInLieuUsd)} city mitigation fee` : `${fmtDualInCm(mitIfRemoved?.replacement_inches_owed || 0)} caliper replacement`
     );
     setElText(
       "qc-future-a-lost",
@@ -7721,7 +8189,7 @@ function initLivingLensUI() {
     );
     setElText(
       "qc-future-b-sponge",
-      `${Math.round(sponge.storm_1in_capture_gallons).toLocaleString("en-US")} gal / 1-in storm + ${Math.round(sponge.som_sponge_capacity_gallons).toLocaleString("en-US")} gal SOM reserve`
+      `${fmtDualGallons(sponge.storm_1in_capture_gallons)}${imp ? " / 1-in storm" : " / 25 mm storm"} + ${fmtDualGallons(sponge.som_sponge_capacity_gallons)} SOM reserve`
     );
     setElText(
       "qc-future-b-margin",
@@ -7792,6 +8260,11 @@ function initLivingLensUI() {
   qcRoot.addEventListener("change", () => {
     updateLivingLens();
   });
+  if (typeof window !== "undefined") {
+    window.addEventListener("oa:unitschange", () => {
+      updateLivingLens();
+    });
+  }
   const openHandoffBtn = document.getElementById("btn-open-handoff-dialog");
   if (openHandoffBtn) {
     openHandoffBtn.addEventListener("click", () => {
@@ -9450,8 +9923,15 @@ function initOrdinancesExplorerUI() {
       const isFullyVerified = unverifiedList.length === 0;
       const statusBadge = isFullyVerified ? `<span class="badge badge-protected">VERIFIED STATUTE</span>` : `<span class="badge badge-warn">CONTAINS UNVERIFIED FIELDS (${unverifiedList.length})</span>`;
       const cityLabel = `${muni.name}, ${muni.state}`;
-      const regDbh = `${muni.dbh_threshold_inches}" DBH`;
-      const heritageDbh = muni.heritage_threshold_inches !== null && muni.heritage_threshold_inches !== void 0 ? `${muni.heritage_threshold_inches}" DBH` : "N/A";
+      const regCm = inToCm(muni.dbh_threshold_inches, 1);
+      const regDbhHtml = dualUnitSpanHtml(
+        `${muni.dbh_threshold_inches}" DBH (${regCm} cm)`,
+        `${regCm} cm DBH (${muni.dbh_threshold_inches}")`
+      );
+      const heritageDbhHtml = muni.heritage_threshold_inches !== null && muni.heritage_threshold_inches !== void 0 ? dualUnitSpanHtml(
+        `${muni.heritage_threshold_inches}" DBH (${inToCm(muni.heritage_threshold_inches, 1)} cm)`,
+        `${inToCm(muni.heritage_threshold_inches, 1)} cm DBH (${muni.heritage_threshold_inches}")`
+      ) : "N/A";
       return `
           <tr data-muni-row="${escapeHtml3(muni.id)}">
             <th scope="row">${escapeHtml3(cityLabel)}</th>
@@ -9462,8 +9942,8 @@ function initOrdinancesExplorerUI() {
                 Primary Statute Source
               </a>
             </td>
-            <td><strong>${escapeHtml3(regDbh)}</strong></td>
-            <td><strong>${escapeHtml3(heritageDbh)}</strong></td>
+            <td><strong>${regDbhHtml}</strong></td>
+            <td><strong>${heritageDbhHtml}</strong></td>
             <td>${escapeHtml3(formatReplacementRatio(muni))}</td>
             <td>${escapeHtml3(formatCashInLieuRate(muni))}</td>
             <td>${escapeHtml3(formatPathogenWindow(muni))}</td>
@@ -9482,6 +9962,7 @@ function initOrdinancesExplorerUI() {
           </tr>
         `;
     }).join("");
+    applyStaticUnitSwaps(tbody);
     tbody.querySelectorAll("[data-load-muni]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const id = btn.getAttribute("data-load-muni");
@@ -9538,6 +10019,7 @@ function initOrdinancesExplorerUI() {
           </article>
         `;
     }).join("");
+    applyStaticUnitSwaps(tbody);
   }
   function setActivePresetButton(activeBtn) {
     presetBar?.querySelectorAll(".btn-preset").forEach((btn) => {
@@ -11072,20 +11554,48 @@ function initFieldToolUI() {
   UserInvalidFallback.init(form);
   let activePreset = JSON.parse(JSON.stringify(FIXED_PARITY_CASES[0]));
   let activePreviewTab = "geojson";
+  let canonicalFieldState = {
+    dbh_cm: 76.2,
+    stem_diameters_cm: [76.2],
+    height_m: 16.5,
+    spread_ns_m: 22,
+    spread_ew_m: 24,
+    cutfill_in: 2,
+    root_flare_cm: 98,
+    burial_depth_cm: 16,
+    trench_length_m: 8.5,
+    trench_width_cm: 30,
+    trench_depth_cm: 35,
+    rce_radius_m: 1,
+    infiltration_mm_hr: 16,
+    airspade_psi: 150
+  };
   const el = (id) => document.getElementById(id);
   const muniSelect = el("input-ordinance-id");
-  if (muniSelect) {
+  function populateMunicipalitySelect() {
+    if (!muniSelect) return;
+    const prevVal = muniSelect.value;
+    const imp = isImperialUnits();
+    const fmtMuniThresholds = (m) => {
+      const pStr = imp ? `${m.dbh_threshold_inches} in` : `${inToCm(m.dbh_threshold_inches, 1)} cm / ${m.dbh_threshold_inches} in`;
+      const hStr = m.heritage_threshold_inches !== null && m.heritage_threshold_inches !== void 0 ? imp ? `${m.heritage_threshold_inches} in` : `${inToCm(m.heritage_threshold_inches, 1)} cm / ${m.heritage_threshold_inches} in` : "N/A";
+      return `${m.name}, ${m.state} (Protected &gt;= ${pStr}, Heritage &gt;= ${hStr})`;
+    };
     const txOptions = CENTRAL_TEXAS_MUNICIPALITIES.map(
-      (m) => `<option value="${m.id}">${m.name}, ${m.state} (Protected &gt;= ${m.dbh_threshold_inches} in, Heritage &gt;= ${m.heritage_threshold_inches} in)</option>`
+      (m) => `<option value="${m.id}">${fmtMuniThresholds(m)}</option>`
     ).join("");
     const orOptions = ROGUE_VALLEY_MUNICIPALITIES.map(
-      (m) => `<option value="${m.id}">${m.name}, ${m.state} (Protected &gt;= ${m.dbh_threshold_inches} in, Heritage &gt;= ${m.heritage_threshold_inches} in)</option>`
+      (m) => `<option value="${m.id}">${fmtMuniThresholds(m)}</option>`
     ).join("");
     muniSelect.innerHTML = [
       `<optgroup label="Central Texas (TX)">${txOptions}</optgroup>`,
       `<optgroup label="Rogue Valley, Oregon (OR)">${orOptions}</optgroup>`
     ].join("");
+    if (prevVal) {
+      muniSelect.value = prevVal;
+    }
   }
+  populateMunicipalitySelect();
   const speciesSelect = el("input-species-preset");
   if (speciesSelect) {
     speciesSelect.innerHTML = [
@@ -11115,6 +11625,278 @@ function initFieldToolUI() {
   function escapeUiHtml(str) {
     return String(str ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
+  function setInputMeta(inputId, labelId, hintId, meta) {
+    const input = el(inputId);
+    const label = el(labelId);
+    const hint = el(hintId);
+    if (label && meta.label) label.textContent = meta.label;
+    if (hint && meta.hint) hint.textContent = meta.hint;
+    if (input) {
+      if (meta.min !== void 0) input.min = String(meta.min);
+      if (meta.max !== void 0) input.max = String(meta.max);
+      if (meta.step !== void 0) input.step = String(meta.step);
+      if (meta.value !== void 0) input.value = String(meta.value);
+    }
+  }
+  function syncUnitInputsUI() {
+    const imp = isImperialUnits();
+    const dbhInEl = el("input-dbh-inches");
+    const dbhCmEl = el("input-dbh-cm");
+    const dbhInVal = Math.round(canonicalFieldState.dbh_cm / 2.54 * 100) / 100;
+    if (imp) {
+      if (dbhInEl) {
+        dbhInEl.readOnly = false;
+        dbhInEl.required = true;
+      }
+      if (dbhCmEl) {
+        dbhCmEl.readOnly = true;
+        dbhCmEl.required = false;
+      }
+      setInputMeta("input-dbh-inches", "label-dbh-in", "hint-dbh-in", {
+        label: "Trunk DBH (Inches)",
+        hint: "Diameter at 4.5 ft (0.5 to 500 in)",
+        min: 0.5,
+        max: 500,
+        step: 0.1,
+        value: dbhInVal
+      });
+      setInputMeta("input-dbh-cm", "label-dbh-cm", "hint-dbh-cm", {
+        label: "Synced DBH (cm)",
+        hint: "Synced metric diameter (cm)",
+        min: 1,
+        max: 1500,
+        step: 0.01,
+        value: canonicalFieldState.dbh_cm
+      });
+      setInputMeta("input-stems-inches", "label-stems", "hint-stems", {
+        label: "Stem Diameters (Inches, comma-separated)",
+        hint: "Example: 20, 14, 10 (in)",
+        value: canonicalFieldState.stem_diameters_cm.map((cm) => cmToIn(cm, 1)).join(", ")
+      });
+      setInputMeta("input-height-m", "label-height", "hint-height", {
+        label: "Tree Height (ft)",
+        hint: `Total height (${mToFt(canonicalFieldState.height_m, 1)} ft = ${canonicalFieldState.height_m} m)`,
+        min: 1.5,
+        max: 450,
+        step: 0.5,
+        value: mToFt(canonicalFieldState.height_m, 1)
+      });
+      setInputMeta("input-infiltration", "label-inf", "hint-inf", {
+        label: "Soil Infiltration (in/hr)",
+        hint: `Ring infiltrometer (${mmHrToInHr(canonicalFieldState.infiltration_mm_hr)} in/hr = ${canonicalFieldState.infiltration_mm_hr} mm/hr)`,
+        min: 0,
+        max: 80,
+        step: 0.05,
+        value: mmHrToInHr(canonicalFieldState.infiltration_mm_hr)
+      });
+      setInputMeta("input-spread-ns-m", "label-spread-ns", "hint-ns", {
+        label: "Crown Spread N-S (ft)",
+        hint: "North-South dripline (ft)",
+        min: 1.5,
+        max: 450,
+        step: 0.5,
+        value: mToFt(canonicalFieldState.spread_ns_m, 1)
+      });
+      setInputMeta("input-spread-ew-m", "label-spread-ew", "hint-ew", {
+        label: "Crown Spread E-W (ft)",
+        hint: "East-West dripline (ft)",
+        min: 1.5,
+        max: 450,
+        step: 0.5,
+        value: mToFt(canonicalFieldState.spread_ew_m, 1)
+      });
+      setInputMeta("input-cutfill-in", "label-cutfill", "hint-cutfill", {
+        label: "Cut/Fill Depth Inside 1/2 CRZ (in)",
+        hint: "Typically max 4 in (10.2 cm) allowed",
+        min: 0,
+        max: 60,
+        step: 0.5,
+        value: Math.round(canonicalFieldState.cutfill_in * 100) / 100
+      });
+      setInputMeta("input-root-flare-cm", "label-rfd", "hint-rfd", {
+        label: "Root Flare Diameter (in)",
+        hint: "Basal flare for AS 4970 SRZ (in)",
+        min: 0.5,
+        max: 1e3,
+        step: 0.2,
+        value: cmToIn(canonicalFieldState.root_flare_cm, 1)
+      });
+      setInputMeta("input-burial-depth-cm", "label-burial", "hint-burial", {
+        label: "Root Flare Burial Depth (in)",
+        hint: "Soil or mulch burial above flare (in)",
+        min: 0,
+        max: 80,
+        step: 0.2,
+        value: cmToIn(canonicalFieldState.burial_depth_cm, 1)
+      });
+      setInputMeta("input-trench-length-m", "label-trench-len", "hint-trench-len", {
+        label: "Trench Length (ft)",
+        hint: "Mean spoke length (ft)",
+        min: 0,
+        max: 165,
+        step: 0.5,
+        value: mToFt(canonicalFieldState.trench_length_m, 1)
+      });
+      setInputMeta("input-trench-width-cm", "label-tw", "hint-tw", {
+        label: "Trench Width (in)",
+        hint: "Default 11.8 in (30 cm)",
+        min: 0,
+        max: 40,
+        step: 0.2,
+        value: cmToIn(canonicalFieldState.trench_width_cm, 1)
+      });
+      setInputMeta("input-trench-depth-cm", "label-td", "hint-td", {
+        label: "Trench Depth (in)",
+        hint: "Default 13.8 in (35 cm)",
+        min: 0,
+        max: 40,
+        step: 0.2,
+        value: cmToIn(canonicalFieldState.trench_depth_cm, 1)
+      });
+      setInputMeta("input-rce-radius-m", "label-rce", "hint-rce", {
+        label: "Root Collar Basin Radius (ft)",
+        hint: "Excavation radius around flare (ft)",
+        min: 0,
+        max: 35,
+        step: 0.2,
+        value: mToFt(canonicalFieldState.rce_radius_m, 1)
+      });
+      setInputMeta("input-airspade-psi", "label-psi", "hint-psi", {
+        label: "AirSpade Pressure (psi)",
+        hint: `Supersonic nozzle (${Math.round(canonicalFieldState.airspade_psi)} psi = ${Math.round(canonicalFieldState.airspade_psi * 0.0689476 * 10) / 10} bar)`,
+        min: 0,
+        max: 250,
+        step: 5,
+        value: Math.round(canonicalFieldState.airspade_psi)
+      });
+    } else {
+      if (dbhCmEl) {
+        dbhCmEl.readOnly = false;
+        dbhCmEl.required = true;
+      }
+      if (dbhInEl) {
+        dbhInEl.readOnly = true;
+        dbhInEl.required = false;
+      }
+      setInputMeta("input-dbh-inches", "label-dbh-in", "hint-dbh-in", {
+        label: "Synced DBH (Inches)",
+        hint: "Synced US Imperial diameter (in)",
+        min: 0.5,
+        max: 500,
+        step: 0.1,
+        value: dbhInVal
+      });
+      setInputMeta("input-dbh-cm", "label-dbh-cm", "hint-dbh-cm", {
+        label: "Trunk DBH (cm)",
+        hint: "Diameter at 1.37 m (1.3 to 1270 cm)",
+        min: 1,
+        max: 1500,
+        step: 0.1,
+        value: canonicalFieldState.dbh_cm
+      });
+      setInputMeta("input-stems-inches", "label-stems", "hint-stems", {
+        label: "Stem Diameters (cm, comma-separated)",
+        hint: "Example: 50.8, 35.6, 25.4 (cm)",
+        value: canonicalFieldState.stem_diameters_cm.join(", ")
+      });
+      setInputMeta("input-height-m", "label-height", "hint-height", {
+        label: "Tree Height (m)",
+        hint: `Total height (${canonicalFieldState.height_m} m = ${mToFt(canonicalFieldState.height_m, 1)} ft)`,
+        min: 0.5,
+        max: 140,
+        step: 0.1,
+        value: canonicalFieldState.height_m
+      });
+      setInputMeta("input-infiltration", "label-inf", "hint-inf", {
+        label: "Soil Infiltration (mm/hr)",
+        hint: `Ring infiltrometer (${canonicalFieldState.infiltration_mm_hr} mm/hr = ${mmHrToInHr(canonicalFieldState.infiltration_mm_hr)} in/hr)`,
+        min: 0,
+        max: 2e3,
+        step: 0.5,
+        value: canonicalFieldState.infiltration_mm_hr
+      });
+      setInputMeta("input-spread-ns-m", "label-spread-ns", "hint-ns", {
+        label: "Crown Spread N-S (m)",
+        hint: "North-South dripline (m)",
+        min: 0.5,
+        max: 140,
+        step: 0.5,
+        value: canonicalFieldState.spread_ns_m
+      });
+      setInputMeta("input-spread-ew-m", "label-spread-ew", "hint-ew", {
+        label: "Crown Spread E-W (m)",
+        hint: "East-West dripline (m)",
+        min: 0.5,
+        max: 140,
+        step: 0.5,
+        value: canonicalFieldState.spread_ew_m
+      });
+      setInputMeta("input-cutfill-in", "label-cutfill", "hint-cutfill", {
+        label: "Cut/Fill Depth Inside 1/2 CRZ (cm)",
+        hint: "Typically max 10.2 cm (4 in) allowed",
+        min: 0,
+        max: 150,
+        step: 0.5,
+        value: inToCm(canonicalFieldState.cutfill_in, 1)
+      });
+      setInputMeta("input-root-flare-cm", "label-rfd", "hint-rfd", {
+        label: "Root Flare Diameter (cm)",
+        hint: "Basal flare for AS 4970 SRZ (cm)",
+        min: 1,
+        max: 2500,
+        step: 0.5,
+        value: canonicalFieldState.root_flare_cm
+      });
+      setInputMeta("input-burial-depth-cm", "label-burial", "hint-burial", {
+        label: "Root Flare Burial Depth (cm)",
+        hint: "Soil or mulch burial above flare (cm)",
+        min: 0,
+        max: 200,
+        step: 0.5,
+        value: canonicalFieldState.burial_depth_cm
+      });
+      setInputMeta("input-trench-length-m", "label-trench-len", "hint-trench-len", {
+        label: "Trench Length (m)",
+        hint: "Mean spoke length (m)",
+        min: 0,
+        max: 50,
+        step: 0.1,
+        value: canonicalFieldState.trench_length_m
+      });
+      setInputMeta("input-trench-width-cm", "label-tw", "hint-tw", {
+        label: "Trench Width (cm)",
+        hint: "Default 30 cm (11.8 in)",
+        min: 0,
+        max: 100,
+        step: 1,
+        value: canonicalFieldState.trench_width_cm
+      });
+      setInputMeta("input-trench-depth-cm", "label-td", "hint-td", {
+        label: "Trench Depth (cm)",
+        hint: "Default 35 cm (13.8 in)",
+        min: 0,
+        max: 100,
+        step: 1,
+        value: canonicalFieldState.trench_depth_cm
+      });
+      setInputMeta("input-rce-radius-m", "label-rce", "hint-rce", {
+        label: "Root Collar Basin Radius (m)",
+        hint: "Excavation radius around flare (m)",
+        min: 0,
+        max: 10,
+        step: 0.05,
+        value: canonicalFieldState.rce_radius_m
+      });
+      setInputMeta("input-airspade-psi", "label-psi", "hint-psi", {
+        label: "AirSpade Pressure (bar)",
+        hint: `Supersonic nozzle (${Math.round(canonicalFieldState.airspade_psi * 0.0689476 * 10) / 10} bar = ${Math.round(canonicalFieldState.airspade_psi)} psi)`,
+        min: 0,
+        max: 18,
+        step: 0.5,
+        value: Math.round(canonicalFieldState.airspade_psi * 0.0689476 * 10) / 10
+      });
+    }
+  }
   function getCurrentCaseStateFromForm() {
     return {
       id: activePreset?.id || "field-case",
@@ -11125,7 +11907,7 @@ function initFieldToolUI() {
       proposed_removal: Boolean(el("input-proposed-removal")?.checked),
       pruning_date: el("input-pruning-date")?.value || "",
       crz_disturbed_pct: Number(el("input-crz-disturbed-pct")?.value) || 0,
-      cutfill_depth_in: Number(el("input-cutfill-in")?.value) || 0,
+      cutfill_depth_in: Math.max(0, Number(canonicalFieldState.cutfill_in) || 0),
       impervious_pct: Number(el("input-impervious-pct")?.value) || 0,
       crown_removal_pct: Number(el("input-crown-removal-pct")?.value) || 0,
       assessment: latestAssessment
@@ -11154,25 +11936,29 @@ function initFieldToolUI() {
     el("input-taxon-id").value = sb.inaturalist_taxon_id || 49005;
     const isMulti = Boolean(sb.is_multistem);
     el("input-multistem-mode").value = isMulti ? sb.multistem_aggregation_method || "largest_plus_half" : "single_stem";
-    if (isMulti && Array.isArray(sb.stem_diameters_cm) && sb.stem_diameters_cm.length > 0) {
-      el("input-stems-inches").value = sb.stem_diameters_cm.map((cm) => Math.round(cm / 2.54 * 10) / 10).join(", ");
-    } else {
-      const inches = Math.round(sb.dbh_cm / 2.54 * 100) / 100;
-      el("input-stems-inches").value = String(inches);
-    }
-    el("input-dbh-inches").value = Math.round(sb.dbh_cm / 2.54 * 100) / 100;
-    el("input-dbh-cm").value = sb.dbh_cm;
+    canonicalFieldState = {
+      dbh_cm: sb.dbh_cm,
+      stem_diameters_cm: isMulti && Array.isArray(sb.stem_diameters_cm) && sb.stem_diameters_cm.length > 0 ? [...sb.stem_diameters_cm] : [sb.dbh_cm],
+      height_m: sb.height_m,
+      spread_ns_m: sb.crown_spread_ns_m,
+      spread_ew_m: sb.crown_spread_ew_m,
+      cutfill_in: activePreset.cutfill_depth_in ?? 0,
+      root_flare_cm: rh.root_flare_diameter_cm,
+      burial_depth_cm: rh.root_flare_burial_depth_cm,
+      trench_length_m: air.trench_length_m,
+      trench_width_cm: air.trench_width_cm,
+      trench_depth_cm: air.trench_depth_cm,
+      rce_radius_m: air.root_collar_excavation_radius_m,
+      infiltration_mm_hr: soil.infiltration_rate_mm_hr,
+      airspade_psi: air.operating_pressure_psi
+    };
     el("input-condition-class").value = activePreset.condition_class || "Good";
     el("input-site-condition").value = activePreset.site_condition || "Open Grown / Parkland";
-    el("input-height-m").value = sb.height_m;
-    el("input-spread-ns-m").value = sb.crown_spread_ns_m;
-    el("input-spread-ew-m").value = sb.crown_spread_ew_m;
     el("input-lcr-pct").value = sb.live_crown_ratio_pct;
     el("input-disposition").value = disp.recommended_disposition || "Preservation_With_Rhizosphere_Remediation";
     el("input-proposed-removal").checked = Boolean(activePreset.proposed_removal) || disp.recommended_disposition === "Removal_Last_Resort_Unmitigable_Hazard";
     el("input-pruning-date").value = activePreset.pruning_date || "";
     el("input-crz-disturbed-pct").value = activePreset.crz_disturbed_pct ?? 0;
-    el("input-cutfill-in").value = activePreset.cutfill_depth_in ?? 0;
     el("input-impervious-pct").value = activePreset.impervious_pct ?? 0;
     el("input-crown-removal-pct").value = activePreset.crown_removal_pct ?? 0;
     el("input-t-over-r").value = sb.sound_shell_thickness_ratio_t_over_r ?? 0.38;
@@ -11180,18 +11966,10 @@ function initFieldToolUI() {
     if (el("input-tomogram-uri")) {
       el("input-tomogram-uri").value = sb.sonic_tomography_or_resistograph_uri || "";
     }
-    el("input-root-flare-cm").value = rh.root_flare_diameter_cm;
-    el("input-burial-depth-cm").value = rh.root_flare_burial_depth_cm;
     el("input-sgr-count").value = rh.stem_girdling_root_count;
     el("input-sgr-severity").value = rh.stem_girdling_root_severity;
     el("input-trench-count").value = air.trench_count;
-    el("input-trench-length-m").value = air.trench_length_m;
-    el("input-trench-width-cm").value = air.trench_width_cm;
-    el("input-trench-depth-cm").value = air.trench_depth_cm;
-    el("input-rce-radius-m").value = air.root_collar_excavation_radius_m;
-    el("input-airspade-psi").value = air.operating_pressure_psi;
     el("input-bulk-density").value = soil.bulk_density_g_cm3;
-    el("input-infiltration").value = soil.infiltration_rate_mm_hr;
     el("input-som-pct").value = soil.organic_matter_pct;
     el("input-soil-ph").value = soil.soil_ph;
     el("input-fb-ratio").value = myco.fungal_to_bacterial_biomass_ratio ?? 0.5;
@@ -11213,6 +11991,7 @@ function initFieldToolUI() {
     el("input-traq-cof").value = traq.consequences_of_failure;
     el("input-traq-overall").value = traq.overall_risk_rating;
     el("input-traq-residual").value = traq.residual_risk_rating || "Low";
+    syncUnitInputsUI();
     toggleMultiStemInputs();
     recalculateAndRender();
   }
@@ -11246,27 +12025,115 @@ function initFieldToolUI() {
   });
   function syncDbhFromInputs() {
     const mode = el("input-multistem-mode").value;
+    const imp = isImperialUnits();
     if (mode === "single_stem") {
-      const dbhIn = Math.max(0.1, Number(el("input-dbh-inches").value) || 20);
-      const dbhCm = Math.round(dbhIn * 2.54 * 100) / 100;
-      el("input-dbh-cm").value = dbhCm;
+      if (imp) {
+        const dbhIn = Math.max(0.1, Number(el("input-dbh-inches").value) || 20);
+        canonicalFieldState.dbh_cm = Math.round(dbhIn * 2.54 * 100) / 100;
+        el("input-dbh-cm").value = String(canonicalFieldState.dbh_cm);
+      } else {
+        const dbhCm = Math.max(0.5, Number(el("input-dbh-cm").value) || 50.8);
+        canonicalFieldState.dbh_cm = Math.round(dbhCm * 100) / 100;
+        el("input-dbh-inches").value = String(Math.round(canonicalFieldState.dbh_cm / 2.54 * 100) / 100);
+      }
     } else {
       const rawStems = String(el("input-stems-inches").value || "").split(",").map((s) => Number(s.trim())).filter((n) => n > 0);
-      const aggIn = rawStems.length > 0 ? calculateMultiStemDBH(rawStems, mode) : 20;
-      const aggCm = Math.round(aggIn * 2.54 * 100) / 100;
-      el("input-dbh-inches").value = aggIn;
-      el("input-dbh-cm").value = aggCm;
+      const stemsIn = imp ? rawStems.length > 0 ? rawStems : [20, 14] : rawStems.length > 0 ? rawStems.map((cm) => cm / 2.54) : [20, 14];
+      const aggIn = calculateMultiStemDBH(stemsIn, mode);
+      canonicalFieldState.stem_diameters_cm = stemsIn.map(
+        (d) => Math.round(d * 2.54 * 100) / 100
+      );
+      canonicalFieldState.dbh_cm = Math.round(aggIn * 2.54 * 100) / 100;
+      el("input-dbh-inches").value = String(aggIn);
+      el("input-dbh-cm").value = String(canonicalFieldState.dbh_cm);
     }
   }
-  el("input-dbh-inches")?.addEventListener("input", () => {
-    const dbhIn = Math.max(0.1, Number(el("input-dbh-inches").value) || 0.1);
-    el("input-dbh-cm").value = Math.round(dbhIn * 2.54 * 100) / 100;
-    recalculateAndRender();
-  });
-  el("input-stems-inches")?.addEventListener("input", () => {
-    syncDbhFromInputs();
-    recalculateAndRender();
-  });
+  function handleUnitFieldInput(target) {
+    if (!target || !target.id) return;
+    const imp = isImperialUnits();
+    const raw = Number(target.value);
+    switch (target.id) {
+      case "input-dbh-inches":
+        if (imp && Number.isFinite(raw) && raw > 0) {
+          canonicalFieldState.dbh_cm = Math.round(raw * 2.54 * 100) / 100;
+          el("input-dbh-cm").value = String(canonicalFieldState.dbh_cm);
+        }
+        break;
+      case "input-dbh-cm":
+        if (!imp && Number.isFinite(raw) && raw > 0) {
+          canonicalFieldState.dbh_cm = Math.round(raw * 100) / 100;
+          el("input-dbh-inches").value = String(
+            Math.round(canonicalFieldState.dbh_cm / 2.54 * 100) / 100
+          );
+        }
+        break;
+      case "input-stems-inches":
+        syncDbhFromInputs();
+        break;
+      case "input-height-m":
+        if (Number.isFinite(raw) && raw > 0) {
+          canonicalFieldState.height_m = imp ? ftToM(raw, 2) : Math.round(raw * 100) / 100;
+        }
+        break;
+      case "input-infiltration":
+        if (Number.isFinite(raw) && raw >= 0) {
+          canonicalFieldState.infiltration_mm_hr = imp ? inHrToMmHr(raw) : Math.round(raw * 10) / 10;
+        }
+        break;
+      case "input-spread-ns-m":
+        if (Number.isFinite(raw) && raw > 0) {
+          canonicalFieldState.spread_ns_m = imp ? ftToM(raw, 2) : Math.round(raw * 100) / 100;
+        }
+        break;
+      case "input-spread-ew-m":
+        if (Number.isFinite(raw) && raw > 0) {
+          canonicalFieldState.spread_ew_m = imp ? ftToM(raw, 2) : Math.round(raw * 100) / 100;
+        }
+        break;
+      case "input-cutfill-in":
+        if (Number.isFinite(raw) && raw >= 0) {
+          canonicalFieldState.cutfill_in = imp ? raw : cmToIn(raw, 2);
+        }
+        break;
+      case "input-root-flare-cm":
+        if (Number.isFinite(raw) && raw > 0) {
+          canonicalFieldState.root_flare_cm = imp ? inToCm(raw, 1) : Math.round(raw * 10) / 10;
+        }
+        break;
+      case "input-burial-depth-cm":
+        if (Number.isFinite(raw) && raw >= 0) {
+          canonicalFieldState.burial_depth_cm = imp ? inToCm(raw, 1) : Math.round(raw * 10) / 10;
+        }
+        break;
+      case "input-trench-length-m":
+        if (Number.isFinite(raw) && raw >= 0) {
+          canonicalFieldState.trench_length_m = imp ? ftToM(raw, 2) : Math.round(raw * 100) / 100;
+        }
+        break;
+      case "input-trench-width-cm":
+        if (Number.isFinite(raw) && raw >= 0) {
+          canonicalFieldState.trench_width_cm = imp ? inToCm(raw, 1) : Math.round(raw * 10) / 10;
+        }
+        break;
+      case "input-trench-depth-cm":
+        if (Number.isFinite(raw) && raw >= 0) {
+          canonicalFieldState.trench_depth_cm = imp ? inToCm(raw, 1) : Math.round(raw * 10) / 10;
+        }
+        break;
+      case "input-rce-radius-m":
+        if (Number.isFinite(raw) && raw >= 0) {
+          canonicalFieldState.rce_radius_m = imp ? ftToM(raw, 2) : Math.round(raw * 100) / 100;
+        }
+        break;
+      case "input-airspade-psi":
+        if (Number.isFinite(raw) && raw >= 0) {
+          canonicalFieldState.airspade_psi = imp ? Math.round(raw) : Math.round(raw / 0.0689476);
+        }
+        break;
+      default:
+        break;
+    }
+  }
   el("btn-gps-locate")?.addEventListener("click", () => {
     const statusSpan = el("gps-status");
     if (typeof navigator === "undefined" || !navigator.geolocation) {
@@ -11311,19 +12178,17 @@ function initFieldToolUI() {
       sb.is_multistem = false;
       sb.multistem_aggregation_method = "single_stem";
       delete sb.stem_diameters_cm;
-      sb.dbh_cm = Math.max(0.5, Number(el("input-dbh-cm").value) || 50.8);
+      sb.dbh_cm = Math.max(0.5, Number(canonicalFieldState.dbh_cm) || 50.8);
     } else {
-      const rawStemsIn = String(el("input-stems-inches").value || "").split(",").map((s) => Number(s.trim())).filter((n) => n > 0);
-      const validStemsIn = rawStemsIn.length > 0 ? rawStemsIn : [20, 14];
-      const aggIn = calculateMultiStemDBH(validStemsIn, mode);
+      const validStemsCm = Array.isArray(canonicalFieldState.stem_diameters_cm) && canonicalFieldState.stem_diameters_cm.length > 0 ? canonicalFieldState.stem_diameters_cm : [50.8, 35.56];
       sb.is_multistem = true;
       sb.multistem_aggregation_method = mode;
-      sb.stem_diameters_cm = validStemsIn.map((d) => Math.round(d * 2.54 * 100) / 100);
-      sb.dbh_cm = Math.round(aggIn * 2.54 * 100) / 100;
+      sb.stem_diameters_cm = [...validStemsCm];
+      sb.dbh_cm = Math.max(0.5, Number(canonicalFieldState.dbh_cm) || 50.8);
     }
-    sb.height_m = Math.max(0.5, Number(el("input-height-m").value) || 15);
-    sb.crown_spread_ns_m = Math.max(0.5, Number(el("input-spread-ns-m").value) || 15);
-    sb.crown_spread_ew_m = Math.max(0.5, Number(el("input-spread-ew-m").value) || 15);
+    sb.height_m = Math.max(0.5, Number(canonicalFieldState.height_m) || 15);
+    sb.crown_spread_ns_m = Math.max(0.5, Number(canonicalFieldState.spread_ns_m) || 15);
+    sb.crown_spread_ew_m = Math.max(0.5, Number(canonicalFieldState.spread_ew_m) || 15);
     sb.live_crown_ratio_pct = Math.min(100, Math.max(0, Number(el("input-lcr-pct").value) || 70));
     sb.sound_shell_thickness_ratio_t_over_r = Math.min(
       1,
@@ -11336,18 +12201,24 @@ function initFieldToolUI() {
     } else {
       delete sb.sonic_tomography_or_resistograph_uri;
     }
-    rh.root_flare_diameter_cm = Math.max(1, Number(el("input-root-flare-cm").value) || sb.dbh_cm * 1.25);
-    rh.root_flare_burial_depth_cm = Math.max(0, Number(el("input-burial-depth-cm").value) || 0);
+    rh.root_flare_diameter_cm = Math.max(
+      1,
+      Number(canonicalFieldState.root_flare_cm) || sb.dbh_cm * 1.25
+    );
+    rh.root_flare_burial_depth_cm = Math.max(0, Number(canonicalFieldState.burial_depth_cm) || 0);
     rh.stem_girdling_root_count = Math.max(0, Math.round(Number(el("input-sgr-count").value) || 0));
     rh.stem_girdling_root_severity = el("input-sgr-severity").value || "None";
     air.trench_count = Math.max(0, Math.round(Number(el("input-trench-count").value) || 6));
-    air.trench_length_m = Math.max(0, Number(el("input-trench-length-m").value) || 6.5);
-    air.trench_width_cm = Math.max(0, Number(el("input-trench-width-cm").value) || 30);
-    air.trench_depth_cm = Math.max(0, Number(el("input-trench-depth-cm").value) || 35);
-    air.root_collar_excavation_radius_m = Math.max(0, Number(el("input-rce-radius-m").value) || 0.9);
-    air.operating_pressure_psi = Math.max(0, Number(el("input-airspade-psi").value) || 150);
+    air.trench_length_m = Math.max(0, Number(canonicalFieldState.trench_length_m) || 6.5);
+    air.trench_width_cm = Math.max(0, Number(canonicalFieldState.trench_width_cm) || 30);
+    air.trench_depth_cm = Math.max(0, Number(canonicalFieldState.trench_depth_cm) || 35);
+    air.root_collar_excavation_radius_m = Math.max(
+      0,
+      Number(canonicalFieldState.rce_radius_m) || 0.9
+    );
+    air.operating_pressure_psi = Math.max(0, Number(canonicalFieldState.airspade_psi) || 150);
     soil.bulk_density_g_cm3 = Math.min(2.65, Math.max(0.1, Number(el("input-bulk-density").value) || 1.45));
-    soil.infiltration_rate_mm_hr = Math.max(0, Number(el("input-infiltration").value) || 20);
+    soil.infiltration_rate_mm_hr = Math.max(0, Number(canonicalFieldState.infiltration_mm_hr) || 20);
     soil.organic_matter_pct = Math.min(100, Math.max(0, Number(el("input-som-pct").value) || 2.8));
     soil.soil_ph = Math.min(11, Math.max(2, Number(el("input-soil-ph").value) || 7.2));
     myco.fungal_to_bacterial_biomass_ratio = Math.max(0, Number(el("input-fb-ratio").value) || 0.5);
@@ -11450,7 +12321,7 @@ function initFieldToolUI() {
         proposed_removal: el("input-proposed-removal").checked,
         pruning_date: el("input-pruning-date").value || null,
         crz_disturbed_pct: Number(el("input-crz-disturbed-pct").value) || 0,
-        cutfill_depth_in: Number(el("input-cutfill-in").value) || 0,
+        cutfill_depth_in: Math.max(0, Number(canonicalFieldState.cutfill_in) || 0),
         impervious_pct: Number(el("input-impervious-pct").value) || 0,
         crown_removal_pct: Number(el("input-crown-removal-pct").value) || 0
       };
@@ -11472,6 +12343,7 @@ function initFieldToolUI() {
   function renderAllOutputs(assessment, res) {
     const errBanner = el("error-banner");
     if (errBanner) errBanner.hidden = true;
+    const imp = isImperialUnits();
     const muni = res.municipality;
     const row = res.evaluatedRow;
     const bio = res.biomechanics;
@@ -11481,6 +12353,14 @@ function initFieldToolUI() {
     const age = res.ageEstimate;
     const mitIfRemoved = res.mitigationIfRemoved;
     const mitActive = res.mitigationActive;
+    const labeledSiteMapSvg = (() => {
+      const raw = String(res.svgSiteMap || "").trim();
+      if (!raw.startsWith("<svg") || raw.includes('role="img"')) return raw;
+      const safeLabel = escapeUiHtml(
+        `ANSI A300 Part 5 and AS 4970 root protection map for ${assessment?.structural_baseline?.tree_tag || "specimen"} (CRZ radius ${fmtDualFtM(res.rootZones.crz.radius_feet, res.rootZones.crz.radius_meters)}, SRZ radius ${fmtDualFtM(res.rootZones.srz.radius_feet, res.rootZones.srz.radius_meters)})`
+      );
+      return raw.replace(/^<svg\b/, `<svg role="img" aria-label="${safeLabel}"`).replace(/>/, `><title>${safeLabel}</title>`);
+    })();
     currentPermalinkHash = encodeAssessmentPermalink(getCurrentCaseStateFromForm());
     const fullShareUrl = typeof window !== "undefined" && window.location ? `${window.location.origin}${window.location.pathname}${currentPermalinkHash}` : `https://openarbor.org/demo/${currentPermalinkHash}`;
     const permalinkDisplayEl = el("permalink-url-display");
@@ -11499,9 +12379,11 @@ function initFieldToolUI() {
       const stRep = el("sticky-replacement-val");
       const stCash = el("sticky-cash-val");
       if (stStatus) stStatus.textContent = `${sticky.status} (${sticky.permit_required})`;
-      if (stDbh) stDbh.textContent = sticky.dbh;
-      if (stCrz) stCrz.textContent = sticky.crz;
-      if (stRep) stRep.textContent = sticky.replacement_owed;
+      if (stDbh) stDbh.textContent = imp ? sticky.dbh : fmtDualInCm(bio.dbh_inches, bio.dbh_cm);
+      if (stCrz) stCrz.textContent = imp ? sticky.crz : fmtDualFtM(res.rootZones.crz.radius_feet, res.rootZones.crz.radius_meters);
+      if (stRep) {
+        stRep.textContent = imp ? sticky.replacement_owed : fmtDualInCm(mitIfRemoved?.replacement_inches_owed || 0);
+      }
       if (stCash) stCash.textContent = sticky.cash_in_lieu;
     }
     const prov = inspectMunicipalityProvenance(muni);
@@ -11540,8 +12422,8 @@ function initFieldToolUI() {
         (g) => `<li><strong>${g.field} (${g.status}):</strong> ${g.description}</li>`
       ).join("")}</ul>`;
       printBodyEl.innerHTML = `
-        <header class="oa-print-header">
-          <h1>Open Arbor Evidentiary Determination Report</h1>
+        <div class="oa-print-header">
+          <h2 class="oa-print-title">Open Arbor Evidentiary Determination Report</h2>
           <p class="oa-print-subtitle">
             <strong>Tree Tag:</strong> ${sb.tree_tag || "T-01"} |
             <strong>Species:</strong> ${sb.species_common || "Live Oak"} (<em>${sb.species_scientific || "Quercus virginiana"}</em>) |
@@ -11557,30 +12439,30 @@ function initFieldToolUI() {
             <strong>Canonical SHA-256 Digest:</strong> ${renderExpandableHashHtml(res.compiledReport.sha256)}<br>
             <strong>Shareable Permalink Address:</strong> ${renderExpandableHashHtml(fullShareUrl, { headChars: 28, tailChars: 12 })}
           </p>
-        </header>
+        </div>
 
         <section class="oa-print-section">
-          <h2>Table 1. Tree Structural &amp; Biomechanical Baseline</h2>
+          <h3>Table 1. Tree Structural &amp; Biomechanical Baseline</h3>
           <div tabindex="0" role="region" aria-label="Table 1. Tree Structural and Biomechanical Baseline" class="table-wrapper">
             <table class="data-table" style="--label-1: 'DBH &amp; Method'; --label-2: 'Height &amp; Spread'; --label-3: 'Plus Code'; --label-4: 'Mattheck t/R'; --label-5: 'Flare Burial'; --label-6: 'SRZ / CRZ / TIZ';">
               <thead>
                 <tr>
-                  <th>DBH &amp; Method</th>
-                  <th>Height &amp; Crown Spread</th>
-                  <th>Global Plus Code</th>
-                  <th>Mattheck t/R &amp; Stability</th>
-                  <th>Root Flare Burial</th>
-                  <th>Protection Zone Radii (SRZ / CRZ / TIZ)</th>
+                  <th scope="col">DBH &amp; Method</th>
+                  <th scope="col">Height &amp; Crown Spread</th>
+                  <th scope="col">Global Plus Code</th>
+                  <th scope="col">Mattheck t/R &amp; Stability</th>
+                  <th scope="col">Root Flare Burial</th>
+                  <th scope="col">Protection Zone Radii (SRZ / CRZ / TIZ)</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td>${bio.dbh_inches} in (${bio.dbh_cm} cm) [${sb.multistem_aggregation_method || "single_stem"}]</td>
-                  <td>H: ${sb.height_m} m | N-S: ${sb.crown_spread_ns_m} m | E-W: ${sb.crown_spread_ew_m} m</td>
+                  <td>${fmtDualInCm(bio.dbh_inches, bio.dbh_cm)} [${sb.multistem_aggregation_method || "single_stem"}]</td>
+                  <td>H: ${fmtDualFromMeters(sb.height_m)} | N-S: ${fmtDualFromMeters(sb.crown_spread_ns_m)} | E-W: ${fmtDualFromMeters(sb.crown_spread_ew_m)}</td>
                   <td><code>${sb.plus_code_global}</code></td>
                   <td>t/R = ${bio.biomechanics.sound_shell_thickness_ratio_t_over_r} (${bio.biomechanics.mattheck_criterion_satisfied ? "Stable >= 0.30" : "Thinning < 0.30"})</td>
-                  <td>${rh.root_flare_burial_depth_cm ?? 0} cm burial (Flare: ${rh.root_flare_diameter_cm} cm)</td>
-                  <td>SRZ: ${res.rootZones.srz.radius_feet} ft (${res.rootZones.srz.radius_meters} m) | CRZ: ${res.rootZones.crz.radius_feet} ft (${res.rootZones.crz.radius_meters} m) | TIZ: ${bio.root_zones.tiz_radius_meters} m</td>
+                  <td>${fmtDualFromCm(rh.root_flare_burial_depth_cm ?? 0)} burial (Flare: ${fmtDualFromCm(rh.root_flare_diameter_cm)})</td>
+                  <td>SRZ: ${fmtDualFtM(res.rootZones.srz.radius_feet, res.rootZones.srz.radius_meters)} | CRZ: ${fmtDualFtM(res.rootZones.crz.radius_feet, res.rootZones.crz.radius_meters)} | TIZ: ${fmtDualFromMeters(bio.root_zones.tiz_radius_meters)}</td>
                 </tr>
               </tbody>
             </table>
@@ -11588,22 +12470,22 @@ function initFieldToolUI() {
         </section>
 
         <section class="oa-print-section">
-          <h2>Table 2. Municipal Ordinance Determination, Mitigation Schedule &amp; Epistemic Boundaries</h2>
+          <h3>Table 2. Municipal Ordinance Determination, Mitigation Schedule &amp; Epistemic Boundaries</h3>
           <div tabindex="0" role="region" aria-label="Table 2. Municipal Ordinance Determination and Mitigation Schedule" class="table-wrapper">
             <table class="data-table" style="--label-1: 'Protection Status'; --label-2: 'Permit Verdict'; --label-3: 'Replacement Owed'; --label-4: 'Cash-in-Lieu';">
               <thead>
                 <tr>
-                  <th>Protection Status</th>
-                  <th>Permit Verdict</th>
-                  <th>Replacement Inches Owed (If Removed)</th>
-                  <th>Cash-in-Lieu Obligation (If Removed)</th>
+                  <th scope="col">Protection Status</th>
+                  <th scope="col">Permit Verdict</th>
+                  <th scope="col">Replacement Caliper Owed (If Removed)</th>
+                  <th scope="col">Cash-in-Lieu Obligation (If Removed)</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
                   <td><strong>${statusLabel(row)}</strong></td>
                   <td><strong>${res.permit.unknown ? "Verify with City (UNVERIFIED)" : res.permit.required ? "PERMIT REQUIRED" : "No Permit Triggered"}</strong> (${res.permitText})</td>
-                  <td>${mitIfRemoved ? `${mitIfRemoved.replacement_inches_owed} in (${mitIfRemoved.replacement_trees_owed} trees)` : "0 in"}</td>
+                  <td>${mitIfRemoved ? `${fmtDualInCm(mitIfRemoved.replacement_inches_owed)} (${mitIfRemoved.replacement_trees_owed} trees)` : "0 in"}</td>
                   <td><strong>$${Number(mitIfRemoved?.cash_in_lieu_usd || 0).toLocaleString()}</strong></td>
                 </tr>
               </tbody>
@@ -11616,20 +12498,20 @@ function initFieldToolUI() {
         </section>
 
         <section class="oa-print-section">
-          <h2>Figure 1. Deterministic Root Protection Zone Map (ANSI A300 Part 5 / AS 4970)</h2>
-          <div id="print-svg-map-holder" class="oa-print-map">${res.svgSiteMap || ""}</div>
+          <h3>Figure 1. Deterministic Root Protection Zone Map (ANSI A300 Part 5 / AS 4970)</h3>
+          <div id="print-svg-map-holder" class="oa-print-map">${labeledSiteMapSvg}</div>
         </section>
 
         <section class="oa-print-section">
-          <h2>Table 3. Dual Valuation &amp; Allometric Ecosystem Services</h2>
+          <h3>Table 3. Dual Valuation &amp; Allometric Ecosystem Services</h3>
           <div tabindex="0" role="region" aria-label="Table 3. Dual Valuation and Allometric Ecosystem Services" class="table-wrapper">
             <table class="data-table" style="--label-1: 'CTLA 10th Ed. Value'; --label-2: '200-Yr Holobiont Equity'; --label-3: 'John White Est. Age'; --label-4: 'Annual Services';">
               <thead>
                 <tr>
-                  <th>CTLA 10th Ed. Depreciated Value</th>
-                  <th>200-Yr Holobiont Biological Equity</th>
-                  <th>John White (FCIN12) Est. Age</th>
-                  <th>Annual Stormwater / Energy / Carbon Flow</th>
+                  <th scope="col">CTLA 10th Ed. Depreciated Value</th>
+                  <th scope="col">200-Yr Holobiont Biological Equity</th>
+                  <th scope="col">John White (FCIN12) Est. Age</th>
+                  <th scope="col">Annual Stormwater / Energy / Carbon Flow</th>
                 </tr>
               </thead>
               <tbody>
@@ -11637,7 +12519,7 @@ function initFieldToolUI() {
                   <td>$${val.ctla_10th_ed_depreciated_usd.toLocaleString()}</td>
                   <td><strong>$${val.holobiont_200yr_biological_equity_usd.toLocaleString()}</strong> (${val.veteran_keystone_habitat_multiplier}x Keystone)</td>
                   <td>${age.estimated_age_years} yrs (${age.site_condition})</td>
-                  <td>${eco.avoided_runoff_gallons_yr.toLocaleString()} gal/yr | ${eco.cooling_savings_kwh_yr} kWh/yr | ${eco.carbon_storage_lbs.toLocaleString()} lbs C ($${eco.total_annual_benefits_usd}/yr)</td>
+                  <td>${fmtDualGallons(eco.avoided_runoff_gallons_yr, "/yr")} | ${eco.cooling_savings_kwh_yr} kWh/yr | ${fmtDualMassFromLbs(eco.carbon_storage_lbs, " C")} ($${eco.total_annual_benefits_usd}/yr)</td>
                 </tr>
               </tbody>
             </table>
@@ -11645,7 +12527,7 @@ function initFieldToolUI() {
         </section>
 
         <section class="oa-print-signature-block">
-          <h2>Practitioner Evidentiary Attestation &amp; Signature Block</h2>
+          <h3>Practitioner Evidentiary Attestation &amp; Signature Block</h3>
           <p>
             <strong>Practitioner Name:</strong> ${escapeUiHtml(el("input-assessor-name")?.value.trim() || "George Steward")} &nbsp;|&nbsp;
             <strong>Credential:</strong> ${escapeUiHtml(el("input-assessor-credential")?.value.trim() || "ISA Certified Arborist TX-362025A / Oak Wilt Qualified")} &nbsp;|&nbsp;
@@ -11684,6 +12566,8 @@ function initFieldToolUI() {
     if (muni) {
       const oakMonths = muni.plan_rules?.pruning?.oak_months;
       const oakWindowText = Array.isArray(oakMonths) ? `Permitted Oak pruning months: ${oakMonths.join(", ")} (${muni.plan_rules?.pruning?.citation || "Oak Wilt Rule"})` : `${muni.plan_rules?.pruning?.standard || "ANSI A300 Part 1"} (${muni.plan_rules?.pruning?.citation || "Verify seasonal Oak Wilt window with local forester"})`;
+      const protThreshStr = fmtDualInCm(muni.dbh_threshold_inches);
+      const heritThreshStr = muni.heritage_threshold_inches !== null && muni.heritage_threshold_inches !== void 0 ? fmtDualInCm(muni.heritage_threshold_inches) : "N/A";
       el("muni-lookup-card").innerHTML = `
         <div class="muni-header">
           <div>
@@ -11696,11 +12580,11 @@ function initFieldToolUI() {
         <div class="metric-grid metric-grid-4">
           <div class="metric-box">
             <span class="metric-label">Protected Threshold</span>
-            <strong class="metric-value">${muni.dbh_threshold_inches} in DBH</strong>
+            <strong class="metric-value">${protThreshStr} DBH</strong>
           </div>
           <div class="metric-box">
             <span class="metric-label">Heritage Threshold</span>
-            <strong class="metric-value">${muni.heritage_threshold_inches} in DBH</strong>
+            <strong class="metric-value">${heritThreshStr} DBH</strong>
           </div>
           <div class="metric-box">
             <span class="metric-label">Multi-Stem Formula</span>
@@ -11708,7 +12592,7 @@ function initFieldToolUI() {
           </div>
           <div class="metric-box">
             <span class="metric-label">CRZ Disturbance Trigger</span>
-            <strong class="metric-value">${muni.plan_rules?.root_zone?.removal_if_disturbed_pct ? `&gt;${muni.plan_rules.root_zone.removal_if_disturbed_pct}% = Removal` : "1.0 ft / in DBH"}</strong>
+            <strong class="metric-value">${muni.plan_rules?.root_zone?.removal_if_disturbed_pct ? `&gt;${muni.plan_rules.root_zone.removal_if_disturbed_pct}% = Removal` : imp ? "1.0 ft / in DBH" : "0.12 m / cm DBH (1.0 ft/in)"}</strong>
           </div>
         </div>
         <p class="muni-subtext"><strong>Oak Wilt &amp; Pruning:</strong> ${oakWindowText}</p>
@@ -11722,10 +12606,10 @@ function initFieldToolUI() {
     const svgMapMarkup = `
       <div class="svg-map-wrap">
         <div class="svg-map-header">
-          <span><strong>ANSI A300 Part 5 / ISA BMP To-Scale Root Protection Map</strong> (Fence Radius: ${row.fence_ft} ft)</span>
+          <span><strong>ANSI A300 Part 5 / ISA BMP To-Scale Root Protection Map</strong> (Fence Radius: ${fmtDualFtM(row.fence_ft)})</span>
           <span>Soil Invigoration Budget: <strong>$${res.soilRemediation.total_usd.toLocaleString()}</strong></span>
         </div>
-        ${res.svgSiteMap || ""}
+        ${labeledSiteMapSvg}
       </div>
     `;
     el("verdict-ordinance-body").innerHTML = `
@@ -11734,7 +12618,7 @@ function initFieldToolUI() {
           <span class="metric-label">Evaluated Municipal Status</span>
           <div class="verdict-title-row">
             <strong class="verdict-big">${statusText}</strong>
-            <span class="badge ${statusClass}">${row.dbh} in DBH (${bio.dbh_cm} cm)</span>
+            <span class="badge ${statusClass}">${fmtDualInCm(row.dbh, bio.dbh_cm)} DBH</span>
           </div>
         </div>
         <div class="verdict-right">
@@ -11748,44 +12632,44 @@ function initFieldToolUI() {
       <div class="metric-grid metric-grid-3">
         <div class="metric-box">
           <span class="metric-label">Critical Root Zone (CRZ)</span>
-          <strong class="metric-value">${res.rootZones.crz.radius_feet} ft (${res.rootZones.crz.radius_meters} m)</strong>
-          <span class="metric-sub">${res.rootZones.crz.area_sqft.toLocaleString()} sq ft (${res.rootZones.crz.area_sqm} m2)</span>
+          <strong class="metric-value">${fmtDualFtM(res.rootZones.crz.radius_feet, res.rootZones.crz.radius_meters)}</strong>
+          <span class="metric-sub">${fmtDualAreaSqftSqm(res.rootZones.crz.area_sqft, res.rootZones.crz.area_sqm)}</span>
         </div>
         <div class="metric-box">
           <span class="metric-label">Structural Root Zone (SRZ)</span>
-          <strong class="metric-value">${res.rootZones.srz.radius_feet} ft (${res.rootZones.srz.radius_meters} m)</strong>
+          <strong class="metric-value">${fmtDualFtM(res.rootZones.srz.radius_feet, res.rootZones.srz.radius_meters)}</strong>
           <span class="metric-sub">AS 4970 Windthrow Plate</span>
         </div>
         <div class="metric-box">
           <span class="metric-label">Tree Influence Zone (TIZ)</span>
-          <strong class="metric-value">${bio.root_zones.tiz_radius_meters} m radius</strong>
-          <span class="metric-sub">${bio.root_zones.tiz_area_sqm} m2 Holobiont Footprint</span>
+          <strong class="metric-value">${fmtDualFromMeters(bio.root_zones.tiz_radius_meters)} radius</strong>
+          <span class="metric-sub">${fmtDualAreaFromSqm(bio.root_zones.tiz_area_sqm)} Holobiont Footprint</span>
         </div>
       </div>
 
-      <div class="table-scroll">
-        <table class="data-table">
+      <div tabindex="0" role="region" aria-label="Municipal Mitigation Scenarios" class="table-wrapper">
+        <table class="data-table" style="--label-1: 'Mitigation Scenario'; --label-2: 'Exemption Cap'; --label-3: 'Replacement Owed'; --label-4: 'Cash-in-Lieu Fee'; --label-5: 'Unpermitted Penalty';">
           <thead>
             <tr>
-              <th>Mitigation Scenario (${muni?.mitigation_fee_schedule?.citation || "Ordinance"})</th>
-              <th>Exemption Cap</th>
-              <th>Replacement Owed</th>
-              <th>Cash-in-Lieu Fee</th>
-              <th>Unpermitted Penalty</th>
+              <th scope="col">Mitigation Scenario (${muni?.mitigation_fee_schedule?.citation || "Ordinance"})</th>
+              <th scope="col">Exemption Cap</th>
+              <th scope="col">Replacement Owed</th>
+              <th scope="col">Cash-in-Lieu Fee</th>
+              <th scope="col">Unpermitted Penalty</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td><strong>Current Field Plan (${row.removal ? "Removal Triggered" : "Preserved"})</strong></td>
-              <td>${mitActive ? `${mitActive.exemption_cap_inches} in (${mitActive.exemption_pct}%)` : "N/A"}</td>
-              <td>${mitActive ? `${mitActive.replacement_inches_owed} in (${mitActive.replacement_trees_owed} trees)` : "0 in"}</td>
+              <th scope="row">Current Field Plan (${row.removal ? "Removal Triggered" : "Preserved"})</th>
+              <td>${mitActive ? `${fmtDualInCm(mitActive.exemption_cap_inches)} (${mitActive.exemption_pct}%)` : "N/A"}</td>
+              <td>${mitActive ? `${fmtDualInCm(mitActive.replacement_inches_owed)} (${mitActive.replacement_trees_owed} trees)` : "0 in"}</td>
               <td><strong>$${(mitActive?.cash_in_lieu_usd || 0).toLocaleString()}</strong></td>
               <td>$${(mitActive?.unpermitted_penalty?.total_penalty_usd || 0).toLocaleString()}</td>
             </tr>
             <tr>
-              <td><strong>Liability If Tree Liquidated / Destroyed</strong></td>
-              <td>${mitIfRemoved ? `${mitIfRemoved.exemption_cap_inches} in (${mitIfRemoved.exemption_pct}%)` : "N/A"}</td>
-              <td>${mitIfRemoved ? `${mitIfRemoved.replacement_inches_owed} in (${mitIfRemoved.replacement_trees_owed} trees)` : "0 in"}</td>
+              <th scope="row">Liability If Tree Liquidated / Destroyed</th>
+              <td>${mitIfRemoved ? `${fmtDualInCm(mitIfRemoved.exemption_cap_inches)} (${mitIfRemoved.exemption_pct}%)` : "N/A"}</td>
+              <td>${mitIfRemoved ? `${fmtDualInCm(mitIfRemoved.replacement_inches_owed)} (${mitIfRemoved.replacement_trees_owed} trees)` : "0 in"}</td>
               <td><strong class="text-danger">$${(mitIfRemoved?.cash_in_lieu_usd || 0).toLocaleString()}</strong></td>
               <td class="text-danger">$${(mitIfRemoved?.unpermitted_penalty?.total_penalty_usd || 0).toLocaleString()}</td>
             </tr>
@@ -11822,22 +12706,22 @@ function initFieldToolUI() {
         </div>
       </div>
 
-      <h4 class="sub-heading">Annual &amp; 20-Year Allometric Ecosystem Services (Nowak / McPherson / Xiao)</h4>
+      <h3 class="sub-heading">Annual &amp; 20-Year Allometric Ecosystem Services (Nowak / McPherson / Xiao)</h3>
       <div class="metric-grid metric-grid-4">
         <div class="metric-box">
           <span class="metric-label">Carbon Stored</span>
-          <strong class="metric-value">${eco.carbon_storage_lbs.toLocaleString()} lbs</strong>
-          <span class="metric-sub">$${eco.carbon_storage_value_usd.toLocaleString()} (${eco.co2_equivalent_lbs_yr} lbs CO2/yr)</span>
+          <strong class="metric-value">${fmtDualMassFromLbs(eco.carbon_storage_lbs)}</strong>
+          <span class="metric-sub">$${eco.carbon_storage_value_usd.toLocaleString()} (${fmtDualMassFromLbs(eco.co2_equivalent_lbs_yr, " CO2/yr")})</span>
         </div>
         <div class="metric-box">
           <span class="metric-label">Stormwater Intercepted</span>
-          <strong class="metric-value">${eco.avoided_runoff_gallons_yr.toLocaleString()} gal/yr</strong>
-          <span class="metric-sub">Canopy Cover: ${eco.canopy_cover_sqft.toLocaleString()} sq ft</span>
+          <strong class="metric-value">${fmtDualGallons(eco.avoided_runoff_gallons_yr, "/yr")}</strong>
+          <span class="metric-sub">Canopy Cover: ${fmtDualAreaSqftSqm(eco.canopy_cover_sqft)}</span>
         </div>
         <div class="metric-box">
           <span class="metric-label">Cooling &amp; Air Quality</span>
           <strong class="metric-value">${eco.cooling_savings_kwh_yr} kWh/yr</strong>
-          <span class="metric-sub">${eco.pollution_removal_lbs_yr} lbs/yr pollutants removed</span>
+          <span class="metric-sub">${fmtDualMassFromLbs(eco.pollution_removal_lbs_yr, "/yr")} pollutants removed</span>
         </div>
         <div class="metric-box">
           <span class="metric-label">Projected 20-Yr Service Value</span>
@@ -11846,28 +12730,28 @@ function initFieldToolUI() {
         </div>
       </div>
 
-      <h4 class="sub-heading">5-Year Practice Economics: Regenerative Stewardship vs. One-Time Tree Removal</h4>
-      <div class="table-scroll">
-        <table class="data-table">
+      <h3 class="sub-heading">5-Year Practice Economics: Regenerative Stewardship vs. One-Time Tree Removal</h3>
+      <div tabindex="0" role="region" aria-label="5-Year Practice Economics Comparison" class="table-wrapper">
+        <table class="data-table" style="--label-1: 'Practice Model'; --label-2: '5-Yr Gross Revenue'; --label-3: 'Practitioner Net Margin'; --label-4: 'Recurring Revenue Share'; --label-5: 'Client Holobiont Equity Impact';">
           <thead>
             <tr>
-              <th>Practice Model</th>
-              <th>5-Yr Gross Revenue</th>
-              <th>Practitioner Net Margin</th>
-              <th>Recurring Revenue Share</th>
-              <th>Client Holobiont Equity Impact</th>
+              <th scope="col">Practice Model</th>
+              <th scope="col">5-Yr Gross Revenue</th>
+              <th scope="col">Practitioner Net Margin</th>
+              <th scope="col">Recurring Revenue Share</th>
+              <th scope="col">Client Holobiont Equity Impact</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td><strong>RCA 5-Year Regenerative Stewardship</strong></td>
+              <th scope="row">RCA 5-Year Regenerative Stewardship</th>
               <td>$${econ.regenerative_stewardship_model.five_year_gross_revenue_usd.toLocaleString()}</td>
               <td><strong class="text-accent">$${econ.regenerative_stewardship_model.net_practitioner_margin_usd.toLocaleString()} (${econ.comparison.margin_multiplier}x)</strong></td>
               <td>${econ.regenerative_stewardship_model.recurring_revenue_share_pct}%</td>
               <td>Preserves <strong>$${econ.regenerative_stewardship_model.client_biological_equity_preserved_usd.toLocaleString()}</strong></td>
             </tr>
             <tr>
-              <td><strong>Legacy Contractor Removal Bid</strong></td>
+              <th scope="row">Legacy Contractor Removal Bid</th>
               <td>$${econ.legacy_removal_model.one_time_gross_bid_usd.toLocaleString()}</td>
               <td>$${econ.legacy_removal_model.net_practitioner_margin_usd.toLocaleString()}</td>
               <td>0%</td>
@@ -11877,27 +12761,27 @@ function initFieldToolUI() {
         </table>
       </div>
 
-      <h4 class="sub-heading">Engine-Scaled Pneumatic Rhizosphere &amp; Bio-Amendment Bill of Materials</h4>
+      <h3 class="sub-heading">Engine-Scaled Pneumatic Rhizosphere &amp; Bio-Amendment Bill of Materials</h3>
       <div class="metric-grid metric-grid-4">
         <div class="metric-box">
           <span class="metric-label">Decompacted Soil Volume</span>
-          <strong class="metric-value">${bio.rhizosphere_prescription.total_decompacted_soil_m3} m3</strong>
-          <span class="metric-sub">AirSpade @ ${bio.rhizosphere_prescription.operating_pressure_psi} psi</span>
+          <strong class="metric-value">${fmtDualSoilVolFromM3(bio.rhizosphere_prescription.total_decompacted_soil_m3)}</strong>
+          <span class="metric-sub">AirSpade @ ${fmtDualPressureFromPsi(bio.rhizosphere_prescription.operating_pressure_psi)}</span>
         </div>
         <div class="metric-box">
           <span class="metric-label">Pre-Charged Biochar</span>
-          <strong class="metric-value">${bio.rhizosphere_prescription.amendments.precharged_biochar_liters} L</strong>
-          <span class="metric-sub">Humate: ${bio.rhizosphere_prescription.amendments.fungal_humate_kg} kg</span>
+          <strong class="metric-value">${fmtDualBiocharFromLiters(bio.rhizosphere_prescription.amendments.precharged_biochar_liters)}</strong>
+          <span class="metric-sub">Humate: ${fmtDualMassFromKg(bio.rhizosphere_prescription.amendments.fungal_humate_kg)}</span>
         </div>
         <div class="metric-box">
           <span class="metric-label">Fungal Compost</span>
-          <strong class="metric-value">${bio.rhizosphere_prescription.amendments.fungal_compost_m3} m3</strong>
+          <strong class="metric-value">${fmtDualSoilVolFromM3(bio.rhizosphere_prescription.amendments.fungal_compost_m3)}</strong>
           <span class="metric-sub">SGR Relief Ratio: ${bio.rhizosphere_prescription.vascular_constriction_relief_ratio}</span>
         </div>
         <div class="metric-box">
           <span class="metric-label">Ramial Woodchip Mulch</span>
-          <strong class="metric-value">${bio.rhizosphere_prescription.amendments.ramial_woodchip_mulch_m3} m3</strong>
-          <span class="metric-sub">8 cm horizon across TIZ</span>
+          <strong class="metric-value">${fmtDualSoilVolFromM3(bio.rhizosphere_prescription.amendments.ramial_woodchip_mulch_m3)}</strong>
+          <span class="metric-sub">${fmtDualFromCm(8)} horizon across TIZ</span>
         </div>
       </div>
     `;
@@ -11945,10 +12829,10 @@ function initFieldToolUI() {
         const recMeta = el("receiver-meta-line");
         const recTruck = el("receiver-truck-summary");
         if (recHeading) {
-          recHeading.textContent = `${sbRec.species_common || "Tree"} (${sbRec.tree_tag || "T-01"}): ${bio.dbh_inches} in DBH in ${prov?.municipality_name || muni?.name || "Local Jurisdiction"}`;
+          recHeading.textContent = `${sbRec.species_common || "Tree"} (${sbRec.tree_tag || "T-01"}): ${fmtDualInCm(bio.dbh_inches, bio.dbh_cm)} DBH in ${prov?.municipality_name || muni?.name || "Local Jurisdiction"}`;
         }
         if (recMeta) {
-          recMeta.textContent = `Status: ${statusText} | Statutory CRZ: ${res.rootZones.crz.radius_feet} ft | Mattheck t/R: ${bio.biomechanics.sound_shell_thickness_ratio_t_over_r} | Day-1 Stage 1 Triage: $${res.phasedTriage.stages[0]?.client_price_usd.toLocaleString()}`;
+          recMeta.textContent = `Status: ${statusText} | Statutory CRZ: ${fmtDualFtM(res.rootZones.crz.radius_feet, res.rootZones.crz.radius_meters)} | Mattheck t/R: ${bio.biomechanics.sound_shell_thickness_ratio_t_over_r} | Day-1 Stage 1 Triage: $${res.phasedTriage.stages[0]?.client_price_usd.toLocaleString()}`;
         }
         if (recTruck) {
           recTruck.innerHTML = `<pre class="code-preview" style="margin: 0; white-space: pre-wrap;">${escapeUiHtml(liveHandoff.arborist_truck_summary)}</pre>`;
@@ -11962,6 +12846,7 @@ function initFieldToolUI() {
       const sp = res.soilSponge;
       const stage1 = tr.stages[0];
       const isSoundShell = bio.biomechanics.mattheck_criterion_satisfied;
+      const stormLabel = imp ? " / 1-in storm" : " / 25 mm storm";
       const stageCardsHtml = tr.stages.map(
         (st) => `
             <div class="oa-triage-stage">
@@ -11986,7 +12871,7 @@ function initFieldToolUI() {
           <p class="muni-subtext" style="margin: 4px 0 0;"><strong>Physical Falsifier (STIM Kill Criterion):</strong> ${escapeUiHtml(af.falsifier)}</p>
         </div>
 
-        <h4 class="sub-heading">3-Stage Phased Stewardship Triage vs. One-Time Chainsaw Removal</h4>
+        <h3 class="sub-heading">3-Stage Phased Stewardship Triage vs. One-Time Chainsaw Removal</h3>
         <div class="metric-grid metric-grid-4">
           <div class="metric-box highlight-box">
             <span class="metric-label">Stage 1 Day-1 Root-Collar Triage</span>
@@ -12005,8 +12890,8 @@ function initFieldToolUI() {
           </div>
           <div class="metric-box">
             <span class="metric-label">Vadose Soil Sponge Capacity</span>
-            <strong class="metric-value">${Math.round(sp.storm_1in_capture_gallons).toLocaleString()} gal / 1-in storm</strong>
-            <span class="metric-sub">${Math.round(sp.som_sponge_capacity_gallons).toLocaleString()} gal SOM reserve (${escapeUiHtml(sp.infiltration_class)})</span>
+            <strong class="metric-value">${fmtDualGallons(sp.storm_1in_capture_gallons)}${stormLabel}</strong>
+            <span class="metric-sub">${fmtDualGallons(sp.som_sponge_capacity_gallons)} SOM reserve (${escapeUiHtml(sp.infiltration_class)})</span>
           </div>
         </div>
 
@@ -12086,8 +12971,11 @@ function initFieldToolUI() {
   }
   document.querySelectorAll("[data-preview-tab]").forEach((tabBtn) => {
     tabBtn.addEventListener("click", () => {
-      document.querySelectorAll("[data-preview-tab]").forEach((b) => b.classList.remove("active"));
-      tabBtn.classList.add("active");
+      document.querySelectorAll("[data-preview-tab]").forEach((b) => {
+        const isCurrent = b === tabBtn;
+        b.classList.toggle("active", isCurrent);
+        b.setAttribute("aria-selected", isCurrent ? "true" : "false");
+      });
       activePreviewTab = tabBtn.dataset.previewTab;
       renderActivePreview();
     });
@@ -12177,13 +13065,26 @@ function initFieldToolUI() {
     };
     reader.readAsText(file);
   });
-  form.addEventListener("input", () => recalculateAndRender());
-  form.addEventListener("change", () => recalculateAndRender());
+  form.addEventListener("input", (e) => {
+    handleUnitFieldInput(e.target);
+    recalculateAndRender();
+  });
+  form.addEventListener("change", (e) => {
+    handleUnitFieldInput(e.target);
+    recalculateAndRender();
+  });
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     recalculateAndRender();
     el("results-section")?.scrollIntoView({ behavior: "smooth" });
   });
+  if (typeof window !== "undefined") {
+    window.addEventListener("oa:unitschange", () => {
+      populateMunicipalitySelect();
+      syncUnitInputsUI();
+      recalculateAndRender();
+    });
+  }
   async function handleCopyVerdictLink(btnEl) {
     if (!currentPermalinkHash) {
       currentPermalinkHash = encodeAssessmentPermalink(getCurrentCaseStateFromForm());
@@ -12425,6 +13326,7 @@ export {
   formatStickyDeterminationSummary,
   getLatestFieldState,
   getOrdinanceUnverifiedNotices,
+  getUnitSystem,
   initFieldToolUI,
   inspectMunicipalityProvenance,
   lintRcaEvidentiaryReport,
@@ -12437,6 +13339,7 @@ export {
   renderExpandableHashHtml,
   renderSiteMapSVG,
   runLeoRcaSelfAudit,
+  setUnitSystem,
   statusLabel,
   toGeoJSONFeatureCollection,
   central_texas_ordinances_default as txOrdinances,

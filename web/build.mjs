@@ -6,11 +6,13 @@
  * Service Worker (D4), and Falsifiability Page (D7) into a self-contained static artifact in out/.
  */
 
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
 import { generateCasesAndMethods } from './generate-cases-and-methods.mjs';
+import { generatePwaAssets } from './pwa-assets.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
@@ -78,8 +80,28 @@ for (const sub of dataSubdirs) {
   }
 }
 
-// 5. Generate Deliverable D3 (/cases/ + 5 static case pages) and Deliverable D7 (/methods/)
+// 5. Generate Deliverable D3 (/cases/ + 5 static case pages), Deliverable D7 (/methods/), and PWA Manifest & Icons
 generateCasesAndMethods(rootDir, outDir);
+generatePwaAssets(outDir);
+
+// 6. Stamp deterministic build digest into out/sw.js CACHE_NAME so every deploy cleanly rotates old SW caches
+const swOutPath = path.join(outDir, 'sw.js');
+if (fs.existsSync(swOutPath)) {
+  const buildHash = crypto
+    .createHash('sha256')
+    .update(fs.readFileSync(path.join(outDir, 'styles.css')))
+    .update(fs.readFileSync(path.join(outDir, 'openarbor-bundle.js')))
+    .update(fs.readFileSync(path.join(outDir, 'index.html')))
+    .update(fs.readFileSync(path.join(outDir, 'icons/icon-512.png')))
+    .digest('hex')
+    .slice(0, 8);
+  const swRaw = fs.readFileSync(swOutPath, 'utf8');
+  const swStamped = swRaw.replace(
+    /const CACHE_NAME = 'openarbor-field-[^']+';/,
+    `const CACHE_NAME = 'openarbor-field-v2.5.0-${buildHash}';`
+  );
+  fs.writeFileSync(swOutPath, swStamped, 'utf8');
+}
 
 function listOutFiles(dir, prefix = 'out') {
   const items = [];

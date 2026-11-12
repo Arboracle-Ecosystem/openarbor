@@ -5,11 +5,18 @@
  * at root (/) on openarbor.org and at subpath (/openarbor/) on GitHub Pages.
  */
 
-const CACHE_NAME = 'openarbor-field-v2.2.0';
+const CACHE_NAME = 'openarbor-field-v2.5.0-c521c18a';
 
 const PRECACHE_PATHS = [
   './',
   './index.html',
+  './manifest.webmanifest',
+  './icons/icon.svg',
+  './icons/icon-68.png',
+  './icons/icon-192.png',
+  './icons/icon-512.png',
+  './icons/icon-maskable-512.png',
+  './icons/apple-touch-icon.png',
   './styles.css',
   './openarbor-bundle.js',
   './demo/index.html',
@@ -72,6 +79,31 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+async function lookupCachedOrFallback(cache, request, url) {
+  let cached = await cache.match(request, { ignoreSearch: true });
+  if (cached) return cached;
+
+  if (url.pathname.endsWith('/')) {
+    const indexUrl = new URL(`${url.pathname}index.html`, url.origin).href;
+    cached = await cache.match(indexUrl, { ignoreSearch: true });
+    if (cached) return cached;
+  } else if (!url.pathname.split('/').pop().includes('.')) {
+    const indexUrl = new URL(`${url.pathname}/index.html`, url.origin).href;
+    const indexCached = await cache.match(indexUrl, { ignoreSearch: true });
+    if (indexCached) {
+      return Response.redirect(`${url.origin}${url.pathname}/${url.search}`, 301);
+    }
+  }
+
+  if (request.mode === 'navigate') {
+    const fallbackIndex = new URL('./index.html', self.registration.scope).href;
+    const fallbackResp = await cache.match(fallbackIndex, { ignoreSearch: true });
+    if (fallbackResp) return fallbackResp;
+  }
+
+  return null;
+}
+
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') return;
@@ -83,51 +115,21 @@ self.addEventListener('fetch', (event) => {
     (async () => {
       const cache = await caches.open(CACHE_NAME);
 
-      // 1. Check exact URL match (ignoring search query / hash)
-      let cached = await cache.match(request, { ignoreSearch: true });
-
-      // 2. Directory index fallback (e.g. /demo/ -> /demo/index.html; /demo -> canonical 301 to /demo/)
-      if (!cached) {
-        if (url.pathname.endsWith('/')) {
-          const indexUrl = new URL(`${url.pathname}index.html`, url.origin).href;
-          cached = await cache.match(indexUrl, { ignoreSearch: true });
-        } else if (!url.pathname.split('/').pop().includes('.')) {
-          const indexUrl = new URL(`${url.pathname}/index.html`, url.origin).href;
-          const indexCached = await cache.match(indexUrl, { ignoreSearch: true });
-          if (indexCached) {
-            return Response.redirect(`${url.origin}${url.pathname}/${url.search}`, 301);
-          }
-        }
-      }
-
-      if (cached) {
-        // Refresh cache asynchronously in background when online
-        event.waitUntil(
-          (async () => {
-            try {
-              const fresh = await fetch(request);
-              if (fresh && fresh.ok) {
-                await cache.put(request, fresh.clone());
-              }
-            } catch {
-              // Offline: keep serving cached response
-            }
-          })()
-        );
-        return cached;
-      }
-
+      // Network-first when online so new deploys (CSS, HTML, JS) take effect immediately on first load;
+      // instant pre-cached fallback when offline in the field.
       try {
         const networkResponse = await fetch(request);
-        if (networkResponse && networkResponse.ok) {
+        if (networkResponse && networkResponse.ok && !networkResponse.redirected) {
           await cache.put(request, networkResponse.clone());
+          if (url.pathname.endsWith('/')) {
+            const indexUrl = new URL(`${url.pathname}index.html`, url.origin).href;
+            await cache.put(indexUrl, networkResponse.clone());
+          }
         }
         return networkResponse;
       } catch (err) {
-        // Fallback to cached root index if navigation request fails offline
-        const fallbackIndex = new URL('./index.html', self.registration.scope).href;
-        const fallbackResp = await cache.match(fallbackIndex, { ignoreSearch: true });
-        if (fallbackResp) return fallbackResp;
+        const offlineMatch = await lookupCachedOrFallback(cache, request, url);
+        if (offlineMatch) return offlineMatch;
         throw err;
       }
     })()

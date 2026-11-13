@@ -1341,11 +1341,15 @@ export function initLivingLensUI() {
           const desc = st.scope || st.summary || '';
           return `
             <div class="oa-triage-stage">
-              <span class="oa-stage-tag">Stage ${escapeHtml(stageNum)} &middot; ${escapeHtml(st.window)}</span>
-              <strong>${escapeHtml(st.title)}</strong>
-              <span class="oa-stage-price">${formatUsd(st.client_price_usd)}</span>
-              <span class="hint">Practitioner net: ${formatUsd(st.practitioner_net_usd)}</span>
-              <p class="hint">${escapeHtml(desc)}</p>
+              <div class="oa-triage-stage-main">
+                <span class="oa-stage-tag">Stage ${escapeHtml(stageNum)} &middot; ${escapeHtml(st.window)}</span>
+                <strong class="oa-stage-title">${escapeHtml(st.title)}</strong>
+                <p class="hint oa-stage-desc">${escapeHtml(desc)}</p>
+              </div>
+              <div class="oa-triage-stage-metrics">
+                <span class="oa-stage-price">${formatUsd(st.client_price_usd)}</span>
+                <span class="hint">Practitioner net: ${formatUsd(st.practitioner_net_usd)}</span>
+              </div>
             </div>
           `;
         })

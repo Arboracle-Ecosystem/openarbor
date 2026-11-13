@@ -35,7 +35,7 @@
 | `out/manifest.webmanifest` | `2656` | PWA Web Application Manifest |
 | `out/mcp/index.html` | `24797` | 8-Tool MCP Server Playground & JSON-RPC Tester (`/mcp/`) |
 | `out/methods/index.html` | `61387` | Executable Proof & Falsifiability Ledger (`/methods/`) |
-| `out/openarbor-bundle.js` | `539699` | Compiled ESM browser bundle (engines + ordinances + catalog + schemas + UI) |
+| `out/openarbor-bundle.js` | `540040` | Compiled ESM browser bundle (engines + ordinances + catalog + schemas + UI) |
 | `out/ordinances/index.html` | `13335` | 8-City Municipal Ordinance Commons & Schema Validator (`/ordinances/`) |
 | `out/schemas/municipal-ordinance.schema.json` | `3630` | Published JSON Schema (Draft 2020-12) |
 | `out/schemas/rap_assessment.schema.json` | `43105` | Published JSON Schema (Draft 2020-12) |
@@ -44,7 +44,7 @@
 | `out/schemas/rca_assessment.schema.json` | `42896` | Published JSON Schema (Draft 2020-12) |
 | `out/schemas/rca_openbadge_v3.schema.json` | `26473` | Published JSON Schema (Draft 2020-12) |
 | `out/spec/index.html` | `27983` | RAP-Spec v2.0 & 200-Year Heartwood Vault Reference (`/spec/`) |
-| `out/styles.css` | `71338` | Shared Sunlight Field & Canopy Dark design system stylesheet |
+| `out/styles.css` | `72395` | Shared Sunlight Field & Canopy Dark design system stylesheet |
 | `out/sw.js` | `4953` | Offline-First Service Worker Cache Shell |
 | `out/tools/index.html` | `13394` | 41-tool Open-Source Forestry & Arboriculture Workbench (`/tools/`) |
 

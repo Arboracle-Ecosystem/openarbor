@@ -2079,11 +2079,15 @@ export function initFieldToolUI() {
         .map(
           (st) => `
             <div class="oa-triage-stage">
-              <span class="metric-label">Stage ${st.stage_number} &middot; ${escapeUiHtml(st.window)}</span>
-              <strong>${escapeUiHtml(st.title)}</strong>
-              <strong class="metric-value text-accent">$${st.client_price_usd.toLocaleString()}</strong>
-              <span class="metric-sub">Arborist net margin: $${st.practitioner_net_usd.toLocaleString()}</span>
-              <p class="muni-subtext" style="margin: 4px 0 0;">${escapeUiHtml(st.scope)}</p>
+              <div class="oa-triage-stage-main">
+                <span class="oa-stage-tag">Stage ${st.stage_number} &middot; ${escapeUiHtml(st.window)}</span>
+                <strong class="oa-stage-title">${escapeUiHtml(st.title)}</strong>
+                <p class="muni-subtext oa-stage-desc">${escapeUiHtml(st.scope)}</p>
+              </div>
+              <div class="oa-triage-stage-metrics">
+                <span class="oa-stage-price">$${st.client_price_usd.toLocaleString()}</span>
+                <span class="metric-sub">Arborist net margin: $${st.practitioner_net_usd.toLocaleString()}</span>
+              </div>
             </div>
           `
         )

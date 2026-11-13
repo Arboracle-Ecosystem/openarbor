@@ -1757,7 +1757,7 @@ dialog::backdrop {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .oa-code-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
   }
   .oa-mcp-tool-bar {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2868,69 +2868,127 @@ label:has(> input[type="file"]:focus-visible) {
   }
 }
 
-/* 5. Act II Human Truth Cards & Phased Stewardship Triage Grid */
+/* 5. Act II Human Truth Cards & Phased Stewardship Triage Stack */
 .oa-truth-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 16px;
-  margin-top: 14px;
-}
-
-@media (min-width: 880px) {
-  .oa-truth-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+  margin-block-start: 14px;
 }
 
 .oa-truth-card {
+  container: truth-card / inline-size;
   background: var(--bg-card);
   border: 1px solid var(--border-main);
   border-radius: var(--radius-md);
-  padding: 18px;
+  padding: 20px 22px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 14px;
   box-shadow: var(--shadow-soft);
   min-inline-size: 0;
 }
 
 .oa-truth-card h3 {
   font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
-  font-size: 1.2rem;
-  margin: 4px 0 8px 0;
+  font-size: 1.24rem;
+  margin: 6px 0 8px 0;
 }
 
 .oa-truth-prose {
   margin: 0;
-  font-size: 0.91rem;
-  line-height: 1.56;
+  max-inline-size: 78ch;
+  font-size: 0.94rem;
+  line-height: 1.6;
   color: var(--text-muted);
 }
 
 .oa-triage-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  container: triage-list / inline-size;
+  display: flex;
+  flex-direction: column;
   gap: 10px;
-  margin-top: 8px;
-}
-
-@media (min-width: 720px) {
-  .oa-triage-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+  margin-block-start: 10px;
 }
 
 .oa-triage-stage {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
-  border-top: 3px solid var(--accent-green);
+  border-inline-start: 4px solid var(--accent-green);
   border-radius: var(--radius-sm);
-  padding: 10px 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-inline-size: 0;
+  overflow-wrap: break-word;
+}
+
+.oa-triage-stage-main {
   display: flex;
   flex-direction: column;
   gap: 4px;
   min-inline-size: 0;
+}
+
+.oa-stage-title {
+  font-size: 0.98rem;
+  line-height: 1.35;
+}
+
+.oa-stage-desc {
+  margin: 2px 0 0 0;
+  max-inline-size: 72ch;
+  line-height: 1.5;
+}
+
+.oa-triage-stage-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+  .oa-triage-stage {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  .oa-triage-stage-metrics {
+    align-items: flex-end;
+    text-align: right;
+  }
+}
+
+@supports (container-type: inline-size) {
+  @media (min-width: 640px) {
+    .oa-triage-stage {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .oa-triage-stage-metrics {
+      align-items: flex-start;
+      text-align: left;
+    }
+  }
+
+  @container triage-list (inline-size >= 520px) {
+    .oa-triage-stage {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 20px;
+    }
+
+    .oa-triage-stage-metrics {
+      align-items: flex-end;
+      text-align: right;
+    }
+  }
 }
 
 .oa-stage-tag {

@@ -1,8 +1,8 @@
 /**
  * Open Arbor v2.0 Mobile-First Web Field Tool & Multi-Page Bundle Entrypoint
  * Bundles the certified Open Arbor engines (rootZone, ordinanceEngine,
- * ecosystemBenefits, rcaEngine) and bioregional municipal ordinance datasets
- * without modifying any engine logic under src/ or data/.
+ * ecosystemBenefits, rapEngine, leoRapEngine, soilFunction, fieldObservationLog)
+ * and bioregional municipal ordinance datasets without modifying any engine logic under src/ or data/.
  */
 
 import {
@@ -37,13 +37,15 @@ import {
   evaluateBiomechanicsAndRhizosphere,
   computeHolobiontValuation,
   computeSanctuaryScorecardRollup,
+  lintRapEvidentiaryReport,
   lintRcaEvidentiaryReport,
   computeRegenerativePracticeEconomics,
   computeCanonicalSha256,
+  compileRapEvidentiaryMarkdown,
   compileRcaEvidentiaryMarkdown,
   compilePreservationCounterNotice,
   mintOpenBadgeAttestation,
-} from '../src/core/rcaEngine.js';
+} from '../src/core/rapEngine.js';
 
 import {
   validateSoilFunction,
@@ -52,16 +54,33 @@ import {
 
 import {
   computePhasedStewardshipTriage,
+  compileLeoRapBrief,
   compileLeoRcaBrief,
+  verifyLeoRapNarrative,
   verifyLeoRcaNarrative,
+  runLeoRapSelfAudit,
   runLeoRcaSelfAudit,
   composeArboristHandoffBrief,
-} from '../src/core/leoRcaEngine.js';
+} from '../src/core/leoRapEngine.js';
+
+import {
+  FORBIDDEN_PII_KEYS,
+  coarsenPlusCode,
+  redactPotentialPii,
+  assertZeroClientPii,
+  createFieldObservationRecord,
+  verifyFieldObservationRecord,
+  serializeObservationCohortJsonl,
+  summarizeObservationCohort,
+} from '../src/core/fieldObservationLog.js';
 
 import txOrdinances from '../data/ordinances/central_texas_ordinances.json';
 import orOrdinances from '../data/ordinances/rogue_valley_oregon_ordinances.json';
-import rcaAssessmentSchema from '../schemas/rca_assessment.schema.json';
+import rapAssessmentSchema from '../schemas/rap_assessment.schema.json';
+import rapFieldObservationSchema from '../schemas/rap_field_observation.schema.json';
 import municipalOrdinanceSchema from '../schemas/municipal-ordinance.schema.json';
+
+const rcaAssessmentSchema = rapAssessmentSchema;
 import forestryToolsCatalog from '../data/catalog/forestry-tools.json';
 import {
   CENTRAL_TEXAS_SPECIES,
@@ -145,19 +164,34 @@ export {
   evaluateBiomechanicsAndRhizosphere,
   computeHolobiontValuation,
   computeSanctuaryScorecardRollup,
+  lintRapEvidentiaryReport,
   lintRcaEvidentiaryReport,
   computeRegenerativePracticeEconomics,
   computeCanonicalSha256,
+  compileRapEvidentiaryMarkdown,
   compileRcaEvidentiaryMarkdown,
   compilePreservationCounterNotice,
   mintOpenBadgeAttestation,
   computePhasedStewardshipTriage,
+  compileLeoRapBrief,
   compileLeoRcaBrief,
+  verifyLeoRapNarrative,
   verifyLeoRcaNarrative,
+  runLeoRapSelfAudit,
   runLeoRcaSelfAudit,
   composeArboristHandoffBrief,
+  FORBIDDEN_PII_KEYS,
+  coarsenPlusCode,
+  redactPotentialPii,
+  assertZeroClientPii,
+  createFieldObservationRecord,
+  verifyFieldObservationRecord,
+  serializeObservationCohortJsonl,
+  summarizeObservationCohort,
   txOrdinances,
   orOrdinances,
+  rapAssessmentSchema,
+  rapFieldObservationSchema,
   rcaAssessmentSchema,
   municipalOrdinanceSchema,
   forestryToolsCatalog,
@@ -248,12 +282,12 @@ export function encodePlusCode(lat, lng) {
 }
 
 /**
- * Run the full Open Arbor v2.0 deterministic pipeline on an RCA_v2 assessment
+ * Run the full Open Arbor v2.0 deterministic pipeline on an RAP_v2 assessment
  * and municipal ordinance context. Used by both the browser UI and parity verification.
  */
 export function evaluateCompleteFieldCase(assessment, options = {}) {
-  const schemaValidation = validateJsonSchema(assessment, rcaAssessmentSchema);
-  const lint = lintRcaEvidentiaryReport(assessment);
+  const schemaValidation = validateJsonSchema(assessment, rapAssessmentSchema);
+  const lint = lintRapEvidentiaryReport(assessment);
 
   const ordId =
     options.ordinance_id ||
@@ -261,7 +295,7 @@ export function evaluateCompleteFieldCase(assessment, options = {}) {
     'tx-austin';
   const municipality = findMunicipality(ordId);
 
-  const compiledReport = compileRcaEvidentiaryMarkdown(assessment, { municipality });
+  const compiledReport = compileRapEvidentiaryMarkdown(assessment, { municipality });
   const counterNotice = compilePreservationCounterNotice(assessment);
   const economics = computeRegenerativePracticeEconomics(assessment);
   const biomechanics = compiledReport.biomechanics;
@@ -412,13 +446,13 @@ export function evaluateCompleteFieldCase(assessment, options = {}) {
     mitigationIfRemoved,
     provenance,
   };
-  const leoBrief = compileLeoRcaBrief(assessment, leoEvalContext);
-  const leoVerification = verifyLeoRcaNarrative(
+  const leoBrief = compileLeoRapBrief(assessment, leoEvalContext);
+  const leoVerification = verifyLeoRapNarrative(
     leoBrief.brief_markdown,
     assessment,
     leoEvalContext
   );
-  const leoSelfAudit = runLeoRcaSelfAudit(assessment, leoEvalContext);
+  const leoSelfAudit = runLeoRapSelfAudit(assessment, leoEvalContext);
 
   const oakWiltFlag = Array.isArray(evaluatedRows[0]?.flags)
     ? evaluatedRows[0].flags.find((f) => /oak wilt/i.test(f)) || ''
@@ -431,6 +465,7 @@ export function evaluateCompleteFieldCase(assessment, options = {}) {
     cityLabel: provenance?.municipality_name || municipality?.name || ordId,
     protectionStatus: statusLabel(evaluatedRows[0]),
     tOverR: biomechanics.biomechanics.sound_shell_thickness_ratio_t_over_r,
+    sonicTomographyVerified: Boolean(sb.sonic_tomography_or_resistograph_uri),
     crzFeet: crz.radius_feet,
     holobiontUsd: valuation.holobiont_200yr_biological_equity_usd,
     ctlaUsd: valuation.ctla_10th_ed_depreciated_usd,
@@ -1232,7 +1267,7 @@ export function initFieldToolUI() {
     );
   });
 
-  // Build RCA_v2 assessment JSON from current form state
+  // Build RAP_v2 assessment JSON from current form state
   function buildAssessmentFromForm() {
     const base = JSON.parse(JSON.stringify(activePreset.assessment));
     const sb = base.structural_baseline;
@@ -1916,7 +1951,7 @@ export function initFieldToolUI() {
           </thead>
           <tbody>
             <tr>
-              <th scope="row">RCA 5-Year Regenerative Stewardship</th>
+              <th scope="row">RAP 5-Year Regenerative Stewardship</th>
               <td>$${econ.regenerative_stewardship_model.five_year_gross_revenue_usd.toLocaleString()}</td>
               <td><strong class="text-accent">$${econ.regenerative_stewardship_model.net_practitioner_margin_usd.toLocaleString()} (${econ.comparison.margin_multiplier}x)</strong></td>
               <td>${econ.regenerative_stewardship_model.recurring_revenue_share_pct}%</td>
@@ -1964,7 +1999,7 @@ export function initFieldToolUI() {
       : `<span class="badge badge-danger">BLOCKED (${res.lint.errors.length} Evidentiary Violation(s))</span>`;
 
     const schemaStatusBadge = res.schemaValidation.valid
-      ? `<span class="badge badge-protected">RCA_v2 Schema Valid</span>`
+      ? `<span class="badge badge-protected">RAP_v2 Schema Valid</span>`
       : `<span class="badge badge-danger">Schema Error (${res.schemaValidation.errors.length})</span>`;
 
     const lintErrorsHtml =
@@ -1975,7 +2010,7 @@ export function initFieldToolUI() {
     el('verdict-linter-header').innerHTML = `
       <div class="linter-row">
         <div>
-          <strong>ASCA / RCA-Spec v2.0 Evidentiary Gate:</strong>
+          <strong>ASCA / RAP-Spec v2.0 Evidentiary Gate:</strong>
           ${lintStatusBadge}
           ${schemaStatusBadge}
         </div>
@@ -1999,6 +2034,7 @@ export function initFieldToolUI() {
       cityLabel: prov?.municipality_name || `${muni?.name || ''}, ${muni?.state || ''}`,
       protectionStatus: statusText,
       tOverR: bio.biomechanics.sound_shell_thickness_ratio_t_over_r,
+      sonicTomographyVerified: Boolean(sbRec.sonic_tomography_or_resistograph_uri),
       crzFeet: res.rootZones.crz.radius_feet,
       holobiontUsd: val.holobiont_200yr_biological_equity_usd,
       ctlaUsd: val.ctla_10th_ed_depreciated_usd,
@@ -2029,7 +2065,7 @@ export function initFieldToolUI() {
       }
     }
 
-    // 6. Innate LEO-RCA Answer-First Verdict, 3-Stage Phased Stewardship Triage & Soil Sponge
+    // 6. Innate LEO-RAP Answer-First Verdict, 3-Stage Phased Stewardship Triage & Soil Sponge
     const phasedBody = el('phased-triage-body');
     if (phasedBody && res.leoBrief && res.phasedTriage && res.soilSponge) {
       const af = res.leoBrief.answer_first;
@@ -2096,7 +2132,7 @@ export function initFieldToolUI() {
       `;
     }
 
-    // 7. Behind the Veil: Live LEO-RCA Epistemic & Anti-Liquidation Oracle Verifier
+    // 7. Behind the Veil: Live LEO-RAP Epistemic & Anti-Liquidation Oracle Verifier
     const leoStatusEl = el('leo-status-header');
     const leoAuditEl = el('leo-self-audit-badge');
     const leoTextarea = el('leo-narrative-textarea');
@@ -2124,7 +2160,7 @@ export function initFieldToolUI() {
       bannerEl.style.borderLeftColor = 'var(--accent-green)';
       bannerEl.innerHTML = `
         <div>
-          <span class="metric-label">Deterministic LEO-RCA Oracle Verifier</span>
+          <span class="metric-label">Deterministic LEO-RAP Oracle Verifier</span>
           <div class="verdict-title-row">
             <strong class="verdict-big text-accent">VERIFIED CLEAN (0 Errors)</strong>
             <span class="badge badge-protected">${verReport.checked_anchors} Oracle Anchors Matched</span>
@@ -2136,7 +2172,7 @@ export function initFieldToolUI() {
       bannerEl.style.borderLeftColor = 'var(--danger-red)';
       bannerEl.innerHTML = `
         <div style="width: 100%;">
-          <span class="metric-label">Deterministic LEO-RCA Oracle Verifier</span>
+          <span class="metric-label">Deterministic LEO-RAP Oracle Verifier</span>
           <div class="verdict-title-row">
             <strong class="verdict-big text-danger">BLOCKED (${verReport.errors.length} Violation${verReport.errors.length === 1 ? '' : 's'} Caught)</strong>
             <span class="badge badge-danger">Anti-Liquidation &amp; Provenance Gate</span>
@@ -2212,7 +2248,7 @@ export function initFieldToolUI() {
     if (!latestResult) return;
     const tag = latestAssessment?.structural_baseline?.tree_tag || 'tree';
     triggerDownload(
-      `${tag.toLowerCase()}-rca-report.md`,
+      `${tag.toLowerCase()}-rap-report.md`,
       latestResult.compiledReport.markdown,
       'text/markdown;charset=utf-8'
     );
@@ -2232,7 +2268,7 @@ export function initFieldToolUI() {
     if (!latestAssessment) return;
     const tag = latestAssessment?.structural_baseline?.tree_tag || 'tree';
     triggerDownload(
-      `${tag.toLowerCase()}-rca-v2.json`,
+      `${tag.toLowerCase()}-rap-v2.json`,
       JSON.stringify(latestAssessment, null, 2),
       'application/json;charset=utf-8'
     );
@@ -2251,7 +2287,7 @@ export function initFieldToolUI() {
     }
   });
 
-  // Import existing RCA_v2 JSON file
+  // Import existing RAP_v2 or legacy RCA_v2 JSON file
   el('input-import-json')?.addEventListener('change', (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -2369,6 +2405,7 @@ export function initFieldToolUI() {
         `${latestResult.municipality?.name || ''}, ${latestResult.municipality?.state || ''}`,
       protectionStatus: statusLabel(row),
       tOverR: latestResult.biomechanics.biomechanics.sound_shell_thickness_ratio_t_over_r,
+      sonicTomographyVerified: Boolean(sb.sonic_tomography_or_resistograph_uri),
       crzFeet: latestResult.rootZones.crz.radius_feet,
       holobiontUsd: latestResult.valuation.holobiont_200yr_biological_equity_usd,
       ctlaUsd: latestResult.valuation.ctla_10th_ed_depreciated_usd,
@@ -2420,11 +2457,11 @@ export function initFieldToolUI() {
     el('veil-deep-forensics')?.scrollIntoView({ behavior: 'smooth' });
   });
 
-  // Live LEO-RCA Oracle Verifier & Conflicted Chainsaw Bid Sabotage Simulator
+  // Live LEO-RAP Oracle Verifier & Conflicted Chainsaw Bid Sabotage Simulator
   el('leo-narrative-textarea')?.addEventListener('input', () => {
     if (!latestAssessment || !latestResult) return;
     const raw = el('leo-narrative-textarea')?.value || '';
-    const check = verifyLeoRcaNarrative(raw, latestAssessment, latestResult.leoEvalContext);
+    const check = verifyLeoRapNarrative(raw, latestAssessment, latestResult.leoEvalContext);
     renderLeoVerificationBanner(check);
   });
 
@@ -2434,7 +2471,7 @@ export function initFieldToolUI() {
     if (textarea) {
       textarea.value = latestResult.leoBrief.brief_markdown;
     }
-    const cleanCheck = verifyLeoRcaNarrative(
+    const cleanCheck = verifyLeoRapNarrative(
       latestResult.leoBrief.brief_markdown,
       latestAssessment,
       latestResult.leoEvalContext
@@ -2470,7 +2507,7 @@ export function initFieldToolUI() {
     const baseMarkdown =
       inputTOverR >= 0.30
         ? latestResult.leoBrief.brief_markdown
-        : compileLeoRcaBrief(soundAssessment, soundContext).brief_markdown;
+        : compileLeoRapBrief(soundAssessment, soundContext).brief_markdown;
 
     const driftedMarkdown = baseMarkdown.replace(
       /\[\[oracle:root_zone\.crz_ft=[^\]]+\]\]/,
@@ -2482,7 +2519,7 @@ export function initFieldToolUI() {
     if (textarea) {
       textarea.value = sabotagedText;
     }
-    const sabotageCheck = verifyLeoRcaNarrative(sabotagedText, soundAssessment, soundContext);
+    const sabotageCheck = verifyLeoRapNarrative(sabotagedText, soundAssessment, soundContext);
     renderLeoVerificationBanner(sabotageCheck);
   });
 

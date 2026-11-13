@@ -1,0 +1,208 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soilgrower.com/schemas/openarbor-rap-field-observation.schema.json",
+  "title": "Open Arbor RAP Field Observation Log Record (PII-Stripped Longitudinal Baseline-to-Outcome)",
+  "description": "CC0-1.0 open schema for local-first, zero-PII field arboriculture observations linking baseline trunk, root-collar, and soil diagnostics to longitudinal 1-to-5 year stewardship outcomes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "observation_id",
+    "recorded_date",
+    "protocol_version",
+    "practitioner_designation",
+    "municipality_id",
+    "coarsened_plus_code",
+    "baseline",
+    "intervention",
+    "longitudinal_outcomes",
+    "privacy_attestation",
+    "canonical_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "RAP_Field_Observation_v1",
+      "description": "Fixed schema version identifier for PII-stripped longitudinal RAP field observation records."
+    },
+    "observation_id": {
+      "type": "string",
+      "minLength": 4,
+      "description": "Non-identifying local observation identifier."
+    },
+    "recorded_date": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+      "description": "ISO 8601 UTC date (YYYY-MM-DD) when the observation was recorded."
+    },
+    "protocol_version": {
+      "type": "string",
+      "enum": ["RAP_v1", "RAP_v2"],
+      "description": "Regenerative Arboriculture Protocol specification version."
+    },
+    "practitioner_designation": {
+      "type": "string",
+      "enum": ["RAPPER", "Open_Steward"],
+      "description": "Practitioner designation tier under the Regenerative Arboriculture Protocol."
+    },
+    "practitioner_credential": {
+      "type": "string",
+      "minLength": 2,
+      "description": "Optional non-PII practitioner credential reference (for example ISA or ASCA registration code)."
+    },
+    "municipality_id": {
+      "type": "string",
+      "minLength": 2,
+      "description": "Normalized jurisdiction identifier from data/ordinances/ or custom local municipality tag."
+    },
+    "coarsened_plus_code": {
+      "type": "string",
+      "pattern": "^[23456789CFGHJMPQRVWX]{6}00\\+$",
+      "description": "Open Location Code truncated to 6 grid characters padded with 00+ (approximately 1.1 km watershed cell, stripping parcel-level coordinates)."
+    },
+    "baseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tree_tag",
+        "species_scientific",
+        "species_common",
+        "dbh_cm",
+        "dbh_inches",
+        "internal_decay_method",
+        "measured_t_over_r",
+        "root_flare_burial_depth_cm",
+        "stem_girdling_root_severity"
+      ],
+      "properties": {
+        "tree_tag": {
+          "type": "string",
+          "minLength": 1
+        },
+        "species_scientific": {
+          "type": "string",
+          "minLength": 2
+        },
+        "species_common": {
+          "type": "string",
+          "minLength": 2
+        },
+        "dbh_cm": {
+          "type": "number",
+          "minimum": 0.1
+        },
+        "dbh_inches": {
+          "type": "number",
+          "minimum": 0.1
+        },
+        "internal_decay_method": {
+          "type": "string",
+          "enum": ["visual_only_unmeasured", "resistograph", "sonic_tomography"],
+          "description": "Method provenance for internal wood shell evaluation; visual_only_unmeasured requires measured_t_over_r to be null."
+        },
+        "measured_t_over_r": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Measured Mattheck sound shell thickness ratio (null when internal_decay_method is visual_only_unmeasured)."
+        },
+        "root_flare_burial_depth_cm": {
+          "type": "number",
+          "minimum": 0
+        },
+        "stem_girdling_root_severity": {
+          "type": "string"
+        },
+        "soil_function": {
+          "type": ["object", "null"]
+        }
+      }
+    },
+    "intervention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stage_executed",
+        "airspade_psi",
+        "amendments_applied",
+        "field_notes"
+      ],
+      "properties": {
+        "stage_executed": {
+          "type": "string",
+          "enum": [
+            "diagnostic_only",
+            "stage_1_stabilize",
+            "stage_2_soil_remediation",
+            "stage_3_guild_and_monitoring"
+          ]
+        },
+        "airspade_psi": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 250
+        },
+        "amendments_applied": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "field_notes": {
+          "type": "string"
+        }
+      }
+    },
+    "longitudinal_outcomes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["checkpoint_year", "date", "survival_status"],
+        "properties": {
+          "checkpoint_year": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 20
+          },
+          "date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "twig_extension_cm": {
+            "type": ["number", "null"]
+          },
+          "canopy_dieback_pct": {
+            "type": ["number", "null"]
+          },
+          "infiltration_mm_hr": {
+            "type": ["number", "null"]
+          },
+          "survival_status": {
+            "type": "string",
+            "enum": ["Thriving", "Stable", "Declining", "Failed_Or_Removed"]
+          }
+        }
+      }
+    },
+    "privacy_attestation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["zero_client_pii", "plus_code_coarsened_to_watershed_cell"],
+      "properties": {
+        "zero_client_pii": {
+          "type": "boolean",
+          "const": true
+        },
+        "plus_code_coarsened_to_watershed_cell": {
+          "type": "boolean",
+          "const": true
+        }
+      }
+    },
+    "canonical_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  }
+}

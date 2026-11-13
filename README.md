@@ -21,31 +21,34 @@ Proprietary arboriculture and urban forestry software often locks field observat
 ```text
 openarbor/
 ├── bin/
-│   └── openarbor-rca.mjs       # Zero-dependency RCA Field Compiler, Counter-Notice, Economics & Badge Attester CLI
+│   ├── openarbor-rap.mjs       # Zero-dependency RAP Field Compiler, Counter-Notice, Economics & Badge Attester CLI
+│   └── openarbor-rca.mjs       # Backward-compatible CLI shim delegating to openarbor-rap.mjs
 ├── data/
 │   └── ordinances/
 │       ├── central_texas_ordinances.json       # Verified open ordinance rules (Austin, Georgetown, Liberty Hill, Cedar Park, Round Rock)
 │       └── rogue_valley_oregon_ordinances.json # Verified open ordinance rules (Ashland, Medford, Grants Pass)
 ├── examples/
-│   └── ashland_oregon_white_oak_rca_v2.json    # Complete schema-valid RCA-Spec v2.0 reference payload (105 cm Quercus garryana)
+│   └── ashland_oregon_white_oak_rap_v2.json    # Complete schema-valid RAP-Spec v2.0 reference payload (105 cm Quercus garryana)
 ├── schemas/
 │   ├── municipal-ordinance.schema.json         # JSON Schema (Draft 2020-12) for community-contributed municipal tree codes
-│   ├── rca_assessment.schema.json              # JSON Schema (Draft 2020-12) for RCA-Spec v2.0 five-domain diagnostic assessments
-│   └── rca_openbadge_v3.schema.json            # JSON-LD Schema (Open Badges 3.0 / W3C VC) for RCA-Verified attestation
+│   ├── rap_assessment.schema.json              # JSON Schema (Draft 2020-12) for RAP-Spec v2.0 five-domain diagnostic assessments
+│   ├── rap_field_observation.schema.json       # JSON Schema (Draft 2020-12) for local-first PII-stripped observation cohort logs
+│   └── rap_openbadge_v3.schema.json            # JSON-LD Schema (Open Badges 3.0 / W3C VC) for RAPPER attestation
 ├── src/
 │   └── core/
 │       ├── rootZone.js                         # CRZ, TPZ, SRZ, multi-stem, and spatial union de-duplication
 │       ├── ordinanceEngine.js                  # Declarative municipal tree protection and mitigation ledger
 │       ├── ecosystemBenefits.js                # Nowak allometrics, Xiao hydrology, and OGC GeoJSON exporter
 │       ├── soilFunction.js                     # Optional soil_function provenance validator and NRCS vadose sponge estimator
-│       ├── rcaEngine.js                        # RCA-Spec v2.0 Mattheck t/R biomechanics, dual valuation, economics, and CLI compilers
-│       └── leoRcaEngine.js                     # LEO-RCA Profile 01 6-slot compiler, 3-stage phased triage, oracle verifier, and handoff briefs
+│       ├── fieldObservationLog.js              # Local-first PII-stripped RAP cohort logger (6-char Plus Code + canonical SHA-256)
+│       ├── rapEngine.js                        # RAP-Spec v2.0 Mattheck t/R biomechanics, dual valuation, economics, and CLI compilers
+│       └── leoRapEngine.js                     # LEO-RAP Profile 01 6-slot compiler, 3-stage phased triage, oracle verifier, and handoff briefs
 ├── tests/
-│   ├── verify_openarbor.mjs                    # Core deterministic Node.js verification suite (10 PASS groups)
+│   ├── verify_openarbor.mjs                    # Core deterministic Node.js verification suite (11 PASS groups)
 │   ├── verify_soil_function.mjs                # Soil provenance and GeoJSON backward-parity suite (4 PASS groups)
 │   ├── verify_mcp.mjs                          # Subprocess MCP JSON-RPC 2.0 suite (10 PASS groups)
-│   └── verify_masterwork_100x.mjs              # Live build, permalink, offline SW, and LEO-RCA suite (9 PASS groups)
-└── docs/                                       # Architectural blueprints and practice specifications (docs/13_RCA_PRACTICE_SPECIFICATION_v1.md)
+│   └── verify_masterwork_100x.mjs              # Live build, permalink, offline SW, and LEO-RAP suite (9 PASS groups)
+└── docs/                                       # Architectural blueprints and practice specifications (docs/13_RAP_PRACTICE_SPECIFICATION_v1.md)
 ```
 
 ### 1. Root Zone & Structural Stability Engine (`src/core/rootZone.js`)
@@ -68,12 +71,13 @@ Rather than hardcoding city logic in application code, Open Arbor reads declarat
 * **Veteran Tree Age Estimation:** Implements the `John White (FCIN12)` site-modified growth factor model across parkland, woodland, and urban street environments.
 * **OGC `GeoJSON` Export:** Converts evaluated inventories directly into `urn:ogc:def:crs:OGC:1.3:CRS84` `FeatureCollection` payloads ready for `QGIS`, `ArcGIS`, or `Leaflet`.
 
-### 4. Regenerative Consulting Arborist Engine (`src/core/rcaEngine.js`)
-Implements the Post-ISA / Post-ASCA diagnostic and appraisal standards governed by `docs/13_RCA_PRACTICE_SPECIFICATION_v1.md` (`RCA-Spec v2.0`):
+### 4. Regenerative Arboriculture Protocol Engine (`src/core/rapEngine.js`)
+Implements the Regenerative Arboriculture Protocol (`RAP-Spec v2.0`) diagnostic and appraisal standards governed by `docs/13_RAP_PRACTICE_SPECIFICATION_v1.md`, building upon ANSI A300, ISA BMP/TRAQ, Shigo CODIT, Mattheck `t/R`, CTLA 10th Edition, and the ASCA 7-part evidentiary structure:
 * **Mattheck Shell-Wall Physics (`evaluateBiomechanicsAndRhizosphere`):** Evaluates the hollow-cylinder safety factor `t/R >= 0.30` and calculates radial pneumatic decompaction (`AirSpade` at 150 psi) and biological amendments (pre-charged biochar, fungal humates, ramial woodchip mulch) scaled to the Tree Influence Zone (`TIZ`).
 * **Living Asset Equity vs. CTLA Dual Valuation (`computeHolobiontValuation`):** Computes classical CTLA 10th Edition depreciated cost and Regenerative Holobiont Biological Equity. Applies the veteran keystone habitat multiplier (1.0 to 3.5) so ancient hollow trees appreciate rather than depreciate.
 * **Sanctuary Scorecard Rollup (`computeSanctuaryScorecardRollup`):** Aggregates tree-level rhizosphere records into the five property-level Scorecard dimensions (`Soil Health Index`, `Canopy Coverage`, `Water Dynamics`, `Biodiversity Baseline`, `Restoration Potential Score`) with spatial root-zone union de-duplication.
-* **Evidentiary Linter (`lintRcaEvidentiaryReport`):** Enforces ASCA-grade evidentiary rigor and blocks un-justified removals when `t/R >= 0.30` and root-zone remediation is viable.
+* **Evidentiary Linter (`lintRapEvidentiaryReport`):** Enforces ASCA 7-part evidentiary rigor and blocks un-justified removals when `t/R >= 0.30` and root-zone remediation is viable.
+* **Local-First Cohort Logger (`src/core/fieldObservationLog.js`):** Coarsens GPS Plus Codes to 6-character watershed cells (`XXXXXX00+`), strips client PII keys and free-text contacts, enforces explicit `null` when internal decay is `visual_only_unmeasured`, seals each observation with a canonical `SHA-256` digest, and exports `.jsonl`.
 
 ---
 
@@ -83,9 +87,9 @@ Implements the Post-ISA / Post-ASCA diagnostic and appraisal standards governed 
 <a href="server/mcp/README.md"><img src="https://img.shields.io/badge/MCP-Compatible_(8_Tools)-2d6a4f.svg" alt="MCP: Compatible (8 Tools)" /></a>
 <a href="data/ordinances/CONTRIBUTING_DATA.md"><img src="https://img.shields.io/badge/Ordinance_Commons-8_Cities-74ac00.svg" alt="Ordinance Commons: 8 Cities" /></a>
 
-Open Arbor packages its six zero-dependency calculation modules as subpath exports (`openarbor/root-zone`, `openarbor/ordinance-engine`, `openarbor/ecosystem-benefits`, `openarbor/soil-function`, `openarbor/rca-engine`, and `openarbor/leo-rca`) under `AGPL-3.0-only`. Any Node.js application, GIS script, or research pipeline can import the deterministic functions directly without cloud keys or native binary compilation. See [`docs/14_OPENARBOR_PLATFORM_100X.md`](docs/14_OPENARBOR_PLATFORM_100X.md) for the platform architecture and dual-surface licensing model.
+Open Arbor packages its seven zero-dependency calculation modules as subpath exports (`openarbor/root-zone`, `openarbor/ordinance-engine`, `openarbor/ecosystem-benefits`, `openarbor/soil-function`, `openarbor/rap-engine`, `openarbor/leo-rap`, and `openarbor/field-observation-log`, plus backward-compatible `./rca-engine` and `./leo-rca` aliases) under `AGPL-3.0-only`. Any Node.js application, GIS script, or research pipeline can import the deterministic functions directly without cloud keys or native binary compilation. See [`docs/14_OPENARBOR_PLATFORM_100X.md`](docs/14_OPENARBOR_PLATFORM_100X.md) for the platform architecture and dual-surface licensing model.
 
-For AI assistants and local agents, [`server/mcp/openarbor-mcp.mjs`](server/mcp/openarbor-mcp.mjs) exposes all six engines and the municipal ordinance catalog over newline-delimited stdio JSON-RPC 2.0 (`calculate_root_zone`, `evaluate_ordinance`, `calculate_ecosystem_benefits`, `rca_biomechanics`, `rca_lint`, `lookup_ordinance`, `validate_soil_function`, and `leo_rca_verify`). Register the server in Claude Desktop or Hermes using the snippets in [`server/mcp/README.md`](server/mcp/README.md) and verify subprocess protocol conformance with `npm run test:mcp`.
+For AI assistants and local agents, [`server/mcp/openarbor-mcp.mjs`](server/mcp/openarbor-mcp.mjs) exposes the deterministic engines and the municipal ordinance catalog over newline-delimited stdio JSON-RPC 2.0 (`calculate_root_zone`, `evaluate_ordinance`, `calculate_ecosystem_benefits`, `rap_biomechanics`, `rap_lint`, `lookup_ordinance`, `validate_soil_function`, and `leo_rap_verify`, while continuing to accept legacy `rca_biomechanics`, `rca_lint`, and `leo_rca_verify` aliases). Register the server in Claude Desktop or Hermes using the snippets in [`server/mcp/README.md`](server/mcp/README.md) and verify subprocess protocol conformance with `npm run test:mcp`.
 
 The Municipal Ordinance Commons (`data/ordinances/`) encodes municipal tree preservation statutes into machine-readable JSON validated against [`schemas/municipal-ordinance.schema.json`](schemas/municipal-ordinance.schema.json). The commons currently ships with six full-rule cities (Austin, Georgetown, and Liberty Hill in Texas; Ashland, Medford, and Grants Pass in Oregon) plus two baseline threshold-and-fee records (Cedar Park and Round Rock). Contributors can validate new or updated city records locally with `node scripts/validate-ordinance.mjs` following [`data/ordinances/CONTRIBUTING_DATA.md`](data/ordinances/CONTRIBUTING_DATA.md).
 
@@ -99,14 +103,14 @@ Open Arbor's core library uses standard ECMAScript Modules (`ESM`) with **zero e
 # Run the deterministic verification suite (Node.js >= 18)
 npm test
 
-# Compile a legal-grade 7-section RCA Evidentiary Dossier from a schema-valid JSON assessment
-node bin/openarbor-rca.mjs compile examples/ashland_oregon_white_oak_rca_v2.json --municipality or-ashland
+# Compile a legal-grade 10-section RAP Evidentiary Dossier from a schema-valid JSON assessment
+node bin/openarbor-rap.mjs compile examples/ashland_oregon_white_oak_rap_v2.json --municipality or-ashland
 
 # Generate an Anti-Liquidation Preservation Counter-Notice challenging an un-evidenced removal bid
-node bin/openarbor-rca.mjs counter-notice examples/ashland_oregon_white_oak_rca_v2.json --competitor-bid 3900 --municipality or-ashland
+node bin/openarbor-rap.mjs counter-notice examples/ashland_oregon_white_oak_rap_v2.json --competitor-bid 3900 --municipality or-ashland
 
 # Compare 5-year Regenerative Stewardship economics against a one-time removal bid
-node bin/openarbor-rca.mjs economics examples/ashland_oregon_white_oak_rca_v2.json --removal-bid 3911
+node bin/openarbor-rap.mjs economics examples/ashland_oregon_white_oak_rap_v2.json --removal-bid 3911
 ```
 
 ### Example Usage

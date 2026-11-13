@@ -3,7 +3,7 @@
  * Initializes:
  *   1. Shared Sunlight Field / Canopy Dark color-scheme toggle (#oa-theme-toggle)
  *   2. Root Landing Portal Instant Root-Zone & Holobiont Quick-Calculator (#landing-quick-calc)
- *   3. RCA-Spec v2.0 & Municipal Ordinance Interactive Schema Inspector (#spec-viewer-root)
+ *   3. RAP-Spec v2.0 & Municipal Ordinance Interactive Schema Inspector (#spec-viewer-root)
  */
 
 import {
@@ -25,11 +25,11 @@ import {
 
 import {
   computeHolobiontValuation,
-} from '../../src/core/rcaEngine.js';
+} from '../../src/core/rapEngine.js';
 
 import txOrdinances from '../../data/ordinances/central_texas_ordinances.json';
 import orOrdinances from '../../data/ordinances/rogue_valley_oregon_ordinances.json';
-import rcaAssessmentSchema from '../../schemas/rca_assessment.schema.json';
+import rapAssessmentSchema from '../../schemas/rap_assessment.schema.json';
 import municipalOrdinanceSchema from '../../schemas/municipal-ordinance.schema.json';
 
 const ALL_MUNICIPALITIES = [
@@ -249,22 +249,22 @@ export function initSpecViewerUI() {
   const specRoot = document.getElementById('spec-viewer-root');
   if (!specRoot) return;
 
-  let activeSchemaKey = 'rca';
+  let activeSchemaKey = 'rap';
   const searchInput = document.getElementById('schema-prop-search');
   const tbody = document.getElementById('schema-props-tbody');
   const metaBanner = document.getElementById('schema-meta-banner');
   const rawFilename = document.getElementById('schema-raw-filename');
   const rawPreview = document.getElementById('schema-raw-preview');
 
-  const rcaRows = flattenSchemaProperties(rcaAssessmentSchema);
+  const rapRows = flattenSchemaProperties(rapAssessmentSchema);
   const ordRows = flattenSchemaProperties(municipalOrdinanceSchema);
 
   function renderSchemaInspector() {
-    const isRca = activeSchemaKey === 'rca';
-    const activeSchema = isRca ? rcaAssessmentSchema : municipalOrdinanceSchema;
-    const allRows = isRca ? rcaRows : ordRows;
-    const filePath = isRca ? 'schemas/rca_assessment.schema.json' : 'schemas/municipal-ordinance.schema.json';
-    const downloadHref = isRca ? '../schemas/rca_assessment.schema.json' : '../schemas/municipal-ordinance.schema.json';
+    const isRap = activeSchemaKey === 'rap' || activeSchemaKey === 'rca';
+    const activeSchema = isRap ? rapAssessmentSchema : municipalOrdinanceSchema;
+    const allRows = isRap ? rapRows : ordRows;
+    const filePath = isRap ? 'schemas/rap_assessment.schema.json' : 'schemas/municipal-ordinance.schema.json';
+    const downloadHref = isRap ? '../schemas/rap_assessment.schema.json' : '../schemas/municipal-ordinance.schema.json';
     const query = (searchInput?.value || '').trim().toLowerCase();
 
     const filteredRows = query

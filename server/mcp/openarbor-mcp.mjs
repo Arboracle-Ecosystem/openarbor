@@ -6,11 +6,11 @@
  *   1. calculate_root_zone          -> src/core/rootZone.js
  *   2. evaluate_ordinance           -> src/core/ordinanceEngine.js
  *   3. calculate_ecosystem_benefits -> src/core/ecosystemBenefits.js
- *   4. rca_biomechanics             -> src/core/rcaEngine.js
- *   5. rca_lint                     -> src/core/rcaEngine.js
+ *   4. rap_biomechanics             -> src/core/rapEngine.js (alias: rca_biomechanics)
+ *   5. rap_lint                     -> src/core/rapEngine.js (alias: rca_lint)
  *   6. lookup_ordinance             -> data/ordinances/*.json
  *   7. validate_soil_function       -> src/core/soilFunction.js
- *   8. leo_rca_verify               -> src/core/leoRcaEngine.js
+ *   8. leo_rap_verify               -> src/core/leoRapEngine.js (alias: leo_rca_verify)
  *
  * License: AGPL-3.0-only
  */
@@ -43,13 +43,13 @@ import {
 } from '../../src/core/soilFunction.js';
 import {
   evaluateBiomechanicsAndRhizosphere,
-  lintRcaEvidentiaryReport,
-} from '../../src/core/rcaEngine.js';
+  lintRapEvidentiaryReport,
+} from '../../src/core/rapEngine.js';
 import {
-  compileLeoRcaBrief,
-  verifyLeoRcaNarrative,
-  runLeoRcaSelfAudit,
-} from '../../src/core/leoRcaEngine.js';
+  compileLeoRapBrief,
+  verifyLeoRapNarrative,
+  runLeoRapSelfAudit,
+} from '../../src/core/leoRapEngine.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -258,31 +258,31 @@ export const MCP_TOOLS = [
     },
   },
   {
-    name: 'rca_biomechanics',
+    name: 'rap_biomechanics',
     description:
-      'Run RCA-Spec v2.0 biomechanical and rhizosphere evaluation (Mattheck t/R hollow-shell buckling safety factor, AS 4970 SRZ, Shigo CODIT wall response, pneumatic AirSpade trench volume, and biochar/compost/humate/mulch amendment quantities).',
+      'Run RAP-Spec v2.0 biomechanical and rhizosphere evaluation (Mattheck t/R hollow-shell buckling safety factor, AS 4970 SRZ, Shigo CODIT wall response, pneumatic AirSpade trench volume, and biochar/compost/humate/mulch amendment quantities).',
     inputSchema: {
       type: 'object',
       required: ['assessment'],
       properties: {
         assessment: {
           type: 'object',
-          description: 'RCA assessment object conforming to schemas/rca_assessment.schema.json.',
+          description: 'RAP assessment object conforming to schemas/rap_assessment.schema.json.',
         },
       },
     },
   },
   {
-    name: 'rca_lint',
+    name: 'rap_lint',
     description:
-      'Validate an RCA assessment object with the ASCA-grade and Nature-First Evidentiary Linter, blocking un-evidenced removals when Mattheck t/R >= 0.30 and rhizosphere remediation is viable.',
+      'Validate a RAP assessment object with the ASCA-grade and Nature-First Evidentiary Linter, blocking un-evidenced removals when Mattheck t/R >= 0.30 and rhizosphere remediation is viable.',
     inputSchema: {
       type: 'object',
       required: ['assessment'],
       properties: {
         assessment: {
           type: 'object',
-          description: 'RCA assessment object conforming to schemas/rca_assessment.schema.json.',
+          description: 'RAP assessment object conforming to schemas/rap_assessment.schema.json.',
         },
       },
     },
@@ -335,16 +335,16 @@ export const MCP_TOOLS = [
     },
   },
   {
-    name: 'leo_rca_verify',
+    name: 'leo_rap_verify',
     description:
-      'Compile a deterministic 6-Slot LEO-RCA Profile 01 stewardship brief with 3-stage phased triage, verify narrative prose against oracle anchors and the Mattheck t/R >= 0.30 anti-liquidation invariant, and run a 3-fixture negative sabotage self-audit.',
+      'Compile a deterministic 6-Slot LEO-RAP Profile 01 stewardship brief with 3-stage phased triage, verify narrative prose against oracle anchors and the Mattheck t/R >= 0.30 anti-liquidation invariant, and run a 3-fixture negative sabotage self-audit.',
     inputSchema: {
       type: 'object',
       required: ['assessment'],
       properties: {
         assessment: {
           type: 'object',
-          description: 'RCA assessment object conforming to schemas/rca_assessment.schema.json.',
+          description: 'RAP assessment object conforming to schemas/rap_assessment.schema.json.',
         },
         markdown_narrative: {
           type: 'string',
@@ -573,13 +573,14 @@ export function executeToolCall(name, args = {}) {
       });
     }
 
+    case 'rap_biomechanics':
     case 'rca_biomechanics': {
       const assessment = args.assessment || (args.structural_baseline ? args : null);
       if (!assessment || typeof assessment !== 'object') {
         return formatToolResult(
           {
             error: 'INVALID_ASSESSMENT',
-            message: 'rca_biomechanics requires an assessment object with structural_baseline.',
+            message: `${name} requires an assessment object with structural_baseline.`,
           },
           true
         );
@@ -590,7 +591,7 @@ export function executeToolCall(name, args = {}) {
       } catch (err) {
         return formatToolResult(
           {
-            error: 'RCA_BIOMECHANICS_ERROR',
+            error: 'RAP_BIOMECHANICS_ERROR',
             message: err.message,
           },
           true
@@ -598,18 +599,19 @@ export function executeToolCall(name, args = {}) {
       }
     }
 
+    case 'rap_lint':
     case 'rca_lint': {
       const assessment = args.assessment || (args.structural_baseline ? args : null);
       if (!assessment || typeof assessment !== 'object') {
         return formatToolResult(
           {
             error: 'INVALID_ASSESSMENT',
-            message: 'rca_lint requires an assessment object.',
+            message: `${name} requires an assessment object.`,
           },
           true
         );
       }
-      const lintResult = lintRcaEvidentiaryReport(assessment);
+      const lintResult = lintRapEvidentiaryReport(assessment);
       return formatToolResult(lintResult);
     }
 
@@ -727,6 +729,7 @@ export function executeToolCall(name, args = {}) {
       }
     }
 
+    case 'leo_rap_verify':
     case 'leo_rca_verify': {
       const safeArgs = args && typeof args === 'object' ? args : {};
       const assessment =
@@ -735,7 +738,7 @@ export function executeToolCall(name, args = {}) {
         return formatToolResult(
           {
             error: 'INVALID_ASSESSMENT',
-            message: 'leo_rca_verify requires an assessment object with structural_baseline.',
+            message: `${name} requires an assessment object with structural_baseline.`,
           },
           true
         );
@@ -807,15 +810,15 @@ export function executeToolCall(name, args = {}) {
           evalContext.municipality = found.record;
         }
 
-        const compiled = compileLeoRcaBrief(assessment, evalContext);
+        const compiled = compileLeoRapBrief(assessment, evalContext);
         const narrativeText =
           typeof safeArgs.markdown_narrative === 'string'
             ? safeArgs.markdown_narrative
             : compiled.brief_markdown;
-        const verification = verifyLeoRcaNarrative(narrativeText, assessment, evalContext);
+        const verification = verifyLeoRapNarrative(narrativeText, assessment, evalContext);
         const shouldRunSelfAudit = safeArgs.run_self_audit !== false;
         const selfAudit = shouldRunSelfAudit
-          ? runLeoRcaSelfAudit(assessment, evalContext)
+          ? runLeoRapSelfAudit(assessment, evalContext)
           : null;
 
         return formatToolResult({
@@ -827,7 +830,7 @@ export function executeToolCall(name, args = {}) {
       } catch (err) {
         return formatToolResult(
           {
-            error: 'LEO_RCA_VERIFY_ERROR',
+            error: 'LEO_RAP_VERIFY_ERROR',
             message: err.message,
           },
           true

@@ -1,5 +1,5 @@
 /**
- * Fixed Central Texas RCA_v2 Field Assessment Cases
+ * Fixed Central Texas & Oregon RAP_v2 Field Assessment Cases
  * Used both as one-tap field presets in the mobile web tool and as the
  * three fixed parity verification cases in deploy/VERIFICATION.md.
  */
@@ -140,7 +140,7 @@ export const FIXED_PARITY_CASES = [
     impervious_pct: 10,
     crown_removal_pct: 10,
     assessment: {
-      schema_version: 'RCA_v2',
+      schema_version: 'RAP_v2',
       assessment_mode: 'Regenerative Diagnostic',
       structural_baseline: {
         tree_tag: 'ATX-QV-101',
@@ -322,7 +322,7 @@ export const FIXED_PARITY_CASES = [
     impervious_pct: 8,
     crown_removal_pct: 5,
     assessment: {
-      schema_version: 'RCA_v2',
+      schema_version: 'RAP_v2',
       assessment_mode: 'Regenerative Diagnostic',
       structural_baseline: {
         tree_tag: 'GTN-CI-204',
@@ -491,7 +491,7 @@ export const FIXED_PARITY_CASES = [
     impervious_pct: 18,
     crown_removal_pct: 15,
     assessment: {
-      schema_version: 'RCA_v2',
+      schema_version: 'RAP_v2',
       assessment_mode: 'Regenerative Diagnostic',
       structural_baseline: {
         tree_tag: 'LBH-QS-309',
@@ -659,7 +659,7 @@ export const FIXED_PARITY_CASES = [
     impervious_pct: 8,
     crown_removal_pct: 8,
     assessment: {
-      schema_version: 'RCA_v2',
+      schema_version: 'RAP_v2',
       assessment_mode: 'Regenerative Diagnostic',
       structural_baseline: {
         tree_tag: 'ASH-QG-105',

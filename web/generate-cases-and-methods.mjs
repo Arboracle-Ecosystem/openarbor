@@ -3,7 +3,7 @@
  * Open Arbor v2.1 Build-Time Static Case & Falsifiability Generator (web/generate-cases-and-methods.mjs)
  * Generates:
  *   - Verified Bioregional Field Cases (out/cases/index.html + 5 case pages)
- *     rendering 100% of the determination, innate LEO-RCA answer-first triage, provenance surface,
+ *     rendering 100% of the determination, innate LEO-RAP answer-first triage, provenance surface,
  *     inline SVG map, mitigation schedule, and signature block as static HTML with JavaScript disabled.
  *   - Executable Proof & Falsifiability Ledger (out/methods/index.html) dynamically parsed from live
  *     test runners and municipal ordinance validators on disk with zero hardcoded drift.
@@ -44,18 +44,18 @@ import {
   validateJsonSchema,
   evaluateBiomechanicsAndRhizosphere,
   computeHolobiontValuation,
-  lintRcaEvidentiaryReport,
+  lintRapEvidentiaryReport,
   computeRegenerativePracticeEconomics,
   computeCanonicalSha256,
-  compileRcaEvidentiaryMarkdown,
+  compileRapEvidentiaryMarkdown,
   compilePreservationCounterNotice,
-} from '../src/core/rcaEngine.js';
+} from '../src/core/rapEngine.js';
 
 import {
   computePhasedStewardshipTriage,
-  compileLeoRcaBrief,
-  runLeoRcaSelfAudit,
-} from '../src/core/leoRcaEngine.js';
+  compileLeoRapBrief,
+  runLeoRapSelfAudit,
+} from '../src/core/leoRapEngine.js';
 
 import { ALL_SPECIES_PRESETS } from '../web/presets.js';
 import {
@@ -111,10 +111,10 @@ function formatUsd(n) {
 /**
  * Evaluate a single gallery case using the exact same deterministic pipeline as evaluateCompleteFieldCase.
  */
-function evaluateStaticCase(caseObj, allMunicipalities, rcaAssessmentSchema) {
+function evaluateStaticCase(caseObj, allMunicipalities, rapAssessmentSchema) {
   const assessment = caseObj.assessment;
-  const schemaValidation = validateJsonSchema(assessment, rcaAssessmentSchema);
-  const lint = lintRcaEvidentiaryReport(assessment);
+  const schemaValidation = validateJsonSchema(assessment, rapAssessmentSchema);
+  const lint = lintRapEvidentiaryReport(assessment);
 
   const ordId =
     caseObj.ordinance_id ||
@@ -122,7 +122,7 @@ function evaluateStaticCase(caseObj, allMunicipalities, rcaAssessmentSchema) {
     'tx-austin';
   const municipality = allMunicipalities.find((m) => m.id === ordId) || null;
 
-  const compiledReport = compileRcaEvidentiaryMarkdown(assessment, { municipality });
+  const compiledReport = compileRapEvidentiaryMarkdown(assessment, { municipality });
   const counterNotice = compilePreservationCounterNotice(assessment);
   const economics = computeRegenerativePracticeEconomics(assessment);
   const biomechanics = evaluateBiomechanicsAndRhizosphere(assessment);
@@ -263,8 +263,8 @@ function evaluateStaticCase(caseObj, allMunicipalities, rcaAssessmentSchema) {
     mitigationIfRemoved,
     provenance,
   };
-  const leoBrief = compileLeoRcaBrief(assessment, leoEvalContext);
-  const leoSelfAudit = runLeoRcaSelfAudit(assessment, leoEvalContext);
+  const leoBrief = compileLeoRapBrief(assessment, leoEvalContext);
+  const leoSelfAudit = runLeoRapSelfAudit(assessment, leoEvalContext);
 
   const evalResult = {
     schemaValidation,
@@ -338,7 +338,7 @@ function renderSharedHeader(relRoot, activeRoute) {
     },
     {
       href: `${relRoot}/spec/index.html`,
-      title: 'RCA-Spec v2.0 & 200-Yr Vault',
+      title: 'RAP-Spec v2.0 & 200-Yr Vault',
       desc: 'Ten-section evidentiary standard, primary equations, and Heartwood file vault.',
       id: 'spec',
     },
@@ -578,7 +578,7 @@ ${renderSharedHeader('..', 'cases')}
   <section class="app-header">
     <div class="container header-inner">
       <div>
-        <span class="eyebrow">Verified Bioregional Field Cases &middot; Zero-JS Crawlable Evidentiary Determinations &middot; RCA-Spec v2.0</span>
+        <span class="eyebrow">Verified Bioregional Field Cases &middot; Zero-JS Crawlable Evidentiary Determinations &middot; RAP-Spec v2.0</span>
         <h1 id="main-content" tabindex="-1">Bioregional Reference Case Gallery (Central Texas &amp; Rogue Valley, Oregon)</h1>
         <p class="subtitle">
           Five benchmark municipal tree determinations pre-rendered at build time directly from the certified ECMAScript core engines. Every case page includes plain-language stewardship triage, full statutory citations, inline vector <code>&lt;svg&gt;</code> root protection maps, provenance boundaries, and cryptographic <code>SHA-256</code> digests with JavaScript disabled.
@@ -899,7 +899,7 @@ ${triageRowsHtml}
         <h2 id="sec1-heading">Static Pre-Rendered Determination</h2>
       </div>
       <p class="subtitle">
-        Computed at build time from <code>src/core/ordinanceEngine.js</code> and <code>src/core/rcaEngine.js</code>. Fully inspectable without client-side JavaScript execution.
+        Computed at build time from <code>src/core/ordinanceEngine.js</code> and <code>src/core/rapEngine.js</code>. Fully inspectable without client-side JavaScript execution.
       </p>
 
       <div class="verdict-banner">
@@ -908,7 +908,7 @@ ${triageRowsHtml}
           <div class="verdict-title-row">
             <strong class="verdict-big">${escapeHtml(status)} Tree</strong>
             <span class="badge ${badgeClass}">${dualHtml(fmtDualInCm, bio.dbh_inches, bio.dbh_cm)} DBH</span>
-            <span class="badge badge-protected">RCA Linter: ${escapeHtml(evalResult.lint.valid ? `PASS (${evalResult.lint.passed_checks.length} checks)` : 'BLOCKED')}</span>
+            <span class="badge badge-protected">RAP Linter: ${escapeHtml(evalResult.lint.valid ? `PASS (${evalResult.lint.passed_checks.length} checks)` : 'BLOCKED')}</span>
           </div>
           <p class="muni-subtext">
             <strong>One-Line Determination Summary:</strong> ${escapeHtml(stickySummary.one_line_text)}
@@ -1085,7 +1085,7 @@ ${unverifiedRowsHtml}
             <tr>
               <th scope="row">Tree Influence Zone (<code>TIZ</code>)</th>
               <td><strong>${dualHtml(fmtDualFromMeters, bio.root_zones.tiz_radius_meters)} radius</strong><br /><small>Footprint Area: ${dualHtml(fmtDualAreaFromSqm, bio.root_zones.tiz_area_sqm)}</small></td>
-              <td><code>RCA-Spec v2.0</code> Holobiont Mycorrhizal Catchment</td>
+              <td><code>RAP-Spec v2.0</code> Holobiont Mycorrhizal Catchment</td>
               <td>Defines the ${dualHtml(fmtDualFromCm, 8)} coarse ramial woodchip mulch horizon (${dualHtml(fmtDualSoilVolFromM3, bio.rhizosphere_prescription.amendments.ramial_woodchip_mulch_m3)}) and native companion guild zone.</td>
             </tr>
             <tr>
@@ -1097,7 +1097,7 @@ ${unverifiedRowsHtml}
             <tr>
               <th scope="row">Supersonic AirSpade Radial Trenching &amp; SGR Relief</th>
               <td><strong>${dualHtml(fmtDualSoilVolFromM3, bio.rhizosphere_prescription.total_decompacted_soil_m3)} decompacted</strong><br /><small>${escapeHtml(air.trench_count)} spokes (${dualUnitSpanHtml(`${mToFt(air.trench_length_m, 1)} ft x ${cmToIn(air.trench_width_cm, 1)} in x ${cmToIn(air.trench_depth_cm, 1)} in (${air.trench_length_m} m x ${air.trench_width_cm} cm x ${air.trench_depth_cm} cm)`, `${air.trench_length_m} m x ${air.trench_width_cm} cm x ${air.trench_depth_cm} cm (${mToFt(air.trench_length_m, 1)} ft x ${cmToIn(air.trench_width_cm, 1)} in x ${cmToIn(air.trench_depth_cm, 1)} in)`)} @ ${dualHtml(fmtDualPressureFromPsi, bio.rhizosphere_prescription.operating_pressure_psi)})</small></td>
-              <td><code>ANSI A300 Part 2</code> / <code>RCA-Spec v2.0</code> Domain 2 &amp; 4</td>
+              <td><code>ANSI A300 Part 2</code> / <code>RAP-Spec v2.0</code> Domain 2 &amp; 4</td>
               <td>Root flare burial ${dualHtml(fmtDualFromCm, rh.root_flare_burial_depth_cm)}; SGR count: ${escapeHtml(bio.rhizosphere_prescription.stem_girdling_root_count)} (<code>${escapeHtml(bio.rhizosphere_prescription.stem_girdling_root_severity)}</code>, relief ratio ${escapeHtml(bio.rhizosphere_prescription.vascular_constriction_relief_ratio)}). Amendments: ${dualHtml(fmtDualBiocharFromLiters, bio.rhizosphere_prescription.amendments.precharged_biochar_liters)} biochar, ${dualHtml(fmtDualSoilVolFromM3, bio.rhizosphere_prescription.amendments.fungal_compost_m3)} compost, ${dualHtml(fmtDualMassFromKg, bio.rhizosphere_prescription.amendments.fungal_humate_kg)} humate.</td>
             </tr>
             <tr>
@@ -1188,7 +1188,7 @@ ${unverifiedRowsHtml}
               <td>N/A (Modeled Asset)</td>
               <td><strong class="oa-valuation-appraisal-val">CTLA: ${escapeHtml(formatUsd(val.ctla_10th_ed_depreciated_usd))}</strong> <span class="oa-valuation-hypothesis-val">| Experimental 200-Yr Model: ${escapeHtml(formatUsd(val.holobiont_200yr_biological_equity_usd))}</span> <span class="oa-model-assumption-note">Assumes CTLA $65/sq in trunk formula; uncalibrated 200-yr survival assumption</span></td>
               <td>Carbon: ${escapeHtml(formatUsd(val.breakdown.carbon_storage_equity_usd))} | Hydrology: ${escapeHtml(formatUsd(val.breakdown.vadose_hydrology_equity_usd))} | CMN Soil: ${escapeHtml(formatUsd(val.breakdown.cmn_rhizosphere_equity_usd))}</td>
-              <td>RCA-Spec v2.0 Dual Valuation (${escapeHtml(val.veteran_keystone_habitat_multiplier)}x Veteran Keystone Multiplier; ${escapeHtml(val.inversion_ratio)}x inversion)</td>
+              <td>RAP-Spec v2.0 Dual Valuation (${escapeHtml(val.veteran_keystone_habitat_multiplier)}x Veteran Keystone Multiplier; ${escapeHtml(val.inversion_ratio)}x inversion)</td>
             </tr>
             <tr>
               <th scope="row">Nowak / McPherson / Xiao Allometric Services</th>
@@ -1241,10 +1241,10 @@ ${companionRowsHtml}
       </div>
     </section>
 
-    <!-- STIM EPISTEMIC SIEVE: LEO-RCA 6-Slot Cambium Receipt -->
+    <!-- STIM EPISTEMIC SIEVE: LEO-RAP 6-Slot Cambium Receipt -->
     <details class="oa-veil card" id="case-leo-epistemic-veil">
       <summary class="oa-veil-summary">
-        <strong>STIM Epistemic Sieve: LEO-RCA 6-Slot Cambium Receipt</strong>
+        <strong>STIM Epistemic Sieve: LEO-RAP 6-Slot Cambium Receipt</strong>
         <span>(Oracle Provenance Anchors, Reconciled UNVERIFIED Tokens &amp; Sabotage Self-Audit)</span>
       </summary>
       <div class="oa-veil-body" style="margin-top: 14px;">
@@ -1269,18 +1269,18 @@ ${companionRowsHtml}
         <h2 id="sec5-heading">Practitioner Evidentiary Attestation &amp; Signature Block</h2>
       </div>
       <p class="subtitle">
-        Print-ready ASCA and RCA-Spec v2.0 conflict-of-interest disclosure and cryptographic attestation block for municipal submittal or conservation easement recording.
+        Print-ready ASCA and RAP-Spec v2.0 conflict-of-interest disclosure and cryptographic attestation block for municipal submittal or conservation easement recording.
       </p>
 
       <div class="citation-callout">
         <p style="margin: 0 0 8px 0;">
-          <strong>Conflict-of-Interest &amp; Evidentiary Attestation Statement:</strong> I certify that this arboricultural and rhizosphere assessment was conducted in accordance with <code>ANSI A300</code> (Parts 1, 2, and 5), <code>ISA Best Management Practices</code>, <code>AS 4970-2009</code>, and <code>Open Arbor RCA-Spec v2.0</code>. The assessing practitioner holds zero financial interest in timber liquidation or un-evidenced tree removal. All biometric, biomechanical (<code>t/R = ${escapeHtml(bio.biomechanics.sound_shell_thickness_ratio_t_over_r)}</code>), soil physical, and statutory mitigation figures trace deterministically to the canonical JSON payload anchored below.
+          <strong>Conflict-of-Interest &amp; Evidentiary Attestation Statement:</strong> I certify that this arboricultural and rhizosphere assessment was conducted in accordance with <code>ANSI A300</code> (Parts 1, 2, and 5), <code>ISA Best Management Practices</code>, <code>AS 4970-2009</code>, and <code>Open Arbor RAP-Spec v2.0</code>. The assessing practitioner holds zero financial interest in timber liquidation or un-evidenced tree removal. All biometric, biomechanical (<code>t/R = ${escapeHtml(bio.biomechanics.sound_shell_thickness_ratio_t_over_r)}</code>), soil physical, and statutory mitigation figures trace deterministically to the canonical JSON payload anchored below.
         </p>
         <div class="metric-grid metric-grid-3" style="margin-top: 12px;">
           <div class="metric-box">
             <span class="metric-label">Practitioner Name &amp; Credentials</span>
             <strong class="metric-value">George Steward</strong>
-            <span class="metric-sub">ISA Certified Arborist TX-362025A &middot; Oak Wilt Qualified &middot; RCA-001</span>
+            <span class="metric-sub">ISA Certified Arborist TX-362025A &middot; Oak Wilt Qualified &middot; RAPPER-001</span>
           </div>
           <div class="metric-box">
             <span class="metric-label">Assessment &amp; Re-Inspection Schedule</span>
@@ -1406,10 +1406,11 @@ function renderMethodsHtml(rootDir, allMunicipalities) {
     '4': 'Proves Claus Mattheck hollow-cylinder shell buckling stability criterion (t/R >= 0.30 sound vs. t/R = 0.18 buckling risk), stem-girdling root (SGR) vascular constriction relief ratios, and 150 psi AirSpade radial trenching & biochar/compost/humate scaling.',
     '5': 'Proves CTLA 10th Edition Trunk Formula depreciation vs. 200-year Holobiont Biological Equity valuation with 3.5x Veteran Keystone Habitat Multiplier and >=10.0x ecological inversion ratio.',
     '6': 'Proves 5-dimension Open Sanctuary Scorecard parcel rollup (Soil Health, Canopy, Water Dynamics, Biodiversity, Restoration) and 1-ft spatial Cartesian grid union de-duplication (unionRootZoneArea).',
-    '7': 'Proves ASCA/RCA hard evidentiary linter blocking unjustified removal when t/R >= 0.30 (UNJUSTIFIED_REMOVAL, EVIDENTIARY_DEFECT) and strict Draft 2020-12 additionalProperties: false schema enforcement.',
+    '7': 'Proves ASCA/RAP hard evidentiary linter blocking unjustified removal when t/R >= 0.30 (UNJUSTIFIED_REMOVAL, EVIDENTIARY_DEFECT) and strict Draft 2020-12 additionalProperties: false schema enforcement.',
     '8': 'Proves Rogue Valley, Oregon bioregional municipal ordinances (Ashland AMC 18.4.5, Medford MMC/MLDC, Grants Pass DC Art. 11) with zero false Texas Oak Wilt flags during May pruning in Oregon.',
-    '9': 'Proves bin/openarbor-rca.mjs CLI subcommands (compile, counter-notice, economics --json, attest Open Badges 3.0 minting) plus negative-path CLI sabotage and __proto__/constructor prototype-pollution rejection.',
+    '9': 'Proves bin/openarbor-rap.mjs CLI subcommands (compile, counter-notice, economics --json, attest Open Badges 3.0 minting) plus backward-compatible openarbor-rca shims, negative-path CLI sabotage, and __proto__/constructor prototype-pollution rejection.',
     '10': 'Proves static multi-page web build (out/) across all routes and executes deploy/verify-parity.mjs asserting 4/4 bit-for-bit CLI-to-browser parity.',
+    '11': 'Verifies 6-character Plus Code watershed coarsening, zero-PII key/regex blocking, instrument honesty (visual_only_unmeasured -> null t/R), canonical SHA-256 sealing, and JSONL cohort export.',
   };
 
   const soilInvariants = {
@@ -1421,13 +1422,13 @@ function renderMethodsHtml(rootDir, allMunicipalities) {
 
   const mcpInvariants = {
     '1': 'Spawns server/mcp/openarbor-mcp.mjs over stdio and verifies JSON-RPC 2.0 initialize handshake (protocolVersion 2024-11-05, server openarbor-mcp v2.1.0).',
-    '2': 'Verifies tools/list returns all 8 deterministic MCP tools (calculate_root_zone, evaluate_ordinance, calculate_ecosystem_benefits, rca_biomechanics, rca_lint, lookup_ordinance, validate_soil_function, leo_rca_verify).',
+    '2': 'Verifies tools/list returns all 8 deterministic MCP tools (calculate_root_zone, evaluate_ordinance, calculate_ecosystem_benefits, rap_biomechanics, rap_lint, lookup_ordinance, validate_soil_function, leo_rap_verify).',
     '3': 'Verifies known-answer tools/call for calculate_root_zone (24 in DBH, US_1_1 -> radius_feet = 24, area_sqft = 1809.56).',
     '4': 'Verifies lookup_ordinance positive lookup (or-ashland -> 6 in DBH threshold) and graceful structured error on unknown jurisdiction (UNKNOWN_JURISDICTION) without crashing.',
-    '5': 'Verifies known-answer tools/call execution for evaluate_ordinance, calculate_ecosystem_benefits, rca_biomechanics (t/R = 0.34 sound), and rca_lint (valid = true).',
+    '5': 'Verifies known-answer tools/call execution for evaluate_ordinance, calculate_ecosystem_benefits, rap_biomechanics (t/R = 0.34 sound), and rap_lint (valid = true) plus legacy rca_* compatibility aliases.',
     '6': 'Verifies tools/call validate_soil_function positive Living Sponge calculation (1,342 gal storm capture), default omission when unsupplied, and structured INVALID_SOIL_FUNCTION error when source is missing.',
-    '7': 'Verifies tools/call leo_rca_verify 8/8 oracle anchors, 3/3 negative sabotage self-audit, 3-stage phased triage conservation, and house-style-clean Arborist Handoff Brief.',
-    '8': 'Verifies bounded-input DoS security guards across evaluate_ordinance (>500 trees -> MAX_TREES_EXCEEDED), lookup_ordinance (>128 chars -> JURISDICTION_ID_TOO_LONG), and leo_rca_verify (>100,000 chars -> MAX_NARRATIVE_LENGTH_EXCEEDED).',
+    '7': 'Verifies tools/call leo_rap_verify 8/8 oracle anchors, 3/3 negative sabotage self-audit, 3-stage phased triage conservation, and de-fanged house-style-clean Arborist Handoff Brief.',
+    '8': 'Verifies bounded-input DoS security guards across evaluate_ordinance (>500 trees -> MAX_TREES_EXCEEDED), lookup_ordinance (>128 chars -> JURISDICTION_ID_TOO_LONG), and leo_rap_verify (>100,000 chars -> MAX_NARRATIVE_LENGTH_EXCEEDED).',
     '9': 'Verifies prototype-chain pollution security gates in scripts/validate-ordinance.mjs: rejects literal __proto__ and constructor payloads with non-zero exit code.',
     '10': 'Verifies clean JSON-RPC 2.0 shutdown response and child process termination.',
   };
@@ -1479,7 +1480,7 @@ function renderMethodsHtml(rootDir, allMunicipalities) {
     D6: 'Proves evidentiary print report stylesheet (@media print, @page Letter) and #evidentiary-print-sheet practitioner attestation & signature block.',
     D7: `Proves falsifiability & verification methodology page (out/methods/index.html) generated dynamically from live test suites with ${totalVerificationGroups}/${totalVerificationGroups} executable verification groups and zero drift.`,
     D8: 'Proves 3-Stage Phased Stewardship Triage (Day-1 Root-Collar Triage undercutting chainsaw removal on Austin and Ashland heritage oaks), dual-voice Arborist Handoff Brief (#oa1=), and native <dialog id="arborist-handoff-dialog" closedby="any"> across Field Home and Field Studio.',
-    D9: 'Proves deterministic 6-slot LEO-RCA Profile 01 compiler, anti-liquidation oracle verifier (catching Mattheck t/R violations, drifted oracle numbers, and epistemic count mismatches across 3/3 negative sabotage fixtures), Cedar Park Threshold_And_Fee_Record UNVERIFIED[STATUTORY_RULE] reconciliation, and zero raw backticks on Field Home.',
+    D9: 'Proves deterministic 6-slot LEO-RAP Profile 01 compiler, anti-liquidation oracle verifier (catching Mattheck t/R violations, drifted oracle numbers, and epistemic count mismatches across 3/3 negative sabotage fixtures), Cedar Park Threshold_And_Fee_Record UNVERIFIED[STATUTORY_RULE] reconciliation, and zero raw backticks on Field Home.',
   };
 
   const masterworkGroups = rawMasterworkGroups.map((g) => {
@@ -1564,7 +1565,7 @@ function renderMethodsHtml(rootDir, allMunicipalities) {
       return `            <tr>
               <th scope="row"><code>parity-case-${idx + 1}</code><br /><small><code>${escapeHtml(c.id)}</code></small></th>
               <td><strong>${escapeHtml(c.label)}</strong><br /><small><em>${escapeHtml(sb.species_scientific)}</em> (<code>${escapeHtml(sb.tree_tag)}</code>)</small></td>
-              <td>Proves 21/21 bit-for-bit identical outputs between Node.js CLI (<code>bin/openarbor-rca.mjs</code>) and browser bundle (<code>out/openarbor-bundle.js</code>): canonical SHA-256, 10-section report Markdown, counter-notice Markdown, linter checks, DBH, Mattheck t/R, SRZ/CRZ/TIZ radii, AirSpade volume, amendments, permit verdict, cash-in-lieu fee, CTLA vs. Holobiont valuation, 5-yr economics, FCIN12 age, Nowak benefits, and GeoJSON SHA-256.</td>
+              <td>Proves 21/21 bit-for-bit identical outputs between Node.js CLI (<code>bin/openarbor-rap.mjs</code>) and browser bundle (<code>out/openarbor-bundle.js</code>): canonical SHA-256, 10-section report Markdown, counter-notice Markdown, linter checks, DBH, Mattheck t/R, SRZ/CRZ/TIZ radii, AirSpade volume, amendments, permit verdict, cash-in-lieu fee, CTLA vs. Holobiont valuation, 5-yr economics, FCIN12 age, Nowak benefits, and GeoJSON SHA-256.</td>
               <td><code>deploy/verify-parity.mjs:66</code><br /><small>Fixture: <code>deploy/fixtures/${escapeHtml(c.id)}.json</code></small></td>
               <td><code>node deploy/verify-parity.mjs</code></td>
             </tr>`;
@@ -1737,7 +1738,7 @@ ${renderSharedHeader('..', 'methods')}
     <section class="card" aria-labelledby="suite1-heading">
       <div class="card-header">
         <span class="step-badge">Runner 1 (${coreGroups.length} Groups)</span>
-        <h2 id="suite1-heading">Core Arboricultural, Allometric &amp; RCA Engine Suite (<code>tests/verify_openarbor.mjs</code>)</h2>
+        <h2 id="suite1-heading">Core Arboricultural, Allometric &amp; RAP Engine Suite (<code>tests/verify_openarbor.mjs</code>)</h2>
       </div>
       <div tabindex="0" role="region" aria-labelledby="table1-caption" class="table-wrapper">
         <table
@@ -1938,7 +1939,7 @@ ${renderGroupRows(masterworkGroups)}
           <tbody>
 ${boundaryRowsHtml}
             <tr>
-              <th scope="row"><strong>Subsurface Decay &amp; Root Architecture</strong><br /><small><code>src/core/rcaEngine.js</code></small></th>
+              <th scope="row"><strong>Subsurface Decay &amp; Root Architecture</strong><br /><small><code>src/core/rapEngine.js</code></small></th>
               <td><code>sound_shell_thickness_ratio_t_over_r</code> &amp; <code>sonic_tomography_or_resistograph_uri</code></td>
               <td><span class="badge badge-protected">INSTRUMENT REQUIRED</span></td>
               <td>Visual inspection alone cannot measure internal heartwood cavity geometry. Open Arbor does not infer internal shell thickness from outer bark appearance; condemning a protected tree requires physical sonic tomography or micro-drilling resistograph evidence.</td>
@@ -1982,8 +1983,8 @@ export function generateCasesAndMethods(rootDir = DEFAULT_ROOT_DIR, outDir = pat
   const orOrdinances = JSON.parse(
     fs.readFileSync(path.join(rootDir, 'data/ordinances/rogue_valley_oregon_ordinances.json'), 'utf8')
   );
-  const rcaAssessmentSchema = JSON.parse(
-    fs.readFileSync(path.join(rootDir, 'schemas/rca_assessment.schema.json'), 'utf8')
+  const rapAssessmentSchema = JSON.parse(
+    fs.readFileSync(path.join(rootDir, 'schemas/rap_assessment.schema.json'), 'utf8')
   );
 
   const allMunicipalities = [
@@ -1993,7 +1994,7 @@ export function generateCasesAndMethods(rootDir = DEFAULT_ROOT_DIR, outDir = pat
 
   // 1. Evaluate all 5 benchmark cases in GALLERY_CASES
   const evaluatedCases = GALLERY_CASES.map((caseObj) =>
-    evaluateStaticCase(caseObj, allMunicipalities, rcaAssessmentSchema)
+    evaluateStaticCase(caseObj, allMunicipalities, rapAssessmentSchema)
   );
 
   // 2. Write out/cases/index.html and out/cases/<slug>/index.html

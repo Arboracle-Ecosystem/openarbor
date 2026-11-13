@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://soilgrower.com/schemas/openarbor-rca-openbadge-v3.schema.json",
   "title": "Open Arbor Verified Regenerative Consulting Arborist (RCA-Verified) Open Badges 3.0 Schema",
-  "description": "AGPL v3 JSON Schema and JSON-LD template for a 1EdTech Open Badges 3.0 / W3C Verifiable Credentials v2.0 OpenBadgeCredential attesting to the Verified Regenerative Consulting Arborist (RCA-Verified) designation under RCA-Spec v2.0. Encodes objective nature-first competency proofs (3 diagnostic report SHA-256 hashes, rhizosphere verification, STIM monitoring commitment) and optional legacy guild cross-walks without any payment flow.",
+  "description": "CC0-1.0 Universal JSON Schema (legacy compatibility alias for schemas/rap_openbadge_v3.schema.json) supporting Open Badges 3.0 / W3C Verifiable Credentials v2.0 credentials for RAPPER and legacy RCA-Verified artifacts.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -59,8 +59,11 @@
     },
     "name": {
       "type": "string",
-      "const": "Verified Regenerative Consulting Arborist (RCA-Verified)",
-      "description": "Canonical human-readable title of the credential (unit: string)."
+      "description": "Canonical human-readable title of the credential (unit: string).",
+      "enum": [
+        "Verified Regenerative Arboriculture Protocol Practitioner in Ecological Restoration (RAPPER)",
+        "Verified Regenerative Consulting Arborist (RCA-Verified)"
+      ]
     },
     "issuer": {
       "type": "object",
@@ -261,6 +264,7 @@
               "type": "string",
               "format": "uri",
               "enum": [
+                "https://soilgrower.com/specs/rap-spec-v2.0",
                 "https://soilgrower.com/specs/rca-spec-v1.0",
                 "https://soilgrower.com/specs/rca-spec-v2.0"
               ],
@@ -278,6 +282,7 @@
             "name": {
               "type": "string",
               "enum": [
+                "Regenerative Arboriculture Protocol (RAP-Spec v2.0)",
                 "Regenerative Consulting Arborist (RCA-Spec v1.0)",
                 "Regenerative Consulting Arborist (RCA-Spec v2.0)"
               ],
@@ -398,6 +403,7 @@
               "type": "string",
               "enum": [
                 "Evidence",
+                "RAPDiagnosticReportEvidence",
                 "RCADiagnosticReportEvidence"
               ]
             },
@@ -410,12 +416,20 @@
           },
           "conforms_to_schema": {
             "type": "string",
-            "const": "https://soilgrower.com/schemas/openarbor-rca-assessment.schema.json",
-            "description": "Canonical schema URI against which the report JSON was validated (unit: URI)."
+            "description": "Canonical schema URI against which the report JSON was validated (unit: URI).",
+            "enum": [
+              "https://soilgrower.com/schemas/openarbor-rap-assessment.schema.json",
+              "https://soilgrower.com/schemas/openarbor-rca-assessment.schema.json"
+            ]
           },
           "schema_version": {
             "type": "string",
-            "enum": ["RCA_v1", "RCA_v2"],
+            "enum": [
+              "RAP_v1",
+              "RAP_v2",
+              "RCA_v1",
+              "RCA_v2"
+            ],
             "description": "Validated RCA specification version (unit: version string)."
           },
           "report_sha256_hash": {

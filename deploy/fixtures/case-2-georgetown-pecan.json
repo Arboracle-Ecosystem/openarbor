@@ -1,5 +1,5 @@
 {
-  "schema_version": "RCA_v2",
+  "schema_version": "RAP_v2",
   "assessment_mode": "Regenerative Diagnostic",
   "structural_baseline": {
     "tree_tag": "GTN-CI-204",

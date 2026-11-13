@@ -4,7 +4,7 @@
  *   1. Global Veil Chrome (#oa-veil-mode-toggle), [popovertarget] fallback, and <dialog closedby="any"> light-dismiss fallback
  *   2. Shared Arborist Handoff modal (<dialog id="arborist-handoff-dialog">) reusable across / and /demo/
  *   3. Interactive Living Tree Lens (#landing-quick-calc) wired to certified Open Arbor core engines:
- *      rootZone.js, ordinanceEngine.js, ecosystemBenefits.js, rcaEngine.js, leoRcaEngine.js, and soilFunction.js
+ *      rootZone.js, ordinanceEngine.js, ecosystemBenefits.js, rapEngine.js, leoRapEngine.js, and soilFunction.js
  */
 
 import {
@@ -31,13 +31,13 @@ import {
   evaluateBiomechanicsAndRhizosphere,
   computeHolobiontValuation,
   computeRegenerativePracticeEconomics,
-} from '../../src/core/rcaEngine.js';
+} from '../../src/core/rapEngine.js';
 
 import {
   computePhasedStewardshipTriage,
-  compileLeoRcaBrief,
+  compileLeoRapBrief,
   composeArboristHandoffBrief,
-} from '../../src/core/leoRcaEngine.js';
+} from '../../src/core/leoRapEngine.js';
 
 import {
   estimateSoilSpongeCapacity,
@@ -1076,7 +1076,7 @@ export function initLivingLensUI() {
     clonedCase.crz_disturbed_pct = disturbancePct;
     clonedCase.proposed_removal = false;
 
-    // Core biomechanical, allometric, holobiont, soil sponge, triage & LEO-RCA engines
+    // Core biomechanical, allometric, holobiont, soil sponge, triage & LEO-RAP engines
     const biomechanics = evaluateBiomechanicsAndRhizosphere(synthAssessment);
     const valuation = computeHolobiontValuation(synthAssessment);
     const economics = computeRegenerativePracticeEconomics(synthAssessment);
@@ -1099,7 +1099,7 @@ export function initLivingLensUI() {
     });
 
     const provenance = inspectMunicipalityProvenance(muni);
-    const leoBrief = compileLeoRcaBrief(synthAssessment, {
+    const leoBrief = compileLeoRapBrief(synthAssessment, {
       municipality: muni,
       evaluatedRow: keepRow,
       permitText,
@@ -1333,7 +1333,7 @@ export function initLivingLensUI() {
       `${triage.net_margin_multiplier.toFixed(2)}x higher 5-yr arborist net margin (${formatUsd(triage.full_5yr_practitioner_net_usd)} vs ${formatUsd(triage.removal_practitioner_net_usd)})`
     );
 
-    // 6. Update Act II 3-Stage Triage Breakdown & Act IV Live LEO-RCA Preview
+    // 6. Update Act II 3-Stage Triage Breakdown & Act IV Live LEO-RAP Preview
     const triageGrid = document.getElementById('qc-triage-stages-grid');
     if (triageGrid && Array.isArray(triage.stages)) {
       triageGrid.innerHTML = triage.stages
@@ -1377,6 +1377,9 @@ export function initLivingLensUI() {
       cityLabel: `${muni.name}, ${muni.state} (${muni.ordinance_numbers})`,
       protectionStatus: protLabel,
       tOverR,
+      sonicTomographyVerified: Boolean(
+        synthAssessment?.structural_baseline?.sonic_tomography_or_resistograph_uri
+      ),
       crzFeet: crz.radius_feet,
       holobiontUsd,
       ctlaUsd,

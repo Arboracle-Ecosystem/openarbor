@@ -35,6 +35,9 @@ const PRECACHE_PATHS = [
   './data/ordinances/rogue_valley_oregon_ordinances.json',
   './data/catalog/forestry-tools.json',
   './schemas/municipal-ordinance.schema.json',
+  './schemas/rap_assessment.schema.json',
+  './schemas/rap_openbadge_v3.schema.json',
+  './schemas/rap_field_observation.schema.json',
   './schemas/rca_assessment.schema.json',
   './schemas/rca_openbadge_v3.schema.json',
 ];

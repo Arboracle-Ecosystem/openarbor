@@ -2,9 +2,9 @@
  * OpenArbor Deterministic Verification Suite (Node.js native test runner)
  * Verifies CRZ, TPZ, SRZ, Multi-Stem DBH, Union Root Zone Area,
  * Municipal Ordinance Mitigation & Ascending Exemption Engine,
- * Ecosystem Benefits, OGC GeoJSON Export, RCA-Spec v2.0 Biomechanics,
+ * Ecosystem Benefits, OGC GeoJSON Export, RAP-Spec v2.0 Biomechanics,
  * Dual Valuation, Sanctuary Rollup, Strict Schema Validation,
- * Rogue Valley Oregon Ordinances, and the 100x RCA Army CLI Compiler.
+ * Rogue Valley Oregon Ordinances, and the RAP CLI Compiler.
  */
 
 import assert from 'node:assert/strict';
@@ -43,12 +43,27 @@ import {
   evaluateBiomechanicsAndRhizosphere,
   computeHolobiontValuation,
   computeSanctuaryScorecardRollup,
-  lintRcaEvidentiaryReport,
+  lintRapEvidentiaryReport,
   computeRegenerativePracticeEconomics,
-  compileRcaEvidentiaryMarkdown,
+  compileRapEvidentiaryMarkdown,
   compilePreservationCounterNotice,
   mintOpenBadgeAttestation,
+} from '../src/core/rapEngine.js';
+
+import {
+  lintRcaEvidentiaryReport,
+  compileRcaEvidentiaryMarkdown,
 } from '../src/core/rcaEngine.js';
+
+import {
+  coarsenPlusCode,
+  redactPotentialPii,
+  assertZeroClientPii,
+  createFieldObservationRecord,
+  verifyFieldObservationRecord,
+  serializeObservationCohortJsonl,
+  summarizeObservationCohort,
+} from '../src/core/fieldObservationLog.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
@@ -59,22 +74,31 @@ const ordinancesRaw = JSON.parse(
 const rogueValleyOrdinancesRaw = JSON.parse(
   fs.readFileSync(path.join(rootDir, 'data/ordinances/rogue_valley_oregon_ordinances.json'), 'utf8')
 );
+const rapAssessmentSchema = JSON.parse(
+  fs.readFileSync(path.join(rootDir, 'schemas/rap_assessment.schema.json'), 'utf8')
+);
+const rapOpenBadgeSchema = JSON.parse(
+  fs.readFileSync(path.join(rootDir, 'schemas/rap_openbadge_v3.schema.json'), 'utf8')
+);
+const rapFieldObservationSchema = JSON.parse(
+  fs.readFileSync(path.join(rootDir, 'schemas/rap_field_observation.schema.json'), 'utf8')
+);
 const rcaAssessmentSchema = JSON.parse(
   fs.readFileSync(path.join(rootDir, 'schemas/rca_assessment.schema.json'), 'utf8')
-);
-const rcaOpenBadgeSchema = JSON.parse(
-  fs.readFileSync(path.join(rootDir, 'schemas/rca_openbadge_v3.schema.json'), 'utf8')
 );
 const municipalOrdinanceSchema = JSON.parse(
   fs.readFileSync(path.join(rootDir, 'schemas/municipal-ordinance.schema.json'), 'utf8')
 );
 const ashlandReferenceCase = JSON.parse(
+  fs.readFileSync(path.join(rootDir, 'examples/ashland_oregon_white_oak_rap_v2.json'), 'utf8')
+);
+const legacyAshlandRcaCase = JSON.parse(
   fs.readFileSync(path.join(rootDir, 'examples/ashland_oregon_white_oak_rca_v2.json'), 'utf8')
 );
 
 /**
  * Helper to clone and customize the 100% schema-valid Ashland reference case
- * so every test fixture strictly satisfies schemas/rca_assessment.schema.json.
+ * so every test fixture strictly satisfies schemas/rap_assessment.schema.json.
  */
 function cloneValidAssessment(overrides = {}) {
   const clone = JSON.parse(JSON.stringify(ashlandReferenceCase));
@@ -231,7 +255,7 @@ console.log('=== OpenArbor v2.0 Open-Standards Verification Suite ===\n');
   console.log('[PASS] 3. Allometric Ecosystem Benefits (Nowak/McPherson), John White Age & GeoJSON Exporter');
 }
 
-// 4. Test RCA Biomechanics, Mattheck t/R Stability, SGR Enum Matching & Rhizosphere Prescription
+// 4. Test RAP Biomechanics, Mattheck t/R Stability, SGR Enum Matching & Rhizosphere Prescription
 {
   const assessment = cloneValidAssessment({
     structural_baseline: {
@@ -259,7 +283,7 @@ console.log('=== OpenArbor v2.0 Open-Standards Verification Suite ===\n');
   });
 
   // Strict schema check on fixture
-  const schemaCheck = validateJsonSchema(assessment, rcaAssessmentSchema);
+  const schemaCheck = validateJsonSchema(assessment, rapAssessmentSchema);
   assert.equal(schemaCheck.valid, true, `Schema errors: ${schemaCheck.errors.join('; ')}`);
 
   const bio = evaluateBiomechanicsAndRhizosphere(assessment);
@@ -290,18 +314,18 @@ console.log('=== OpenArbor v2.0 Open-Standards Verification Suite ===\n');
       sound_shell_thickness_ratio_t_over_r: 0.18,
     },
   });
-  assert.equal(validateJsonSchema(thinned, rcaAssessmentSchema).valid, true);
+  assert.equal(validateJsonSchema(thinned, rapAssessmentSchema).valid, true);
   const thinnedResult = evaluateBiomechanicsAndRhizosphere(thinned);
   assert.equal(thinnedResult.biomechanics.mattheck_criterion_satisfied, false);
   assert.equal(thinnedResult.biomechanics.is_structurally_sound, false);
   assert.ok(thinnedResult.biomechanics.stability_rating.includes('Elevated Buckling Risk'));
 
-  console.log('[PASS] 4. RCA Biomechanics, Mattheck t/R Stability, SGR Enums & Rhizosphere Prescription');
+  console.log('[PASS] 4. RAP Biomechanics, Mattheck t/R Stability, SGR Enums & Rhizosphere Prescription');
 }
 
 // 5. Test CTLA 10th Ed vs. Holobiont Biological Equity Inversion (Veteran Oak)
 {
-  assert.equal(validateJsonSchema(ashlandReferenceCase, rcaAssessmentSchema).valid, true);
+  assert.equal(validateJsonSchema(ashlandReferenceCase, rapAssessmentSchema).valid, true);
 
   const val = computeHolobiontValuation(ashlandReferenceCase, {
     unit_cost_sq_in: 75.0,
@@ -380,8 +404,8 @@ console.log('=== OpenArbor v2.0 Open-Standards Verification Suite ===\n');
     },
   });
 
-  assert.equal(validateJsonSchema(tree1, rcaAssessmentSchema).valid, true);
-  assert.equal(validateJsonSchema(tree2, rcaAssessmentSchema).valid, true);
+  assert.equal(validateJsonSchema(tree1, rapAssessmentSchema).valid, true);
+  assert.equal(validateJsonSchema(tree2, rapAssessmentSchema).valid, true);
 
   const rollup = computeSanctuaryScorecardRollup([tree1, tree2], 4047);
   assert.equal(rollup.total_assessed_trees, 2);
@@ -413,20 +437,25 @@ console.log('=== OpenArbor v2.0 Open-Standards Verification Suite ===\n');
     },
   });
   delete badRemovalAssessment.structural_baseline.sonic_tomography_or_resistograph_uri;
-  assert.equal(validateJsonSchema(badRemovalAssessment, rcaAssessmentSchema).valid, true);
+  assert.equal(validateJsonSchema(badRemovalAssessment, rapAssessmentSchema).valid, true);
 
-  const lintResult = lintRcaEvidentiaryReport(badRemovalAssessment);
+  const lintResult = lintRapEvidentiaryReport(badRemovalAssessment);
   assert.equal(lintResult.valid, false);
   assert.ok(lintResult.errors.some((e) => e.includes('UNJUSTIFIED_REMOVAL')));
   assert.ok(lintResult.errors.some((e) => e.includes('EVIDENTIARY_DEFECT')));
 
-  const goodResult = lintRcaEvidentiaryReport(ashlandReferenceCase);
+  const goodResult = lintRapEvidentiaryReport(ashlandReferenceCase);
   assert.equal(goodResult.valid, true);
+
+  // Backward-compatible shim identity and legacy RCA_v2 fixture conformance checks
+  assert.equal(lintRcaEvidentiaryReport, lintRapEvidentiaryReport);
+  assert.equal(compileRcaEvidentiaryMarkdown, compileRapEvidentiaryMarkdown);
+  assert.equal(validateJsonSchema(legacyAshlandRcaCase, rcaAssessmentSchema).valid, true);
 
   // Sabotage check on validateJsonSchema: un-schematized property must fail!
   const unschematized = cloneValidAssessment();
   unschematized.soil_and_microbiome_baseline.dominant_fungal_taxa_inaturalist_ids = [12345];
-  const badSchemaCheck = validateJsonSchema(unschematized, rcaAssessmentSchema);
+  const badSchemaCheck = validateJsonSchema(unschematized, rapAssessmentSchema);
   assert.equal(badSchemaCheck.valid, false);
   assert.ok(badSchemaCheck.errors.some((e) => e.includes('additionalProperties: false')));
 
@@ -556,18 +585,25 @@ console.log('=== OpenArbor v2.0 Open-Standards Verification Suite ===\n');
   console.log('[PASS] 8. Rogue Valley Oregon Bioregional Municipal Ordinances (Ashland, Medford, Grants Pass)');
 }
 
-// 9. Test 100x RCA Army Engine & CLI (compile, counter-notice, economics, attest + sabotage checks)
+// 9. Test RAP Practice Engine & CLI (compile, counter-notice, economics, attest, legacy shims & sabotage checks)
 {
-  const cliPath = path.join(rootDir, 'bin/openarbor-rca.mjs');
-  const examplePath = path.join(rootDir, 'examples/ashland_oregon_white_oak_rca_v2.json');
+  const cliPath = path.join(rootDir, 'bin/openarbor-rap.mjs');
+  const legacyCliPath = path.join(rootDir, 'bin/openarbor-rca.mjs');
+  const examplePath = path.join(rootDir, 'examples/ashland_oregon_white_oak_rap_v2.json');
+  const legacyExamplePath = path.join(rootDir, 'examples/ashland_oregon_white_oak_rca_v2.json');
 
-  // 9a. Test CLI compile
+  // 9a. Test CLI compile (canonical RAP_v2 + backward-compatible openarbor-rca shim)
   const compileOut = execFileSync(process.execPath, [cliPath, 'compile', examplePath], {
     encoding: 'utf8',
   });
-  assert.ok(compileOut.includes('# Open Arbor Regenerative Diagnostic & Evidentiary Report (RCA_v2)'));
+  assert.ok(compileOut.includes('# Open Arbor Regenerative Diagnostic & Evidentiary Report (RAP_v2)'));
   assert.ok(compileOut.includes('Structurally Sound (t/R >= 0.30 Mattheck Criterion Satisfied)'));
   assert.ok(compileOut.includes('<svg'));
+
+  const legacyCompileOut = execFileSync(process.execPath, [legacyCliPath, 'compile', legacyExamplePath], {
+    encoding: 'utf8',
+  });
+  assert.ok(legacyCompileOut.includes('# Open Arbor Regenerative Diagnostic & Evidentiary Report (RCA_v2)'));
 
   // 9b. Test CLI counter-notice
   const noticeOut = execFileSync(process.execPath, [cliPath, 'counter-notice', examplePath], {
@@ -586,7 +622,7 @@ console.log('=== OpenArbor v2.0 Open-Standards Verification Suite ===\n');
   assert.ok(econData.regenerative_stewardship_model.five_year_gross_revenue_usd > econData.legacy_removal_model.one_time_gross_bid_usd);
 
   // 9d. Test CLI attest (end-to-end Open Badges 3.0 minting & schema validation)
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'openarbor-rca-test-'));
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'openarbor-rap-test-'));
   const pracPath = path.join(tmpDir, 'practitioner.json');
   const r2Path = path.join(tmpDir, 'report2.json');
   const r3Path = path.join(tmpDir, 'report3.json');
@@ -614,7 +650,7 @@ console.log('=== OpenArbor v2.0 Open-Standards Verification Suite ===\n');
     encoding: 'utf8',
   });
   const mintedBadge = JSON.parse(fs.readFileSync(badgeOutPath, 'utf8'));
-  const badgeSchemaRes = validateJsonSchema(mintedBadge, rcaOpenBadgeSchema);
+  const badgeSchemaRes = validateJsonSchema(mintedBadge, rapOpenBadgeSchema);
   assert.equal(badgeSchemaRes.valid, true, `Badge schema errors: ${badgeSchemaRes.errors.join('; ')}`);
   assert.equal(mintedBadge.evidence.length, 3);
   assert.equal(mintedBadge.credentialSubject.nature_first_competency_proof.diagnostic_report_hashes_sha256.length, 3);
@@ -651,7 +687,7 @@ console.log('=== OpenArbor v2.0 Open-Standards Verification Suite ===\n');
     configurable: true,
     writable: true,
   });
-  const protoCheck = validateJsonSchema(protoInjected, rcaAssessmentSchema);
+  const protoCheck = validateJsonSchema(protoInjected, rapAssessmentSchema);
   assert.equal(protoCheck.valid, false, 'Assessment carrying __proto__ at domain level must be rejected');
   assert.ok(
     protoCheck.errors.some((e) => e.includes("un-schematized additional property '__proto__' is forbidden")),
@@ -660,7 +696,7 @@ console.log('=== OpenArbor v2.0 Open-Standards Verification Suite ===\n');
 
   const constructorInjected = JSON.parse(JSON.stringify(ashlandReferenceCase));
   constructorInjected.structural_baseline.constructor = { polluted: true };
-  const constructorCheck = validateJsonSchema(constructorInjected, rcaAssessmentSchema);
+  const constructorCheck = validateJsonSchema(constructorInjected, rapAssessmentSchema);
   assert.equal(constructorCheck.valid, false, 'Assessment carrying constructor at domain level must be rejected');
   assert.ok(
     constructorCheck.errors.some((e) => e.includes("un-schematized additional property 'constructor' is forbidden")),
@@ -668,7 +704,7 @@ console.log('=== OpenArbor v2.0 Open-Standards Verification Suite ===\n');
   );
 
   fs.rmSync(tmpDir, { recursive: true, force: true });
-  console.log('[PASS] 9. 100x RCA Army Engine & CLI (compile, counter-notice, economics, attest & sabotage gates)');
+  console.log('[PASS] 9. RAP Practice Engine & CLI (compile, counter-notice, economics, attest, legacy shims & sabotage gates)');
 }
 
 // 10. Test Static Web Field Bundle (out/), 6 Routes & 4/4 CLI-to-Browser Parity
@@ -702,6 +738,75 @@ console.log('=== OpenArbor v2.0 Open-Standards Verification Suite ===\n');
   assert.ok(fs.existsSync(path.join(rootDir, 'deploy/VERIFICATION.md')), 'deploy/VERIFICATION.md must exist');
   assert.ok(fs.existsSync(path.join(rootDir, 'deploy/DEPLOY.md')), 'deploy/DEPLOY.md must exist');
   console.log(`[PASS] 10. Static Web Portal & Multi-Route Build (out/, bundle ${bundleBytes}/${MAX_BUNDLE_BYTES} bytes) & 4/4 CLI-to-Browser Bundle Parity`);
+}
+
+// 11. Test Local-First PII-Stripped RAP Field Observation Log & Cohort JSONL Export
+{
+  assert.equal(coarsenPlusCode('8624PG84+2V'), '8624PG00+');
+  assert.throws(() => coarsenPlusCode('8624+'), /INVALID_PLUS_CODE/);
+
+  const scrubbedSample = redactPotentialPii('Call (512) 555-0199 or mail jane@example.com');
+  assert.ok(scrubbedSample.includes('[REDACTED_PHONE]'));
+  assert.ok(scrubbedSample.includes('[REDACTED_EMAIL]'));
+  assert.throws(() => assertZeroClientPii({ note: 'jane@example.com' }), /PII_PATTERN_DETECTED/);
+
+  const rec1 = createFieldObservationRecord(ashlandReferenceCase, {
+    observation_id: 'obs-ash-qg-105-v1',
+    internal_decay_method: 'visual_only_unmeasured',
+    stage_executed: 'stage_1_stabilize',
+    field_notes: 'Contact jane@example.com or (512) 555-0199 at 1204 Barton Springs Rd',
+    schema: rapFieldObservationSchema,
+  });
+  assert.equal(rec1.baseline.measured_t_over_r, null);
+  assert.equal(rec1.coarsened_plus_code, '84JV5700+');
+  assert.ok(rec1.intervention.field_notes.includes('[REDACTED_EMAIL]'));
+  assert.ok(rec1.intervention.field_notes.includes('[REDACTED_PHONE]'));
+  assert.ok(rec1.intervention.field_notes.includes('[REDACTED_ADDRESS]'));
+  assert.equal(verifyFieldObservationRecord(rec1, rapFieldObservationSchema).valid, true);
+  assertZeroClientPii(rec1, 'rec1');
+
+  const rec2 = createFieldObservationRecord(ashlandReferenceCase, {
+    observation_id: 'obs-ash-qg-105-r2',
+    internal_decay_method: 'resistograph',
+    measured_t_over_r: 0.34,
+    stage_executed: 'stage_2_soil_remediation',
+    schema: rapFieldObservationSchema,
+  });
+  assert.equal(rec2.baseline.measured_t_over_r, 0.34);
+  assert.equal(verifyFieldObservationRecord(rec2, rapFieldObservationSchema).valid, true);
+
+  assert.throws(
+    () => createFieldObservationRecord(ashlandReferenceCase, { client_name: 'Alice' }),
+    /PII_KEY_FORBIDDEN/
+  );
+
+  const tampered = { ...rec2, municipality_id: 'tampered-city' };
+  const tamperedVerify = verifyFieldObservationRecord(tampered, rapFieldObservationSchema);
+  assert.equal(tamperedVerify.valid, false);
+  assert.ok(tamperedVerify.errors.some((e) => e.includes('SHA256_MISMATCH')));
+
+  const rec3 = createFieldObservationRecord(ashlandReferenceCase, {
+    observation_id: 'obs-atx-qv-301',
+    municipality_id: 'tx-austin',
+    plus_code_global: '8624M38F+4X',
+    internal_decay_method: 'sonic_tomography',
+    measured_t_over_r: 0.36,
+    stage_executed: 'stage_3_guild_and_monitoring',
+    schema: rapFieldObservationSchema,
+  });
+
+  const jsonl = serializeObservationCohortJsonl([rec1, rec2, rec3], rapFieldObservationSchema);
+  const jsonlLines = jsonl.trim().split('\n');
+  assert.equal(jsonlLines.length, 3);
+  assert.equal(JSON.parse(jsonlLines[0]).observation_id, 'obs-ash-qg-105-v1');
+
+  const summary = summarizeObservationCohort([rec1, rec2, rec3], 10);
+  assert.equal(summary.count, 3);
+  assert.equal(summary.progress_pct, 30);
+  assert.equal(summary.instrument_verified_count, 2);
+  assert.equal(summary.visual_only_count, 1);
+
+  console.log('[PASS] 11. Local-First PII-Stripped RAP Field Observation Log & Cohort JSONL Export');
 }
 
 console.log('\nALL OPENARBOR CORE VERIFICATION CHECKS PASSED (0 proprietary dependencies).');

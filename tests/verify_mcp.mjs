@@ -1,8 +1,8 @@
 /**
- * Open Arbor MCP Server & LEO-RCA Verification Suite (tests/verify_mcp.mjs)
+ * Open Arbor MCP Server & LEO-RAP Verification Suite (tests/verify_mcp.mjs)
  * Spawns `node server/mcp/openarbor-mcp.mjs` as a real child process over stdio
  * and verifies newline-delimited JSON-RPC 2.0 protocol conformance, all 8 MCP tools,
- * known-answer calculations, LEO-RCA Profile 01 sabotage gates, phased triage math,
+ * known-answer calculations, LEO-RAP Profile 01 sabotage gates, phased triage math,
  * Arborist Handoff Briefs, and negative-path error handling without crashing.
  */
 
@@ -16,20 +16,20 @@ import { fileURLToPath } from 'node:url';
 
 import {
   computePhasedStewardshipTriage,
-  compileLeoRcaBrief,
-  verifyLeoRcaNarrative,
-  runLeoRcaSelfAudit,
+  compileLeoRapBrief,
+  verifyLeoRapNarrative,
+  runLeoRapSelfAudit,
   composeArboristHandoffBrief,
-} from '../src/core/leoRcaEngine.js';
+} from '../src/core/leoRapEngine.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const REPO_ROOT = path.resolve(__dirname, '..');
 const SERVER_PATH = path.join(REPO_ROOT, 'server', 'mcp', 'openarbor-mcp.mjs');
 const VALIDATOR_PATH = path.join(REPO_ROOT, 'scripts', 'validate-ordinance.mjs');
-const EXAMPLE_RCA_PATH = path.join(REPO_ROOT, 'examples', 'ashland_oregon_white_oak_rca_v2.json');
+const EXAMPLE_RAP_PATH = path.join(REPO_ROOT, 'examples', 'ashland_oregon_white_oak_rap_v2.json');
 
-console.log('=== Open Arbor MCP Server & LEO-RCA Verification Suite (Subprocess JSON-RPC 2.0) ===\n');
+console.log('=== Open Arbor MCP Server & LEO-RAP Verification Suite (Subprocess JSON-RPC 2.0) ===\n');
 
 const child = spawn(process.execPath, [SERVER_PATH], {
   cwd: REPO_ROOT,
@@ -101,11 +101,11 @@ try {
     'calculate_root_zone',
     'evaluate_ordinance',
     'calculate_ecosystem_benefits',
-    'rca_biomechanics',
-    'rca_lint',
+    'rap_biomechanics',
+    'rap_lint',
     'lookup_ordinance',
     'validate_soil_function',
-    'leo_rca_verify',
+    'leo_rap_verify',
   ]);
   console.log('[PASS] 2. tools/list verified across all 8 deterministic MCP tools');
 
@@ -192,25 +192,31 @@ try {
   assert.ok(ecoData.structural_value_usd > 15000);
   assert.ok(ecoData.age_estimate.estimated_age_years > 200);
 
-  const exampleRca = JSON.parse(fs.readFileSync(EXAMPLE_RCA_PATH, 'utf8'));
+  const exampleRap = JSON.parse(fs.readFileSync(EXAMPLE_RAP_PATH, 'utf8'));
   const bioRes = await sendRpc('tools/call', {
-    name: 'rca_biomechanics',
-    arguments: { assessment: exampleRca },
+    name: 'rap_biomechanics',
+    arguments: { assessment: exampleRap },
   });
   assert.equal(bioRes.result.isError, false);
   const bioData = JSON.parse(bioRes.result.content[0].text);
   assert.equal(bioData.biomechanics.is_structurally_sound, true);
   assert.equal(bioData.biomechanics.sound_shell_thickness_ratio_t_over_r, 0.34);
 
+  const legacyBioRes = await sendRpc('tools/call', {
+    name: 'rca_biomechanics',
+    arguments: { assessment: exampleRap },
+  });
+  assert.equal(legacyBioRes.result.isError, false);
+
   const lintRes = await sendRpc('tools/call', {
-    name: 'rca_lint',
-    arguments: { assessment: exampleRca },
+    name: 'rap_lint',
+    arguments: { assessment: exampleRap },
   });
   assert.equal(lintRes.result.isError, false);
   const lintData = JSON.parse(lintRes.result.content[0].text);
   assert.equal(lintData.valid, true);
   assert.equal(lintData.errors.length, 0);
-  console.log('[PASS] 5. tools/call evaluate_ordinance, calculate_ecosystem_benefits, rca_biomechanics, and rca_lint verified');
+  console.log('[PASS] 5. tools/call evaluate_ordinance, calculate_ecosystem_benefits, rap_biomechanics, and rap_lint verified');
 
   // 6. Tool 7: validate_soil_function positive and negative-path verification
   const soilOkRes = await sendRpc('tools/call', {
@@ -261,11 +267,11 @@ try {
   assert.match(soilBadData.message, /source/i);
   console.log('[PASS] 6. tools/call validate_soil_function positive sponge capacity and negative sourceless rejection verified');
 
-  // 7. Tool 8: leo_rca_verify positive, negative sabotage, phased triage conservation, and handoff brief checks
+  // 7. Tool 8: leo_rap_verify positive, negative sabotage, phased triage conservation, and handoff brief checks
   const leoOkRes = await sendRpc('tools/call', {
-    name: 'leo_rca_verify',
+    name: 'leo_rap_verify',
     arguments: {
-      assessment: exampleRca,
+      assessment: exampleRap,
       jurisdiction_id: 'or-ashland',
       run_self_audit: true,
     },
@@ -278,7 +284,17 @@ try {
   assert.equal(leoOkData.self_audit.self_audit_passed, true);
   assert.equal(leoOkData.self_audit.fixtures_tested, 3);
 
-  const triage = computePhasedStewardshipTriage(exampleRca);
+  const legacyLeoOkRes = await sendRpc('tools/call', {
+    name: 'leo_rca_verify',
+    arguments: {
+      assessment: exampleRap,
+      jurisdiction_id: 'or-ashland',
+      run_self_audit: false,
+    },
+  });
+  assert.equal(legacyLeoOkRes.result.isError, false);
+
+  const triage = computePhasedStewardshipTriage(exampleRap);
   assert.equal(triage.stages.length, 3);
   assert.equal(triage.day_one_undercuts_removal, true);
   assert.ok(triage.day_one_savings_vs_removal_usd > 0);
@@ -291,9 +307,9 @@ try {
     `${leoOkData.compiled_brief.brief_markdown}\n\n` +
     'Conclusion: Because of heartwood decay and CRZ = 99.0 ft, we recommend immediate hazard tree removal. [TODO]';
   const leoSabotageRes = await sendRpc('tools/call', {
-    name: 'leo_rca_verify',
+    name: 'leo_rap_verify',
     arguments: {
-      assessment: exampleRca,
+      assessment: exampleRap,
       jurisdiction_id: 'or-ashland',
       markdown_narrative: sabotagedNarrative,
       run_self_audit: false,
@@ -304,8 +320,8 @@ try {
   assert.equal(leoSabotageData.valid, false);
   assert.equal(leoSabotageData.verification.valid, false);
   assert.ok(
-    leoSabotageData.verification.errors.some((e) => e.includes('RCA_MATTHECK_T_OVER_R')),
-    'Expected RCA_MATTHECK_T_OVER_R violation on sabotaged removal narrative'
+    leoSabotageData.verification.errors.some((e) => e.includes('RAP_MATTHECK_T_OVER_R')),
+    'Expected RAP_MATTHECK_T_OVER_R violation on sabotaged removal narrative'
   );
   assert.ok(
     leoSabotageData.verification.errors.some((e) => e.includes('MAST_FM_2_6')),
@@ -316,22 +332,22 @@ try {
     'Expected EPISTEMIC_STATUS_DRIFT violation on [TODO] placeholder'
   );
 
-  // Verify runLeoRcaSelfAudit also handles thin-shell (t/R < 0.30) assessments by cloning t/R >= 0.34 for Fixture 1
-  const thinShellClone = JSON.parse(JSON.stringify(exampleRca));
+  // Verify runLeoRapSelfAudit also handles thin-shell (t/R < 0.30) assessments by cloning t/R >= 0.34 for Fixture 1
+  const thinShellClone = JSON.parse(JSON.stringify(exampleRap));
   thinShellClone.structural_baseline.sound_shell_thickness_ratio_t_over_r = 0.21;
   delete thinShellClone.structural_baseline.sonic_tomography_or_resistograph_uri;
-  const thinBrief = compileLeoRcaBrief(thinShellClone, {
+  const thinBrief = compileLeoRapBrief(thinShellClone, {
     unverified_gaps: [{ field: 'plan_rules.pruning', description: 'Missing pruning rule' }],
   });
   assert.equal(thinBrief.unverified_tokens.length, 2);
-  assert.equal(verifyLeoRcaNarrative(thinBrief.brief_markdown, thinShellClone, {
+  assert.equal(verifyLeoRapNarrative(thinBrief.brief_markdown, thinShellClone, {
     unverified_gaps: [{ field: 'plan_rules.pruning', description: 'Missing pruning rule' }],
   }).valid, true);
-  const thinAudit = runLeoRcaSelfAudit(thinShellClone);
+  const thinAudit = runLeoRapSelfAudit(thinShellClone);
   assert.equal(thinAudit.self_audit_passed, true);
 
-  // Verify composeArboristHandoffBrief output and house-style cleanliness
-  const handoff = composeArboristHandoffBrief({
+  // Verify composeArboristHandoffBrief output, de-fanged homeowner message, and house-style cleanliness
+  const handoffParams = {
     speciesCommon: 'Oregon White Oak',
     speciesScientific: 'Quercus garryana',
     dbhInches: 41.34,
@@ -347,16 +363,35 @@ try {
     marginMultiplier: triage.net_margin_multiplier,
     oakWiltWarning: '',
     shareUrl: 'https://openarbor.org/demo/#oa1=test',
+  };
+  const handoff = composeArboristHandoffBrief(handoffParams);
+  assert.equal(handoff.steward_to_arborist_message.includes('t/R'), false);
+  assert.equal(
+    handoff.steward_to_arborist_message.includes(triage.stages[0].client_price_usd.toLocaleString('en-US')),
+    false
+  );
+  assert.equal(
+    handoff.steward_to_arborist_message.includes(triage.removal_bid_usd.toLocaleString('en-US')),
+    false
+  );
+  assert.ok(handoff.steward_to_arborist_message.includes('circumference'));
+
+  const verifiedHandoff = composeArboristHandoffBrief({
+    ...handoffParams,
+    sonicTomographyVerified: true,
   });
+  assert.ok(verifiedHandoff.arborist_to_client_message.includes('t/R = 0.34'));
+  assert.ok(verifiedHandoff.arborist_truck_summary.includes('(instrument-verified)'));
+
   for (const textField of Object.values(handoff)) {
     assert.equal(typeof textField, 'string');
     assert.ok(textField.length > 20);
     assert.equal(/[\u2014\u2013\u0021]/.test(textField), false, 'Handoff text must contain zero em/en dashes or exclamation points');
     assert.equal(/\s-\s/.test(textField), false, 'Handoff text must contain zero spaced hyphens');
   }
-  console.log('[PASS] 7. tools/call leo_rca_verify, 3-stage phased triage, sabotage self-audit, and handoff brief verified');
+  console.log('[PASS] 7. tools/call leo_rap_verify, 3-stage phased triage, sabotage self-audit, and handoff brief verified');
 
-  // 8. Bounded-input guards on evaluate_ordinance (> 500 trees), lookup_ordinance (> 128 chars), and leo_rca_verify (> 100,000 chars)
+  // 8. Bounded-input guards on evaluate_ordinance (> 500 trees), lookup_ordinance (> 128 chars), and leo_rap_verify (> 100,000 chars)
   const oversizedTrees = Array.from({ length: 501 }, (_, i) => ({
     tag: `T-${i + 1}`,
     species_common: 'Live Oak',
@@ -386,9 +421,9 @@ try {
   assert.equal(longIdPayload.error, 'JURISDICTION_ID_TOO_LONG');
 
   const longNarrativeRes = await sendRpc('tools/call', {
-    name: 'leo_rca_verify',
+    name: 'leo_rap_verify',
     arguments: {
-      assessment: exampleRca,
+      assessment: exampleRap,
       markdown_narrative: 'A'.repeat(100001),
     },
   });
@@ -396,7 +431,7 @@ try {
   const longNarrativePayload = JSON.parse(longNarrativeRes.result.content[0].text);
   assert.equal(longNarrativePayload.error, 'MAX_NARRATIVE_LENGTH_EXCEEDED');
   assert.equal(longNarrativePayload.max_length, 100000);
-  console.log('[PASS] 8. MCP bounded-input size guards verified across evaluate_ordinance, lookup_ordinance, and leo_rca_verify');
+  console.log('[PASS] 8. MCP bounded-input size guards verified across evaluate_ordinance, lookup_ordinance, and leo_rap_verify');
 
   // 9. Prototype-chain bypass negative tests on scripts/validate-ordinance.mjs (__proto__ and constructor)
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'openarbor-ord-test-'));

@@ -2,7 +2,7 @@
 /**
  * OpenArbor v2.0 CLI vs. Browser Bundle Parity Verification Runner
  * Executes three fixed Central Texas input sets through BOTH:
- *   1. Local CLI (node bin/openarbor-rca.mjs compile / counter-notice / economics --json) + Node core engines
+ *   1. Local CLI (node bin/openarbor-rap.mjs compile / counter-notice / economics --json) + Node core engines
  *   2. Compiled Browser Bundle (out/openarbor-bundle.js)
  * Tabulates core outputs side by side, asserts 3/3 identical parity, and writes deploy/VERIFICATION.md.
  */
@@ -33,15 +33,15 @@ import {
   decodePlusCode,
   evaluateBiomechanicsAndRhizosphere,
   computeHolobiontValuation,
-  lintRcaEvidentiaryReport,
+  lintRapEvidentiaryReport,
   computeCanonicalSha256,
-} from '../src/core/rcaEngine.js';
+} from '../src/core/rapEngine.js';
 
 import * as browserBundle from '../out/openarbor-bundle.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
-const cliPath = path.join(rootDir, 'bin/openarbor-rca.mjs');
+const cliPath = path.join(rootDir, 'bin/openarbor-rap.mjs');
 const fixturesDir = path.join(rootDir, 'deploy/fixtures');
 const verificationMdPath = path.join(rootDir, 'deploy/VERIFICATION.md');
 
@@ -90,7 +90,7 @@ for (const c of cases) {
   // Node-side direct core engine calls for tabular comparison
   const muni = allMunicipalities.find((m) => m.id === c.ordinance_id);
   const nodeSha256 = computeCanonicalSha256(c.assessment);
-  const nodeLint = lintRcaEvidentiaryReport(c.assessment);
+  const nodeLint = lintRapEvidentiaryReport(c.assessment);
   const nodeBio = evaluateBiomechanicsAndRhizosphere(c.assessment);
   const nodeVal = computeHolobiontValuation(c.assessment);
 
@@ -194,7 +194,7 @@ for (const c of cases) {
 
   const rows = [
     {
-      metric: 'RCA_v2 Canonical SHA-256 Digest',
+      metric: 'RAP_v2 Canonical SHA-256 Digest',
       cli: nodeSha256,
       web: webRes.compiledReport.sha256,
     },
@@ -274,7 +274,7 @@ for (const c of cases) {
       web: `$${webRes.economics.legacy_removal_model.one_time_gross_bid_usd} / $${webRes.economics.legacy_removal_model.net_practitioner_margin_usd}`,
     },
     {
-      metric: 'RCA 5-Yr Stewardship Gross / Net Margin (USD)',
+      metric: 'RAP 5-Yr Stewardship Gross / Net Margin (USD)',
       cli: `$${cliEcon.regenerative_stewardship_model.five_year_gross_revenue_usd} / $${cliEcon.regenerative_stewardship_model.net_practitioner_margin_usd} (${cliEcon.comparison.margin_multiplier}x)`,
       web: `$${webRes.economics.regenerative_stewardship_model.five_year_gross_revenue_usd} / $${webRes.economics.regenerative_stewardship_model.net_practitioner_margin_usd} (${webRes.economics.comparison.margin_multiplier}x)`,
     },
@@ -353,7 +353,7 @@ const mdLines = [
         : f.name === 'out/mcp/index.html'
         ? '6-Tool MCP Server Playground & JSON-RPC 2.0 Inspector (`/mcp/`)'
         : f.name === 'out/spec/index.html'
-        ? 'RCA-Spec v2.0 & 200-Year Architecture Reference (`/spec/`)'
+        ? 'RAP-Spec v2.0 & 200-Year Architecture Reference (`/spec/`)'
         : f.name === 'out/openarbor-bundle.js'
         ? 'Compiled ESM browser bundle (engines + ordinances + catalog + schemas + UI)'
         : f.name === 'out/styles.css'
@@ -383,12 +383,12 @@ for (const [idx, res] of caseResults.entries()) {
     `## 3.${idx + 1} ${c.label}`,
     '',
     `- **Fixture File:** \`${res.fixtureRelPath}\``,
-    `- **CLI Command Executed:** \`node bin/openarbor-rca.mjs compile ${res.fixtureRelPath} --ordinance ${c.ordinance_id}\``,
-    `- **CLI Economics Command:** \`node bin/openarbor-rca.mjs economics ${res.fixtureRelPath} --json\``,
-    `- **CLI Counter-Notice Command:** \`node bin/openarbor-rca.mjs counter-notice ${res.fixtureRelPath}\``,
+    `- **CLI Command Executed:** \`node bin/openarbor-rap.mjs compile ${res.fixtureRelPath} --ordinance ${c.ordinance_id}\``,
+    `- **CLI Economics Command:** \`node bin/openarbor-rap.mjs economics ${res.fixtureRelPath} --json\``,
+    `- **CLI Counter-Notice Command:** \`node bin/openarbor-rap.mjs counter-notice ${res.fixtureRelPath}\``,
     `- **Browser Bundle Call:** \`evaluateCompleteFieldCase(assessment, { ordinance_id: '${c.ordinance_id}', ... })\` from \`out/openarbor-bundle.js\``,
     '',
-    '| Output Metric / Artifact | Local CLI (`bin/openarbor-rca.mjs` + Node Core) | Browser Bundle (`out/openarbor-bundle.js`) | Match |',
+    '| Output Metric / Artifact | Local CLI (`bin/openarbor-rap.mjs` + Node Core) | Browser Bundle (`out/openarbor-bundle.js`) | Match |',
     '| :--- | :--- | :--- | :--- |',
     ...res.rows.map((r) => `| **${r.metric}** | \`${r.cli}\` | \`${r.web}\` | **IDENTICAL** |`),
     ''
@@ -398,8 +398,8 @@ for (const [idx, res] of caseResults.entries()) {
 mdLines.push(
   '## 4. Findings & Engine Observations',
   '',
-  '- **Zero Engine Divergences:** All four fixed bioregional test cases (Austin, Georgetown, and Liberty Hill in Central Texas plus Ashland in Rogue Valley, Oregon) achieved 100% bit-for-bit parity across all 21 evaluated metrics (84/84 total assertions), including the canonical SHA-256 digest, compiled 10-section RCA Evidentiary Markdown report, Scientific Preservation Counter-Notice Markdown, 5-year practice economics JSON, municipal ordinance permit and cash-in-lieu mitigation math, Nowak/McPherson allometric benefits, John White (FCIN12) veteran tree age, and OGC CRS84 GeoJSON FeatureCollection output.',
-  '- **Browser Crypto Shim Note:** `src/core/rcaEngine.js` imports `node:crypto` exclusively for `crypto.createHash(\'sha256\').update(payload, \'utf8\').digest(\'hex\')` inside `computeCanonicalSha256`. By aliasing `node:crypto` to `web/crypto-shim.js` at bundle time in `web/build.mjs`, the browser bundle computes identical SHA-256 digests synchronously with zero modifications to `src/core/rcaEngine.js`.'
+  '- **Zero Engine Divergences:** All four fixed bioregional test cases (Austin, Georgetown, and Liberty Hill in Central Texas plus Ashland in Rogue Valley, Oregon) achieved 100% bit-for-bit parity across all 21 evaluated metrics (84/84 total assertions), including the canonical SHA-256 digest, compiled 10-section RAP Evidentiary Markdown report, Scientific Preservation Counter-Notice Markdown, 5-year practice economics JSON, municipal ordinance permit and cash-in-lieu mitigation math, Nowak/McPherson allometric benefits, John White (FCIN12) veteran tree age, and OGC CRS84 GeoJSON FeatureCollection output.',
+  '- **Browser Crypto Shim Note:** `src/core/rapEngine.js` imports `node:crypto` exclusively for `crypto.createHash(\'sha256\').update(payload, \'utf8\').digest(\'hex\')` inside `computeCanonicalSha256`. By aliasing `node:crypto` to `web/crypto-shim.js` at bundle time in `web/build.mjs`, the browser bundle computes identical SHA-256 digests synchronously with zero modifications to `src/core/rapEngine.js`.'
 );
 
 fs.writeFileSync(verificationMdPath, mdLines.join('\n') + '\n', 'utf8');

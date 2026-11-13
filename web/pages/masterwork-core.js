@@ -28,7 +28,7 @@ export const MEDFORD_PONDEROSA_CASE = {
   impervious_pct: 10,
   crown_removal_pct: 10,
   assessment: {
-    schema_version: 'RCA_v2',
+    schema_version: 'RAP_v2',
     assessment_mode: 'Regenerative Diagnostic',
     structural_baseline: {
       tree_tag: 'MFD-PP-208',
@@ -236,7 +236,7 @@ function fromBase64Url(b64url) {
 /**
  * D1. Encode the complete assessment state into a versioned URL fragment (#oa1=...).
  * Always embeds explicit version, jurisdiction, species, DBH, work type, disturbance, and site context,
- * plus either a compact base-case index (when matching a gallery baseline) or full RCA_v2 delta blocks.
+ * plus either a compact base-case index (when matching a gallery baseline) or full RAP_v2 delta blocks.
  */
 export function encodeAssessmentPermalink(caseState) {
   const a = caseState.assessment || {};

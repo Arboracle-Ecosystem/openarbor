@@ -23,9 +23,17 @@ import {
   computeSanctuaryScorecardRollup,
   computeCanonicalSha256,
   mintOpenBadgeAttestation,
-} from '../../src/core/rcaEngine.js';
+} from '../../src/core/rapEngine.js';
 
-import rcaAssessmentSchema from '../../schemas/rca_assessment.schema.json';
+import {
+  createFieldObservationRecord,
+  verifyFieldObservationRecord,
+  serializeObservationCohortJsonl,
+  summarizeObservationCohort,
+} from '../../src/core/fieldObservationLog.js';
+
+import rapAssessmentSchema from '../../schemas/rap_assessment.schema.json';
+import rapFieldObservationSchema from '../../schemas/rap_field_observation.schema.json';
 import {
   ALL_SPECIES_PRESETS,
   DEFAULT_STAND_TREES,
@@ -999,7 +1007,7 @@ export function initDemoExtrasUI() {
         : `Net Union CRZ: <strong>${unionSqm} m2 (${unionCrzAreaSqFt.toLocaleString()} sq ft)</strong> | Overlap Saved: <strong>${savedSqm} m2 (${overlapPct}%)</strong>`;
     }
 
-    // Build RCA_v2 assessments for each tree in the stand to run computeSanctuaryScorecardRollup
+    // Build RAP_v2 assessments for each tree in the stand to run computeSanctuaryScorecardRollup
     const standAssessments = locatedTrees.map((t) => {
       const matchedCase =
         FIXED_PARITY_CASES.find((c) => c.id === t.case_id) || FIXED_PARITY_CASES[0];
@@ -1116,14 +1124,14 @@ export function initDemoExtrasUI() {
     const thirdAssessment = JSON.parse(JSON.stringify(FIXED_PARITY_CASES[2].assessment));
 
     const practitionerName = inputPractitioner?.value.trim() || 'George Steward';
-    const rawCredId = inputCredId?.value.trim() || 'ISA TX-362025A / RCA-001';
+    const rawCredId = inputCredId?.value.trim() || 'ISA TX-362025A / RAPPER-001';
     const issuerUri = inputIssuerUri?.value.trim() || 'https://openarbor.org/issuers/open-arbor-alliance';
-    const evidenceBaseUri = inputEvidenceUri?.value.trim() || 'https://openarbor.org/reports/rca-v2/';
+    const evidenceBaseUri = inputEvidenceUri?.value.trim() || 'https://openarbor.org/reports/rap-v2/';
 
     const practitionerMeta = {
       id: `did:web:openarbor.org:stewards:${practitionerName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
       practitioner_name: practitionerName,
-      credential_id: `https://openarbor.org/credentials/rca-verified/${encodeURIComponent(rawCredId.replace(/\s+/g, '-'))}`,
+      credential_id: `https://openarbor.org/credentials/rapper/${encodeURIComponent(rawCredId.replace(/\s+/g, '-'))}`,
       validFrom: '2026-10-29T00:00:00Z',
       validUntil: '2027-10-29T00:00:00Z',
       legacy_statutory_equivalencies: {
@@ -1137,7 +1145,7 @@ export function initDemoExtrasUI() {
     const minted = mintOpenBadgeAttestation(
       practitionerMeta,
       [primaryAssessment, secondAssessment, thirdAssessment],
-      rcaAssessmentSchema
+      rapAssessmentSchema
     );
 
     // Apply custom Issuer URI and Evidence URI prefix if entered
@@ -1273,7 +1281,7 @@ export function initDemoExtrasUI() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'openarbor-rca-verified.ob3.json';
+    a.download = 'openarbor-rapper-verified.ob3.json';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -1298,5 +1306,136 @@ export function initDemoExtrasUI() {
   }
   if (badgeJsonPreview) {
     mintAndRenderOpenBadge();
+  }
+
+  // =========================================================================
+  // 5. LOCAL-FIRST RAP FIELD OBSERVATION LOG (INITIAL 10-CONSULTATION COHORT)
+  // =========================================================================
+  const obsStorageKey = 'openarbor_rap_observations_v1';
+  const obsDecaySelect = document.getElementById('obs-decay-method');
+  const obsStageSelect = document.getElementById('obs-stage-executed');
+  const obsNotesInput = document.getElementById('obs-field-notes');
+  const btnObsLog = document.getElementById('btn-log-field-observation');
+  const btnObsExport = document.getElementById('btn-export-observations-jsonl');
+  const btnObsClear = document.getElementById('btn-clear-observations');
+  const obsProgressEl = document.getElementById('obs-cohort-progress');
+  const obsListEl = document.getElementById('obs-cohort-list');
+
+  function escObs(str) {
+    return String(str ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function loadCohortRecords() {
+    try {
+      const raw = localStorage.getItem(obsStorageKey);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function saveCohortRecords(records) {
+    try {
+      localStorage.setItem(obsStorageKey, JSON.stringify(records));
+    } catch {
+      // Ignore storage quota / private mode restrictions gracefully
+    }
+  }
+
+  function renderObservationCohort() {
+    if (!obsProgressEl || !obsListEl) return;
+    const records = loadCohortRecords();
+    const summary = summarizeObservationCohort(records, 10);
+
+    obsProgressEl.innerHTML =
+      `<strong>${summary.count} / ${summary.target_cohort_size}</strong> initial RAP cohort consultations logged ` +
+      `(${summary.progress_pct}% progress) &middot; ` +
+      `Instrument-verified: <strong>${summary.instrument_verified_count}</strong> &middot; ` +
+      `Visual-only (t/R unmeasured): <strong>${summary.visual_only_count}</strong>`;
+
+    if (records.length === 0) {
+      obsListEl.innerHTML = '<p class="hint">No local observations recorded yet. Click "Record Anonymized Field Observation" to seal the active specimen with a coarsened watershed Plus Code and canonical SHA-256 digest.</p>';
+      return;
+    }
+
+    obsListEl.innerHTML = records
+      .slice()
+      .reverse()
+      .map((rec) => {
+        const verified = verifyFieldObservationRecord(rec, rapFieldObservationSchema);
+        const trText = rec.measured_t_over_r === null ? 'unmeasured (null)' : `t/R = ${rec.measured_t_over_r}`;
+        const badge = verified.valid
+          ? '<span class="badge badge-protected">SHA-256 Valid</span>'
+          : '<span class="badge badge-danger">Verification Error</span>';
+        return `
+          <div class="citation-callout" style="margin-bottom: 8px;">
+            <div>
+              <strong>${escObs(rec.species_scientific)}</strong> (${escObs(rec.dbh_cm)} cm DBH)
+              &middot; Cell <code>${escObs(rec.coarsened_plus_code)}</code>
+              &middot; Method: <code>${escObs(rec.internal_decay_method)}</code> (${escObs(trText)})
+              &middot; Stage: <code>${escObs(rec.stage_executed)}</code>
+              ${badge}
+            </div>
+            <div class="metric-sub">
+              ID: <code>${escObs(rec.observation_id)}</code> &middot; Digest: ${renderExpandableHashHtml(rec.canonical_sha256)}
+              ${rec.field_notes ? `<br />Notes: ${escObs(rec.field_notes)}` : ''}
+            </div>
+          </div>
+        `;
+      })
+      .join('');
+  }
+
+  if (obsProgressEl && obsListEl) {
+    renderObservationCohort();
+
+    btnObsLog?.addEventListener('click', () => {
+      const { latestAssessment, latestResult } = getLatestFieldState();
+      const sourceAssessment = latestAssessment || FIXED_PARITY_CASES[0].assessment;
+      const sb = sourceAssessment.structural_baseline || {};
+      const decayMethod = obsDecaySelect?.value || 'visual_only_unmeasured';
+      const stageExecuted = obsStageSelect?.value || 'assessment_only';
+      const notes = obsNotesInput?.value || '';
+
+      const record = createFieldObservationRecord(sourceAssessment, {
+        internal_decay_method: decayMethod,
+        measured_t_over_r: sb.sound_shell_thickness_ratio_t_over_r,
+        stage_executed: stageExecuted,
+        field_notes: notes,
+        municipality_id: latestResult?.municipality?.id || sb.municipal_permit_disposition?.jurisdiction_id || 'tx-austin',
+        schema: rapFieldObservationSchema,
+      });
+
+      const records = loadCohortRecords();
+      records.push(record);
+      saveCohortRecords(records);
+      if (obsNotesInput) obsNotesInput.value = '';
+      renderObservationCohort();
+    });
+
+    btnObsExport?.addEventListener('click', () => {
+      const records = loadCohortRecords();
+      const jsonl = serializeObservationCohortJsonl(records, rapFieldObservationSchema);
+      const blob = new Blob([jsonl], { type: 'application/x-ndjson;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'openarbor-rap-cohort.jsonl';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    btnObsClear?.addEventListener('click', () => {
+      saveCohortRecords([]);
+      renderObservationCohort();
+    });
   }
 }

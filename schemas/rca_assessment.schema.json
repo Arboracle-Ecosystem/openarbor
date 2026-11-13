@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://soilgrower.com/schemas/openarbor-rca-assessment.schema.json",
   "title": "Open Arbor Regenerative Consulting Arborist (RCA-Spec v2.0) Assessment Schema",
-  "description": "AGPL v3 JSON Schema for the Assessments.data_json column when assessment_type is 'Regenerative Diagnostic' (supporting RCA_v1 and RCA_v2). Enforces typed, unit-explicit field capture across the five mandatory diagnostic domains of Regenerative Consulting Arboriculture, absorbing Shigo CODIT, Mattheck t/R shell mechanics, and Holobiont Living Asset Equity.",
+  "description": "CC0-1.0 Universal JSON Schema (legacy compatibility pointer to schemas/rap_assessment.schema.json) for Assessments.data_json when assessment_type is 'Regenerative Diagnostic'. Accepts RAP_v1, RAP_v2, RCA_v1, and RCA_v2.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -17,7 +17,12 @@
   "properties": {
     "schema_version": {
       "type": "string",
-      "enum": ["RCA_v1", "RCA_v2"],
+      "enum": [
+        "RAP_v1",
+        "RAP_v2",
+        "RCA_v1",
+        "RCA_v2"
+      ],
       "description": "Identifier for the Regenerative Consulting Arborist Practice Specification version (unit: version string)."
     },
     "assessment_mode": {
@@ -62,7 +67,12 @@
         },
         "multistem_aggregation_method": {
           "type": "string",
-          "enum": ["quadratic", "largest_plus_half", "sum", "single_stem"],
+          "enum": [
+            "quadratic",
+            "largest_plus_half",
+            "sum",
+            "single_stem"
+          ],
           "description": "Formula used to aggregate stem_diameters_cm into dbh_cm per src/core/rootZone.js (unit: enum string)."
         },
         "height_m": {
@@ -136,7 +146,11 @@
           "properties": {
             "assessment_level": {
               "type": "string",
-              "enum": ["Level_1_Limited_Visual", "Level_2_Basic", "Level_3_Advanced"],
+              "enum": [
+                "Level_1_Limited_Visual",
+                "Level_2_Basic",
+                "Level_3_Advanced"
+              ],
               "description": "ANSI A300 Part 9 / ISA TRAQ inspection level (unit: enum string)."
             },
             "time_frame_years": {
@@ -152,37 +166,76 @@
             },
             "primary_tree_part_of_concern": {
               "type": "string",
-              "enum": ["Whole_Tree", "Root_Plate", "Root_Collar", "Trunk_Stem", "Codominant_Union", "Scaffold_Branch", "Perimeter_Branch"],
+              "enum": [
+                "Whole_Tree",
+                "Root_Plate",
+                "Root_Collar",
+                "Trunk_Stem",
+                "Codominant_Union",
+                "Scaffold_Branch",
+                "Perimeter_Branch"
+              ],
               "description": "Structural component governing the highest risk rating (unit: enum string)."
             },
             "likelihood_of_failure": {
               "type": "string",
-              "enum": ["Improbable", "Possible", "Probable", "Imminent"],
+              "enum": [
+                "Improbable",
+                "Possible",
+                "Probable",
+                "Imminent"
+              ],
               "description": "ISA TRAQ Matrix 1 row: probability of structural failure within time_frame_years (unit: TRAQ enum)."
             },
             "likelihood_of_impact": {
               "type": "string",
-              "enum": ["Very Low", "Low", "Medium", "High"],
+              "enum": [
+                "Very Low",
+                "Low",
+                "Medium",
+                "High"
+              ],
               "description": "ISA TRAQ Matrix 1 column: probability of impacting the target zone if failure occurs (unit: TRAQ enum)."
             },
             "likelihood_of_failure_and_impact": {
               "type": "string",
-              "enum": ["Unlikely", "Somewhat Likely", "Likely", "Very Likely"],
+              "enum": [
+                "Unlikely",
+                "Somewhat Likely",
+                "Likely",
+                "Very Likely"
+              ],
               "description": "ISA TRAQ Matrix 1 combined output cell (unit: TRAQ enum)."
             },
             "consequences_of_failure": {
               "type": "string",
-              "enum": ["Negligible", "Minor", "Significant", "Severe"],
+              "enum": [
+                "Negligible",
+                "Minor",
+                "Significant",
+                "Severe"
+              ],
               "description": "ISA TRAQ Matrix 2 column: severity of harm or damage upon impact (unit: TRAQ enum)."
             },
             "overall_risk_rating": {
               "type": "string",
-              "enum": ["Low", "Moderate", "High", "Extreme"],
+              "enum": [
+                "Low",
+                "Moderate",
+                "High",
+                "Extreme"
+              ],
               "description": "ISA TRAQ Matrix 2 final risk rating (unit: TRAQ enum)."
             },
             "residual_risk_rating": {
               "type": "string",
-              "enum": ["None", "Low", "Moderate", "High", "Extreme"],
+              "enum": [
+                "None",
+                "Low",
+                "Moderate",
+                "High",
+                "Extreme"
+              ],
               "description": "Projected risk rating following prescribed regenerative or structural intervention (unit: TRAQ enum)."
             }
           }
@@ -212,7 +265,13 @@
             },
             "protection_tier": {
               "type": "string",
-              "enum": ["Unprotected", "Excepted_Species", "Protected", "Legacy", "Heritage"],
+              "enum": [
+                "Unprotected",
+                "Excepted_Species",
+                "Protected",
+                "Legacy",
+                "Heritage"
+              ],
               "description": "Ordinance classification evaluated from DBH and species (unit: enum string)."
             },
             "permit_required": {
@@ -242,8 +301,8 @@
         },
         "sound_shell_thickness_ratio_t_over_r": {
           "type": "number",
-          "minimum": 0.0,
-          "maximum": 1.0,
+          "minimum": 0,
+          "maximum": 1,
           "description": "Mattheck sound wood shell thickness to trunk radius ratio (t/R). Values >= 0.30 indicate full hollow-cylinder bending strength against windthrow (unit: dimensionless ratio 0.0 to 1.0)."
         },
         "sonic_tomography_or_resistograph_uri": {
@@ -273,8 +332,8 @@
             },
             "veteran_keystone_habitat_multiplier": {
               "type": "number",
-              "minimum": 1.0,
-              "maximum": 5.0,
+              "minimum": 1,
+              "maximum": 5,
               "description": "Ecological keystone and saproxylic habitat value multiplier (1.0 = standard, 1.5-3.5 = veteran hollow keystone tree) (unit: scalar multiplier)."
             },
             "valuation_delta_usd": {
@@ -430,7 +489,10 @@
           "description": "Dry soil bulk density in the top 0 to 15 cm feeder-root horizon (unit: grams per cubic centimeter)."
         },
         "penetrometer_resistance_psi": {
-          "type": ["number", "null"],
+          "type": [
+            "number",
+            "null"
+          ],
           "minimum": 0,
           "maximum": 1000,
           "description": "Soil compaction resistance to root penetration at 15 cm depth; root-limiting threshold typically near 300 psi (unit: pounds per square inch)."
@@ -449,8 +511,8 @@
         },
         "soil_ph": {
           "type": "number",
-          "minimum": 2.0,
-          "maximum": 11.0,
+          "minimum": 2,
+          "maximum": 11,
           "description": "Rhizosphere soil pH in 1:1 or 1:2 water suspension (unit: pH units)."
         },
         "lab_panel_url": {
@@ -484,7 +546,10 @@
               "description": "Primary mycorrhizal association guild of the host tree species (unit: enum string)."
             },
             "fungal_to_bacterial_biomass_ratio": {
-              "type": ["number", "null"],
+              "type": [
+                "number",
+                "null"
+              ],
               "minimum": 0,
               "maximum": 50,
               "description": "Ratio of total fungal biomass to bacterial biomass (F:B); null if biological assay is not yet returned (unit: dimensionless mass ratio)."
@@ -517,7 +582,10 @@
                     "description": "Scientific name or field morphotype of the observed fungus (unit: taxon string)."
                   },
                   "inaturalist_taxon_id": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 1,
                     "description": "iNaturalist taxon ID for the fungal observation, or null if identified only to morphotype (unit: integer ID)."
                   },
@@ -802,8 +870,8 @@
             },
             "target_ser_recovery_wheel_stars": {
               "type": "number",
-              "minimum": 1.0,
-              "maximum": 5.0,
+              "minimum": 1,
+              "maximum": 5,
               "description": "Target 5-year composite rating on the SER Five-Star Ecological Recovery Wheel across physical conditions, species composition, structural diversity, and ecosystem function (unit: 1.0 to 5.0 star scale)."
             },
             "sanctuary_scorecard_targets": {

@@ -1,6 +1,6 @@
 /**
  * Browser-safe synchronous SHA-256 shim for OpenArbor web bundle.
- * Implements the subset of node:crypto used by src/core/rcaEngine.js:
+ * Implements the subset of node:crypto used by src/core/rapEngine.js:
  *   crypto.createHash('sha256').update(payload, 'utf8').digest('hex')
  */
 

@@ -359,6 +359,25 @@ if (process.env.OA_SKIP_D7_GATE === '1') {
   });
 
   assert.ok(handoff.subject.includes('Live Oak'), 'D8 FAIL: handoff.subject must include species');
+  assert.equal(
+    handoff.steward_to_arborist_message.includes('t/R'),
+    false,
+    'D8 FAIL: steward_to_arborist_message must omit unverified t/R'
+  );
+  assert.equal(
+    handoff.steward_to_arborist_message.includes(atxTriage.stages[0].client_price_usd.toLocaleString('en-US')),
+    false,
+    'D8 FAIL: steward_to_arborist_message must omit Stage 1 contractor pricing'
+  );
+  assert.equal(
+    handoff.steward_to_arborist_message.includes(atxTriage.removal_bid_usd.toLocaleString('en-US')),
+    false,
+    'D8 FAIL: steward_to_arborist_message must omit removal bid anchor'
+  );
+  assert.ok(
+    handoff.steward_to_arborist_message.includes('circumference'),
+    'D8 FAIL: steward_to_arborist_message must include circumference measurement'
+  );
   assert.ok(
     handoff.steward_to_arborist_message.includes('#oa1='),
     'D8 FAIL: steward_to_arborist_message must embed #oa1= shareUrl'
@@ -390,29 +409,44 @@ if (process.env.OA_SKIP_D7_GATE === '1') {
   );
 }
 
-// D9. Deterministic 6-Slot LEO-RCA Compiler, Oracle Verifier & 3-Fixture Sabotage Self-Audit
+// D9. Deterministic 6-Slot LEO-RAP Compiler, Oracle Verifier & 3-Fixture Sabotage Self-Audit
 {
+  assert.equal(
+    typeof bundle.compileLeoRapBrief,
+    'function',
+    'D9 FAIL: bundle.compileLeoRapBrief must be exported'
+  );
+  assert.equal(
+    typeof bundle.verifyLeoRapNarrative,
+    'function',
+    'D9 FAIL: bundle.verifyLeoRapNarrative must be exported'
+  );
+  assert.equal(
+    typeof bundle.runLeoRapSelfAudit,
+    'function',
+    'D9 FAIL: bundle.runLeoRapSelfAudit must be exported'
+  );
   assert.equal(
     typeof bundle.compileLeoRcaBrief,
     'function',
-    'D9 FAIL: bundle.compileLeoRcaBrief must be exported'
+    'D9 FAIL: legacy bundle.compileLeoRcaBrief alias must remain exported'
   );
   assert.equal(
     typeof bundle.verifyLeoRcaNarrative,
     'function',
-    'D9 FAIL: bundle.verifyLeoRcaNarrative must be exported'
+    'D9 FAIL: legacy bundle.verifyLeoRcaNarrative alias must remain exported'
   );
   assert.equal(
     typeof bundle.runLeoRcaSelfAudit,
     'function',
-    'D9 FAIL: bundle.runLeoRcaSelfAudit must be exported'
+    'D9 FAIL: legacy bundle.runLeoRcaSelfAudit alias must remain exported'
   );
 
   const austinMuni = bundle.findMunicipality('tx-austin');
   const austinProv = bundle.inspectMunicipalityProvenance(austinMuni);
   const baseAssessment = bundle.FIXED_PARITY_CASES[0].assessment;
 
-  const selfAudit = bundle.runLeoRcaSelfAudit(baseAssessment, {
+  const selfAudit = bundle.runLeoRapSelfAudit(baseAssessment, {
     municipality: austinMuni,
     provenance: austinProv,
   });
@@ -420,14 +454,14 @@ if (process.env.OA_SKIP_D7_GATE === '1') {
   assert.equal(
     selfAudit.self_audit_passed,
     true,
-    `D9 FAIL: runLeoRcaSelfAudit must pass (got ${JSON.stringify(selfAudit)})`
+    `D9 FAIL: runLeoRapSelfAudit must pass (got ${JSON.stringify(selfAudit)})`
   );
   assert.equal(selfAudit.fixtures_tested, 3, 'D9 FAIL: Must test all 3 negative sabotage fixtures');
   assert.ok(
     selfAudit.caught_failures.sabotage_unjustified_removal.some((e) =>
-      e.includes('RCA_MATTHECK_T_OVER_R')
+      e.includes('RAP_MATTHECK_T_OVER_R')
     ),
-    'D9 FAIL: Sabotage fixture 1 must catch RCA_MATTHECK_T_OVER_R'
+    'D9 FAIL: Sabotage fixture 1 must catch RAP_MATTHECK_T_OVER_R'
   );
   assert.ok(
     selfAudit.caught_failures.sabotage_oracle_drift.some((e) => e.includes('MAST_FM_2_6')),
@@ -443,7 +477,7 @@ if (process.env.OA_SKIP_D7_GATE === '1') {
   // Cedar Park Threshold_And_Fee_Record epistemic reconciliation check
   const cedarPark = bundle.findMunicipality('tx-cedar-park');
   const cpProv = bundle.inspectMunicipalityProvenance(cedarPark);
-  const cpBrief = bundle.compileLeoRcaBrief(baseAssessment, {
+  const cpBrief = bundle.compileLeoRapBrief(baseAssessment, {
     municipality: cedarPark,
     provenance: cpProv,
   });
@@ -460,14 +494,14 @@ if (process.env.OA_SKIP_D7_GATE === '1') {
     `D9 FAIL: Cedar Park STATUS header (${cpBrief.status_line}) must reconcile exact unverified token count (${cpBrief.unverified_tokens.length})`
   );
 
-  const cpVerified = bundle.verifyLeoRcaNarrative(cpBrief.brief_markdown, baseAssessment, {
+  const cpVerified = bundle.verifyLeoRapNarrative(cpBrief.brief_markdown, baseAssessment, {
     municipality: cedarPark,
     provenance: cpProv,
   });
   assert.equal(
     cpVerified.valid,
     true,
-    `D9 FAIL: Compiled Cedar Park LEO-RCA brief must pass verifyLeoRcaNarrative with 0 errors, got ${JSON.stringify(cpVerified.errors)}`
+    `D9 FAIL: Compiled Cedar Park LEO-RAP brief must pass verifyLeoRapNarrative with 0 errors, got ${JSON.stringify(cpVerified.errors)}`
   );
 
   const indexHtml = fs.readFileSync(path.join(outDir, 'index.html'), 'utf8');
@@ -478,7 +512,7 @@ if (process.env.OA_SKIP_D7_GATE === '1') {
   );
 
   console.log(
-    `[PASS] D9. LEO-RCA 6-Slot Compiler, Oracle Verifier & 3/3 Sabotage Self-Audit verified (Cedar Park reconciled: ${cpBrief.unverified_tokens.length} UNVERIFIED tokens)`
+    `[PASS] D9. LEO-RAP 6-Slot Compiler, Oracle Verifier & 3/3 Sabotage Self-Audit verified (Cedar Park reconciled: ${cpBrief.unverified_tokens.length} UNVERIFIED tokens)`
   );
 }
 

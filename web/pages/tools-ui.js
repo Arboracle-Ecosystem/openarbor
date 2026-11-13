@@ -29,8 +29,8 @@ const CORE_ESM_TOOLS = [
     citation:
       'ANSI A300 (Part 5); ISA Best Management Practices: Managing Trees During Construction; Standards Australia AS 4970-2009; British Standard BS 5837:2012; Mattheck & Breloer (1994).',
     recipe: `# Execute directly in Node.js >= 20 or import in browser ESM
-npx openarbor-rca evaluate --dbh-in 28 --drf-in 34 --jurisdiction tx-austin
-node -e "import('./src/core/rootZone.js').then(m => console.log(m.calculateRootZones({ dbhInches: 28, rootFlareDiameterInches: 34 })))"`,
+npx openarbor-rap --help
+node -e "import('./src/core/rootZone.js').then(m => console.log({ crz: m.calculateCRZ(28), srz: m.calculateSRZ(34, 28) }))"`,
     bridgeTargetPaths: [
       'structural_baseline.dbh_cm',
       'structural_baseline.multistem_aggregation_method',
@@ -148,25 +148,25 @@ node -e "import('./src/core/ecosystemBenefits.js').then(m => console.log(m.estim
     },
   },
   {
-    id: 'openarbor-rca-esm',
-    name: 'rcaEngine.js (Open Arbor Core ESM)',
+    id: 'openarbor-rap-esm',
+    name: 'rapEngine.js (Open Arbor Core ESM)',
     group: 'core-esm',
-    domain: 'RCA-Spec v2.0 Diagnostic, CODIT, Mattheck t/R & Holobiont Equity',
-    upstream_url: 'https://github.com/Arboracle-Ecosystem/openarbor/blob/master/src/core/rcaEngine.js',
+    domain: 'RAP-Spec v2.0 Diagnostic, CODIT, Mattheck t/R & Holobiont Equity',
+    upstream_url: 'https://github.com/Arboracle-Ecosystem/openarbor/blob/master/src/core/rapEngine.js',
     license: 'AGPL-3.0-only',
     language: 'JavaScript (ESM)',
     packagingTier: 'Core Browser/Node ESM',
     evidenceGrade: 'Workflow-qualified',
     isCoreEsm: true,
-    formats: ['JSON (rca_assessment.schema.json)', 'Markdown Report', 'SVG Site Map'],
-    tags: ['rca-v2', 'codit', 'shigo', 'mattheck', 'airspade', 'soil-health-index', 'sanctuary-scorecard'],
+    formats: ['JSON (rap_assessment.schema.json)', 'Markdown Report', 'SVG Site Map'],
+    tags: ['rap-v2', 'rapper', 'codit', 'shigo', 'mattheck', 'airspade', 'soil-health-index', 'sanctuary-scorecard'],
     summary:
-      'Regenerative Consulting Arborist (RCA-Spec v2.0) diagnostic engine evaluating Shigo CODIT wall response, Mattheck t/R shell buckling safety, pneumatic AirSpade trench geometry, soil microbiome health index, and Sanctuary Scorecard 5-year rollups.',
+      'Regenerative Arboriculture Protocol (RAP-Spec v2.0) diagnostic engine evaluating Shigo CODIT wall response, Mattheck t/R shell buckling safety, pneumatic AirSpade trench geometry, soil microbiome health index, and Sanctuary Scorecard 5-year rollups.',
     citation:
       'Shigo & Marx (1977) CODIT USDA Info Bulletin 405; Mattheck & Breloer (1994); Smiley (2008) AirSpade Root Collar Excavation; Gann et al. (2019) SER Standards; Newton et al. (2020).',
-    recipe: `# Run full RCA-Spec v2.0 diagnostic verification suite
+    recipe: `# Run full RAP-Spec v2.0 diagnostic verification suite
 npm test
-node tests/verify_openarbor.mjs`,
+npx openarbor-rap compile examples/ashland_oregon_white_oak_rap_v2.json`,
     bridgeTargetPaths: [
       'structural_baseline.codit_wall_response_rating',
       'structural_baseline.sound_shell_thickness_ratio_t_over_r',
@@ -175,7 +175,7 @@ node tests/verify_openarbor.mjs`,
       'outcome_monitoring_schedule.five_year_lagging_indicators.sanctuary_scorecard_targets.soil_health_index_baseline_score',
     ],
     bridgeSnippet: {
-      schema_version: 'RCA_v2',
+      schema_version: 'RAP_v2',
       assessment_mode: 'Regenerative Diagnostic',
       structural_baseline: {
         codit_wall_response_rating: 'Strong Wall 4 barrier zone formation; active woundwood roll at 8.5 mm/yr',
@@ -200,7 +200,7 @@ node tests/verify_openarbor.mjs`,
 
 /**
  * Metadata enrichment lookup keyed by tool id for literature citations, file formats,
- * sovereign execution recipes, and exact RCA_v2 schema bridge mappings.
+ * sovereign execution recipes, and exact RAP_v2 schema bridge mappings.
  */
 const TOOL_BRIDGE_METADATA = {
   qgis: {
@@ -239,7 +239,7 @@ qgis --project openarbor_sanctuary_parcel.qgz openarbor_trees_crs84.geojson`,
     recipe: `# Install host GDAL utilities and verify CRS84 GeoJSON conformance
 sudo apt-get install -y gdal-bin
 ogrinfo -al -so openarbor_trees_crs84.geojson
-ogr2ogr -f "GPKG" sanctuary_inventory.gpkg openarbor_trees_crs84.geojson -nln rca_trees`,
+ogr2ogr -f "GPKG" sanctuary_inventory.gpkg openarbor_trees_crs84.geojson -nln rap_trees`,
     bridgePaths: [
       'structural_baseline.plus_code_global',
       'outcome_monitoring_schedule.five_year_lagging_indicators.sanctuary_scorecard_targets.tiz_footprint_area_m2',
@@ -324,7 +324,7 @@ flatpak run ch.opengis.qfield --project sanctuary_field_survey.qgz`,
     citation: 'Azavea & OpenTreeMap Contributors (2022). OpenTreeMap Collaborative Urban Forest Inventory Platform.',
     recipe: `# Containerized sidecar inspection (requires license & maintenance review before launch)
 docker compose -f docker/opentreemap-sidecar.yml config
-# Export existing OTM table into Open Arbor RCA_v2 migration format
+# Export existing OTM table into Open Arbor RAP_v2 migration format
 pg_dump -t treemap_tree --csv otm_db > otm_trees_export.csv`,
     bridgePaths: [
       'structural_baseline.species_scientific',
@@ -1135,7 +1135,7 @@ export function buildUnifiedWorkbenchCatalog() {
         `# Local sovereign execution recipe (${entry.install_method})\n# Upstream: ${entry.upstream_url}`,
       bridgeTargetPaths: meta.bridgePaths || ['structural_baseline.dbh_cm'],
       bridgeSnippet: meta.sampleOutput || {
-        schema_version: 'RCA_v2',
+        schema_version: 'RAP_v2',
         assessment_mode: 'Regenerative Diagnostic',
       },
     };
@@ -1189,7 +1189,7 @@ export function initToolsCatalogUI() {
   const groupDescriptions = {
     all: 'All 4 Open Arbor Core ESM engines, 33 scientific forestry models, and 4 supporting geospatial applications.',
     'core-esm':
-      'Zero-dependency ECMAScript Modules running natively in the browser and Node.js for root zones, municipal ordinances, ecosystem benefits, and RCA-Spec v2.0 diagnostics.',
+      'Zero-dependency ECMAScript Modules running natively in the browser and Node.js for root zones, municipal ordinances, ecosystem benefits, and RAP-Spec v2.0 diagnostics.',
     ...(forestryToolsCatalog.groups || {}),
   };
 
@@ -1281,18 +1281,18 @@ export function initToolsCatalogUI() {
       </div>
 
       <div>
-        <h3 class="sub-heading">2. Open Arbor <code>RCA_v2</code> Schema Pipeline Bridge</h3>
+        <h3 class="sub-heading">2. Open Arbor <code>RAP_v2</code> Schema Pipeline Bridge</h3>
         <p class="subtitle">
-          Outputs from <strong>${escapeHtml(tool.name)}</strong> map deterministically into the following JSON paths inside <code>schemas/rca_assessment.schema.json</code>:
+          Outputs from <strong>${escapeHtml(tool.name)}</strong> map deterministically into the following JSON paths inside <code>schemas/rap_assessment.schema.json</code>:
         </p>
         <ul class="muni-subtext">${pathsHtml}</ul>
       </div>
 
       <div>
         <div class="svg-map-header">
-          <strong>3. Sample <code>RCA_v2</code> Bridge Payload Snippet</strong>
+          <strong>3. Sample <code>RAP_v2</code> Bridge Payload Snippet</strong>
           <button type="button" class="btn-secondary tab-btn" data-copy-target="dialog-bridge-code">
-            Copy RCA_v2 JSON Snippet
+            Copy RAP_v2 JSON Snippet
           </button>
         </div>
         <pre id="dialog-bridge-code" class="code-preview">${escapeHtml(snippetJson)}</pre>
@@ -1403,7 +1403,7 @@ export function initToolsCatalogUI() {
                 <strong class="metric-value">${escapeHtml(tool.formats.join(', '))}</strong>
               </div>
               <div class="metric-box">
-                <span class="metric-label">Primary <code>RCA_v2</code> Schema Target</span>
+                <span class="metric-label">Primary <code>RAP_v2</code> Schema Target</span>
                 <strong class="metric-value text-accent"><code>${escapeHtml(tool.bridgeTargetPaths[0] || 'structural_baseline')}</code></strong>
               </div>
             </div>
@@ -1415,7 +1415,7 @@ export function initToolsCatalogUI() {
                 class="btn ${tool.isCoreEsm ? 'btn-outline' : 'btn-secondary'}"
                 data-inspect-tool="${escapeHtml(tool.id)}"
               >
-                Inspect CLI Recipe, Sample I/O &amp; RCA_v2 Pipeline Bridge
+                Inspect CLI Recipe, Sample I/O &amp; RAP_v2 Pipeline Bridge
               </button>
             </div>
           </article>

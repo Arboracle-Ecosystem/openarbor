@@ -27,11 +27,11 @@
 | `out/icons/icon.svg` | `5008` | GitHub Pages Jekyll bypass marker |
 | `out/icons/screenshot-desktop.png` | `216969` | GitHub Pages Jekyll bypass marker |
 | `out/icons/screenshot-mobile.png` | `147971` | GitHub Pages Jekyll bypass marker |
-| `out/index.html` | `41702` | Open Arbor (`openarbor.org`) root landing and alliance portal |
+| `out/index.html` | `41653` | Open Arbor (`openarbor.org`) root landing and alliance portal |
 | `out/manifest.webmanifest` | `2656` | GitHub Pages Jekyll bypass marker |
 | `out/mcp/index.html` | `11492` | 6-Tool MCP Server Playground & JSON-RPC 2.0 Inspector (`/mcp/`) |
 | `out/methods/index.html` | `60689` | GitHub Pages Jekyll bypass marker |
-| `out/openarbor-bundle.js` | `628500` | Compiled ESM browser bundle (engines + ordinances + catalog + schemas + UI) |
+| `out/openarbor-bundle.js` | `628472` | Compiled ESM browser bundle (engines + ordinances + catalog + schemas + UI) |
 | `out/ordinances/index.html` | `13359` | 8-City Municipal Ordinance Commons & Schema Validator (`/ordinances/`) |
 | `out/schemas/municipal-ordinance.schema.json` | `3630` | Published JSON Schema (Draft 2020-12) |
 | `out/schemas/rap_assessment.schema.json` | `43105` | Published JSON Schema (Draft 2020-12) |
@@ -40,7 +40,7 @@
 | `out/schemas/rca_assessment.schema.json` | `42896` | Published JSON Schema (Draft 2020-12) |
 | `out/schemas/rca_openbadge_v3.schema.json` | `26473` | Published JSON Schema (Draft 2020-12) |
 | `out/spec/index.html` | `28007` | RAP-Spec v2.0 & 200-Year Architecture Reference (`/spec/`) |
-| `out/styles.css` | `63716` | Shared Sunlight Field & Canopy Dark design system stylesheet |
+| `out/styles.css` | `65108` | Shared Sunlight Field & Canopy Dark design system stylesheet |
 | `out/sw.js` | `4728` | GitHub Pages Jekyll bypass marker |
 | `out/tools/index.html` | `13418` | 41-tool Open-Source Forestry & Arboriculture Workbench (`/tools/`) |
 

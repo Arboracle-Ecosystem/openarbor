@@ -1732,6 +1732,69 @@ textarea:focus-visible {
   border-radius: var(--radius-md);
   padding: 14px;
   margin-top: 12px;
+  color: var(--text-main);
+}
+
+.oa-provenance-panel[data-provenance-tier="full"] {
+  border-inline-start: 4px solid var(--accent-green);
+}
+
+.oa-provenance-panel[data-provenance-tier="threshold"] {
+  border-inline-start: 4px solid var(--accent-copper);
+}
+
+.oa-provenance-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin-bottom: 6px;
+  font-size: 0.88rem;
+  color: var(--text-main);
+}
+
+.oa-provenance-citation {
+  margin: 4px 0 8px 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.oa-provenance-panel a {
+  color: var(--accent-bright);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 600;
+}
+
+.oa-provenance-gaps {
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: var(--text-main);
+  background: var(--bg-card);
+}
+
+.oa-provenance-gaps-clean {
+  border-inline-start: 3px solid var(--accent-green);
+}
+
+.oa-provenance-gaps-warn {
+  background: var(--badge-amber-bg);
+  color: var(--badge-amber-text);
+  border: 1px solid var(--badge-amber-border);
+  border-inline-start: 3px solid var(--accent-copper);
+}
+
+.oa-provenance-list {
+  margin: 6px 0 0 0;
+  padding-inline-start: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .oa-provenance-meta {
@@ -1746,7 +1809,7 @@ textarea:focus-visible {
   font-size: 0.84rem;
 }
 
-.oa-provenance-tier-full {
+.oa-provenance-tier-full:not(.oa-provenance-panel) {
   background: var(--accent-green);
   color: var(--btn-primary-text);
   padding: 3px 9px;
@@ -1755,7 +1818,7 @@ textarea:focus-visible {
   font-weight: 700;
 }
 
-.oa-provenance-tier-threshold {
+.oa-provenance-tier-threshold:not(.oa-provenance-panel) {
   background: var(--badge-amber-bg);
   color: var(--badge-amber-text);
   border: 1px solid var(--badge-amber-border);

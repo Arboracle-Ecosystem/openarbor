@@ -1267,13 +1267,12 @@ export function initLivingLensUI() {
     const provPanel = document.getElementById('qc-provenance-panel');
     if (provPanel) {
       const isFull = provenance.record_tier === 'Full_Rule_Record';
-      provPanel.className = `oa-provenance-panel ${
-        isFull ? 'oa-provenance-tier-full' : 'oa-provenance-tier-threshold'
-      }`;
+      provPanel.className = 'oa-provenance-panel';
+      provPanel.dataset.provenanceTier = isFull ? 'full' : 'threshold';
       const gapCount = provenance.unverified_gaps.length;
       const gapsHtml =
         gapCount > 0
-          ? `<div class="oa-provenance-gaps">
+          ? `<div class="oa-provenance-gaps oa-provenance-gaps-warn">
               <strong>Visible Gaps (${gapCount} UNVERIFIED Sub-Section${gapCount === 1 ? '' : 's'}):</strong>
               <ul class="oa-provenance-list">
                 ${provenance.unverified_gaps
@@ -1284,7 +1283,7 @@ export function initLivingLensUI() {
                   .join('')}
               </ul>
             </div>`
-          : `<div class="oa-provenance-gaps" style="background: transparent; border-left: 3px solid var(--accent-green); padding: 4px 10px;">
+          : `<div class="oa-provenance-gaps oa-provenance-gaps-clean">
               <strong>Visible Gaps (UNVERIFIED Sub-Sections):</strong> 0 missing core schema domains (${provenance.verified_sections.length} statutory sections encoded with primary citations; verify site-specific variances before construction).
             </div>`;
 
@@ -1293,10 +1292,10 @@ export function initLivingLensUI() {
           <strong>Provenance &amp; Statutory Coverage: ${escapeHtml(provenance.municipality_name)} (${escapeHtml(provenance.record_id)})</strong>
           <span class="badge ${isFull ? 'badge-protected' : 'badge-warn'}">${escapeHtml(provenance.record_tier)}</span>
         </div>
-        <p class="hint" style="margin: 4px 0 8px 0;">
+        <p class="oa-provenance-citation">
           Primary Citation: ${escapeHtml(provenance.primary_citation)} &middot; Dataset ${escapeHtml(provenance.dataset_version)} &middot; Verified ${escapeHtml(provenance.last_verified)}${
             provenance.source_url
-              ? ` &middot; <a href="${escapeHtml(provenance.source_url)}" target="_blank" rel="noopener">Primary Code Link</a>`
+              ? ` &middot; <a href="${escapeHtml(provenance.source_url)}" target="_blank" rel="noopener noreferrer" class="muni-link">Primary Code Link</a>`
               : ''
           }
         </p>

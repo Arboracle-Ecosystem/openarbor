@@ -184,6 +184,19 @@ const bundle = await import(bundlePath);
   assert.ok(rrProv.unverified_gaps.length >= 3, 'D5 FAIL: Round Rock must report at least 3 unverified statutory sub-sections');
   assert.equal(atxProv.unverified_gaps.length, 0, 'D5 FAIL: Austin Full_Rule_Record should have 0 unverified gaps');
 
+  const indexHtml = fs.readFileSync(path.join(outDir, 'index.html'), 'utf8');
+  const provPanelMatch = indexHtml.match(/<div\s+id="qc-provenance-panel"[^>]*>/);
+  assert.ok(provPanelMatch, 'D5 FAIL: out/index.html must render #qc-provenance-panel');
+  assert.equal(
+    /oa-provenance-tier-(?:full|threshold)/.test(provPanelMatch[0]),
+    false,
+    'D5 FAIL: #qc-provenance-panel must not carry inline pill class oa-provenance-tier-full/threshold'
+  );
+  assert.ok(
+    provPanelMatch[0].includes('data-provenance-tier="full"'),
+    'D5 FAIL: #qc-provenance-panel must use data-provenance-tier="full"'
+  );
+
   console.log(`[PASS] D5. Provenance Surface & Epistemic Gap Inspector verified (Cedar Park: ${cpProv.unverified_gaps.length} gaps, Round Rock: ${rrProv.unverified_gaps.length} gaps)`);
 }
 

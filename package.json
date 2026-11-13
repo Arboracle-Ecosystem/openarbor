@@ -24,7 +24,7 @@
   "bin": {
     "openarbor-rap": "./bin/openarbor-rap.mjs",
     "openarbor-rca": "./bin/openarbor-rca.mjs",
-    "openarbor-mcp": "./server/mcp/openarbor-mcp.mjs"
+    "openarbor-mcp": "./bin/openarbor-mcp.mjs"
   },
   "files": [
     "bin/",

@@ -591,6 +591,33 @@ try {
     assert.ok(!fillerWordRegex.test(body), `House-style filler violation in ${fileName}`);
     assert.ok(!/[A-Za-z0-9.,;:)"'`][ \t]+-[ \t]+[A-Za-z0-9("'`]/.test(body), `Spaced hyphen violation in ${fileName}`);
   }
+
+  const symDir = fs.mkdtempSync(path.join(os.tmpdir(), 'openarbor-mcp-sym-'));
+  const symServerLink = path.join(symDir, 'openarbor-mcp-sym');
+  const symBinLink = path.join(symDir, 'openarbor-mcp-bin');
+  fs.symlinkSync(SERVER_PATH, symServerLink);
+  fs.symlinkSync(path.join(REPO_ROOT, 'bin', 'openarbor-mcp.mjs'), symBinLink);
+  const initLines =
+    JSON.stringify({
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'initialize',
+      params: { protocolVersion: '2024-11-05', capabilities: {}, clientInfo: { name: 'sym', version: '1.0' } },
+    }) +
+    '\n' +
+    JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'shutdown', params: {} }) +
+    '\n';
+  for (const targetLink of [symServerLink, symBinLink]) {
+    const symRun = spawnSync(process.execPath, [targetLink], {
+      cwd: os.tmpdir(),
+      input: initLines,
+      encoding: 'utf8',
+    });
+    assert.equal(symRun.status, 0, `Symlinked MCP invocation exited ${symRun.status}: ${symRun.stderr}`);
+    assert.ok(symRun.stdout.includes('"name":"openarbor-mcp"'), `Symlinked MCP invocation produced no handshake: ${symRun.stdout}`);
+    assert.ok(symRun.stdout.includes('"version":"2.2.0"'));
+  }
+
   console.log('[PASS] 10. openarbor_consult, built-in prompts (3), and Steward Agent Pack (5 files) verified');
 
   // 11. Clean shutdown

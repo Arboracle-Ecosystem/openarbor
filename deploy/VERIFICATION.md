@@ -8,41 +8,40 @@
 
 | File Path | Size (Bytes) | Role |
 | :--- | :--- | :--- |
-| `out/.nojekyll` | `0` | GitHub Pages Jekyll bypass marker |
-| `out/cases/ashland-oregon-white-oak/index.html` | `53782` | GitHub Pages Jekyll bypass marker |
-| `out/cases/austin-heritage-live-oak/index.html` | `53256` | GitHub Pages Jekyll bypass marker |
-| `out/cases/georgetown-multistem-pecan/index.html` | `52217` | GitHub Pages Jekyll bypass marker |
-| `out/cases/index.html` | `34853` | GitHub Pages Jekyll bypass marker |
-| `out/cases/liberty-hill-post-oak/index.html` | `52488` | GitHub Pages Jekyll bypass marker |
-| `out/cases/medford-ponderosa-pine/index.html` | `53111` | GitHub Pages Jekyll bypass marker |
+| `out/cases/ashland-oregon-white-oak/index.html` | `53487` | Static Pre-Rendered Bioregional Field Case Page |
+| `out/cases/austin-heritage-live-oak/index.html` | `52961` | Static Pre-Rendered Bioregional Field Case Page |
+| `out/cases/georgetown-multistem-pecan/index.html` | `51922` | Static Pre-Rendered Bioregional Field Case Page |
+| `out/cases/index.html` | `34833` | 5-Case Bioregional Field Gallery Index (`/cases/`) |
+| `out/cases/liberty-hill-post-oak/index.html` | `52193` | Static Pre-Rendered Bioregional Field Case Page |
+| `out/cases/medford-ponderosa-pine/index.html` | `52816` | Static Pre-Rendered Bioregional Field Case Page |
 | `out/data/catalog/forestry-tools.json` | `22749` | Published open dataset JSON |
 | `out/data/ordinances/central_texas_ordinances.json` | `10712` | Published open dataset JSON |
 | `out/data/ordinances/rogue_valley_oregon_ordinances.json` | `7531` | Published open dataset JSON |
-| `out/demo/index.html` | `63627` | Interactive 3-mode Open Arbor engine demo (`/demo/`) |
-| `out/icons/apple-touch-icon.png` | `50286` | GitHub Pages Jekyll bypass marker |
-| `out/icons/icon-192.png` | `65521` | GitHub Pages Jekyll bypass marker |
-| `out/icons/icon-512.png` | `49031` | GitHub Pages Jekyll bypass marker |
-| `out/icons/icon-68.png` | `10726` | GitHub Pages Jekyll bypass marker |
-| `out/icons/icon-maskable-512.png` | `335298` | GitHub Pages Jekyll bypass marker |
-| `out/icons/icon.svg` | `5008` | GitHub Pages Jekyll bypass marker |
-| `out/icons/screenshot-desktop.png` | `216969` | GitHub Pages Jekyll bypass marker |
-| `out/icons/screenshot-mobile.png` | `147971` | GitHub Pages Jekyll bypass marker |
-| `out/index.html` | `41653` | Open Arbor (`openarbor.org`) root landing and alliance portal |
-| `out/manifest.webmanifest` | `2656` | GitHub Pages Jekyll bypass marker |
-| `out/mcp/index.html` | `11492` | 6-Tool MCP Server Playground & JSON-RPC 2.0 Inspector (`/mcp/`) |
-| `out/methods/index.html` | `60689` | GitHub Pages Jekyll bypass marker |
+| `out/demo/index.html` | `63607` | Interactive 3-mode Open Arbor engine demo (`/demo/`) |
+| `out/icons/apple-touch-icon.png` | `50286` | PWA & Brand Icon Asset |
+| `out/icons/icon-192.png` | `65521` | PWA & Brand Icon Asset |
+| `out/icons/icon-512.png` | `49031` | PWA & Brand Icon Asset |
+| `out/icons/icon-68.png` | `10726` | PWA & Brand Icon Asset |
+| `out/icons/icon-maskable-512.png` | `335298` | PWA & Brand Icon Asset |
+| `out/icons/icon.svg` | `5008` | PWA & Brand Icon Asset |
+| `out/icons/screenshot-desktop.png` | `216969` | PWA & Brand Icon Asset |
+| `out/icons/screenshot-mobile.png` | `147971` | PWA & Brand Icon Asset |
+| `out/index.html` | `41944` | Open Arbor (`openarbor.org`) root landing and alliance portal |
+| `out/manifest.webmanifest` | `2656` | PWA Web Application Manifest |
+| `out/mcp/index.html` | `11472` | 8-Tool MCP Server Playground & JSON-RPC Tester (`/mcp/`) |
+| `out/methods/index.html` | `60669` | Executable Proof & Falsifiability Ledger (`/methods/`) |
 | `out/openarbor-bundle.js` | `628472` | Compiled ESM browser bundle (engines + ordinances + catalog + schemas + UI) |
-| `out/ordinances/index.html` | `13359` | 8-City Municipal Ordinance Commons & Schema Validator (`/ordinances/`) |
+| `out/ordinances/index.html` | `13339` | 8-City Municipal Ordinance Commons & Schema Validator (`/ordinances/`) |
 | `out/schemas/municipal-ordinance.schema.json` | `3630` | Published JSON Schema (Draft 2020-12) |
 | `out/schemas/rap_assessment.schema.json` | `43105` | Published JSON Schema (Draft 2020-12) |
 | `out/schemas/rap_field_observation.schema.json` | `6317` | Published JSON Schema (Draft 2020-12) |
 | `out/schemas/rap_openbadge_v3.schema.json` | `26589` | Published JSON Schema (Draft 2020-12) |
 | `out/schemas/rca_assessment.schema.json` | `42896` | Published JSON Schema (Draft 2020-12) |
 | `out/schemas/rca_openbadge_v3.schema.json` | `26473` | Published JSON Schema (Draft 2020-12) |
-| `out/spec/index.html` | `28007` | RAP-Spec v2.0 & 200-Year Architecture Reference (`/spec/`) |
-| `out/styles.css` | `65108` | Shared Sunlight Field & Canopy Dark design system stylesheet |
-| `out/sw.js` | `4728` | GitHub Pages Jekyll bypass marker |
-| `out/tools/index.html` | `13418` | 41-tool Open-Source Forestry & Arboriculture Workbench (`/tools/`) |
+| `out/spec/index.html` | `27987` | RAP-Spec v2.0 & 200-Year Heartwood Vault Reference (`/spec/`) |
+| `out/styles.css` | `68009` | Shared Sunlight Field & Canopy Dark design system stylesheet |
+| `out/sw.js` | `4728` | Offline-First Service Worker Cache Shell |
+| `out/tools/index.html` | `13398` | 41-tool Open-Source Forestry & Arboriculture Workbench (`/tools/`) |
 
 ## 2. Executive Summary of 4 Fixed Bioregional Input Cases (Texas & Oregon)
 

@@ -64,9 +64,33 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
+a:where(:not(.btn, .oa-nav-link, .oa-brand-link, .oa-deep-popover-item)) {
+  color: var(--accent-bright);
+  text-underline-offset: 3px;
+  font-weight: 600;
+}
+
+a:where(:not(.btn, .oa-nav-link, .oa-brand-link, .oa-deep-popover-item)):hover {
+  text-decoration-thickness: 2px;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+p,
+.subtitle,
+.oa-sequoia-lead,
+.oa-truth-prose {
+  text-wrap: pretty;
+}
+
 code,
 .muni-link,
 .metric-value,
+.oa-determination-value,
 .metric-sub,
 .citation-callout,
 .subtitle,
@@ -244,23 +268,17 @@ code,
   .oa-main-nav {
     order: 3;
     inline-size: 100%;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    scrollbar-width: none;
-    gap: 4px;
+    flex-wrap: wrap;
+    overflow-x: visible;
+    gap: 4px 6px;
     padding-bottom: 2px;
-  }
-
-  .oa-main-nav::-webkit-scrollbar {
-    display: none;
   }
 
   .oa-nav-link,
   .oa-nav-veil-trigger {
-    flex-shrink: 0;
-    padding: 5px 9px;
-    min-height: 31px;
-    font-size: 0.79rem;
+    padding: 5px 8px;
+    min-height: 32px;
+    font-size: 0.78rem;
     white-space: nowrap;
   }
 }
@@ -650,6 +668,12 @@ input.user-valid-fallback {
   min-inline-size: 0;
 }
 
+.metric-box > * {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+}
+
 .highlight-box {
   border-color: var(--accent-bright);
   background: var(--highlight-bg);
@@ -747,6 +771,21 @@ input.user-valid-fallback {
   font-size: 1.35rem;
 }
 
+.verdict-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-inline-size: 0;
+}
+
+@media (min-width: 720px) {
+  .verdict-right {
+    align-items: flex-end;
+    text-align: right;
+  }
+}
+
 .citation-callout {
   font-size: 0.88rem;
   background: var(--bg-input);
@@ -781,11 +820,16 @@ input.user-valid-fallback {
 .table-wrapper {
   overflow: auto;
   max-inline-size: 100%;
-  max-block-size: min(640px, 82vh);
+  max-block-size: min(640px, 82dvh);
   container-type: inline-size;
   margin: 10px 0;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
+}
+
+.oa-responsive-spec-table td,
+.oa-responsive-spec-table code {
+  overflow-wrap: anywhere;
 }
 
 .data-table {
@@ -1114,7 +1158,7 @@ input.user-valid-fallback {
     color: var(--accent-bright);
   }
   .oa-stand-table-wrapper td:nth-child(6)::before {
-    content: var(--label-6, "RCA Diagnostic Template");
+    content: var(--label-6, "RAP Diagnostic Template");
     font-size: 0.76rem;
     font-weight: 700;
     color: var(--accent-bright);
@@ -1440,6 +1484,8 @@ input.user-valid-fallback {
   color: var(--text-main);
   cursor: pointer;
   text-align: left;
+  min-inline-size: 0;
+  max-inline-size: 100%;
 }
 
 .oa-mcp-tool-btn.active,
@@ -1452,12 +1498,17 @@ input.user-valid-fallback {
 .oa-mcp-tool-name {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-weight: 700;
-  font-size: 0.88rem;
+  font-size: 0.84rem;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .oa-mcp-tool-mod {
   font-size: 0.74rem;
   opacity: 0.85;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
 }
 
 .oa-mcp-controls-bar {
@@ -1588,6 +1639,58 @@ dialog::backdrop {
   color: var(--text-muted);
 }
 
+.oa-footer {
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-elevated);
+  padding: 24px 0 36px 0;
+  margin-top: 32px;
+  font-size: 0.84rem;
+  color: var(--text-muted);
+}
+
+.oa-footer-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+@media (min-width: 820px) {
+  .oa-footer-inner {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+  }
+}
+
+.oa-footer-inner strong {
+  color: var(--text-main);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.oa-footer-inner p {
+  margin: 0;
+  max-inline-size: 64ch;
+}
+
+.oa-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+}
+
+.oa-footer-links a {
+  color: var(--accent-bright);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.oa-footer-links a:hover {
+  text-decoration: underline;
+}
+
 @media (min-width: 720px) {
   .header-inner {
     flex-direction: row;
@@ -1634,17 +1737,28 @@ dialog::backdrop {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .oa-mcp-tool-bar {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .oa-mcp-dual-pane {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
+@media (min-width: 1120px) {
+  .oa-mcp-tool-bar {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
 /* ============================================================================
  * Masterwork 100x Deliverable D2: Sticky Determination Bar (.oa-sticky-verdict-bar)
  * ============================================================================ */
-.oa-sticky-verdict-bar {
+body:has(#sticky-determination-bar) .oa-site-header {
+  position: relative;
+}
+
+.oa-sticky-verdict-bar,
+.oa-sticky-determination-bar {
   position: sticky;
   top: 0;
   z-index: 90;
@@ -1652,6 +1766,14 @@ dialog::backdrop {
   border-bottom: 2px solid var(--oa-fern-green, #7EA172);
   padding: 0.55rem 1rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
+}
+
+.oa-sticky-bar-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 14px;
 }
 
 .oa-sticky-verdict-inner {
@@ -1872,10 +1994,9 @@ textarea:focus-visible {
 
 .oa-print-header {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: flex-start;
-  gap: 12px;
+  gap: 6px;
   border-bottom: 2px solid var(--border-main);
   padding-bottom: 10px;
   margin-bottom: 12px;
@@ -1887,6 +2008,27 @@ textarea:focus-visible {
   max-inline-size: 100%;
 }
 
+.oa-print-title {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.oa-print-subtitle,
+.oa-print-meta {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--text-muted);
+}
+
+.oa-print-epistemic {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  font-size: 0.84rem;
+}
+
 .oa-print-section {
   margin-bottom: 14px;
   padding-bottom: 10px;
@@ -1894,7 +2036,8 @@ textarea:focus-visible {
   min-inline-size: 0;
 }
 
-.oa-signature-block {
+.oa-signature-block,
+.oa-print-signature-block {
   margin-top: 16px;
   padding: 12px;
   border: 1px solid var(--border-main);
@@ -2097,6 +2240,14 @@ summary.oa-veil-summary {
   font-weight: 700;
   color: var(--text-main);
   user-select: none;
+  min-inline-size: 0;
+}
+
+summary.oa-veil-summary > *,
+summary.oa-models-summary > * {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
 }
 
 summary.oa-veil-summary::-webkit-details-marker {
@@ -2741,6 +2892,21 @@ label:has(> input[type="file"]:focus-visible) {
   flex-direction: column;
   gap: 4px;
   min-inline-size: 0;
+}
+
+.oa-stage-tag {
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent-copper);
+}
+
+.oa-stage-price {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--accent-bright);
+  font-variant-numeric: tabular-nums;
 }
 
 .oa-arborist-banner {

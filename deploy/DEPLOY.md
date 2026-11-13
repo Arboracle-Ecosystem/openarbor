@@ -1,8 +1,7 @@
-# Open Arbor v2.0 Deployment Guide: Google Cloud Run (`openarbor.org`) and GitHub Pages
+# Open Arbor Production Deployment Guide (Cloud Run)
 
 - **Canonical Repository:** `https://github.com/Arboracle-Ecosystem/openarbor.git`
 - **Primary Domain Target:** `https://openarbor.org` (Google Cloud Run service `openarbor` in `us-central1`)
-- **Mirror Target:** `https://arboracle-ecosystem.github.io/openarbor/` (GitHub Pages `gh-pages` branch)
 - **Build Output Directory:** `out/`
 - **Runtime Dependencies:** Zero (`AGPL-3.0-only`, 100% client-side execution)
 
@@ -33,13 +32,17 @@ npm run verify:parity
 | `out/demo/index.html` | Interactive 3-mode Open Arbor field engine, Sanctuary rollup, and badge minter |
 | `out/tools/index.html` | 41-tool Open-Source Forestry and Arboriculture Workbench |
 | `out/ordinances/index.html` | 8-city Municipal Ordinance Commons and live Draft 2020-12 schema validator |
-| `out/mcp/index.html` | Interactive 6-tool Model Context Protocol (`MCP`) simulator and JSON-RPC 2.0 inspector |
-| `out/spec/index.html` | `RCA-Spec v2.0` 10-section evidentiary reference and 200-year Heartwood Vault specification |
+| `out/mcp/index.html` | Interactive 8-tool Model Context Protocol (`MCP`) simulator and JSON-RPC 2.0 inspector |
+| `out/spec/index.html` | `RAP-Spec v2.0` 10-section evidentiary reference and 200-year Heartwood Vault specification |
+| `out/cases/**` | 5-case bioregional field gallery index and static pre-rendered case determination pages |
+| `out/methods/index.html` | Executable proof and falsifiability verification ledger |
 | `out/openarbor-bundle.js` | Self-contained ESM bundle (`src/core/*` + TX/OR ordinances + 41-tool catalog + schemas + UI) |
 | `out/styles.css` | Sunlight Field (`light`) and Canopy Dark (`dark`) stylesheet using `light-dark()` |
+| `out/manifest.webmanifest` | PWA web application manifest |
+| `out/sw.js` | Offline-first service worker cache shell |
+| `out/icons/*` | PWA and brand icon PNG assets |
 | `out/schemas/*.json` | Published Draft 2020-12 JSON Schemas served with `Access-Control-Allow-Origin: *` |
 | `out/data/**/*.json` | Published municipal ordinance datasets and 41-tool forestry catalog |
-| `out/.nojekyll` | Disables Jekyll processing on GitHub Pages |
 
 ## 2. Google Cloud Run Deployment (`openarbor.org`)
 
@@ -66,15 +69,4 @@ To map or verify the custom domain `openarbor.org` on the Cloud Run service:
 
 ```bash
 gcloud beta run domain-mappings list --region us-central1
-```
-
-## 3. GitHub Pages Mirror Deployment (Awaiting Approval)
-
-Per governance policy, `git push` requires explicit operator confirmation:
-
-```bash
-cd /home/george/Myceliate_Master/UNDERSTORY/arboracle-ecosystem/openarbor
-
-git push origin master
-git subtree push --prefix out origin gh-pages
 ```

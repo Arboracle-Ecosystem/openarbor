@@ -378,7 +378,7 @@ function renderSharedHeader(relRoot, activeRoute) {
     <div class="oa-nav-container">
       <a href="${relRoot}/index.html" class="oa-brand-link">
         <span class="oa-brand-mark"><img src="${relRoot}/icons/icon-68.png" alt="" width="34" height="34" class="oa-brand-logo" decoding="async" /></span>
-        <span class="oa-brand-text">Open Arbor <small>v2.1</small></span>
+        <span class="oa-brand-text">OPEN ARBOR</span>
       </a>
       <nav class="oa-main-nav" aria-label="Primary">
         ${primaryHtml}
@@ -793,15 +793,15 @@ ${renderSharedHeader('../..', 'cases')}
   <main>
   <!-- Sticky Determination Summary Bar -->
   <div id="sticky-determination-bar" class="oa-sticky-determination-bar" role="region" aria-label="Sticky Determination Summary">
-    <div class="container oa-sticky-bar-inner" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; background: var(--bg-elevated); border-bottom: 1px solid var(--border-main);">
-      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: 0.86rem;">
+    <div class="container oa-sticky-bar-inner">
+      <div class="oa-sticky-verdict-metrics">
         <span><strong>Status:</strong> <span id="sticky-status-val" class="badge ${badgeClass}">${escapeHtml(stickySummary.status)} (${escapeHtml(stickySummary.permit_required)})</span></span>
         <span><strong>DBH:</strong> <strong id="sticky-dbh-val">${dualHtml(fmtDualInCm, bio.dbh_inches, bio.dbh_cm)}</strong></span>
         <span><strong>CRZ:</strong> <strong id="sticky-crz-val">${dualHtml(fmtDualFtM, rz.crz.radius_feet, rz.crz.radius_meters)}</strong></span>
         <span><strong>Replacement Owed:</strong> <strong id="sticky-replacement-val">${dualHtml(fmtDualInCm, row.removal ? mitActive?.replacement_inches_owed || 0 : mitIfRemoved?.replacement_inches_owed || 0)}</strong></span>
         <span><strong>Cash in Lieu:</strong> <strong id="sticky-cash-val" class="text-danger">${escapeHtml(stickySummary.cash_in_lieu)}</strong></span>
       </div>
-      <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+      <div class="oa-sticky-verdict-actions">
         <a href="../../demo/index.html${escapeHtml(permalinkHash)}" class="btn btn-primary btn-xs">Open in Field Studio (#oa1=)</a>
         <a href="../index.html" class="btn btn-outline btn-xs">All 5 Cases</a>
       </div>

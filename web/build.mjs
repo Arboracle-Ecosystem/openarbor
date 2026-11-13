@@ -33,14 +33,14 @@ await esbuild.build({
   legalComments: 'inline',
 });
 
-// 1. Copy root portal HTML, shared stylesheet, offline Service Worker (if present), and .nojekyll
+// 1. Copy root portal HTML, shared stylesheet, and offline Service Worker (if present)
 fs.copyFileSync(path.join(rootDir, 'web/index.html'), path.join(outDir, 'index.html'));
 fs.copyFileSync(path.join(rootDir, 'web/styles.css'), path.join(outDir, 'styles.css'));
 const swSrcPath = path.join(rootDir, 'web/sw.js');
 if (fs.existsSync(swSrcPath)) {
   fs.copyFileSync(swSrcPath, path.join(outDir, 'sw.js'));
 }
-fs.writeFileSync(path.join(outDir, '.nojekyll'), '', 'utf8');
+fs.rmSync(path.join(outDir, '.nojekyll'), { force: true });
 
 // 2. Copy route index.html pages (/demo/, /tools/, /ordinances/, /mcp/, /spec/)
 const routes = ['demo', 'tools', 'ordinances', 'mcp', 'spec'];

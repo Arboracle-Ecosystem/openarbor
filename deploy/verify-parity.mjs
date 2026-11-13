@@ -351,9 +351,21 @@ const mdLines = [
         : f.name === 'out/ordinances/index.html'
         ? '8-City Municipal Ordinance Commons & Schema Validator (`/ordinances/`)'
         : f.name === 'out/mcp/index.html'
-        ? '6-Tool MCP Server Playground & JSON-RPC 2.0 Inspector (`/mcp/`)'
+        ? '8-Tool MCP Server Playground & JSON-RPC Tester (`/mcp/`)'
         : f.name === 'out/spec/index.html'
-        ? 'RAP-Spec v2.0 & 200-Year Architecture Reference (`/spec/`)'
+        ? 'RAP-Spec v2.0 & 200-Year Heartwood Vault Reference (`/spec/`)'
+        : f.name === 'out/cases/index.html'
+        ? '5-Case Bioregional Field Gallery Index (`/cases/`)'
+        : f.name.startsWith('out/cases/')
+        ? 'Static Pre-Rendered Bioregional Field Case Page'
+        : f.name === 'out/methods/index.html'
+        ? 'Executable Proof & Falsifiability Ledger (`/methods/`)'
+        : f.name === 'out/manifest.webmanifest'
+        ? 'PWA Web Application Manifest'
+        : f.name === 'out/sw.js'
+        ? 'Offline-First Service Worker Cache Shell'
+        : f.name.startsWith('out/icons/')
+        ? 'PWA & Brand Icon Asset'
         : f.name === 'out/openarbor-bundle.js'
         ? 'Compiled ESM browser bundle (engines + ordinances + catalog + schemas + UI)'
         : f.name === 'out/styles.css'
@@ -362,7 +374,7 @@ const mdLines = [
         ? 'Published JSON Schema (Draft 2020-12)'
         : f.name.startsWith('out/data/')
         ? 'Published open dataset JSON'
-        : 'GitHub Pages Jekyll bypass marker';
+        : 'Static Web Build Artifact';
     return `| \`${f.name}\` | \`${f.bytes}\` | ${role} |`;
   }),
   '',

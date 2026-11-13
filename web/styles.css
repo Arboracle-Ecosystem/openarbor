@@ -3172,6 +3172,147 @@ details.oa-hash-chip[open] .oa-hash-chip-action-closed {
   border: none;
 }
 
+/* --- Unified MCP Harness Connectors, Steward Agent Pack & Consult Presets --- */
+.oa-harness-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+  margin-bottom: 12px;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+.oa-harness-tab {
+  appearance: none;
+  background: var(--bg-input);
+  color: var(--text-main);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 8px 14px;
+  min-height: 40px;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.oa-harness-tab:hover {
+  border-color: var(--accent-green);
+  background: var(--bg-elevated);
+}
+
+.oa-harness-tab.active,
+.oa-harness-tab[aria-selected="true"] {
+  background: var(--highlight-bg);
+  border-color: var(--accent-green);
+  color: var(--accent-bright);
+}
+
+.oa-harness-panels,
+.oa-harness-panel {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+.oa-harness-panel[hidden] {
+  display: none;
+}
+
+.oa-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.oa-agent-pack-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-top: 14px;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+@media (min-width: 680px) {
+  .oa-agent-pack-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .oa-agent-pack-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.oa-agent-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: var(--bg-input);
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+}
+
+.oa-agent-card p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.oa-agent-card-top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+
+.oa-agent-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.oa-prompts-summary,
+.oa-consult-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 14px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--bg-input);
+  font-size: 0.875rem;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+}
+
+.oa-prompts-summary {
+  border-style: dashed;
+  margin-bottom: 0;
+}
+
+#mcp-playground-root .oa-code-card,
+#mcp-playground-root .code-preview {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
 @page {
   size: letter portrait;
   margin: 0.4in;

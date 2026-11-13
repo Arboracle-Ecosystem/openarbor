@@ -40,6 +40,11 @@ const PRECACHE_PATHS = [
   './schemas/rap_field_observation.schema.json',
   './schemas/rca_assessment.schema.json',
   './schemas/rca_openbadge_v3.schema.json',
+  './agents/openarbor-steward/SKILL.md',
+  './agents/openarbor-steward/AGENTS.md',
+  './agents/openarbor-steward/claude-agent.md',
+  './agents/openarbor-steward/hermes-steward.yaml',
+  './agents/openarbor-steward/README.md',
 ];
 
 function resolveScopeUrls() {

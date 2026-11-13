@@ -27,6 +27,8 @@
     "openarbor-mcp": "./server/mcp/openarbor-mcp.mjs"
   },
   "files": [
+    "bin/",
+    "agents/",
     "src/",
     "schemas/",
     "data/",

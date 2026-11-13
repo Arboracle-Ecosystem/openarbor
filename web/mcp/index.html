@@ -11,10 +11,10 @@
         document.querySelector('meta[name="color-scheme"]').content = localStorage.getItem('color-scheme') ?? 'light dark';
       } catch (e) {}
     </script>
-    <title>MCP Agent Server Playground &amp; JSON-RPC 2.0 Inspector | Open Arbor v2.1</title>
+    <title>Connect Your Agent (Unified MCP &amp; Steward Pack) | Open Arbor v2.2</title>
     <meta
       name="description"
-      content="Interactive Model Context Protocol (MCP) Simulator and JSON-RPC 2.0 Inspector for Open Arbor. Execute root-zone, municipal ordinance, ecosystem benefits, RAP biomechanics, and LEO-RAP verification tools directly in your browser."
+      content="Connect Claude Code, OpenAI Codex, Hermes, Cursor, Claude Desktop, or Antigravity to Open Arbor through one local zero-dependency MCP server and download the OpenArbor Steward Agent Pack for Logical English Orchestration (LEO-RAP)."
     />
     <link rel="manifest" href="../manifest.webmanifest" />
     <link rel="icon" href="../icons/icon.svg" type="image/svg+xml" />
@@ -53,8 +53,8 @@
             <span>Point clouds, dendrochronology, fire behavior, and core ESM calculators.</span>
           </a>
           <a href="../mcp/index.html" class="oa-deep-popover-item active" aria-current="page">
-            <strong>MCP Agent Server Playground</strong>
-            <span>JSON-RPC 2.0 inspector so AI agents run verified math instead of guessing.</span>
+            <strong>Connect Your Agent (Unified MCP)</strong>
+            <span>One MCP connection, 1-click harness setup, and Steward Agent Pack.</span>
           </a>
           <a href="../spec/index.html" class="oa-deep-popover-item">
             <strong>RAP-Spec v2.0 &amp; 200-Yr Vault</strong>
@@ -83,148 +83,327 @@
     </header>
 
     <main>
-    <section class="app-header">
-      <div class="container header-inner">
-        <div>
-          <span class="eyebrow">Model Context Protocol (2024-11-05) &middot; Zero-Dependency <code>stdio</code> Server</span>
-          <h1 id="main-content" tabindex="-1">Open Arbor MCP Playground &amp; JSON-RPC 2.0 Simulator</h1>
+      <section class="app-header">
+        <div class="container header-inner">
+          <div>
+            <span class="eyebrow">One Unified MCP Connection &middot; Zero Built-In Agent Overhead</span>
+            <h1 id="main-content" tabindex="-1">Connect Your Agent to Open Arbor</h1>
+            <p class="subtitle">
+              All Open Arbor calculations bind into one local zero-dependency MCP server (<code>openarbor-mcp</code> v2.2.0) with zero hosted AI bloat or API keys. Connect your preferred agent harness in one step and add the Steward Agent Pack so your agent translates dense tree physics and city ordinances into clear Logical English Orchestration (<code>LEO-RAP</code>).
+            </p>
+          </div>
+          <div class="header-actions">
+            <a href="#mcp-config-section" class="btn btn-primary">1. Connect Your Harness</a>
+            <a href="#mcp-agent-pack-section" class="btn btn-secondary">2. Steward Agent Pack</a>
+            <a href="#mcp-simulator-section" class="btn btn-outline">3. Live Inspector</a>
+          </div>
+        </div>
+      </section>
+
+      <div id="mcp-playground-root" class="container main-layout">
+        <!-- SECTION 1: ONE-CLICK HARNESS CONNECTORS -->
+        <section id="mcp-config-section" class="card" aria-labelledby="mcp-config-heading">
+          <div class="card-header">
+            <span class="step-badge">1. Single Server &middot; 6 Harnesses</span>
+            <h2 id="mcp-config-heading">Connect Any Popular Agent Harness Over One Connection</h2>
+          </div>
           <p class="subtitle">
-            Test every deterministic Open Arbor MCP tool in real time. Every request executes the exact ECMAScript core functions wired into <code>server/mcp/openarbor-mcp.mjs</code>, including bounded-input security guards (<code>MAX_EVALUATE_TREES = 500</code>, <code>MAX_JURISDICTION_ID_LENGTH = 128</code>).
+            You never wire up separate servers for root zones, city ordinances, biomechanics, or soil checks. One <code>stdio</code> server exposes <code>openarbor_consult</code> (full plain-language intake) alongside all 8 specialist tools and 3 built-in audience prompts directly via <code>npx</code> with zero manual repo clone.
           </p>
-        </div>
-        <div class="header-actions">
-          <a href="#mcp-config-section" class="btn btn-secondary">Agent Config Snippets</a>
-          <a href="../spec/index.html" class="btn btn-outline">RAP-Spec v2.0 Reference</a>
-        </div>
-      </div>
-    </section>
 
-    <div id="mcp-playground-root" class="container main-layout">
-      <section class="card" aria-labelledby="mcp-overview-heading">
-        <div class="card-header">
-          <span class="step-badge">Server v2.1.0</span>
-          <h2 id="mcp-overview-heading">Deterministic Arboricultural &amp; LEO-RAP Tools over JSON-RPC 2.0</h2>
-        </div>
-        <p class="subtitle">
-          AI agents should never guess statutory tree protection thresholds, Claus Mattheck hollow-shell buckling ratios, or Nowak carbon equations from training weights. Open Arbor exposes its verified engines as a standard Model Context Protocol server (<code>openarbor-mcp</code>). Select any tool below to inspect its JSON Schema, edit input arguments, or test the 500-tree spatial grid security guard.
-        </p>
-
-        <div id="mcp-tool-selector" class="oa-mcp-tool-bar" role="tablist" aria-label="Select MCP Tool"></div>
-      </section>
-
-      <section class="card" aria-labelledby="mcp-simulator-heading">
-        <div class="card-header">
-          <span class="step-badge">Live Simulator</span>
-          <h2 id="mcp-simulator-heading">Interactive Tool Arguments &amp; Dual-Pane JSON-RPC 2.0 Inspector</h2>
-        </div>
-
-        <div id="mcp-active-tool-meta" class="muni-lookup-box"></div>
-
-        <div class="oa-mcp-controls-bar">
-          <div class="oa-mcp-action-group">
-            <button type="button" id="btn-mcp-run" class="btn btn-primary">Execute <code>tools/call</code> Request</button>
-            <button type="button" id="btn-mcp-reset" class="btn btn-secondary">Reset Default Arguments</button>
-            <button type="button" id="btn-mcp-test-guard" class="btn btn-outline">Test &gt;500 Trees Security Guard (501 rows)</button>
-            <button type="button" id="btn-mcp-test-id-guard" class="btn btn-outline">Test &gt;128 Char Jurisdiction Guard</button>
+          <div class="oa-harness-tabs" role="tablist" aria-label="Choose AI Agent Harness">
+            <button type="button" role="tab" id="tab-claude-code" aria-selected="true" aria-controls="panel-claude-code" class="oa-harness-tab active" data-harness-tab="claude-code">Claude Code</button>
+            <button type="button" role="tab" id="tab-codex" aria-selected="false" aria-controls="panel-codex" class="oa-harness-tab" data-harness-tab="codex">OpenAI Codex</button>
+            <button type="button" role="tab" id="tab-hermes" aria-selected="false" aria-controls="panel-hermes" class="oa-harness-tab" data-harness-tab="hermes">Hermes</button>
+            <button type="button" role="tab" id="tab-cursor" aria-selected="false" aria-controls="panel-cursor" class="oa-harness-tab" data-harness-tab="cursor">Cursor</button>
+            <button type="button" role="tab" id="tab-claude-desktop" aria-selected="false" aria-controls="panel-claude-desktop" class="oa-harness-tab" data-harness-tab="claude-desktop">Claude Desktop</button>
+            <button type="button" role="tab" id="tab-antigravity" aria-selected="false" aria-controls="panel-antigravity" class="oa-harness-tab" data-harness-tab="antigravity">Antigravity</button>
           </div>
-          <div class="oa-mcp-status-pill">
-            <span class="metric-label">Execution Latency:</span>
-            <strong id="mcp-latency-badge" class="text-accent">0.00 ms</strong>
-          </div>
-        </div>
 
-        <div class="field">
-          <label for="mcp-args-editor">Editable <code>params.arguments</code> JSON Payload</label>
-          <span class="hint">Modify the JSON arguments below and click "Execute tools/call Request" (or press Ctrl+Enter).</span>
-          <textarea id="mcp-args-editor" class="oa-json-textarea" rows="10" spellcheck="false"></textarea>
-          <div id="mcp-args-error" class="error-banner" hidden></div>
-        </div>
-
-        <div class="oa-mcp-dual-pane">
-          <div class="oa-mcp-pane">
-            <div class="oa-code-header">
-              <strong>JSON-RPC 2.0 <code>tools/call</code> Request Payload</strong>
-              <button type="button" id="btn-copy-mcp-req" class="btn btn-outline btn-xs">Copy Request</button>
+          <div class="oa-harness-panels">
+            <!-- Claude Code -->
+            <div id="panel-claude-code" role="tabpanel" aria-labelledby="tab-claude-code" class="oa-harness-panel" data-harness-panel="claude-code">
+              <div class="oa-code-card">
+                <div class="oa-code-header">
+                  <strong>Claude Code: One-Command MCP + Steward Subagent</strong>
+                  <button type="button" class="btn btn-outline btn-xs" data-copy-target="cmd-claude-code">Copy Command</button>
+                </div>
+                <pre id="cmd-claude-code" class="code-preview">claude mcp add openarbor -- npx -y --package=github:Arboracle-Ecosystem/openarbor openarbor-mcp</pre>
+                <div class="oa-code-header" style="margin-top: 6px;">
+                  <span>Optional: install the dedicated subagent (<code>.claude/agents/openarbor-steward.md</code>) and skill in your project</span>
+                  <button type="button" class="btn btn-outline btn-xs" data-copy-target="cmd-claude-skill">Copy Skill Setup</button>
+                </div>
+                <pre id="cmd-claude-skill" class="code-preview">mkdir -p .claude/agents .claude/skills/openarbor-steward &amp;&amp; \
+curl -fsSL https://openarbor.org/agents/openarbor-steward/claude-agent.md -o .claude/agents/openarbor-steward.md &amp;&amp; \
+curl -fsSL https://openarbor.org/agents/openarbor-steward/SKILL.md -o .claude/skills/openarbor-steward/SKILL.md</pre>
+              </div>
             </div>
-            <pre id="mcp-request-preview" class="code-preview"></pre>
-          </div>
 
-          <div class="oa-mcp-pane">
-            <div class="oa-code-header">
-              <strong>JSON-RPC 2.0 Deterministic Response Payload</strong>
-              <button type="button" id="btn-copy-mcp-res" class="btn btn-outline btn-xs">Copy Response</button>
+            <!-- OpenAI Codex -->
+            <div id="panel-codex" role="tabpanel" aria-labelledby="tab-codex" class="oa-harness-panel" data-harness-panel="codex" hidden>
+              <div class="oa-code-card">
+                <div class="oa-code-header">
+                  <strong>OpenAI Codex CLI: One-Command MCP + <code>AGENTS.md</code> Profile</strong>
+                  <button type="button" class="btn btn-outline btn-xs" data-copy-target="cmd-codex">Copy Command</button>
+                </div>
+                <pre id="cmd-codex" class="code-preview">codex mcp add openarbor -- npx -y --package=github:Arboracle-Ecosystem/openarbor openarbor-mcp</pre>
+                <div class="oa-code-header" style="margin-top: 6px;">
+                  <span>Optional: install workspace instructions (<code>AGENTS.md</code>) and skill definition</span>
+                  <button type="button" class="btn btn-outline btn-xs" data-copy-target="cmd-codex-skill">Copy Skill Setup</button>
+                </div>
+                <pre id="cmd-codex-skill" class="code-preview">mkdir -p .agents/skills/openarbor-steward &amp;&amp; \
+curl -fsSL https://openarbor.org/agents/openarbor-steward/AGENTS.md -o AGENTS.md &amp;&amp; \
+curl -fsSL https://openarbor.org/agents/openarbor-steward/SKILL.md -o .agents/skills/openarbor-steward/SKILL.md</pre>
+              </div>
             </div>
-            <pre id="mcp-response-preview" class="code-preview" aria-live="polite"></pre>
-          </div>
-        </div>
-      </section>
 
-      <section id="mcp-config-section" class="card" aria-labelledby="mcp-config-heading">
-        <div class="card-header">
-          <span class="step-badge">Agent Integration</span>
-          <h2 id="mcp-config-heading">One-Click MCP Client Configuration Snippets</h2>
-        </div>
-        <p class="subtitle">
-          Register <code>openarbor-mcp</code> in Claude Desktop, Cursor, Windsurf, or Hermes. Because the server uses Node.js built-in modules (<code>node:fs</code>, <code>node:path</code>, <code>node:readline</code>, <code>node:crypto</code>), it starts in under 40 milliseconds with zero network calls or API keys.
-        </p>
+            <!-- Hermes -->
+            <div id="panel-hermes" role="tabpanel" aria-labelledby="tab-hermes" class="oa-harness-panel" data-harness-panel="hermes" hidden>
+              <div class="oa-code-card">
+                <div class="oa-code-header">
+                  <strong>Hermes Agent: One-Command CLI Registration or <code>~/.hermes/config.yaml</code></strong>
+                  <button type="button" class="btn btn-outline btn-xs" data-copy-target="cmd-hermes-cli">Copy CLI</button>
+                </div>
+                <pre id="cmd-hermes-cli" class="code-preview">hermes mcp add openarbor --command npx --args -y --package=github:Arboracle-Ecosystem/openarbor openarbor-mcp</pre>
+                <div class="oa-code-header" style="margin-top: 6px;">
+                  <span>Equivalent <code>~/.hermes/config.yaml</code> block + <code>SKILL.md</code> install</span>
+                  <button type="button" class="btn btn-outline btn-xs" data-copy-target="cmd-hermes-yaml">Copy YAML &amp; Skill</button>
+                </div>
+                <pre id="cmd-hermes-yaml" class="code-preview">mcp_servers:
+  openarbor:
+    command: npx
+    args: ["-y", "--package=github:Arboracle-Ecosystem/openarbor", "openarbor-mcp"]
 
-        <div class="oa-code-grid">
-          <div class="oa-code-card">
-            <div class="oa-code-header">
-              <strong>Claude Desktop (<code>claude_desktop_config.json</code>)</strong>
-              <button type="button" class="btn btn-outline btn-xs" data-copy-target="cfg-claude">Copy</button>
+# Install the Hermes companion skill:
+mkdir -p ~/.hermes/skills/openarbor-steward &amp;&amp; \
+curl -fsSL https://openarbor.org/agents/openarbor-steward/SKILL.md -o ~/.hermes/skills/openarbor-steward/SKILL.md</pre>
+              </div>
             </div>
-            <pre id="cfg-claude" class="code-preview">{
+
+            <!-- Cursor -->
+            <div id="panel-cursor" role="tabpanel" aria-labelledby="tab-cursor" class="oa-harness-panel" data-harness-panel="cursor" hidden>
+              <div class="oa-code-card">
+                <div class="oa-code-header">
+                  <strong>Cursor: One-Click Deeplink Install or <code>.cursor/mcp.json</code></strong>
+                  <div class="oa-inline-actions">
+                    <a
+                      href="cursor://anysphere.cursor-deeplink/mcp/install?name=openarbor&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsIi0tcGFja2FnZT1naXRodWI6QXJib3JhY2xlLUVjb3N5c3RlbS9vcGVuYXJib3IiLCJvcGVuYXJib3ItbWNwIl19"
+                      class="btn btn-primary btn-xs"
+                    >One-Click Install in Cursor</a>
+                    <button type="button" class="btn btn-outline btn-xs" data-copy-target="cmd-cursor-json">Copy JSON</button>
+                  </div>
+                </div>
+                <pre id="cmd-cursor-json" class="code-preview">{
   "mcpServers": {
     "openarbor": {
-      "command": "node",
+      "command": "npx",
       "args": [
-        "/path/to/openarbor/server/mcp/openarbor-mcp.mjs"
+        "-y",
+        "--package=github:Arboracle-Ecosystem/openarbor",
+        "openarbor-mcp"
       ]
     }
   }
 }</pre>
-          </div>
-
-          <div class="oa-code-card">
-            <div class="oa-code-header">
-              <strong>Cursor / Windsurf (<code>.cursor/mcp.json</code>)</strong>
-              <button type="button" class="btn btn-outline btn-xs" data-copy-target="cfg-cursor">Copy</button>
+              </div>
             </div>
-            <pre id="cfg-cursor" class="code-preview">{
+
+            <!-- Claude Desktop -->
+            <div id="panel-claude-desktop" role="tabpanel" aria-labelledby="tab-claude-desktop" class="oa-harness-panel" data-harness-panel="claude-desktop" hidden>
+              <div class="oa-code-card">
+                <div class="oa-code-header">
+                  <strong>Claude Desktop (<code>claude_desktop_config.json</code>)</strong>
+                  <button type="button" class="btn btn-outline btn-xs" data-copy-target="cfg-claude">Copy JSON</button>
+                </div>
+                <pre id="cfg-claude" class="code-preview">{
   "mcpServers": {
-    "openarbor-mcp": {
+    "openarbor": {
       "command": "npx",
-      "args": ["-y", "openarbor-mcp"],
-      "env": {}
+      "args": [
+        "-y",
+        "--package=github:Arboracle-Ecosystem/openarbor",
+        "openarbor-mcp"
+      ]
     }
   }
 }</pre>
-          </div>
-
-          <div class="oa-code-card">
-            <div class="oa-code-header">
-              <strong>Hermes Autonomous Fleet &amp; Stdio Test</strong>
-              <button type="button" class="btn btn-outline btn-xs" data-copy-target="cfg-hermes">Copy</button>
+              </div>
             </div>
-            <pre id="cfg-hermes" class="code-preview"># Register in Hermes config.yaml under mcp_servers:
-mcp_servers:
-  openarbor:
-    command: "node"
-    args: ["/path/to/openarbor/server/mcp/openarbor-mcp.mjs"]
 
-# Verify stdio JSON-RPC assertions locally:
-npm run test:mcp</pre>
+            <!-- Antigravity -->
+            <div id="panel-antigravity" role="tabpanel" aria-labelledby="tab-antigravity" class="oa-harness-panel" data-harness-panel="antigravity" hidden>
+              <div class="oa-code-card">
+                <div class="oa-code-header">
+                  <strong>Antigravity &amp; Gemini CLI (<code>~/.gemini/config/mcp_config.json</code>)</strong>
+                  <button type="button" class="btn btn-outline btn-xs" data-copy-target="cfg-antigravity">Copy Config</button>
+                </div>
+                <pre id="cfg-antigravity" class="code-preview">{
+  "mcpServers": {
+    "openarbor": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "--package=github:Arboracle-Ecosystem/openarbor",
+        "openarbor-mcp"
+      ]
+    }
+  }
+}</pre>
+                <div class="oa-code-header" style="margin-top: 6px;">
+                  <span>Install global Steward Skill (<code>~/.gemini/config/skills/openarbor-steward/SKILL.md</code>)</span>
+                  <button type="button" class="btn btn-outline btn-xs" data-copy-target="cmd-antigravity-skill">Copy Skill Setup</button>
+                </div>
+                <pre id="cmd-antigravity-skill" class="code-preview">mkdir -p ~/.gemini/config/skills/openarbor-steward &amp;&amp; \
+curl -fsSL https://openarbor.org/agents/openarbor-steward/SKILL.md -o ~/.gemini/config/skills/openarbor-steward/SKILL.md</pre>
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
-    </div>
+        </section>
+
+        <!-- SECTION 2: STEWARD AGENT DEFINITION PACK -->
+        <section id="mcp-agent-pack-section" class="card" aria-labelledby="mcp-agent-pack-heading">
+          <div class="card-header">
+            <span class="step-badge">2. Steward Agent Pack</span>
+            <h2 id="mcp-agent-pack-heading">Portable Agent &amp; Skill Files (Logical English Orchestration)</h2>
+          </div>
+          <p class="subtitle">
+            Raw root-zone geometry, Mattheck shell thresholds, and municipal subsections are dense by necessity. Drop these open-source files into any harness so your agent always calls <code>openarbor_consult</code> first, separates verified facts from economic models, respects the <code>t/R &gt;= 0.30</code> stability gate, and leaves every <code>UNVERIFIED</code> city gap visible.
+          </p>
+
+          <div class="oa-agent-pack-grid">
+            <article class="oa-agent-card">
+              <div class="oa-agent-card-top">
+                <code>SKILL.md</code>
+                <span class="badge badge-protected">Universal Skill</span>
+              </div>
+              <p>Agent Skills standard runbook teaching any model <code>openarbor_consult</code> routing, the 3 audience voices, and anti-hallucination gates.</p>
+              <div class="oa-agent-actions">
+                <a href="../agents/openarbor-steward/SKILL.md" download="SKILL.md" class="btn btn-secondary btn-xs">Download</a>
+                <button type="button" class="btn btn-outline btn-xs" data-agent-preview="../agents/openarbor-steward/SKILL.md" data-agent-label="SKILL.md">Preview / Copy</button>
+              </div>
+            </article>
+
+            <article class="oa-agent-card">
+              <div class="oa-agent-card-top">
+                <code>AGENTS.md</code>
+                <span class="badge badge-neutral">Codex / Cursor / Gemini</span>
+              </div>
+              <p>Drop-in workspace instruction file keeping models on deterministic math, Layer 1 separation, and honest instrument verification.</p>
+              <div class="oa-agent-actions">
+                <a href="../agents/openarbor-steward/AGENTS.md" download="AGENTS.md" class="btn btn-secondary btn-xs">Download</a>
+                <button type="button" class="btn btn-outline btn-xs" data-agent-preview="../agents/openarbor-steward/AGENTS.md" data-agent-label="AGENTS.md">Preview / Copy</button>
+              </div>
+            </article>
+
+            <article class="oa-agent-card">
+              <div class="oa-agent-card-top">
+                <code>claude-agent.md</code>
+                <span class="badge badge-neutral">Claude Code Subagent</span>
+              </div>
+              <p>Ready for <code>.claude/agents/openarbor-steward.md</code> with scoped <code>openarbor</code> MCP access and 3-layer response framing.</p>
+              <div class="oa-agent-actions">
+                <a href="../agents/openarbor-steward/claude-agent.md" download="openarbor-steward.md" class="btn btn-secondary btn-xs">Download</a>
+                <button type="button" class="btn btn-outline btn-xs" data-agent-preview="../agents/openarbor-steward/claude-agent.md" data-agent-label="claude-agent.md">Preview / Copy</button>
+              </div>
+            </article>
+
+            <article class="oa-agent-card">
+              <div class="oa-agent-card-top">
+                <code>hermes-steward.yaml</code>
+                <span class="badge badge-neutral">Hermes Profile</span>
+              </div>
+              <p>Pre-wired <code>mcp_servers.openarbor</code> block and skill install steps for autonomous Hermes sessions and scheduled triage checks.</p>
+              <div class="oa-agent-actions">
+                <a href="../agents/openarbor-steward/hermes-steward.yaml" download="hermes-steward.yaml" class="btn btn-secondary btn-xs">Download</a>
+                <button type="button" class="btn btn-outline btn-xs" data-agent-preview="../agents/openarbor-steward/hermes-steward.yaml" data-agent-label="hermes-steward.yaml">Preview / Copy</button>
+              </div>
+            </article>
+          </div>
+
+          <div id="mcp-agent-preview-wrap" class="oa-code-card" style="margin-top: 12px;" hidden>
+            <div class="oa-code-header">
+              <strong id="mcp-agent-preview-title">File Preview</strong>
+              <div class="oa-inline-actions">
+                <button type="button" id="btn-copy-agent-preview" class="btn btn-outline btn-xs">Copy File Contents</button>
+                <button type="button" id="btn-close-agent-preview" class="btn btn-secondary btn-xs">Close</button>
+              </div>
+            </div>
+            <pre id="mcp-agent-preview-code" class="code-preview"></pre>
+          </div>
+
+          <div class="oa-prompts-summary">
+            <strong>Built-in MCP Prompts (<code>prompts/list</code>):</strong>
+            <span><code>homeowner-tree-guide</code> &middot; <code>rap-practitioner-brief</code> &middot; <code>municipal-plan-review</code></span>
+          </div>
+        </section>
+
+        <!-- SECTION 3: LIVE DETERMINISTIC INSPECTOR -->
+        <section id="mcp-simulator-section" class="card" aria-labelledby="mcp-simulator-heading">
+          <div class="card-header">
+            <span class="step-badge">3. Live Inspector &middot; 9 Tools</span>
+            <h2 id="mcp-simulator-heading">Test <code>openarbor_consult</code> &amp; All Specialist MCP Tools</h2>
+          </div>
+          <p class="subtitle">
+            Every request runs locally against the exact core engine inside <code>server/mcp/openarbor-mcp.mjs</code> (v2.2.0), including bounded-input security guards (<code>MAX_EVALUATE_TREES = 500</code>, <code>MAX_JURISDICTION_ID_LENGTH = 128</code>).
+          </p>
+
+          <div class="oa-consult-presets" aria-label="Quick Consult Audience Presets">
+            <span class="metric-label">Try <code>openarbor_consult</code> as:</span>
+            <button type="button" class="btn btn-secondary btn-xs" data-consult-preset="homeowner">Homeowner (Tape Circumference)</button>
+            <button type="button" class="btn btn-secondary btn-xs" data-consult-preset="practitioner">RAP Practitioner (Sonic Tomography)</button>
+            <button type="button" class="btn btn-secondary btn-xs" data-consult-preset="municipal">Municipal Reviewer (Plan Check)</button>
+            <button type="button" class="btn btn-outline btn-xs" data-consult-preset="cedar-park">Cedar Park (Visible Gaps Check)</button>
+          </div>
+
+          <div id="mcp-tool-selector" class="oa-mcp-tool-bar" role="tablist" aria-label="Select MCP Tool"></div>
+
+          <div id="mcp-active-tool-meta" class="muni-lookup-box" style="margin-top: 12px;"></div>
+
+          <div class="oa-mcp-controls-bar">
+            <div class="oa-mcp-action-group">
+              <button type="button" id="btn-mcp-run" class="btn btn-primary">Execute <code>tools/call</code> Request</button>
+              <button type="button" id="btn-mcp-reset" class="btn btn-secondary">Reset Default Arguments</button>
+              <button type="button" id="btn-mcp-test-guard" class="btn btn-outline">Test &gt;500 Trees Guard</button>
+              <button type="button" id="btn-mcp-test-id-guard" class="btn btn-outline">Test &gt;128 Char Guard</button>
+            </div>
+            <div class="oa-mcp-status-pill">
+              <span class="metric-label">Execution Latency:</span>
+              <strong id="mcp-latency-badge" class="text-accent">0.00 ms</strong>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="mcp-args-editor">Editable <code>params.arguments</code> JSON Payload</label>
+            <span class="hint">Modify the JSON arguments below and click "Execute tools/call Request" (or press Ctrl+Enter).</span>
+            <textarea id="mcp-args-editor" class="oa-json-textarea" rows="10" spellcheck="false"></textarea>
+            <div id="mcp-args-error" class="error-banner" hidden></div>
+          </div>
+
+          <div class="oa-mcp-dual-pane">
+            <div class="oa-mcp-pane">
+              <div class="oa-code-header">
+                <strong>JSON-RPC 2.0 <code>tools/call</code> Request Payload</strong>
+                <button type="button" id="btn-copy-mcp-req" class="btn btn-outline btn-xs">Copy Request</button>
+              </div>
+              <pre id="mcp-request-preview" class="code-preview"></pre>
+            </div>
+
+            <div class="oa-mcp-pane">
+              <div class="oa-code-header">
+                <strong>JSON-RPC 2.0 Deterministic Response Payload</strong>
+                <button type="button" id="btn-copy-mcp-res" class="btn btn-outline btn-xs">Copy Response</button>
+              </div>
+              <pre id="mcp-response-preview" class="code-preview" aria-live="polite"></pre>
+            </div>
+          </div>
+        </section>
+      </div>
     </main>
 
-    <footer class="app-footer">
+    <footer class="oa-footer">
       <div class="container">
         <p>
-          Open Arbor v2.1 &middot; Model Context Protocol (<code>openarbor-mcp</code>) &middot; Governed by the Open Arbor Alliance &middot; AGPL-3.0-only.
+          Open Arbor v2.2 &middot; Unified Model Context Protocol (<code>openarbor-mcp</code>) &middot; Governed by the Open Arbor Alliance &middot; AGPL-3.0-only (code) / CC0-1.0 (schemas &amp; data).
         </p>
       </div>
     </footer>

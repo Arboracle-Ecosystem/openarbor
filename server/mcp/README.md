@@ -1,65 +1,84 @@
-# Open Arbor MCP Server (`server/mcp/`)
+# Open Arbor Unified MCP Server (`openarbor-mcp` v2.2.0)
 
-The Open Arbor Model Context Protocol (MCP) server (`v2.1.0`) exposes Open Arbor's deterministic calculation engines (`rootZone.js`, `ordinanceEngine.js`, `ecosystemBenefits.js`, `soilFunction.js`, `rapEngine.js`, and `leoRapEngine.js`) and municipal ordinance records (`data/ordinances/`) over newline-delimited stdio JSON-RPC 2.0. It requires Node.js 18 or newer and zero external npm dependencies.
+Zero-dependency local Model Context Protocol (`MCP`) `stdio` server exposing Open Arbor's unified plain-language consultation entrypoint (`openarbor_consult`), 8 specialist forestry and ordinance engines, and 3 built-in Logical English Orchestration (`LEO-RAP`) prompts over a single connection.
 
----
+Every client stays completely local with zero external API keys, zero built-in LLM charges, and deterministic parity between CLI harnesses, Node.js tests, and `https://openarbor.org/mcp/`.
 
-## Registration
+## One-Command Connection Across 6 Agent Harnesses
 
-### 1. Claude Desktop (`claude_desktop_config.json`)
+Run directly from GitHub via `npx` with no manual clone or build step:
+
+- **Claude Code:**
+  ```bash
+  claude mcp add openarbor -- npx -y --package=github:Arboracle-Ecosystem/openarbor openarbor-mcp
+  ```
+- **OpenAI Codex CLI:**
+  ```bash
+  codex mcp add openarbor -- npx -y --package=github:Arboracle-Ecosystem/openarbor openarbor-mcp
+  ```
+- **Hermes:**
+  ```bash
+  hermes mcp add openarbor --command npx --args -y --package=github:Arboracle-Ecosystem/openarbor openarbor-mcp
+  ```
+- **Cursor:** Add to `.cursor/mcp.json` (or use the one-click deeplink on `/mcp/`).
+- **Claude Desktop:** Add to `claude_desktop_config.json`.
+- **Antigravity & Gemini CLI:** Add to `~/.gemini/config/mcp_config.json`.
+
+Standard `mcpServers` JSON block for Cursor, Claude Desktop, and Antigravity:
 
 ```json
 {
   "mcpServers": {
     "openarbor": {
-      "command": "node",
+      "command": "npx",
       "args": [
-        "/home/george/Myceliate_Master/UNDERSTORY/arboracle-ecosystem/openarbor/server/mcp/openarbor-mcp.mjs"
+        "-y",
+        "--package=github:Arboracle-Ecosystem/openarbor",
+        "openarbor-mcp"
       ]
     }
   }
 }
 ```
 
-### 2. Hermes Agent (`~/.hermes/config.yaml`)
+From a local repository clone, you can also run `node bin/openarbor-mcp.mjs` or `node server/mcp/openarbor-mcp.mjs` directly (zero `npm install` needed for MCP runtime).
 
-```yaml
-mcp_servers:
-  openarbor:
-    command: node
-    args:
-      - /home/george/Myceliate_Master/UNDERSTORY/arboracle-ecosystem/openarbor/server/mcp/openarbor-mcp.mjs
-```
+## Steward Agent Definition Pack (`agents/openarbor-steward/`)
 
----
+Drop the open-source Steward Agent Pack files into your agent harness so the model translates raw CRZ geometry, Mattheck `t/R` safety factors, and municipal subsections accurately for homeowners, RAP practitioners, and city plan reviewers:
 
-## Exposed Deterministic Tools
+| File | Purpose | Download / Hosted URL |
+| :--- | :--- | :--- |
+| `agents/openarbor-steward/SKILL.md` | Agent Skills standard workflow and 3-audience translation rules | `https://openarbor.org/agents/openarbor-steward/SKILL.md` |
+| `agents/openarbor-steward/AGENTS.md` | Workspace instruction file (`AGENTS.md` / `CLAUDE.md`) | `https://openarbor.org/agents/openarbor-steward/AGENTS.md` |
+| `agents/openarbor-steward/claude-agent.md` | Dedicated Claude Code subagent (`.claude/agents/openarbor-steward.md`) | `https://openarbor.org/agents/openarbor-steward/claude-agent.md` |
+| `agents/openarbor-steward/hermes-steward.yaml` | Hermes `config.yaml` MCP block and companion skill install commands | `https://openarbor.org/agents/openarbor-steward/hermes-steward.yaml` |
+| `agents/openarbor-steward/README.md` | Quick harness mapping table | `https://openarbor.org/agents/openarbor-steward/README.md` |
 
-| Tool Name | Underlying Module & Functions | Input Summary | Output Summary |
-| :--- | :--- | :--- | :--- |
-| `calculate_root_zone` | `src/core/rootZone.js` (`calculateCRZ`, `calculateTPZ`, `calculateSRZ`, `calculateMultiStemDBH`) | `dbh`, `unit` (`inches` or `cm`), `standard` (`US_1_1`, `US_1_1.5`, `US_1_18`, `Australian_AS4970`, `UK_BS5837`, `Custom`), `multiplier`, `min_radius_feet`, `drf_inches` | `radius_feet`, `radius_meters`, `area_sqft`, `area_sqm`, `formula_used`, plus full `crz`, `tpz`, and `srz` blocks |
-| `evaluate_ordinance` | `src/core/ordinanceEngine.js` (`evaluateTreeInventory`, `permitDetermination`, `computeMitigationPlan`, `estimateRootZoneRemediation`) | `trees` (array of tree rows, bounded at `<= 500` rows per call), `jurisdiction_id` (`<= 128` chars, or inline `ordinance` object) | `evaluated_trees` (protected/heritage flags, CRZ disturbance, Oak Wilt flags), `permit_determination`, `permit_summary`, `mitigation_plan`, `remediation_estimate` |
-| `calculate_ecosystem_benefits` | `src/core/ecosystemBenefits.js` (`calculateTreeEcosystemBenefits`, `estimateTreeAge`) | `dbh_inches`, `species`, `condition`, `land_use`, `height_feet`, `canopy_spread_feet`, `annual_rainfall_inches`, `projection_years` | Carbon storage and annual sequestration, stormwater runoff avoided, dry deposition air pollution removal, shade cooling (`kWh`), CTLA structural value, and John White (FCIN12) `age_estimate` |
-| `rap_biomechanics` | `src/core/rapEngine.js` (`evaluateBiomechanicsAndRhizosphere`; alias `rca_biomechanics`) | `assessment` (RAP assessment object conforming to `schemas/rap_assessment.schema.json`) | Mattheck `t/R` hollow-shell buckling stability rating, `SRZ`/`CRZ`/`TIZ` radii, pneumatic `AirSpade` trench volume, and biochar/compost/humate/mulch amendment quantities |
-| `rap_lint` | `src/core/rapEngine.js` (`lintRapEvidentiaryReport`; alias `rca_lint`) | `assessment` (RAP assessment object conforming to `schemas/rap_assessment.schema.json`) | `valid` boolean, `errors`, `warnings`, and `passed_checks` enforcing five-domain completeness and blocking un-evidenced removals when `t/R >= 0.30` |
-| `lookup_ordinance` | `data/ordinances/*.json` (`central_texas_ordinances.json`, `rogue_valley_oregon_ordinances.json`) | `jurisdiction_id` (`<= 128` chars; e.g., `tx-austin`, `tx-liberty-hill`, `or-ashland`) | Full verified ordinance record for the named municipality, or a structured error listing all available jurisdiction IDs |
-| `validate_soil_function` | `src/core/soilFunction.js` (`validateSoilFunction`, `estimateSoilSpongeCapacity`) | Optional `soil_function` provenance block, `tiz_area_m2`, `infiltration_mm_hr`, `organic_matter_percent` | Validated `soil_function` record (or `null` when omitted) plus 1-inch storm capture and NRCS SOM water-holding sponge gallons |
-| `leo_rap_verify` | `src/core/leoRapEngine.js` (`compileLeoRapBrief`, `verifyLeoRapNarrative`, `runLeoRapSelfAudit`; alias `leo_rca_verify`) | `assessment`, optional `markdown_narrative` (`<= 100,000` chars), optional `jurisdiction_id` (`<= 128` chars), `run_self_audit` | 6-slot compiled `LEO-RAP` brief, 3-stage phased triage, inline `[[oracle:key=value]]` verification status, and 3-fixture negative sabotage self-audit |
+## Exposed Tools (9)
 
-### Input Size Bounds (`MAX_EVALUATE_TREES`, `MAX_JURISDICTION_ID_LENGTH`, and `MAX_NARRATIVE_LENGTH`)
+| Tool | Role | Source Module |
+| :--- | :--- | :--- |
+| `openarbor_consult` | Primary unified intake orchestrating root zones, city permits, Mattheck `t/R`, AirSpade soil care, phased triage, provenance gaps, and audience guidance | `server/mcp/mcpCore.mjs` |
+| `calculate_root_zone` | CRZ, TPZ (`US_1_1`, `US_1_1.5`, `US_1_18`, `Australian_AS4970`, `UK_BS5837`, `Custom`), AS 4970 SRZ, and multi-stem DBH aggregation | `src/core/rootZone.js` |
+| `evaluate_ordinance` | Batch site inventory evaluation (bounded to 500 trees), permit disposition, Oak Wilt seasonal check, and replacement/cash-in-lieu mitigation | `src/core/ordinanceEngine.js` |
+| `calculate_ecosystem_benefits` | Nowak carbon, Xiao rainfall interception, McPherson energy cooling, CTLA structural reference, and John White `FCIN12` veteran tree age | `src/core/ecosystemBenefits.js` |
+| `rap_biomechanics` | RAP-Spec v2.0 Mattheck `t/R` safety factor, CODIT wall response, and 150 psi AirSpade radial trench amendments | `src/core/rapEngine.js` |
+| `rap_lint` | Evidentiary linter rejecting un-evidenced removals when `t/R >= 0.30` and rhizosphere remediation is viable | `src/core/rapEngine.js` |
+| `lookup_ordinance` | Verified open municipal ordinance lookup across Texas and Southern Oregon datasets (`data/ordinances/`) | `data/ordinances/` |
+| `validate_soil_function` | Chronological `soil_function` provenance validator and vadose stormwater sponge calculator | `src/core/soilFunction.js` |
+| `leo_rap_verify` | 6-slot LEO-RAP Profile 01 compiler, narrative oracle verifier, and 3-fixture negative sabotage self-audit | `src/core/leoRapEngine.js` |
 
-* **`evaluate_ordinance` Tree Array Cap (`MAX_EVALUATE_TREES = 500`):** `evaluate_ordinance` invokes `estimateRootZoneRemediation`, which calls the `1-ft` spatial grid union calculator (`unionRootZoneArea` in `src/core/rootZone.js`). To prevent an unbounded tree array from stalling the stdio MCP host process, `evaluate_ordinance` rejects `trees` arrays exceeding `500` rows with a structured tool error (`error: "MAX_TREES_EXCEEDED"`, `max_trees: 500`, `isError: true`). Typical residential and commercial subdivision submittals contain 10 to 300 trees; inventories larger than 500 stems should be evaluated in spatial parcel batches of 500 or fewer.
-* **`jurisdiction_id` Length Cap (`MAX_JURISDICTION_ID_LENGTH = 128`):** `lookup_ordinance`, `evaluate_ordinance`, and `leo_rap_verify` reject `jurisdiction_id` strings exceeding `128` characters with `error: "JURISDICTION_ID_TOO_LONG"` (`isError: true`).
-* **`markdown_narrative` Length Cap (`MAX_NARRATIVE_LENGTH = 100000`):** `leo_rap_verify` rejects narrative strings exceeding `100,000` characters with `error: "MAX_NARRATIVE_LENGTH_EXCEEDED"` (`isError: true`).
+## Exposed Built-In Prompts (`prompts/list`, `prompts/get`)
 
----
+1. `homeowner-tree-guide`: Everyday English homeowner guidance converting trunk circumference or DBH, explaining permits, leaving `UNVERIFIED` gaps visible, and distinguishing visual hollows from verified tomography.
+2. `rap-practitioner-brief`: Peer technical RAP-Spec v2.0 brief covering Layer 1 facts, Mattheck `t/R`, AirSpade prescriptions, illustrative 3-stage economics, and Year-1 STIM kill criteria.
+3. `municipal-plan-review`: Plan-review compliance summary citing municipal chapters/sections, CRZ fencing radii, Oak Wilt restrictions, and missing `Threshold_And_Fee_Record` subsections.
 
 ## Verification
-
-Run the subprocess protocol verification suite from the repository root:
 
 ```bash
 npm run test:mcp
 ```
 
-The test harness spawns `node server/mcp/openarbor-mcp.mjs` as a child process, performs `initialize` and `tools/list` (verifying all 8 tools), verifies known-answer calls across the engines, and checks negative-path error handling (`UNKNOWN_JURISDICTION`, missing soil provenance source, and Mattheck `t/R` anti-liquidation narrative sabotage).
+Spawns `server/mcp/openarbor-mcp.mjs` over `stdio` and asserts JSON-RPC 2.0 `initialize` (`v2.2.0`, `capabilities.tools`, `capabilities.prompts`), `tools/list` (`9` tools), `prompts/list` (`3` prompts), `prompts/get`, `openarbor_consult` across all 3 audiences and `circumference_inches`, `Steward Agent Pack` file integrity, bounded input guards (`500` trees, `128`-char ID, `100 KB` narrative), prototype pollution immunity, and clean shutdown.

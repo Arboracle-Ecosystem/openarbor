@@ -1421,8 +1421,8 @@ function renderMethodsHtml(rootDir, allMunicipalities) {
   };
 
   const mcpInvariants = {
-    '1': 'Spawns server/mcp/openarbor-mcp.mjs over stdio and verifies JSON-RPC 2.0 initialize handshake (protocolVersion 2024-11-05, server openarbor-mcp v2.1.0).',
-    '2': 'Verifies tools/list returns all 8 deterministic MCP tools (calculate_root_zone, evaluate_ordinance, calculate_ecosystem_benefits, rap_biomechanics, rap_lint, lookup_ordinance, validate_soil_function, leo_rap_verify).',
+    '1': 'Spawns server/mcp/openarbor-mcp.mjs over stdio and verifies JSON-RPC 2.0 initialize handshake (protocolVersion 2024-11-05, server openarbor-mcp v2.2.0, tools and prompts capabilities).',
+    '2': 'Verifies tools/list returns all 9 deterministic MCP tools (openarbor_consult first, plus calculate_root_zone, evaluate_ordinance, calculate_ecosystem_benefits, rap_biomechanics, rap_lint, lookup_ordinance, validate_soil_function, leo_rap_verify).',
     '3': 'Verifies known-answer tools/call for calculate_root_zone (24 in DBH, US_1_1 -> radius_feet = 24, area_sqft = 1809.56).',
     '4': 'Verifies lookup_ordinance positive lookup (or-ashland -> 6 in DBH threshold) and graceful structured error on unknown jurisdiction (UNKNOWN_JURISDICTION) without crashing.',
     '5': 'Verifies known-answer tools/call execution for evaluate_ordinance, calculate_ecosystem_benefits, rap_biomechanics (t/R = 0.34 sound), and rap_lint (valid = true) plus legacy rca_* compatibility aliases.',
@@ -1430,7 +1430,8 @@ function renderMethodsHtml(rootDir, allMunicipalities) {
     '7': 'Verifies tools/call leo_rap_verify 8/8 oracle anchors, 3/3 negative sabotage self-audit, 3-stage phased triage conservation, and de-fanged house-style-clean Arborist Handoff Brief.',
     '8': 'Verifies bounded-input DoS security guards across evaluate_ordinance (>500 trees -> MAX_TREES_EXCEEDED), lookup_ordinance (>128 chars -> JURISDICTION_ID_TOO_LONG), and leo_rap_verify (>100,000 chars -> MAX_NARRATIVE_LENGTH_EXCEEDED).',
     '9': 'Verifies prototype-chain pollution security gates in scripts/validate-ordinance.mjs: rejects literal __proto__ and constructor payloads with non-zero exit code.',
-    '10': 'Verifies clean JSON-RPC 2.0 shutdown response and child process termination.',
+    '10': 'Verifies openarbor_consult across all 3 audiences, circumference_inches intake, visual_only instrument verification, Cedar Park UNVERIFIED gap visibility, prompts/list, prompts/get, and Steward Agent Pack files.',
+    '11': 'Verifies clean JSON-RPC 2.0 shutdown response and child process termination.',
   };
 
   const coreGroups = extractPassGroupsFromFile(

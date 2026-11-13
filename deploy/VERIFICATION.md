@@ -8,6 +8,11 @@
 
 | File Path | Size (Bytes) | Role |
 | :--- | :--- | :--- |
+| `out/agents/openarbor-steward/AGENTS.md` | `2235` | Static Web Build Artifact |
+| `out/agents/openarbor-steward/README.md` | `1717` | Static Web Build Artifact |
+| `out/agents/openarbor-steward/SKILL.md` | `5104` | Static Web Build Artifact |
+| `out/agents/openarbor-steward/claude-agent.md` | `2292` | Static Web Build Artifact |
+| `out/agents/openarbor-steward/hermes-steward.yaml` | `1172` | Static Web Build Artifact |
 | `out/cases/ashland-oregon-white-oak/index.html` | `53483` | Static Pre-Rendered Bioregional Field Case Page |
 | `out/cases/austin-heritage-live-oak/index.html` | `52957` | Static Pre-Rendered Bioregional Field Case Page |
 | `out/cases/georgetown-multistem-pecan/index.html` | `51918` | Static Pre-Rendered Bioregional Field Case Page |
@@ -26,11 +31,11 @@
 | `out/icons/icon.svg` | `5008` | PWA & Brand Icon Asset |
 | `out/icons/screenshot-desktop.png` | `216969` | PWA & Brand Icon Asset |
 | `out/icons/screenshot-mobile.png` | `147971` | PWA & Brand Icon Asset |
-| `out/index.html` | `41940` | Open Arbor (`openarbor.org`) root landing and alliance portal |
+| `out/index.html` | `42029` | Open Arbor (`openarbor.org`) root landing and alliance portal |
 | `out/manifest.webmanifest` | `2656` | PWA Web Application Manifest |
-| `out/mcp/index.html` | `11468` | 8-Tool MCP Server Playground & JSON-RPC Tester (`/mcp/`) |
-| `out/methods/index.html` | `60665` | Executable Proof & Falsifiability Ledger (`/methods/`) |
-| `out/openarbor-bundle.js` | `628363` | Compiled ESM browser bundle (engines + ordinances + catalog + schemas + UI) |
+| `out/mcp/index.html` | `24797` | 8-Tool MCP Server Playground & JSON-RPC Tester (`/mcp/`) |
+| `out/methods/index.html` | `61387` | Executable Proof & Falsifiability Ledger (`/methods/`) |
+| `out/openarbor-bundle.js` | `539699` | Compiled ESM browser bundle (engines + ordinances + catalog + schemas + UI) |
 | `out/ordinances/index.html` | `13335` | 8-City Municipal Ordinance Commons & Schema Validator (`/ordinances/`) |
 | `out/schemas/municipal-ordinance.schema.json` | `3630` | Published JSON Schema (Draft 2020-12) |
 | `out/schemas/rap_assessment.schema.json` | `43105` | Published JSON Schema (Draft 2020-12) |
@@ -39,8 +44,8 @@
 | `out/schemas/rca_assessment.schema.json` | `42896` | Published JSON Schema (Draft 2020-12) |
 | `out/schemas/rca_openbadge_v3.schema.json` | `26473` | Published JSON Schema (Draft 2020-12) |
 | `out/spec/index.html` | `27983` | RAP-Spec v2.0 & 200-Year Heartwood Vault Reference (`/spec/`) |
-| `out/styles.css` | `68663` | Shared Sunlight Field & Canopy Dark design system stylesheet |
-| `out/sw.js` | `4728` | Offline-First Service Worker Cache Shell |
+| `out/styles.css` | `71338` | Shared Sunlight Field & Canopy Dark design system stylesheet |
+| `out/sw.js` | `4953` | Offline-First Service Worker Cache Shell |
 | `out/tools/index.html` | `13394` | 41-tool Open-Source Forestry & Arboriculture Workbench (`/tools/`) |
 
 ## 2. Executive Summary of 4 Fixed Bioregional Input Cases (Texas & Oregon)

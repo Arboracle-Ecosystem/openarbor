@@ -1,0 +1,28 @@
+# OpenArbor Unified MCP + Steward Skill Profile for Hermes Agent
+#
+# Quick 1-command MCP registration (preferred):
+#   hermes mcp add openarbor --command npx --args -y --package=github:Arboracle-Ecosystem/openarbor openarbor-mcp
+#
+# Or add directly inside ~/.hermes/config.yaml under `mcp_servers:`:
+
+mcp_servers:
+  openarbor:
+    command: npx
+    args:
+      - "-y"
+      - "--package=github:Arboracle-Ecosystem/openarbor"
+      - "openarbor-mcp"
+
+# Recommended Companion Skill Installation (~/.hermes/skills/openarbor-steward/SKILL.md):
+#   mkdir -p ~/.hermes/skills/openarbor-steward
+#   curl -fsSL https://openarbor.org/agents/openarbor-steward/SKILL.md -o ~/.hermes/skills/openarbor-steward/SKILL.md
+#
+# Built-in MCP tools exposed over this single connection:
+#   - openarbor_consult (Primary intake across homeowner, practitioner, and municipal voices)
+#   - calculate_root_zone, evaluate_ordinance, calculate_ecosystem_benefits
+#   - rap_biomechanics, rap_lint, lookup_ordinance, validate_soil_function, leo_rap_verify
+#
+# Built-in MCP prompts exposed over this single connection:
+#   - homeowner-tree-guide
+#   - rap-practitioner-brief
+#   - municipal-plan-review

@@ -85,19 +85,22 @@ try {
   const initRes = await sendRpc('initialize', {
     protocolVersion: '2024-11-05',
     capabilities: {},
-    clientInfo: { name: 'verify_mcp', version: '2.1.0' },
+    clientInfo: { name: 'verify_mcp', version: '2.2.0' },
   });
   assert.equal(initRes.jsonrpc, '2.0');
   assert.equal(initRes.result.serverInfo.name, 'openarbor-mcp');
-  assert.equal(initRes.result.serverInfo.version, '2.1.0');
-  console.log('[PASS] 1. MCP initialize handshake completed (server: openarbor-mcp v2.1.0)');
+  assert.equal(initRes.result.serverInfo.version, '2.2.0');
+  assert.ok(initRes.result.capabilities?.tools, 'Server must advertise tools capability');
+  assert.ok(initRes.result.capabilities?.prompts, 'Server must advertise prompts capability');
+  console.log('[PASS] 1. MCP initialize handshake completed (server: openarbor-mcp v2.2.0)');
 
-  // 2. tools/list assertion (must return all 8 tools)
+  // 2. tools/list assertion (must return all 9 tools with openarbor_consult first)
   const listRes = await sendRpc('tools/list', {});
   const tools = listRes.result?.tools || [];
-  assert.equal(tools.length, 8, `Expected 8 MCP tools, got ${tools.length}`);
+  assert.equal(tools.length, 9, `Expected 9 MCP tools, got ${tools.length}`);
   const toolNames = tools.map((t) => t.name);
   assert.deepEqual(toolNames, [
+    'openarbor_consult',
     'calculate_root_zone',
     'evaluate_ordinance',
     'calculate_ecosystem_benefits',
@@ -107,7 +110,7 @@ try {
     'validate_soil_function',
     'leo_rap_verify',
   ]);
-  console.log('[PASS] 2. tools/list verified across all 8 deterministic MCP tools');
+  console.log('[PASS] 2. tools/list verified across all 9 deterministic MCP tools');
 
   // 3. Known-answer tools/call for calculate_root_zone (dbh: 24 inches, US_1_1 -> radius_feet: 24)
   const rzRes = await sendRpc('tools/call', {
@@ -492,11 +495,109 @@ try {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
 
-  // 10. Clean shutdown
+  // 10. Unified openarbor_consult, built-in prompts/list + prompts/get, and Steward Agent Pack checks
+  const consultHomeRes = await sendRpc('tools/call', {
+    name: 'openarbor_consult',
+    arguments: {
+      circumference_inches: 94.25,
+      species: 'Live Oak',
+      jurisdiction_id: 'tx-austin',
+      audience: 'homeowner',
+      cavity_pct: 62,
+      crz_disturbed_pct: 10,
+      decay_measurement_method: 'visual_only',
+    },
+  });
+  assert.equal(consultHomeRes.result?.isError, false);
+  const homeData = consultHomeRes.result?.structuredContent;
+  assert.equal(homeData?.audience_guidance?.audience, 'homeowner');
+  assert.equal(homeData?.determination?.dbh_inches, 30);
+  assert.equal(homeData?.determination?.structural_shell?.t_over_r, 0.38);
+  assert.equal(homeData?.determination?.structural_shell?.instrument_verified, false);
+  assert.ok(homeData?.secondary_models?.assumptions?.length > 10);
+
+  const consultPracRes = await sendRpc('tools/call', {
+    name: 'openarbor_consult',
+    arguments: {
+      dbh_inches: 32,
+      species: 'Oregon White Oak',
+      jurisdiction_id: 'or-ashland',
+      audience: 'practitioner',
+      cavity_pct: 48,
+      decay_measurement_method: 'sonic_tomography',
+    },
+  });
+  assert.equal(consultPracRes.result?.isError, false);
+  assert.equal(consultPracRes.result?.structuredContent?.audience_guidance?.audience, 'practitioner');
+  assert.equal(
+    consultPracRes.result?.structuredContent?.determination?.structural_shell?.instrument_verified,
+    true
+  );
+
+  const consultGapRes = await sendRpc('tools/call', {
+    name: 'openarbor_consult',
+    arguments: {
+      dbh_inches: 24,
+      species: 'Live Oak',
+      jurisdiction_id: 'tx-cedar-park',
+      audience: 'municipal',
+    },
+  });
+  assert.equal(consultGapRes.result?.isError, false);
+  const gapProv = consultGapRes.result?.structuredContent?.determination?.provenance;
+  assert.equal(gapProv?.record_tier, 'Threshold_And_Fee_Record');
+  assert.ok(Array.isArray(gapProv?.unverified_gaps) && gapProv.unverified_gaps.length >= 4);
+
+  const consultErrRes = await sendRpc('tools/call', {
+    name: 'openarbor_consult',
+    arguments: {
+      dbh_inches: 24,
+      jurisdiction_id: 'tx-unknown-city',
+    },
+  });
+  assert.equal(consultErrRes.result?.isError, true);
+  assert.equal(consultErrRes.result?.structuredContent?.error, 'UNKNOWN_JURISDICTION');
+
+  const promptsListRes = await sendRpc('prompts/list', {});
+  const promptNames = (promptsListRes.result?.prompts || []).map((p) => p.name);
+  assert.deepEqual(promptNames, [
+    'homeowner-tree-guide',
+    'rap-practitioner-brief',
+    'municipal-plan-review',
+  ]);
+
+  const promptGetRes = await sendRpc('prompts/get', {
+    name: 'homeowner-tree-guide',
+    arguments: { species: 'Live Oak', city: 'tx-austin' },
+  });
+  const promptText = promptGetRes.result?.messages?.[0]?.content?.text || '';
+  assert.ok(promptText.includes('openarbor_consult'));
+
+  const promptErrRes = await sendRpc('prompts/get', {
+    name: 'nonexistent-prompt',
+    arguments: {},
+  });
+  assert.equal(promptErrRes.error?.code, -32602);
+
+  const agentPackDir = path.join(REPO_ROOT, 'agents', 'openarbor-steward');
+  const agentFiles = ['SKILL.md', 'AGENTS.md', 'claude-agent.md', 'hermes-steward.yaml', 'README.md'];
+  const fillerWordRegex = /\b(delve|leverage|robust|seamless|crucial|pivotal|furthermore|moreover|game-changing|tapestry|underscore)\b/i;
+  for (const fileName of agentFiles) {
+    const filePath = path.join(agentPackDir, fileName);
+    assert.ok(fs.existsSync(filePath), `Missing Steward Agent Pack file: ${fileName}`);
+    const body = fs.readFileSync(filePath, 'utf8');
+    assert.ok(body.trim().length > 100, `Empty Steward Agent Pack file: ${fileName}`);
+    assert.ok(!/[\u2013\u2014!]/.test(body), `House-style punctuation violation in ${fileName}`);
+    assert.ok(!fillerWordRegex.test(body), `House-style filler violation in ${fileName}`);
+    assert.ok(!/[A-Za-z0-9.,;:)"'`][ \t]+-[ \t]+[A-Za-z0-9("'`]/.test(body), `Spaced hyphen violation in ${fileName}`);
+  }
+  console.log('[PASS] 10. openarbor_consult, built-in prompts (3), and Steward Agent Pack (5 files) verified');
+
+  // 11. Clean shutdown
   const shutRes = await sendRpc('shutdown', {});
   assert.equal(shutRes.result, null);
-  console.log('[PASS] 10. MCP shutdown completed cleanly\n');
-  console.log('ALL 10 OPEN ARBOR MCP, LEO-RCA & VALIDATOR SECURITY CHECKS PASSED (0 proprietary dependencies).');
+  console.log('[PASS] 11. MCP shutdown completed cleanly\n');
+  console.log('ALL 11 OPEN ARBOR MCP, CONSULT & STEWARD AGENT CHECKS PASSED (0 proprietary dependencies).');
 } finally {
   rl.close();
   if (!child.killed) {

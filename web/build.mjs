@@ -26,6 +26,8 @@ await esbuild.build({
   format: 'esm',
   platform: 'browser',
   target: ['es2020'],
+  minifyWhitespace: true,
+  minifySyntax: true,
   outfile: path.join(outDir, 'openarbor-bundle.js'),
   alias: {
     'node:crypto': path.join(rootDir, 'web/crypto-shim.js'),
@@ -76,6 +78,19 @@ for (const sub of dataSubdirs) {
       if (file.endsWith('.json')) {
         fs.copyFileSync(path.join(srcSubDir, file), path.join(destSubDir, file));
       }
+    }
+  }
+}
+
+// 4b. Copy portable Steward Agent Pack to out/agents/openarbor-steward/
+const agentsSrcDir = path.join(rootDir, 'agents', 'openarbor-steward');
+const agentsOutDir = path.join(outDir, 'agents', 'openarbor-steward');
+if (fs.existsSync(agentsSrcDir)) {
+  fs.mkdirSync(agentsOutDir, { recursive: true });
+  for (const file of fs.readdirSync(agentsSrcDir).sort()) {
+    const srcFile = path.join(agentsSrcDir, file);
+    if (fs.statSync(srcFile).isFile()) {
+      fs.copyFileSync(srcFile, path.join(agentsOutDir, file));
     }
   }
 }

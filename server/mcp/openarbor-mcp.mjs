@@ -1,16 +1,13 @@
 #!/usr/bin/env node
 /**
- * Open Arbor MCP Server (server/mcp/openarbor-mcp.mjs)
- * Zero-dependency stdio JSON-RPC 2.0 Model Context Protocol server exposing
- * Open Arbor's 8 deterministic tools:
- *   1. calculate_root_zone          -> src/core/rootZone.js
- *   2. evaluate_ordinance           -> src/core/ordinanceEngine.js
- *   3. calculate_ecosystem_benefits -> src/core/ecosystemBenefits.js
- *   4. rap_biomechanics             -> src/core/rapEngine.js (alias: rca_biomechanics)
- *   5. rap_lint                     -> src/core/rapEngine.js (alias: rca_lint)
- *   6. lookup_ordinance             -> data/ordinances/*.json
- *   7. validate_soil_function       -> src/core/soilFunction.js
- *   8. leo_rap_verify               -> src/core/leoRapEngine.js (alias: leo_rca_verify)
+ * Open Arbor Unified MCP Server (server/mcp/openarbor-mcp.mjs)
+ * Single zero-dependency stdio JSON-RPC 2.0 Model Context Protocol server exposing:
+ *   - Unified Intake Tool: `openarbor_consult` (alias: `consult_tree`)
+ *   - 8 Specialist Tools: `calculate_root_zone`, `evaluate_ordinance`,
+ *     `calculate_ecosystem_benefits`, `rap_biomechanics`, `rap_lint`,
+ *     `lookup_ordinance`, `validate_soil_function`, `leo_rap_verify`
+ *   - 3 Built-In LEO-RAP Orchestration Prompts (`prompts/list`, `prompts/get`):
+ *     `homeowner-tree-guide`, `rap-practitioner-brief`, `municipal-plan-review`
  *
  * License: AGPL-3.0-only
  */
@@ -21,35 +18,22 @@ import readline from 'node:readline';
 import { fileURLToPath } from 'node:url';
 
 import {
-  calculateCRZ,
-  calculateTPZ,
-  calculateSRZ,
-  calculateMultiStemDBH,
-} from '../../src/core/rootZone.js';
-import {
-  evaluateTreeInventory,
-  permitDetermination,
-  permitSummary,
-  computeMitigationPlan,
-  estimateRootZoneRemediation,
-} from '../../src/core/ordinanceEngine.js';
-import {
-  calculateTreeEcosystemBenefits,
-  estimateTreeAge,
-} from '../../src/core/ecosystemBenefits.js';
-import {
-  validateSoilFunction,
-  estimateSoilSpongeCapacity,
-} from '../../src/core/soilFunction.js';
-import {
-  evaluateBiomechanicsAndRhizosphere,
-  lintRapEvidentiaryReport,
-} from '../../src/core/rapEngine.js';
-import {
-  compileLeoRapBrief,
-  verifyLeoRapNarrative,
-  runLeoRapSelfAudit,
-} from '../../src/core/leoRapEngine.js';
+  MCP_TOOLS,
+  MCP_PROMPTS,
+  MAX_EVALUATE_TREES,
+  MAX_JURISDICTION_ID_LENGTH,
+  MAX_NARRATIVE_LENGTH,
+  executeMcpTool,
+  getMcpPrompt,
+} from './mcpCore.mjs';
+
+export {
+  MCP_TOOLS,
+  MCP_PROMPTS,
+  MAX_EVALUATE_TREES,
+  MAX_JURISDICTION_ID_LENGTH,
+  MAX_NARRATIVE_LENGTH,
+};
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -58,14 +42,10 @@ const ORDINANCES_DIR = path.join(REPO_ROOT, 'data', 'ordinances');
 
 const SERVER_INFO = {
   name: 'openarbor-mcp',
-  version: '2.1.0',
+  version: '2.2.0',
 };
 
 const PROTOCOL_VERSION = '2024-11-05';
-
-export const MAX_EVALUATE_TREES = 500;
-export const MAX_JURISDICTION_ID_LENGTH = 128;
-export const MAX_NARRATIVE_LENGTH = 100000;
 
 /**
  * Load all municipal ordinance records from data/ordinances/*.json.
@@ -103,751 +83,13 @@ export function loadOrdinanceCatalog() {
   return catalog;
 }
 
-export const MCP_TOOLS = [
-  {
-    name: 'calculate_root_zone',
-    description:
-      'Calculate Critical Root Zone (CRZ), international Tree Protection Zone (TPZ), and Mattheck/AS 4970 Structural Root Zone (SRZ) radii and areas in imperial (ft, sq ft) and metric (m, sq m) units.',
-    inputSchema: {
-      type: 'object',
-      required: ['dbh'],
-      properties: {
-        dbh: {
-          type: 'number',
-          description: 'Diameter at Breast Height (4.5 ft / 1.37 m) in inches or cm.',
-        },
-        unit: {
-          type: 'string',
-          enum: ['inches', 'cm'],
-          default: 'inches',
-          description: 'Unit of the provided DBH measurement.',
-        },
-        standard: {
-          type: 'string',
-          enum: [
-            'US_1_1',
-            'US_1_1.5',
-            'US_1_18',
-            'Australian_AS4970',
-            'UK_BS5837',
-            'Custom',
-          ],
-          default: 'US_1_1',
-          description: 'Tree Protection Zone standard to apply.',
-        },
-        multiplier: {
-          type: 'number',
-          default: 1.0,
-          description: 'Feet of radius per inch of DBH for CRZ or Custom TPZ.',
-        },
-        min_radius_feet: {
-          type: 'number',
-          default: 0,
-          description: 'Optional municipal minimum CRZ radius floor in feet.',
-        },
-        drf_inches: {
-          type: 'number',
-          description: 'Optional Diameter at Root Flare (DRF) in inches for AS 4970 SRZ calculation.',
-        },
-        stems_inches: {
-          type: 'array',
-          items: { type: 'number' },
-          description: 'Optional multi-stem diameters in inches to aggregate prior to root zone calculation.',
-        },
-        multistem_method: {
-          type: 'string',
-          enum: ['quadratic', 'largest_plus_half', 'sum'],
-          default: 'quadratic',
-          description: 'Aggregation formula when stems_inches is supplied.',
-        },
-      },
-    },
-  },
-  {
-    name: 'evaluate_ordinance',
-    description:
-      'Evaluate a tree inventory against a municipal tree protection ordinance, returning protected/heritage flags, CRZ encroachment triggers, seasonal Oak Wilt flags, permit determinations, and mitigation fee/replacement plans.',
-    inputSchema: {
-      type: 'object',
-      required: ['trees'],
-      properties: {
-        trees: {
-          type: 'array',
-          maxItems: MAX_EVALUATE_TREES,
-          description:
-            'Array of tree inventory rows (max 500 rows per call; tag, species_common, species_scientific, dbh or stems_inches, removal, crz_disturbed_pct, etc.).',
-          items: { type: 'object' },
-        },
-        jurisdiction_id: {
-          type: 'string',
-          maxLength: MAX_JURISDICTION_ID_LENGTH,
-          description:
-            'Jurisdiction ID in data/ordinances/ (e.g., tx-austin, tx-georgetown, tx-liberty-hill, tx-cedar-park, tx-round-rock, or-ashland, or-medford, or-grants-pass).',
-        },
-        ordinance: {
-          type: 'object',
-          description:
-            'Optional inline municipal ordinance object conforming to schemas/municipal-ordinance.schema.json (used when jurisdiction_id is not provided).',
-        },
-      },
-    },
-  },
-  {
-    name: 'calculate_ecosystem_benefits',
-    description:
-      'Compute annual and 20-year allometric ecosystem services (Nowak carbon storage/sequestration, Xiao stormwater interception, dry deposition air pollution removal, McPherson shade cooling kWh, CTLA structural value) and John White (FCIN12) veteran tree age.',
-    inputSchema: {
-      type: 'object',
-      required: ['dbh_inches'],
-      properties: {
-        dbh_inches: {
-          type: 'number',
-          description: 'Diameter at Breast Height in inches (> 0).',
-        },
-        species: {
-          type: 'string',
-          description: 'Scientific or common species name.',
-        },
-        condition: {
-          type: 'string',
-          enum: ['Excellent', 'Good', 'Fair', 'Poor', 'Critical', 'Dead'],
-          default: 'Good',
-          description: 'Tree condition class.',
-        },
-        land_use: {
-          type: 'string',
-          enum: ['Residential', 'Commercial', 'Street', 'Park'],
-          default: 'Residential',
-          description: 'Surrounding site land use context.',
-        },
-        height_feet: {
-          type: 'number',
-          description: 'Optional measured tree height in feet.',
-        },
-        canopy_spread_feet: {
-          type: 'number',
-          description: 'Optional measured crown spread in feet.',
-        },
-        crown_light_exposure: {
-          type: 'number',
-          default: 4,
-          description: 'Crown light exposure sides (0 to 5).',
-        },
-        annual_rainfall_inches: {
-          type: 'number',
-          default: 35,
-          description: 'Local mean annual precipitation in inches.',
-        },
-        projection_years: {
-          type: 'number',
-          default: 20,
-          description: 'Cumulative ecosystem benefit horizon in years.',
-        },
-        base_growth_factor: {
-          type: 'number',
-          default: 4.5,
-          description: 'Species growth factor for John White FCIN12 age estimation.',
-        },
-        site_condition: {
-          type: 'string',
-          enum: ['Open Grown / Parkland', 'Forest / Woodland', 'Urban / Street Tree'],
-          default: 'Open Grown / Parkland',
-          description: 'Site exposure class for John White FCIN12 age estimation.',
-        },
-      },
-    },
-  },
-  {
-    name: 'rap_biomechanics',
-    description:
-      'Run RAP-Spec v2.0 biomechanical and rhizosphere evaluation (Mattheck t/R hollow-shell buckling safety factor, AS 4970 SRZ, Shigo CODIT wall response, pneumatic AirSpade trench volume, and biochar/compost/humate/mulch amendment quantities).',
-    inputSchema: {
-      type: 'object',
-      required: ['assessment'],
-      properties: {
-        assessment: {
-          type: 'object',
-          description: 'RAP assessment object conforming to schemas/rap_assessment.schema.json.',
-        },
-      },
-    },
-  },
-  {
-    name: 'rap_lint',
-    description:
-      'Validate a RAP assessment object with the ASCA-grade and Nature-First Evidentiary Linter, blocking un-evidenced removals when Mattheck t/R >= 0.30 and rhizosphere remediation is viable.',
-    inputSchema: {
-      type: 'object',
-      required: ['assessment'],
-      properties: {
-        assessment: {
-          type: 'object',
-          description: 'RAP assessment object conforming to schemas/rap_assessment.schema.json.',
-        },
-      },
-    },
-  },
-  {
-    name: 'lookup_ordinance',
-    description:
-      'Retrieve the verified municipal tree protection ordinance record for a jurisdiction ID from data/ordinances/.',
-    inputSchema: {
-      type: 'object',
-      required: ['jurisdiction_id'],
-      properties: {
-        jurisdiction_id: {
-          type: 'string',
-          maxLength: MAX_JURISDICTION_ID_LENGTH,
-          description:
-            'Municipality identifier (max 128 chars; e.g., tx-austin, tx-georgetown, tx-liberty-hill, tx-cedar-park, tx-round-rock, or-ashland, or-medford, or-grants-pass).',
-        },
-      },
-    },
-  },
-  {
-    name: 'validate_soil_function',
-    description:
-      'Validate an optional soil_function provenance block (enforcing source attribution and chronological ISO measurement_dates whenever numeric soil metrics are supplied) and compute deterministic vadose storm capture and NRCS organic-matter sponge capacity.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        soil_function: {
-          type: 'object',
-          description:
-            'Optional soil_function object (infiltration_mm_hr, organic_matter_percent, water_holding_gal_acre_ft, measurement_dates, source, method).',
-        },
-        tiz_area_m2: {
-          type: 'number',
-          default: 100,
-          description: 'Tree Influence Zone area in square meters for vadose sponge capacity scaling.',
-        },
-        infiltration_mm_hr: {
-          type: 'number',
-          description:
-            'Optional infiltration rate in mm/hr (used for sponge capacity when soil_function is omitted).',
-        },
-        organic_matter_percent: {
-          type: 'number',
-          description:
-            'Optional soil organic matter percentage from 0 to 100 (used for sponge capacity when soil_function is omitted).',
-        },
-      },
-    },
-  },
-  {
-    name: 'leo_rap_verify',
-    description:
-      'Compile a deterministic 6-Slot LEO-RAP Profile 01 stewardship brief with 3-stage phased triage, verify narrative prose against oracle anchors and the Mattheck t/R >= 0.30 anti-liquidation invariant, and run a 3-fixture negative sabotage self-audit.',
-    inputSchema: {
-      type: 'object',
-      required: ['assessment'],
-      properties: {
-        assessment: {
-          type: 'object',
-          description: 'RAP assessment object conforming to schemas/rap_assessment.schema.json.',
-        },
-        markdown_narrative: {
-          type: 'string',
-          maxLength: MAX_NARRATIVE_LENGTH,
-          description:
-            'Optional Markdown narrative (max 100,000 chars) to verify against deterministic oracle anchors and Mattheck stability invariants.',
-        },
-        jurisdiction_id: {
-          type: 'string',
-          maxLength: MAX_JURISDICTION_ID_LENGTH,
-          description:
-            'Optional jurisdiction ID in data/ordinances/ to attach municipal CRZ and cash-in-lieu context.',
-        },
-        run_self_audit: {
-          type: 'boolean',
-          default: true,
-          description: 'Whether to execute the 3-fixture negative sabotage self-audit gate.',
-        },
-      },
-    },
-  },
-];
-
-function formatToolResult(payload, isError = false) {
-  return {
-    content: [
-      {
-        type: 'text',
-        text: JSON.stringify(payload, null, 2),
-      },
-    ],
-    structuredContent: payload,
-    isError,
-  };
-}
-
 /**
- * Execute a named MCP tool call deterministically.
+ * Execute a named MCP tool call deterministically over the local ordinance catalog.
  * @param {string} name
  * @param {object} args
  */
 export function executeToolCall(name, args = {}) {
-  switch (name) {
-    case 'calculate_root_zone': {
-      const unit = args.unit || 'inches';
-      const standard = args.standard || 'US_1_1';
-      const multiplier = args.multiplier != null ? Number(args.multiplier) : 1.0;
-      const minRadiusFeet = args.min_radius_feet != null ? Number(args.min_radius_feet) : 0;
-
-      let rawDbh = Number(args.dbh ?? args.dbh_inches ?? 0);
-      if ((!rawDbh || rawDbh <= 0) && Array.isArray(args.stems_inches) && args.stems_inches.length > 0) {
-        rawDbh = calculateMultiStemDBH(args.stems_inches, args.multistem_method || 'quadratic');
-      }
-      if (!rawDbh || rawDbh <= 0) {
-        return formatToolResult(
-          {
-            error: 'INVALID_DBH',
-            message: 'dbh must be a positive number (or supply non-empty stems_inches).',
-          },
-          true
-        );
-      }
-
-      const dbhInches = unit === 'cm' ? rawDbh / 2.54 : rawDbh;
-      const dbhCm = unit === 'inches' ? rawDbh * 2.54 : rawDbh;
-
-      const tpz = calculateTPZ(rawDbh, unit, standard, multiplier);
-      const crz = calculateCRZ(dbhInches, multiplier, minRadiusFeet);
-      const srz = calculateSRZ(
-        args.drf_inches != null ? Number(args.drf_inches) : null,
-        dbhInches
-      );
-
-      return formatToolResult({
-        dbh_input: rawDbh,
-        unit,
-        dbh_inches: Math.round(dbhInches * 100) / 100,
-        dbh_cm: Math.round(dbhCm * 100) / 100,
-        standard,
-        radius_feet: tpz.radius_feet,
-        radius_meters: tpz.radius_meters,
-        area_sqft: tpz.area_sqft,
-        area_sqm: tpz.area_sqm,
-        formula_used: tpz.formula_used,
-        crz,
-        tpz,
-        srz,
-      });
-    }
-
-    case 'evaluate_ordinance': {
-      const trees = Array.isArray(args.trees)
-        ? args.trees
-        : Array.isArray(args.tree_rows)
-        ? args.tree_rows
-        : null;
-      if (!trees) {
-        return formatToolResult(
-          {
-            error: 'INVALID_TREES_INPUT',
-            message: 'evaluate_ordinance requires a trees array.',
-          },
-          true
-        );
-      }
-
-      if (trees.length > MAX_EVALUATE_TREES) {
-        return formatToolResult(
-          {
-            error: 'MAX_TREES_EXCEEDED',
-            max_trees: MAX_EVALUATE_TREES,
-            received_trees: trees.length,
-            message: `evaluate_ordinance accepts at most ${MAX_EVALUATE_TREES} tree rows per call (received ${trees.length}) to bound 1-ft spatial grid union evaluation.`,
-          },
-          true
-        );
-      }
-
-      if (
-        args.jurisdiction_id &&
-        String(args.jurisdiction_id).length > MAX_JURISDICTION_ID_LENGTH
-      ) {
-        return formatToolResult(
-          {
-            error: 'JURISDICTION_ID_TOO_LONG',
-            max_length: MAX_JURISDICTION_ID_LENGTH,
-            received_length: String(args.jurisdiction_id).length,
-            message: `jurisdiction_id exceeds maximum length of ${MAX_JURISDICTION_ID_LENGTH} characters.`,
-          },
-          true
-        );
-      }
-
-      let ordinanceRecord = args.ordinance || null;
-      let sourceMeta = null;
-
-      if (!ordinanceRecord && args.jurisdiction_id) {
-        const catalog = loadOrdinanceCatalog();
-        const found = catalog.get(String(args.jurisdiction_id).toLowerCase().trim());
-        if (!found) {
-          return formatToolResult(
-            {
-              error: 'UNKNOWN_JURISDICTION',
-              message: `No ordinance record found for jurisdiction_id '${args.jurisdiction_id}'.`,
-              available_jurisdictions: Array.from(catalog.keys()),
-            },
-            true
-          );
-        }
-        ordinanceRecord = found.record;
-        sourceMeta = { file: found.file, region: found.region };
-      }
-
-      if (!ordinanceRecord) {
-        return formatToolResult(
-          {
-            error: 'MISSING_ORDINANCE',
-            message: 'Provide either jurisdiction_id or an inline ordinance object.',
-          },
-          true
-        );
-      }
-
-      const evaluatedRows = evaluateTreeInventory(trees, ordinanceRecord);
-      const permit = permitDetermination(evaluatedRows, ordinanceRecord);
-      const summaryText = permitSummary(permit);
-      const mitigationPlan = computeMitigationPlan(evaluatedRows, ordinanceRecord);
-      const remediationEstimate = estimateRootZoneRemediation(evaluatedRows);
-
-      return formatToolResult({
-        jurisdiction: {
-          id: ordinanceRecord.id,
-          name: ordinanceRecord.name,
-          state: ordinanceRecord.state,
-          ordinance_numbers: ordinanceRecord.ordinance_numbers,
-          source_url: ordinanceRecord.source_url,
-          ...(sourceMeta || {}),
-        },
-        evaluated_trees: evaluatedRows,
-        permit_determination: permit,
-        permit_summary: summaryText,
-        mitigation_plan: mitigationPlan,
-        remediation_estimate: remediationEstimate,
-      });
-    }
-
-    case 'calculate_ecosystem_benefits': {
-      const dbhInches = Number(args.dbh_inches ?? args.dbh ?? 0);
-      if (!dbhInches || dbhInches <= 0) {
-        return formatToolResult(
-          {
-            error: 'INVALID_DBH',
-            message: 'dbh_inches must be a positive number.',
-          },
-          true
-        );
-      }
-
-      const speciesName = args.species || args.species_name || 'Quercus virginiana';
-      const commonName = args.common_name || args.species || '';
-      const conditionClass = args.condition || args.condition_class || 'Good';
-      const landUse = args.land_use || 'Residential';
-
-      const benefits = calculateTreeEcosystemBenefits({
-        species_name: speciesName,
-        common_name: commonName,
-        dbh_inches: dbhInches,
-        height_feet: args.height_feet ?? null,
-        canopy_spread_feet: args.canopy_spread_feet ?? null,
-        condition_class: conditionClass,
-        crown_light_exposure: args.crown_light_exposure ?? 4,
-        land_use: landUse,
-        annual_rainfall_inches: args.annual_rainfall_inches ?? 35,
-        projection_years: args.projection_years ?? 20,
-      });
-
-      const ageEstimate = estimateTreeAge({
-        dbh_inches: dbhInches,
-        base_growth_factor: args.base_growth_factor ?? 4.5,
-        site_condition: args.site_condition || 'Open Grown / Parkland',
-      });
-
-      return formatToolResult({
-        ...benefits,
-        age_estimate: ageEstimate,
-      });
-    }
-
-    case 'rap_biomechanics':
-    case 'rca_biomechanics': {
-      const assessment = args.assessment || (args.structural_baseline ? args : null);
-      if (!assessment || typeof assessment !== 'object') {
-        return formatToolResult(
-          {
-            error: 'INVALID_ASSESSMENT',
-            message: `${name} requires an assessment object with structural_baseline.`,
-          },
-          true
-        );
-      }
-      try {
-        const result = evaluateBiomechanicsAndRhizosphere(assessment);
-        return formatToolResult(result);
-      } catch (err) {
-        return formatToolResult(
-          {
-            error: 'RAP_BIOMECHANICS_ERROR',
-            message: err.message,
-          },
-          true
-        );
-      }
-    }
-
-    case 'rap_lint':
-    case 'rca_lint': {
-      const assessment = args.assessment || (args.structural_baseline ? args : null);
-      if (!assessment || typeof assessment !== 'object') {
-        return formatToolResult(
-          {
-            error: 'INVALID_ASSESSMENT',
-            message: `${name} requires an assessment object.`,
-          },
-          true
-        );
-      }
-      const lintResult = lintRapEvidentiaryReport(assessment);
-      return formatToolResult(lintResult);
-    }
-
-    case 'lookup_ordinance': {
-      const catalog = loadOrdinanceCatalog();
-      const rawInput = String(args.jurisdiction_id || '');
-      if (rawInput.length > MAX_JURISDICTION_ID_LENGTH) {
-        return formatToolResult(
-          {
-            error: 'JURISDICTION_ID_TOO_LONG',
-            max_length: MAX_JURISDICTION_ID_LENGTH,
-            received_length: rawInput.length,
-            message: `jurisdiction_id exceeds maximum length of ${MAX_JURISDICTION_ID_LENGTH} characters.`,
-          },
-          true
-        );
-      }
-      const rawId = rawInput.toLowerCase().trim();
-      if (!rawId) {
-        return formatToolResult(
-          {
-            error: 'MISSING_JURISDICTION_ID',
-            message: 'jurisdiction_id is required.',
-            available_jurisdictions: Array.from(catalog.keys()),
-          },
-          true
-        );
-      }
-
-      const entry = catalog.get(rawId);
-      if (!entry) {
-        return formatToolResult(
-          {
-            error: 'UNKNOWN_JURISDICTION',
-            message: `Unknown jurisdiction '${args.jurisdiction_id}'.`,
-            available_jurisdictions: Array.from(catalog.keys()),
-          },
-          true
-        );
-      }
-
-      return formatToolResult({
-        dataset_file: entry.file,
-        dataset_region: entry.region,
-        ordinance: entry.record,
-      });
-    }
-
-    case 'validate_soil_function': {
-      try {
-        const safeArgs = args && typeof args === 'object' ? args : {};
-        const hasExplicitBlock = Object.prototype.hasOwnProperty.call(
-          safeArgs,
-          'soil_function'
-        );
-        const hasTopLevelSoilMetadata =
-          Object.prototype.hasOwnProperty.call(safeArgs, 'measurement_dates') ||
-          Object.prototype.hasOwnProperty.call(safeArgs, 'source') ||
-          Object.prototype.hasOwnProperty.call(safeArgs, 'method') ||
-          Object.prototype.hasOwnProperty.call(safeArgs, 'water_holding_gal_acre_ft');
-
-        let rawSoil = null;
-        if (hasExplicitBlock) {
-          rawSoil = safeArgs.soil_function;
-        } else if (hasTopLevelSoilMetadata) {
-          const candidate = {};
-          for (const k of [
-            'infiltration_mm_hr',
-            'organic_matter_percent',
-            'water_holding_gal_acre_ft',
-            'measurement_dates',
-            'source',
-            'method',
-          ]) {
-            if (Object.prototype.hasOwnProperty.call(safeArgs, k)) {
-              candidate[k] = safeArgs[k];
-            }
-          }
-          rawSoil = candidate;
-        }
-
-        const normalized = validateSoilFunction(rawSoil);
-        const tizAreaM2 =
-          safeArgs.tiz_area_m2 != null ? Number(safeArgs.tiz_area_m2) : 100;
-        const infRate =
-          normalized?.infiltration_mm_hr ??
-          (safeArgs.infiltration_mm_hr != null ? Number(safeArgs.infiltration_mm_hr) : 18);
-        const somPct =
-          normalized?.organic_matter_percent ??
-          (safeArgs.organic_matter_percent != null
-            ? Number(safeArgs.organic_matter_percent)
-            : 2.5);
-
-        const spongeCapacity = estimateSoilSpongeCapacity({
-          tiz_area_m2: tizAreaM2,
-          infiltration_mm_hr: infRate,
-          organic_matter_percent: somPct,
-        });
-
-        return formatToolResult({
-          valid: true,
-          soil_function: normalized,
-          omitted_by_default: normalized === null,
-          sponge_capacity: spongeCapacity,
-        });
-      } catch (err) {
-        return formatToolResult(
-          {
-            valid: false,
-            error: 'INVALID_SOIL_FUNCTION',
-            message: err.message,
-          },
-          true
-        );
-      }
-    }
-
-    case 'leo_rap_verify':
-    case 'leo_rca_verify': {
-      const safeArgs = args && typeof args === 'object' ? args : {};
-      const assessment =
-        safeArgs.assessment || (safeArgs.structural_baseline ? safeArgs : null);
-      if (!assessment || typeof assessment !== 'object' || Array.isArray(assessment)) {
-        return formatToolResult(
-          {
-            error: 'INVALID_ASSESSMENT',
-            message: `${name} requires an assessment object with structural_baseline.`,
-          },
-          true
-        );
-      }
-
-      if (
-        safeArgs.markdown_narrative !== undefined &&
-        safeArgs.markdown_narrative !== null &&
-        typeof safeArgs.markdown_narrative !== 'string'
-      ) {
-        return formatToolResult(
-          {
-            error: 'INVALID_NARRATIVE_TYPE',
-            message: 'markdown_narrative must be a string when provided.',
-          },
-          true
-        );
-      }
-
-      if (
-        typeof safeArgs.markdown_narrative === 'string' &&
-        safeArgs.markdown_narrative.length > MAX_NARRATIVE_LENGTH
-      ) {
-        return formatToolResult(
-          {
-            error: 'MAX_NARRATIVE_LENGTH_EXCEEDED',
-            max_length: MAX_NARRATIVE_LENGTH,
-            received_length: safeArgs.markdown_narrative.length,
-            message: `markdown_narrative exceeds maximum length of ${MAX_NARRATIVE_LENGTH} characters.`,
-          },
-          true
-        );
-      }
-
-      if (
-        safeArgs.jurisdiction_id &&
-        String(safeArgs.jurisdiction_id).length > MAX_JURISDICTION_ID_LENGTH
-      ) {
-        return formatToolResult(
-          {
-            error: 'JURISDICTION_ID_TOO_LONG',
-            max_length: MAX_JURISDICTION_ID_LENGTH,
-            received_length: String(safeArgs.jurisdiction_id).length,
-            message: `jurisdiction_id exceeds maximum length of ${MAX_JURISDICTION_ID_LENGTH} characters.`,
-          },
-          true
-        );
-      }
-
-      try {
-        const evalContext =
-          safeArgs.eval_context && typeof safeArgs.eval_context === 'object'
-            ? { ...safeArgs.eval_context }
-            : {};
-
-        if (!evalContext.municipality && safeArgs.jurisdiction_id) {
-          const catalog = loadOrdinanceCatalog();
-          const found = catalog.get(String(safeArgs.jurisdiction_id).toLowerCase().trim());
-          if (!found) {
-            return formatToolResult(
-              {
-                error: 'UNKNOWN_JURISDICTION',
-                message: `No ordinance record found for jurisdiction_id '${safeArgs.jurisdiction_id}'.`,
-                available_jurisdictions: Array.from(catalog.keys()),
-              },
-              true
-            );
-          }
-          evalContext.municipality = found.record;
-        }
-
-        const compiled = compileLeoRapBrief(assessment, evalContext);
-        const narrativeText =
-          typeof safeArgs.markdown_narrative === 'string'
-            ? safeArgs.markdown_narrative
-            : compiled.brief_markdown;
-        const verification = verifyLeoRapNarrative(narrativeText, assessment, evalContext);
-        const shouldRunSelfAudit = safeArgs.run_self_audit !== false;
-        const selfAudit = shouldRunSelfAudit
-          ? runLeoRapSelfAudit(assessment, evalContext)
-          : null;
-
-        return formatToolResult({
-          valid: verification.valid && (selfAudit ? selfAudit.self_audit_passed : true),
-          verification,
-          compiled_brief: compiled,
-          self_audit: selfAudit,
-        });
-      } catch (err) {
-        return formatToolResult(
-          {
-            error: 'LEO_RAP_VERIFY_ERROR',
-            message: err.message,
-          },
-          true
-        );
-      }
-    }
-
-    default:
-      return formatToolResult(
-        {
-          error: 'UNKNOWN_TOOL',
-          message: `Unknown tool '${name}'.`,
-          available_tools: MCP_TOOLS.map((t) => t.name),
-        },
-        true
-      );
-  }
+  return executeMcpTool(name, args, loadOrdinanceCatalog());
 }
 
 /**
@@ -882,6 +124,7 @@ export function handleJsonRpcMessage(msg) {
           protocolVersion: params?.protocolVersion || PROTOCOL_VERSION,
           capabilities: {
             tools: { listChanged: false },
+            prompts: { listChanged: false },
           },
           serverInfo: SERVER_INFO,
         },
@@ -916,11 +159,49 @@ export function handleJsonRpcMessage(msg) {
           },
         };
       }
-      const result = executeToolCall(toolName, toolArgs);
       return {
         jsonrpc: '2.0',
         id,
-        result,
+        result: executeToolCall(toolName, toolArgs),
+      };
+    }
+
+    case 'prompts/list':
+      return {
+        jsonrpc: '2.0',
+        id,
+        result: {
+          prompts: MCP_PROMPTS,
+        },
+      };
+
+    case 'prompts/get': {
+      const promptName = params?.name;
+      if (!promptName || typeof promptName !== 'string') {
+        return {
+          jsonrpc: '2.0',
+          id,
+          error: {
+            code: -32602,
+            message: 'Invalid params: prompts/get requires params.name',
+          },
+        };
+      }
+      const promptResult = getMcpPrompt(promptName, params?.arguments || {});
+      if (!promptResult) {
+        return {
+          jsonrpc: '2.0',
+          id,
+          error: {
+            code: -32602,
+            message: `Unknown prompt '${promptName}'. Available prompts: ${MCP_PROMPTS.map((p) => p.name).join(', ')}`,
+          },
+        };
+      }
+      return {
+        jsonrpc: '2.0',
+        id,
+        result: promptResult,
       };
     }
 

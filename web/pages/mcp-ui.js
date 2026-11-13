@@ -1,62 +1,51 @@
 /**
- * Open Arbor v2.1 Model Context Protocol (MCP) Playground UI (web/pages/mcp-ui.js)
- * Interactive browser simulator for the 8 deterministic tools in server/mcp/openarbor-mcp.mjs.
+ * Open Arbor v2.2 Model Context Protocol (MCP) Playground UI (web/pages/mcp-ui.js)
+ * Connects the browser playground directly to server/mcp/mcpCore.mjs so every
+ * client-side simulation runs identical logic to server/mcp/openarbor-mcp.mjs.
+ *
+ * License: AGPL-3.0-only
  */
-
-import {
-  calculateCRZ,
-  calculateTPZ,
-  calculateSRZ,
-  calculateMultiStemDBH,
-} from '../../src/core/rootZone.js';
-
-import {
-  evaluateTreeInventory,
-  permitDetermination,
-  permitSummary,
-  computeMitigationPlan,
-  estimateRootZoneRemediation,
-} from '../../src/core/ordinanceEngine.js';
-
-import {
-  calculateTreeEcosystemBenefits,
-  estimateTreeAge,
-} from '../../src/core/ecosystemBenefits.js';
-
-import {
-  evaluateBiomechanicsAndRhizosphere,
-  lintRapEvidentiaryReport,
-} from '../../src/core/rapEngine.js';
-
-import {
-  validateSoilFunction,
-  estimateSoilSpongeCapacity,
-} from '../../src/core/soilFunction.js';
-
-import {
-  compileLeoRapBrief,
-  verifyLeoRapNarrative,
-  runLeoRapSelfAudit,
-} from '../../src/core/leoRapEngine.js';
 
 import txOrdinances from '../../data/ordinances/central_texas_ordinances.json';
 import orOrdinances from '../../data/ordinances/rogue_valley_oregon_ordinances.json';
 import { FIXED_PARITY_CASES } from '../presets.js';
+import {
+  MCP_TOOLS as CORE_MCP_TOOLS,
+  executeMcpTool,
+  MAX_EVALUATE_TREES,
+  MAX_JURISDICTION_ID_LENGTH,
+  MAX_NARRATIVE_LENGTH,
+} from '../../server/mcp/mcpCore.mjs';
 
-export const MAX_EVALUATE_TREES = 500;
-export const MAX_JURISDICTION_ID_LENGTH = 128;
-export const MAX_NARRATIVE_LENGTH = 100000;
+export { MAX_EVALUATE_TREES, MAX_JURISDICTION_ID_LENGTH, MAX_NARRATIVE_LENGTH };
+
+const SAMPLE_RAP_ASSESSMENT = FIXED_PARITY_CASES?.[0]?.assessment || {
+  specimen: {
+    species_scientific: 'Quercus garryana',
+    species_common: 'Oregon White Oak',
+    dbh_inches: 32,
+  },
+  structural_baseline: {
+    t_over_r_ratio: 0.52,
+    srz_feet: 9.8,
+  },
+  soil_and_rhizosphere: {
+    tiz_area_m2: 120,
+    crz_disturbance_pct: 12,
+  },
+  recommendation: 'RETAIN_AND_REMEDIATE',
+};
 
 const ALL_ORDINANCE_ENTRIES = [
-  ...(txOrdinances.municipalities || []).map((m) => ({
-    record: m,
+  ...(txOrdinances.municipalities || []).map((record) => ({
+    record,
     file: 'data/ordinances/central_texas_ordinances.json',
-    region: txOrdinances.region || 'Central Texas',
+    region: txOrdinances.region,
   })),
-  ...(orOrdinances.municipalities || []).map((m) => ({
-    record: m,
+  ...(orOrdinances.municipalities || []).map((record) => ({
+    record,
     file: 'data/ordinances/rogue_valley_oregon_ordinances.json',
-    region: orOrdinances.region || 'Rogue Valley, Oregon',
+    region: orOrdinances.region,
   })),
 ];
 
@@ -64,727 +53,267 @@ const ORDINANCE_CATALOG = new Map(
   ALL_ORDINANCE_ENTRIES.map((entry) => [entry.record.id.toLowerCase(), entry])
 );
 
-export const MCP_TOOLS = [
-  {
-    name: 'calculate_root_zone',
-    module: 'src/core/rootZone.js',
-    description:
-      'Calculate Critical Root Zone (CRZ), international Tree Protection Zone (TPZ), and Mattheck/AS 4970 Structural Root Zone (SRZ) radii and areas in imperial (ft, sq ft) and metric (m, sq m) units.',
-    inputSchema: {
-      type: 'object',
-      required: ['dbh'],
-      properties: {
-        dbh: { type: 'number', description: 'Diameter at Breast Height (4.5 ft / 1.37 m) in inches or cm.' },
-        unit: { type: 'string', enum: ['inches', 'cm'], default: 'inches' },
-        standard: {
-          type: 'string',
-          enum: ['US_1_1', 'US_1_1.5', 'US_1_18', 'Australian_AS4970', 'UK_BS5837', 'Custom'],
-          default: 'US_1_1',
-        },
-        multiplier: { type: 'number', default: 1.0 },
-        min_radius_feet: { type: 'number', default: 0 },
-        drf_inches: { type: 'number', description: 'Optional Diameter at Root Flare in inches for AS 4970 SRZ.' },
-        stems_inches: { type: 'array', items: { type: 'number' } },
-        multistem_method: { type: 'string', enum: ['quadratic', 'largest_plus_half', 'sum'], default: 'quadratic' },
-      },
+const MCP_UI_TOOL_META = {
+  openarbor_consult: {
+    module: 'Unified Consult',
+    defaultArgs: {
+      dbh_inches: 30,
+      species: 'Live Oak',
+      jurisdiction_id: 'tx-austin',
+      audience: 'homeowner',
+      cavity_pct: 62,
+      crz_disturbed_pct: 10,
+      decay_measurement_method: 'visual_only',
     },
+  },
+  calculate_root_zone: {
+    module: 'rootZone.js',
     defaultArgs: {
       dbh: 30,
       unit: 'inches',
       standard: 'US_1_1',
       multiplier: 1.0,
-      drf_inches: 38.58,
+      min_radius_feet: 0,
     },
   },
-  {
-    name: 'evaluate_ordinance',
-    module: 'src/core/ordinanceEngine.js',
-    description:
-      'Evaluate a tree inventory against a municipal tree protection ordinance, returning protected/heritage flags, CRZ encroachment triggers, seasonal Oak Wilt flags, permit determinations, and mitigation fee/replacement plans.',
-    inputSchema: {
-      type: 'object',
-      required: ['trees'],
-      properties: {
-        trees: {
-          type: 'array',
-          maxItems: MAX_EVALUATE_TREES,
-          description: 'Array of tree inventory rows (max 500 rows per call).',
-          items: { type: 'object' },
-        },
-        jurisdiction_id: {
-          type: 'string',
-          maxLength: MAX_JURISDICTION_ID_LENGTH,
-          description: 'Jurisdiction ID in data/ordinances/ (e.g., tx-austin, tx-georgetown, tx-liberty-hill, or-ashland).',
-        },
-        ordinance: { type: 'object' },
-      },
-    },
+  evaluate_ordinance: {
+    module: 'ordinanceEngine.js',
     defaultArgs: {
       jurisdiction_id: 'tx-austin',
       trees: [
         {
-          tag: 'ATX-QV-101',
+          tag: 'T-01',
           species_common: 'Live Oak',
           species_scientific: 'Quercus virginiana',
-          dbh_inches: 30,
-          lat: 30.2672,
-          lng: -97.7431,
-          condition_score: 8,
+          dbh: 30,
+          crz_disturbed_pct: 10,
           removal: false,
-          pruning_date: '2026-11-15',
-          crz_disturbed_pct: 15,
-          cutfill_within_half_crz: true,
-          cutfill_depth_in: 2,
-          impervious_pct: 10,
-          crown_removal_pct: 10,
-          actions: ['pruning'],
         },
       ],
     },
   },
-  {
-    name: 'calculate_ecosystem_benefits',
-    module: 'src/core/ecosystemBenefits.js',
-    description:
-      'Compute annual and 20-year allometric ecosystem services (Nowak carbon storage/sequestration, Xiao stormwater interception, dry deposition air pollution removal, McPherson shade cooling kWh, CTLA structural value) and John White (FCIN12) veteran tree age.',
-    inputSchema: {
-      type: 'object',
-      required: ['dbh_inches'],
-      properties: {
-        dbh_inches: { type: 'number' },
-        species: { type: 'string' },
-        condition: { type: 'string', enum: ['Excellent', 'Good', 'Fair', 'Poor', 'Critical', 'Dead'], default: 'Good' },
-        land_use: { type: 'string', enum: ['Residential', 'Commercial', 'Street', 'Park'], default: 'Residential' },
-        height_feet: { type: 'number' },
-        canopy_spread_feet: { type: 'number' },
-        crown_light_exposure: { type: 'number', default: 4 },
-        annual_rainfall_inches: { type: 'number', default: 35 },
-        projection_years: { type: 'number', default: 20 },
-        base_growth_factor: { type: 'number', default: 4.5 },
-        site_condition: {
-          type: 'string',
-          enum: ['Open Grown / Parkland', 'Forest / Woodland', 'Urban / Street Tree'],
-          default: 'Open Grown / Parkland',
-        },
-      },
-    },
+  calculate_ecosystem_benefits: {
+    module: 'ecosystemBenefits.js',
     defaultArgs: {
       dbh_inches: 30,
       species: 'Quercus virginiana',
       condition: 'Good',
       land_use: 'Residential',
-      height_feet: 54.1,
-      canopy_spread_feet: 75.5,
-      base_growth_factor: 4.5,
-      site_condition: 'Open Grown / Parkland',
+      projection_years: 20,
     },
   },
-  {
-    name: 'rap_biomechanics',
-    module: 'src/core/rapEngine.js',
-    description:
-      'Run RAP-Spec v2.0 biomechanical and rhizosphere evaluation (Mattheck t/R hollow-shell buckling safety factor, AS 4970 SRZ, Shigo CODIT wall response, pneumatic AirSpade trench volume, and biochar/compost/humate/mulch amendment quantities).',
-    inputSchema: {
-      type: 'object',
-      required: ['assessment'],
-      properties: {
-        assessment: {
-          type: 'object',
-          description: 'RAP assessment object conforming to schemas/rap_assessment.schema.json.',
-        },
-      },
-    },
+  rap_biomechanics: {
+    module: 'rapEngine.js',
     defaultArgs: {
-      assessment: FIXED_PARITY_CASES[0].assessment,
+      assessment: SAMPLE_RAP_ASSESSMENT,
     },
   },
-  {
-    name: 'rap_lint',
-    module: 'src/core/rapEngine.js',
-    description:
-      'Validate a RAP assessment object with the ASCA-grade and Nature-First Evidentiary Linter, blocking un-evidenced removals when Mattheck t/R >= 0.30 and rhizosphere remediation is viable.',
-    inputSchema: {
-      type: 'object',
-      required: ['assessment'],
-      properties: {
-        assessment: {
-          type: 'object',
-          description: 'RAP assessment object conforming to schemas/rap_assessment.schema.json.',
-        },
-      },
-    },
+  rap_lint: {
+    module: 'rapEngine.js',
     defaultArgs: {
-      assessment: FIXED_PARITY_CASES[0].assessment,
+      assessment: SAMPLE_RAP_ASSESSMENT,
     },
   },
-  {
-    name: 'lookup_ordinance',
-    module: 'data/ordinances/*.json',
-    description:
-      'Retrieve the verified municipal tree protection ordinance record for a jurisdiction ID from data/ordinances/.',
-    inputSchema: {
-      type: 'object',
-      required: ['jurisdiction_id'],
-      properties: {
-        jurisdiction_id: {
-          type: 'string',
-          maxLength: MAX_JURISDICTION_ID_LENGTH,
-          description:
-            'Municipality identifier (max 128 chars; tx-austin, tx-georgetown, tx-liberty-hill, tx-cedar-park, tx-round-rock, or-ashland, or-medford, or-grants-pass).',
-        },
-      },
-    },
+  lookup_ordinance: {
+    module: 'ordinanceCatalog',
     defaultArgs: {
       jurisdiction_id: 'tx-austin',
     },
   },
-  {
-    name: 'validate_soil_function',
-    module: 'src/core/soilFunction.js',
-    description:
-      'Validate an optional soil_function provenance block (enforcing source attribution and chronological ISO measurement_dates whenever numeric soil metrics are supplied) and compute deterministic vadose storm capture and NRCS organic-matter sponge capacity.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        soil_function: {
-          type: 'object',
-          description:
-            'Optional soil_function object (infiltration_mm_hr, organic_matter_percent, water_holding_gal_acre_ft, measurement_dates, source, method).',
-        },
-        tiz_area_m2: { type: 'number', default: 100 },
-        infiltration_mm_hr: { type: 'number' },
-        organic_matter_percent: { type: 'number' },
-      },
-    },
+  validate_soil_function: {
+    module: 'soilFunction.js',
     defaultArgs: {
-      tiz_area_m2: 263.1,
       soil_function: {
-        infiltration_mm_hr: 42.5,
-        organic_matter_percent: 4.8,
-        water_holding_gal_acre_ft: 76000,
-        measurement_dates: ['2026-09-14', '2026-10-20'],
-        source: 'Single-ring infiltrometer & loss-on-ignition lab assay (Austin Live Oak TIZ)',
-        method: 'measured',
+        infiltration_mm_hr: 24,
+        organic_matter_percent: 4.5,
+        measurement_dates: ['2026-09-15'],
+        source: 'Double-ring infiltrometer + Loss-on-Ignition lab',
+        method: 'ASTM D3385',
       },
+      tiz_area_m2: 110,
     },
   },
-  {
-    name: 'leo_rap_verify',
-    module: 'src/core/leoRapEngine.js',
-    description:
-      'Compile a deterministic 6-Slot LEO-RAP Profile 01 stewardship brief with 3-stage phased triage, verify narrative prose against oracle anchors and the Mattheck t/R >= 0.30 anti-liquidation invariant, and run a 3-fixture negative sabotage self-audit.',
-    inputSchema: {
-      type: 'object',
-      required: ['assessment'],
-      properties: {
-        assessment: {
-          type: 'object',
-          description: 'RAP assessment object conforming to schemas/rap_assessment.schema.json.',
-        },
-        markdown_narrative: {
-          type: 'string',
-          maxLength: MAX_NARRATIVE_LENGTH,
-        },
-        jurisdiction_id: {
-          type: 'string',
-          maxLength: MAX_JURISDICTION_ID_LENGTH,
-        },
-        run_self_audit: {
-          type: 'boolean',
-          default: true,
-        },
-      },
-    },
+  leo_rap_verify: {
+    module: 'leoRapEngine.js',
     defaultArgs: {
-      jurisdiction_id: 'tx-austin',
+      assessment: SAMPLE_RAP_ASSESSMENT,
+      jurisdiction_id: 'or-ashland',
       run_self_audit: true,
-      assessment: FIXED_PARITY_CASES[0].assessment,
     },
   },
-];
+};
 
-function formatToolResult(payload, isError = false) {
+export const MCP_TOOLS = CORE_MCP_TOOLS.map((tool) => {
+  const uiMeta = MCP_UI_TOOL_META[tool.name] || { module: 'mcpCore.mjs', defaultArgs: {} };
   return {
-    content: [
-      {
-        type: 'text',
-        text: JSON.stringify(payload, null, 2),
-      },
-    ],
-    structuredContent: payload,
-    isError,
+    ...tool,
+    module: uiMeta.module,
+    defaultArgs: uiMeta.defaultArgs,
   };
+});
+
+const CONSULT_PRESETS = {
+  homeowner: {
+    circumference_inches: 94.25,
+    species: 'Live Oak',
+    jurisdiction_id: 'tx-austin',
+    audience: 'homeowner',
+    cavity_pct: 62,
+    crz_disturbed_pct: 10,
+    decay_measurement_method: 'visual_only',
+  },
+  practitioner: {
+    dbh_inches: 32,
+    species: 'Oregon White Oak',
+    jurisdiction_id: 'or-ashland',
+    audience: 'practitioner',
+    cavity_pct: 48,
+    crz_disturbed_pct: 12,
+    decay_measurement_method: 'sonic_tomography',
+    infiltration_mm_hr: 12,
+    organic_matter_percent: 4.5,
+  },
+  municipal: {
+    dbh_inches: 30,
+    species: 'Live Oak',
+    jurisdiction_id: 'tx-austin',
+    audience: 'municipal',
+    crz_disturbed_pct: 20,
+    proposed_removal: true,
+  },
+  'cedar-park': {
+    dbh_inches: 24,
+    species: 'Live Oak',
+    jurisdiction_id: 'tx-cedar-park',
+    audience: 'homeowner',
+    crz_disturbed_pct: 10,
+  },
+};
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+async function copyTextWithFeedback(button, text) {
+  if (!button || !text) return;
+  const originalLabel = button.dataset.origLabel || button.textContent;
+  button.dataset.origLabel = originalLabel;
+  try {
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const temp = document.createElement('textarea');
+      temp.value = text;
+      temp.setAttribute('readonly', '');
+      temp.style.position = 'absolute';
+      temp.style.left = '-9999px';
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand('copy');
+      document.body.removeChild(temp);
+    }
+    button.textContent = 'Copied';
+  } catch {
+    button.textContent = 'Copy Failed';
+  }
+  setTimeout(() => {
+    button.textContent = originalLabel;
+  }, 1500);
 }
 
 /**
- * Browser-compatible deterministic execution matching server/mcp/openarbor-mcp.mjs.
+ * Execute an Open Arbor MCP tool synchronously in the browser with identical
+ * semantics and security limits to server/mcp/openarbor-mcp.mjs.
  */
 export function executeMcpToolInBrowser(name, args = {}) {
-  switch (name) {
-    case 'calculate_root_zone': {
-      const unit = args.unit || 'inches';
-      const standard = args.standard || 'US_1_1';
-      const multiplier = args.multiplier != null ? Number(args.multiplier) : 1.0;
-      const minRadiusFeet = args.min_radius_feet != null ? Number(args.min_radius_feet) : 0;
-
-      let rawDbh = Number(args.dbh ?? args.dbh_inches ?? 0);
-      if ((!rawDbh || rawDbh <= 0) && Array.isArray(args.stems_inches) && args.stems_inches.length > 0) {
-        rawDbh = calculateMultiStemDBH(args.stems_inches, args.multistem_method || 'quadratic');
-      }
-      if (!rawDbh || rawDbh <= 0) {
-        return formatToolResult(
-          {
-            error: 'INVALID_DBH',
-            message: 'dbh must be a positive number (or supply non-empty stems_inches).',
-          },
-          true
-        );
-      }
-
-      const dbhInches = unit === 'cm' ? rawDbh / 2.54 : rawDbh;
-      const dbhCm = unit === 'inches' ? rawDbh * 2.54 : rawDbh;
-
-      const tpz = calculateTPZ(rawDbh, unit, standard, multiplier);
-      const crz = calculateCRZ(dbhInches, multiplier, minRadiusFeet);
-      const srz = calculateSRZ(
-        args.drf_inches != null ? Number(args.drf_inches) : null,
-        dbhInches
-      );
-
-      return formatToolResult({
-        dbh_input: rawDbh,
-        unit,
-        dbh_inches: Math.round(dbhInches * 100) / 100,
-        dbh_cm: Math.round(dbhCm * 100) / 100,
-        standard,
-        radius_feet: tpz.radius_feet,
-        radius_meters: tpz.radius_meters,
-        area_sqft: tpz.area_sqft,
-        area_sqm: tpz.area_sqm,
-        formula_used: tpz.formula_used,
-        crz,
-        tpz,
-        srz,
-      });
-    }
-
-    case 'evaluate_ordinance': {
-      const trees = Array.isArray(args.trees)
-        ? args.trees
-        : Array.isArray(args.tree_rows)
-        ? args.tree_rows
-        : null;
-      if (!trees) {
-        return formatToolResult(
-          {
-            error: 'INVALID_TREES_INPUT',
-            message: 'evaluate_ordinance requires a trees array.',
-          },
-          true
-        );
-      }
-
-      if (trees.length > MAX_EVALUATE_TREES) {
-        return formatToolResult(
-          {
-            error: 'MAX_TREES_EXCEEDED',
-            max_trees: MAX_EVALUATE_TREES,
-            received_trees: trees.length,
-            message: `evaluate_ordinance accepts at most ${MAX_EVALUATE_TREES} tree rows per call (received ${trees.length}) to bound 1-ft spatial grid union evaluation.`,
-          },
-          true
-        );
-      }
-
-      if (
-        args.jurisdiction_id &&
-        String(args.jurisdiction_id).length > MAX_JURISDICTION_ID_LENGTH
-      ) {
-        return formatToolResult(
-          {
-            error: 'JURISDICTION_ID_TOO_LONG',
-            max_length: MAX_JURISDICTION_ID_LENGTH,
-            received_length: String(args.jurisdiction_id).length,
-            message: `jurisdiction_id exceeds maximum length of ${MAX_JURISDICTION_ID_LENGTH} characters.`,
-          },
-          true
-        );
-      }
-
-      let ordinanceRecord = args.ordinance || null;
-      let sourceMeta = null;
-
-      if (!ordinanceRecord && args.jurisdiction_id) {
-        const found = ORDINANCE_CATALOG.get(String(args.jurisdiction_id).toLowerCase().trim());
-        if (!found) {
-          return formatToolResult(
-            {
-              error: 'UNKNOWN_JURISDICTION',
-              message: `No ordinance record found for jurisdiction_id '${args.jurisdiction_id}'.`,
-              available_jurisdictions: Array.from(ORDINANCE_CATALOG.keys()),
-            },
-            true
-          );
-        }
-        ordinanceRecord = found.record;
-        sourceMeta = { file: found.file, region: found.region };
-      }
-
-      if (!ordinanceRecord) {
-        return formatToolResult(
-          {
-            error: 'MISSING_ORDINANCE',
-            message: 'Provide either jurisdiction_id or an inline ordinance object.',
-          },
-          true
-        );
-      }
-
-      const evaluatedRows = evaluateTreeInventory(trees, ordinanceRecord);
-      const permit = permitDetermination(evaluatedRows, ordinanceRecord);
-      const summaryText = permitSummary(permit);
-      const mitigationPlan = computeMitigationPlan(evaluatedRows, ordinanceRecord);
-      const remediationEstimate = estimateRootZoneRemediation(evaluatedRows);
-
-      return formatToolResult({
-        jurisdiction: {
-          id: ordinanceRecord.id,
-          name: ordinanceRecord.name,
-          state: ordinanceRecord.state,
-          ordinance_numbers: ordinanceRecord.ordinance_numbers,
-          source_url: ordinanceRecord.source_url,
-          ...(sourceMeta || {}),
-        },
-        evaluated_trees: evaluatedRows,
-        permit_determination: permit,
-        permit_summary: summaryText,
-        mitigation_plan: mitigationPlan,
-        remediation_estimate: remediationEstimate,
-      });
-    }
-
-    case 'calculate_ecosystem_benefits': {
-      const dbhInches = Number(args.dbh_inches ?? args.dbh ?? 0);
-      if (!dbhInches || dbhInches <= 0) {
-        return formatToolResult(
-          {
-            error: 'INVALID_DBH',
-            message: 'dbh_inches must be a positive number.',
-          },
-          true
-        );
-      }
-
-      const speciesName = args.species || args.species_name || 'Quercus virginiana';
-      const commonName = args.common_name || args.species || '';
-      const conditionClass = args.condition || args.condition_class || 'Good';
-      const landUse = args.land_use || 'Residential';
-
-      const benefits = calculateTreeEcosystemBenefits({
-        species_name: speciesName,
-        common_name: commonName,
-        dbh_inches: dbhInches,
-        height_feet: args.height_feet ?? null,
-        canopy_spread_feet: args.canopy_spread_feet ?? null,
-        condition_class: conditionClass,
-        crown_light_exposure: args.crown_light_exposure ?? 4,
-        land_use: landUse,
-        annual_rainfall_inches: args.annual_rainfall_inches ?? 35,
-        projection_years: args.projection_years ?? 20,
-      });
-
-      const ageEstimate = estimateTreeAge({
-        dbh_inches: dbhInches,
-        base_growth_factor: args.base_growth_factor ?? 4.5,
-        site_condition: args.site_condition || 'Open Grown / Parkland',
-      });
-
-      return formatToolResult({
-        ...benefits,
-        age_estimate: ageEstimate,
-      });
-    }
-
-    case 'rap_biomechanics':
-    case 'rca_biomechanics': {
-      const assessment = args.assessment || (args.structural_baseline ? args : null);
-      if (!assessment || typeof assessment !== 'object') {
-        return formatToolResult(
-          {
-            error: 'INVALID_ASSESSMENT',
-            message: `${name} requires an assessment object with structural_baseline.`,
-          },
-          true
-        );
-      }
-      try {
-        const result = evaluateBiomechanicsAndRhizosphere(assessment);
-        return formatToolResult(result);
-      } catch (err) {
-        return formatToolResult(
-          {
-            error: 'RAP_BIOMECHANICS_ERROR',
-            message: err.message,
-          },
-          true
-        );
-      }
-    }
-
-    case 'rap_lint':
-    case 'rca_lint': {
-      const assessment = args.assessment || (args.structural_baseline ? args : null);
-      if (!assessment || typeof assessment !== 'object') {
-        return formatToolResult(
-          {
-            error: 'INVALID_ASSESSMENT',
-            message: `${name} requires an assessment object.`,
-          },
-          true
-        );
-      }
-      const lintResult = lintRapEvidentiaryReport(assessment);
-      return formatToolResult(lintResult);
-    }
-
-    case 'lookup_ordinance': {
-      const rawInput = String(args.jurisdiction_id || '');
-      if (rawInput.length > MAX_JURISDICTION_ID_LENGTH) {
-        return formatToolResult(
-          {
-            error: 'JURISDICTION_ID_TOO_LONG',
-            max_length: MAX_JURISDICTION_ID_LENGTH,
-            received_length: rawInput.length,
-            message: `jurisdiction_id exceeds maximum length of ${MAX_JURISDICTION_ID_LENGTH} characters.`,
-          },
-          true
-        );
-      }
-      const rawId = rawInput.toLowerCase().trim();
-      if (!rawId) {
-        return formatToolResult(
-          {
-            error: 'MISSING_JURISDICTION_ID',
-            message: 'jurisdiction_id is required.',
-            available_jurisdictions: Array.from(ORDINANCE_CATALOG.keys()),
-          },
-          true
-        );
-      }
-
-      const entry = ORDINANCE_CATALOG.get(rawId);
-      if (!entry) {
-        return formatToolResult(
-          {
-            error: 'UNKNOWN_JURISDICTION',
-            message: `Unknown jurisdiction '${args.jurisdiction_id}'.`,
-            available_jurisdictions: Array.from(ORDINANCE_CATALOG.keys()),
-          },
-          true
-        );
-      }
-
-      return formatToolResult({
-        dataset_file: entry.file,
-        dataset_region: entry.region,
-        ordinance: entry.record,
-      });
-    }
-
-    case 'validate_soil_function': {
-      try {
-        const safeArgs = args && typeof args === 'object' ? args : {};
-        const hasExplicitBlock = Object.prototype.hasOwnProperty.call(
-          safeArgs,
-          'soil_function'
-        );
-        const hasTopLevelSoilMetadata =
-          Object.prototype.hasOwnProperty.call(safeArgs, 'measurement_dates') ||
-          Object.prototype.hasOwnProperty.call(safeArgs, 'source') ||
-          Object.prototype.hasOwnProperty.call(safeArgs, 'method') ||
-          Object.prototype.hasOwnProperty.call(safeArgs, 'water_holding_gal_acre_ft');
-
-        let rawSoil = null;
-        if (hasExplicitBlock) {
-          rawSoil = safeArgs.soil_function;
-        } else if (hasTopLevelSoilMetadata) {
-          const candidate = {};
-          for (const k of [
-            'infiltration_mm_hr',
-            'organic_matter_percent',
-            'water_holding_gal_acre_ft',
-            'measurement_dates',
-            'source',
-            'method',
-          ]) {
-            if (Object.prototype.hasOwnProperty.call(safeArgs, k)) {
-              candidate[k] = safeArgs[k];
-            }
-          }
-          rawSoil = candidate;
-        }
-
-        const normalized = validateSoilFunction(rawSoil);
-        const tizAreaM2 =
-          safeArgs.tiz_area_m2 != null ? Number(safeArgs.tiz_area_m2) : 100;
-        const infRate =
-          normalized?.infiltration_mm_hr ??
-          (safeArgs.infiltration_mm_hr != null ? Number(safeArgs.infiltration_mm_hr) : 18);
-        const somPct =
-          normalized?.organic_matter_percent ??
-          (safeArgs.organic_matter_percent != null
-            ? Number(safeArgs.organic_matter_percent)
-            : 2.5);
-
-        const spongeCapacity = estimateSoilSpongeCapacity({
-          tiz_area_m2: tizAreaM2,
-          infiltration_mm_hr: infRate,
-          organic_matter_percent: somPct,
-        });
-
-        return formatToolResult({
-          valid: true,
-          soil_function: normalized,
-          omitted_by_default: normalized === null,
-          sponge_capacity: spongeCapacity,
-        });
-      } catch (err) {
-        return formatToolResult(
-          {
-            valid: false,
-            error: 'INVALID_SOIL_FUNCTION',
-            message: err.message,
-          },
-          true
-        );
-      }
-    }
-
-    case 'leo_rap_verify':
-    case 'leo_rca_verify': {
-      const safeArgs = args && typeof args === 'object' ? args : {};
-      const assessment =
-        safeArgs.assessment || (safeArgs.structural_baseline ? safeArgs : null);
-      if (!assessment || typeof assessment !== 'object' || Array.isArray(assessment)) {
-        return formatToolResult(
-          {
-            error: 'INVALID_ASSESSMENT',
-            message: `${name} requires an assessment object with structural_baseline.`,
-          },
-          true
-        );
-      }
-
-      if (
-        safeArgs.markdown_narrative !== undefined &&
-        safeArgs.markdown_narrative !== null &&
-        typeof safeArgs.markdown_narrative !== 'string'
-      ) {
-        return formatToolResult(
-          {
-            error: 'INVALID_NARRATIVE_TYPE',
-            message: 'markdown_narrative must be a string when provided.',
-          },
-          true
-        );
-      }
-
-      if (
-        typeof safeArgs.markdown_narrative === 'string' &&
-        safeArgs.markdown_narrative.length > MAX_NARRATIVE_LENGTH
-      ) {
-        return formatToolResult(
-          {
-            error: 'MAX_NARRATIVE_LENGTH_EXCEEDED',
-            max_length: MAX_NARRATIVE_LENGTH,
-            received_length: safeArgs.markdown_narrative.length,
-            message: `markdown_narrative exceeds maximum length of ${MAX_NARRATIVE_LENGTH} characters.`,
-          },
-          true
-        );
-      }
-
-      if (
-        safeArgs.jurisdiction_id &&
-        String(safeArgs.jurisdiction_id).length > MAX_JURISDICTION_ID_LENGTH
-      ) {
-        return formatToolResult(
-          {
-            error: 'JURISDICTION_ID_TOO_LONG',
-            max_length: MAX_JURISDICTION_ID_LENGTH,
-            received_length: String(safeArgs.jurisdiction_id).length,
-            message: `jurisdiction_id exceeds maximum length of ${MAX_JURISDICTION_ID_LENGTH} characters.`,
-          },
-          true
-        );
-      }
-
-      try {
-        const evalContext =
-          safeArgs.eval_context && typeof safeArgs.eval_context === 'object'
-            ? { ...safeArgs.eval_context }
-            : {};
-
-        if (!evalContext.municipality && safeArgs.jurisdiction_id) {
-          const found = ORDINANCE_CATALOG.get(String(safeArgs.jurisdiction_id).toLowerCase().trim());
-          if (!found) {
-            return formatToolResult(
-              {
-                error: 'UNKNOWN_JURISDICTION',
-                message: `No ordinance record found for jurisdiction_id '${safeArgs.jurisdiction_id}'.`,
-                available_jurisdictions: Array.from(ORDINANCE_CATALOG.keys()),
-              },
-              true
-            );
-          }
-          evalContext.municipality = found.record;
-        }
-
-        const compiled = compileLeoRapBrief(assessment, evalContext);
-        const narrativeText =
-          typeof safeArgs.markdown_narrative === 'string'
-            ? safeArgs.markdown_narrative
-            : compiled.brief_markdown;
-        const verification = verifyLeoRapNarrative(narrativeText, assessment, evalContext);
-        const shouldRunSelfAudit = safeArgs.run_self_audit !== false;
-        const selfAudit = shouldRunSelfAudit
-          ? runLeoRapSelfAudit(assessment, evalContext)
-          : null;
-
-        return formatToolResult({
-          valid: verification.valid && (selfAudit ? selfAudit.self_audit_passed : true),
-          verification,
-          compiled_brief: compiled,
-          self_audit: selfAudit,
-        });
-      } catch (err) {
-        return formatToolResult(
-          {
-            error: 'LEO_RAP_VERIFY_ERROR',
-            message: err.message,
-          },
-          true
-        );
-      }
-    }
-
-    default:
-      return formatToolResult(
-        {
-          error: 'UNKNOWN_TOOL',
-          message: `Unknown tool '${name}'.`,
-          available_tools: MCP_TOOLS.map((t) => t.name),
-        },
-        true
-      );
-  }
+  return executeMcpTool(name, args, ORDINANCE_CATALOG);
 }
 
+/**
+ * Mount harness setup tabs, Steward Agent Pack previews, consult audience presets,
+ * and the 9-tool interactive JSON-RPC 2.0 inspector on /mcp/.
+ */
 export function initMcpPlaygroundUI() {
   if (typeof document === 'undefined') return;
   const root = document.getElementById('mcp-playground-root');
   if (!root) return;
 
+  // 1. Harness connection tabs (Claude Code, Codex, Hermes, Cursor, Claude Desktop, Antigravity)
+  const harnessTabs = Array.from(root.querySelectorAll('[data-harness-tab]'));
+  const harnessPanels = Array.from(root.querySelectorAll('[data-harness-panel]'));
+
+  function selectHarness(harnessId) {
+    harnessTabs.forEach((tab) => {
+      const isSelected = tab.getAttribute('data-harness-tab') === harnessId;
+      tab.classList.toggle('active', isSelected);
+      tab.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+    });
+    harnessPanels.forEach((panel) => {
+      const matches = panel.getAttribute('data-harness-panel') === harnessId;
+      panel.hidden = !matches;
+    });
+  }
+
+  harnessTabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      selectHarness(tab.getAttribute('data-harness-tab'));
+    });
+  });
+
+  // 2. Copy command / snippet buttons
+  root.querySelectorAll('[data-copy-target]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.getAttribute('data-copy-target');
+      const targetEl = targetId ? document.getElementById(targetId) : null;
+      if (targetEl) {
+        copyTextWithFeedback(btn, targetEl.textContent || '');
+      }
+    });
+  });
+
+  // 3. Steward Agent Pack live preview and copy drawer
+  const previewWrap = document.getElementById('mcp-agent-preview-wrap');
+  const previewTitle = document.getElementById('mcp-agent-preview-title');
+  const previewCode = document.getElementById('mcp-agent-preview-code');
+  const btnCopyAgentPreview = document.getElementById('btn-copy-agent-preview');
+  const btnCloseAgentPreview = document.getElementById('btn-close-agent-preview');
+
+  root.querySelectorAll('[data-agent-preview]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const url = btn.getAttribute('data-agent-preview');
+      const label = btn.getAttribute('data-agent-label') || url || 'Agent File';
+      if (!url || !previewWrap || !previewCode) return;
+
+      previewWrap.hidden = false;
+      if (previewTitle) previewTitle.textContent = label;
+      previewCode.textContent = `Loading ${label}...`;
+
+      try {
+        const res = await fetch(url);
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+        const text = await res.text();
+        previewCode.textContent = text;
+      } catch (err) {
+        previewCode.textContent = `Unable to load ${label} from static server (${err.message}). Check agents/openarbor-steward/ in the repository.`;
+      }
+    });
+  });
+
+  btnCopyAgentPreview?.addEventListener('click', () => {
+    copyTextWithFeedback(btnCopyAgentPreview, previewCode?.textContent || '');
+  });
+
+  btnCloseAgentPreview?.addEventListener('click', () => {
+    if (previewWrap) previewWrap.hidden = true;
+  });
+
+  // 4. Interactive JSON-RPC 2.0 9-tool inspector
   let activeToolName = MCP_TOOLS[0].name;
   let requestCounter = 1;
 
@@ -803,70 +332,68 @@ export function initMcpPlaygroundUI() {
   function renderToolSelector() {
     if (!selectorEl) return;
     selectorEl.innerHTML = MCP_TOOLS.map(
-      (t) => `
-      <button
+      (t) => `<button
         type="button"
         role="tab"
-        aria-selected="${t.name === activeToolName}"
+        aria-selected="${t.name === activeToolName ? 'true' : 'false'}"
         class="oa-mcp-tool-btn ${t.name === activeToolName ? 'active' : ''}"
-        data-mcp-tool="${t.name}"
+        data-mcp-tool="${escapeHtml(t.name)}"
       >
-        <span class="oa-mcp-tool-name">${t.name}</span>
-        <span class="oa-mcp-tool-mod">${t.module}</span>
-      </button>
-    `
+        <span class="oa-mcp-tool-name">${escapeHtml(t.name)}</span>
+        <span class="oa-mcp-tool-mod">${escapeHtml(t.module)}</span>
+      </button>`
     ).join('');
 
     selectorEl.querySelectorAll('[data-mcp-tool]').forEach((btn) => {
       btn.addEventListener('click', () => {
-        activeToolName = btn.dataset.mcpTool;
+        activeToolName = btn.getAttribute('data-mcp-tool') || MCP_TOOLS[0].name;
         renderToolSelector();
-        loadToolDefaults();
-        runCurrentToolCall();
+        loadToolDefaults(true);
       });
     });
   }
 
-  function loadToolDefaults() {
-    const tool = getActiveTool();
-    if (metaEl) {
-      const reqFields = (tool.inputSchema.required || []).join(', ') || 'None';
-      const propNames = Object.keys(tool.inputSchema.properties || {}).join(', ');
-      metaEl.innerHTML = `
-        <div class="muni-header">
-          <div>
-            <strong><code>${tool.name}</code></strong>
-            <span class="badge badge-protected">${tool.module}</span>
-          </div>
-          <span class="badge badge-neutral">Required: ${reqFields}</span>
+  function renderMeta(tool) {
+    if (!metaEl) return;
+    const reqFields = tool.inputSchema?.required || [];
+    const propKeys = Object.keys(tool.inputSchema?.properties || {});
+    metaEl.innerHTML = `
+      <div class="muni-row">
+        <div>
+          <strong><code>${escapeHtml(tool.name)}</code></strong>
+          <span class="badge badge-protected" style="margin-left: 6px;">${escapeHtml(tool.module)}</span>
+          <p class="hint" style="margin-top: 6px;">${escapeHtml(tool.description)}</p>
         </div>
-        <p class="muni-citation">${tool.description}</p>
-        <p class="muni-subtext"><strong>Schema Properties:</strong> <code>${propNames}</code></p>
-      `;
-    }
-    if (argsEditor) {
-      argsEditor.value = JSON.stringify(tool.defaultArgs, null, 2);
-    }
-    if (argsError) {
+        <div class="hint" style="text-align: right; max-width: 320px;">
+          <div><strong>Required:</strong> ${reqFields.length ? reqFields.map((f) => `<code>${escapeHtml(f)}</code>`).join(', ') : 'None (all fields optional)'}</div>
+          <div style="margin-top: 4px;"><strong>Parameters (${propKeys.length}):</strong> ${propKeys.map((k) => `<code>${escapeHtml(k)}</code>`).join(', ')}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function setArgsError(message) {
+    if (!argsError) return;
+    if (!message) {
       argsError.hidden = true;
+      argsError.textContent = '';
+    } else {
+      argsError.hidden = false;
+      argsError.textContent = message;
     }
   }
 
-  function runCurrentToolCall(overrideArgs = null) {
+  function runCurrentToolCall() {
     const tool = getActiveTool();
-    let parsedArgs = overrideArgs;
+    if (!argsEditor) return;
 
-    if (!parsedArgs) {
-      try {
-        parsedArgs = JSON.parse(argsEditor?.value || '{}');
-        if (argsError) argsError.hidden = true;
-      } catch (err) {
-        if (argsError) {
-          argsError.hidden = false;
-          argsError.textContent = `Invalid JSON in arguments editor: ${err.message}`;
-        }
-        return;
-      }
+    let parsedArgs;
+    try {
+      parsedArgs = JSON.parse(argsEditor.value || '{}');
+      setArgsError('');
+    } catch (err) {
+      setArgsError(`Invalid JSON payload in params.arguments: ${err.message}`);
+      return;
     }
 
     const reqId = requestCounter++;
@@ -879,111 +406,133 @@ export function initMcpPlaygroundUI() {
         arguments: parsedArgs,
       },
     };
+    if (reqPreview) {
+      reqPreview.textContent = JSON.stringify(rpcRequest, null, 2);
+    }
 
     const t0 = typeof performance !== 'undefined' ? performance.now() : Date.now();
     const result = executeMcpToolInBrowser(tool.name, parsedArgs);
     const t1 = typeof performance !== 'undefined' ? performance.now() : Date.now();
-    const elapsedMs = Math.max(0.01, t1 - t0).toFixed(2);
+    const elapsedMs = Math.max(0, t1 - t0);
+
+    if (latencyBadge) {
+      latencyBadge.textContent = `${elapsedMs.toFixed(2)} ms`;
+    }
 
     const rpcResponse = {
       jsonrpc: '2.0',
       id: reqId,
       result,
     };
-
-    if (reqPreview) {
-      reqPreview.textContent = JSON.stringify(rpcRequest, null, 2);
-    }
     if (resPreview) {
       resPreview.textContent = JSON.stringify(rpcResponse, null, 2);
     }
-    if (latencyBadge) {
-      latencyBadge.textContent = `${elapsedMs} ms (${result.isError ? 'Guard/Error Returned' : 'OK'})`;
+  }
+
+  function loadToolDefaults(shouldRun = true) {
+    const tool = getActiveTool();
+    renderMeta(tool);
+    if (argsEditor) {
+      argsEditor.value = JSON.stringify(tool.defaultArgs, null, 2);
+    }
+    setArgsError('');
+    if (shouldRun) {
+      runCurrentToolCall();
     }
   }
+
+  // Consult audience preset buttons
+  root.querySelectorAll('[data-consult-preset]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const presetKey = btn.getAttribute('data-consult-preset');
+      const presetArgs = CONSULT_PRESETS[presetKey];
+      if (!presetArgs) return;
+      activeToolName = 'openarbor_consult';
+      renderToolSelector();
+      renderMeta(getActiveTool());
+      if (argsEditor) {
+        argsEditor.value = JSON.stringify(presetArgs, null, 2);
+      }
+      setArgsError('');
+      runCurrentToolCall();
+    });
+  });
 
   document.getElementById('btn-mcp-run')?.addEventListener('click', () => {
     runCurrentToolCall();
   });
 
   document.getElementById('btn-mcp-reset')?.addEventListener('click', () => {
-    loadToolDefaults();
-    runCurrentToolCall();
+    loadToolDefaults(true);
   });
 
-  // Security guard test 1: >500 trees on evaluate_ordinance
   document.getElementById('btn-mcp-test-guard')?.addEventListener('click', () => {
     activeToolName = 'evaluate_ordinance';
     renderToolSelector();
-    loadToolDefaults();
-    const oversizedTrees = Array.from({ length: 501 }, (_, idx) => ({
-      tag: `T-${idx + 1}`,
+    renderMeta(getActiveTool());
+    const oversizedTrees = Array.from({ length: MAX_EVALUATE_TREES + 1 }, (_, idx) => ({
+      tag: `T-${String(idx + 1).padStart(3, '0')}`,
       species_common: 'Live Oak',
       species_scientific: 'Quercus virginiana',
-      dbh_inches: 24,
+      dbh: 20,
+      removal: false,
     }));
-    const guardArgs = {
-      jurisdiction_id: 'tx-austin',
-      trees: oversizedTrees,
-    };
     if (argsEditor) {
       argsEditor.value = JSON.stringify(
         {
           jurisdiction_id: 'tx-austin',
-          _note: 'Simulating 501 tree rows to test MAX_EVALUATE_TREES = 500 guard',
-          trees_count: 501,
+          trees: oversizedTrees,
         },
         null,
         2
       );
     }
-    runCurrentToolCall(guardArgs);
+    setArgsError('');
+    runCurrentToolCall();
   });
 
-  // Security guard test 2: >128 char jurisdiction_id
   document.getElementById('btn-mcp-test-id-guard')?.addEventListener('click', () => {
-    activeToolName = 'lookup_ordinance';
+    activeToolName = 'evaluate_ordinance';
     renderToolSelector();
-    const overlongId = 'tx-austin-' + 'x'.repeat(130);
-    const guardArgs = { jurisdiction_id: overlongId };
+    renderMeta(getActiveTool());
     if (argsEditor) {
-      argsEditor.value = JSON.stringify(guardArgs, null, 2);
+      argsEditor.value = JSON.stringify(
+        {
+          jurisdiction_id: `tx-${'a'.repeat(MAX_JURISDICTION_ID_LENGTH + 4)}`,
+          trees: [
+            {
+              tag: 'T-01',
+              species_common: 'Live Oak',
+              species_scientific: 'Quercus virginiana',
+              dbh: 30,
+              removal: false,
+            },
+          ],
+        },
+        null,
+        2
+      );
     }
-    runCurrentToolCall(guardArgs);
+    setArgsError('');
+    runCurrentToolCall();
   });
 
-  argsEditor?.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-      e.preventDefault();
+  argsEditor?.addEventListener('keydown', (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+      event.preventDefault();
       runCurrentToolCall();
     }
   });
 
-  // Copy buttons for request/response and config snippets
-  function bindCopyBtn(btnEl, getTextFn) {
-    if (!btnEl) return;
-    btnEl.addEventListener('click', async () => {
-      const txt = getTextFn();
-      if (navigator.clipboard && txt) {
-        await navigator.clipboard.writeText(txt);
-        const orig = btnEl.textContent;
-        btnEl.textContent = 'Copied';
-        setTimeout(() => {
-          btnEl.textContent = orig;
-        }, 1600);
-      }
-    });
-  }
-
-  bindCopyBtn(document.getElementById('btn-copy-mcp-req'), () => reqPreview?.textContent || '');
-  bindCopyBtn(document.getElementById('btn-copy-mcp-res'), () => resPreview?.textContent || '');
-
-  root.querySelectorAll('[data-copy-target]').forEach((btn) => {
-    const targetId = btn.getAttribute('data-copy-target');
-    bindCopyBtn(btn, () => document.getElementById(targetId)?.textContent || '');
+  const btnCopyReq = document.getElementById('btn-copy-mcp-req');
+  const btnCopyRes = document.getElementById('btn-copy-mcp-res');
+  btnCopyReq?.addEventListener('click', () => {
+    copyTextWithFeedback(btnCopyReq, reqPreview?.textContent || '');
+  });
+  btnCopyRes?.addEventListener('click', () => {
+    copyTextWithFeedback(btnCopyRes, resPreview?.textContent || '');
   });
 
   renderToolSelector();
-  loadToolDefaults();
-  runCurrentToolCall();
+  loadToolDefaults(true);
 }

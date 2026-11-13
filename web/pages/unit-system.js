@@ -77,7 +77,7 @@ export function setUnitSystem(nextSys, persist = true) {
     const btn = document.getElementById('oa-units-toggle');
     if (btn) {
       btn.textContent =
-        normalized === 'imperial' ? 'Units: US (in, ft)' : 'Units: Metric (cm, m)';
+        normalized === 'imperial' ? 'Units: in / ft' : 'Units: cm / m';
     }
     applyStaticUnitSwaps(document, normalized);
   }

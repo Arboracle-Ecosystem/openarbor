@@ -231,13 +231,8 @@ export function initSharedThemeToggle() {
     }
 
     if (btn) {
-      if (stored === 'dark') {
-        btn.textContent = 'Theme: Dark';
-      } else if (stored === 'light') {
-        btn.textContent = 'Theme: Light';
-      } else {
-        btn.textContent = `Theme: Auto (${sys === 'dark' ? 'Dark' : 'Light'})`;
-      }
+      const effective = stored === 'dark' || stored === 'light' ? stored : sys;
+      btn.textContent = `Theme: ${effective === 'dark' ? 'Dark' : 'Light'}`;
     }
   };
 

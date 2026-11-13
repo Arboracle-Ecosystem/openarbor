@@ -422,7 +422,7 @@ ${popoverHtml}
           class="btn btn-secondary btn-sm"
           aria-description="Switch measurement system between US Imperial and Metric"
         >
-          Units: US (in, ft)
+          Units: in / ft
         </button>
         <button
           type="button"
@@ -430,7 +430,7 @@ ${popoverHtml}
           class="btn btn-secondary btn-sm"
           aria-description="Toggle color scheme"
         >
-          Theme: Auto
+          Theme: Dark
         </button>
       </div>
     </div>

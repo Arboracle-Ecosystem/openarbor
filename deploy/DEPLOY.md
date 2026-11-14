@@ -1,9 +1,9 @@
-# Open Arbor Production Deployment Guide (Cloud Run)
+# Open Arbor v2.2 Production Deployment Guide (Cloud Run)
 
 - **Canonical Repository:** `https://github.com/Arboracle-Ecosystem/openarbor.git`
 - **Primary Domain Target:** `https://openarbor.org` (Google Cloud Run service `openarbor` in `us-central1`)
 - **Build Output Directory:** `out/`
-- **Runtime Dependencies:** Zero (`AGPL-3.0-only`, 100% client-side execution)
+- **Runtime Dependencies:** Zero (`AGPL-3.0-only` engine / `CC0-1.0` schemas and data, 100% client-side execution)
 
 ## 1. Local Multi-Page Build and 4/4 Bioregional Parity Verification
 
@@ -43,6 +43,8 @@ npm run verify:parity
 | `out/icons/*` | PWA and brand icon PNG assets |
 | `out/schemas/*.json` | Published Draft 2020-12 JSON Schemas served with `Access-Control-Allow-Origin: *` |
 | `out/data/**/*.json` | Published municipal ordinance datasets and 41-tool forestry catalog |
+| `out/agents/openarbor-steward/*` | Portable Steward Agent Pack (`SKILL.md`, `AGENTS.md`, `claude-agent.md`, `hermes-steward.yaml`, `README.md`) |
+| `out/LICENSE`, `out/LICENSE-DATA`, `out/NOTICE`, `out/CONTRIBUTING.md`, `out/docs/LAYERS.md` | Published license, attribution, contributor, and 3-layer governance documents (`text/plain; charset=utf-8`) |
 
 ## 2. Google Cloud Run Deployment (`openarbor.org`)
 

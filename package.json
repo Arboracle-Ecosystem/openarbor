@@ -1,6 +1,6 @@
 {
   "name": "openarbor",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Open-standards arboricultural field assessment, root-zone protection (ANSI A300 / ISA BMP), allometric ecosystem models, Regenerative Arboriculture Protocol (RAP-Spec v2.0) engine, LEO-RAP Profile 01 verifier, local-first field observation log, and municipal tree ordinance commons.",
   "type": "module",
   "license": "AGPL-3.0-only",
@@ -33,9 +33,12 @@
     "schemas/",
     "data/",
     "server/",
-    "docs/13_*",
-    "docs/14_*",
+    "docs/13_RAP_PRACTICE_SPECIFICATION_v1.md",
+    "docs/13_RCA_PRACTICE_SPECIFICATION_v1.md",
+    "docs/16_RAP_AND_RAPPER_ARCHITECTURE.md",
+    "docs/LAYERS.md",
     "README.md",
+    "CONTRIBUTING.md",
     "LICENSE",
     "LICENSE-DATA",
     "NOTICE"

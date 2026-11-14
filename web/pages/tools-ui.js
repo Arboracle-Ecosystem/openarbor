@@ -119,7 +119,7 @@ node -e "import('./src/core/ordinanceEngine.js').then(m => console.log(Object.ke
     citation:
       'Nowak (1994); Cairns et al. (1997); Xiao et al. (2000); Nowak et al. (2006); McPherson & Simpson (1999); White (1998) Forestry Commission Information Note FCIN12.',
     recipe: `# Compute ecosystem services and export OGC CRS84 GeoJSON
-node -e "import('./src/core/ecosystemBenefits.js').then(m => console.log(m.estimateEcosystemBenefits({ dbhInches: 30, species: 'Quercus virginiana' })))"`,
+node -e "import('./src/core/ecosystemBenefits.js').then(m => console.log(m.calculateTreeEcosystemBenefits({ dbh_inches: 30, species_name: 'Quercus virginiana', common_name: 'Live Oak' })))"`,
     bridgeTargetPaths: [
       'structural_baseline.dual_valuation.ctla_10th_ed_depreciated_usd',
       'structural_baseline.dual_valuation.holobiont_200yr_biological_equity_usd',
@@ -277,8 +277,8 @@ CloudCompare -SILENT -O tree_scan_raw.laz -C_EXPORT_FMT LAS -SS SPATIAL 0.01 -SA
     language: 'Python (uv + sqlite-vec + Ollama)',
     formats: ['SQLite (.db)', 'Markdown', 'JSONL', 'MCP Stdio'],
     citation: 'STIM Protocol Contributors (2026). Forest Search & Semantic Index for Local Ecological Knowledge Commons.',
-    recipe: `# Query local sovereign literature and municipal rules over stdio
-uv run --project /home/george/Myceliate_Master/UNDERSTORY/forest-search python -m forest_search query "Mattheck t/R hollow shell threshold"`,
+    recipe: `# Query indexed arboricultural literature and municipal ordinances locally over stdio
+uv run --project ./forest-search python -m forest_search query "Mattheck t/R hollow shell threshold"`,
     bridgePaths: [
       'outcome_monitoring_schedule.stim_hypothesis_statement',
       'outcome_monitoring_schedule.stim_kill_criterion',
@@ -288,7 +288,7 @@ uv run --project /home/george/Myceliate_Master/UNDERSTORY/forest-search python -
         stim_hypothesis_statement:
           'Pneumatic root collar excavation to 14 cm depth plus 8 radial biochar-compost trenches will reduce topsoil bulk density below 1.25 g/cm3 within 24 months.',
         stim_kill_criterion:
-          'Falsified if 12-month terminal shoot extension remains below 5 cm/yr or upper canopy dieback exceeds 15 percent.',
+          'Falsified if 12-month terminal shoot extension remains below 5 cm/yr or upper canopy dieback exceeds 15%.',
       },
     },
   },
@@ -322,8 +322,8 @@ flatpak run ch.opengis.qfield --project sanctuary_field_survey.qgz`,
     language: 'Python / Django / PostGIS',
     formats: ['PostgreSQL / PostGIS', 'CSV', 'GeoJSON'],
     citation: 'Azavea & OpenTreeMap Contributors (2022). OpenTreeMap Collaborative Urban Forest Inventory Platform.',
-    recipe: `# Containerized sidecar inspection (requires license & maintenance review before launch)
-docker compose -f docker/opentreemap-sidecar.yml config
+    recipe: `# Inspect an existing OpenTreeMap Compose stack (review upstream license before launch)
+# docker compose -f docker/opentreemap-sidecar.yml config
 # Export existing OTM table into Open Arbor RAP_v2 migration format
 pg_dump -t treemap_tree --csv otm_db > otm_trees_export.csv`,
     bridgePaths: [
@@ -343,8 +343,9 @@ pg_dump -t treemap_tree --csv otm_db > otm_trees_export.csv`,
     language: 'HTML5 / JavaScript (Leaflet Static)',
     formats: ['GeoJSON', 'HTML', 'CSV'],
     citation: 'Meyering, N. (2024). CanopyWatch: Open Urban Canopy Equity Visualization.',
-    recipe: `# Serve local CanopyWatch static bundle with local parcel GeoJSON overlay
-python3 -m http.server 8090 --directory ./vendor/canopy-watch`,
+    recipe: `# Clone upstream static viewer and serve local parcel GeoJSON overlay
+git clone https://github.com/meyeringn/canopy-watch.git
+python3 -m http.server 8090 --directory ./canopy-watch`,
     bridgePaths: [
       'outcome_monitoring_schedule.five_year_lagging_indicators.sanctuary_scorecard_targets.canopy_projection_area_m2',
       'outcome_monitoring_schedule.five_year_lagging_indicators.sanctuary_scorecard_targets.restoration_potential_baseline_pct',
@@ -365,8 +366,8 @@ python3 -m http.server 8090 --directory ./vendor/canopy-watch`,
     language: 'R / C++ (Rcpp)',
     formats: ['LAS', 'LAZ', 'CSV', 'RDS'],
     citation: 'de Conto, T., et al. (2017). Performance of stem denoising and stem modelling algorithms on single tree point clouds from terrestrial laser scanning. Computers and Electronics in Agriculture, 143, 165-176.',
-    recipe: `# Run TreeLS inside reproducible renv container sidecar
-docker run --rm -v "$PWD:/data" openarbor/renv-lidar:latest Rscript -e "
+    recipe: `# Run inside rocker/geospatial:4 with TreeLS installed via renv/remotes
+docker run --rm -v "$PWD:/data" rocker/geospatial:4 Rscript -e "
   library(TreeLS); tls <- readTLS('/data/stem_scan.laz');
   inv <- tlsInventory(tls, d_method = shapeFit(shape = 'circle', algorithm = 'ransac'));
   write.csv(inv, '/data/treels_dbh.csv', row.names = FALSE)"`,
@@ -503,8 +504,8 @@ uv pip install --python .venv-pytlidar numba open3d laspy
     language: 'R / C++ (Rcpp)',
     formats: ['CSV (TreeQSM / SimpleForest / aRchi Cylinders)', 'RDS'],
     citation: 'Morales, A., & MacFarlane, D. W. (2024). rTwig: Real Twig correction for over-estimated small branch cylinders in Quantitative Structure Models. CRAN.',
-    recipe: `# Apply Real Twig allometric tapering correction to raw QSM cylinder table
-docker run --rm -v "$PWD:/data" openarbor/renv-qsm:latest Rscript -e "
+    recipe: `# Run inside rocker/geospatial:4 with rTwig installed from CRAN/renv
+docker run --rm -v "$PWD:/data" rocker/geospatial:4 Rscript -e "
   library(rTwig); cyl <- read.csv('/data/raw_qsm_cylinders.csv');
   corrected <- run_rtwig(cyl, twig_radius = 4.2);
   write.csv(corrected, '/data/rtwig_corrected.csv', row.names = FALSE)"`,
@@ -526,8 +527,8 @@ docker run --rm -v "$PWD:/data" openarbor/renv-qsm:latest Rscript -e "
     language: 'R / C++ (Rcpp / sf / terra)',
     formats: ['LAS', 'LAZ', 'COPC', 'GeoTIFF (CHM)', 'GeoPackage'],
     citation: 'Roussel, J.-R., et al. (2020). lidR: An R package for analysis of Airborne Laser Scanning (ALS) data. Remote Sensing of Environment, 251, 112061.',
-    recipe: `# Generate 0.5m Canopy Height Model (CHM) and segment individual tree crowns
-docker run --rm -v "$PWD:/data" openarbor/renv-lidar:latest Rscript -e "
+    recipe: `# Run inside rocker/geospatial:4 with lidR installed from CRAN/renv
+docker run --rm -v "$PWD:/data" rocker/geospatial:4 Rscript -e "
   library(lidR); las <- readLAS('/data/sanctuary_als.laz');
   chm <- rasterize_canopy(las, res = 0.5, p2r());
   ttops <- locate_trees(las, lmf(ws = 5));
@@ -651,8 +652,8 @@ qgis --profile openarbor-treeeyed parcel_ortho.tif`,
     language: 'R (HDF5 / sf / lidR)',
     formats: ['HDF5 (.h5 GEDI L1B/L2A/L2B/L4A)', 'GeoPackage', 'CSV'],
     citation: 'Silva, C. A., et al. (2020). rGEDI: An R Package for NASA Global Ecosystem Dynamics Investigation (GEDI) Data Visualizing and Processing.',
-    recipe: `# Extract GEDI L2A relative height metrics and L2B Plant Area Index (PAI) profile
-docker run --rm -v "$PWD:/data" openarbor/renv-lidar:latest Rscript -e "
+    recipe: `# Run inside rocker/geospatial:4 with rGEDI installed via renv/remotes
+docker run --rm -v "$PWD:/data" rocker/geospatial:4 Rscript -e "
   library(rGEDI); l2a <- readLevel2A('/data/GEDI02_A_sample.h5');
   metrics <- getLevel2AM(l2a); write.csv(metrics, '/data/gedi_rh_metrics.csv', row.names = FALSE)"`,
     bridgePaths: [
@@ -670,8 +671,8 @@ docker run --rm -v "$PWD:/data" openarbor/renv-lidar:latest Rscript -e "
     language: 'R / C (Dendrochronology Program Library in R)',
     formats: ['Tucson (.rwl)', 'Heidelberg (.fh)', 'Compact', 'CSV'],
     citation: 'Bunn, A. G. (2008). A dendrochronology program library in R (dplR). Dendrochronologia, 26(2), 115-124.',
-    recipe: `# Detrend ring-width series and compute Basal Area Increment (BAI) in R
-docker run --rm -v "$PWD:/data" openarbor/renv-dendro:latest Rscript -e "
+    recipe: `# Run inside rocker/geospatial:4 with dplR installed from CRAN/renv
+docker run --rm -v "$PWD:/data" rocker/geospatial:4 Rscript -e "
   library(dplR); rwl <- read.rwl('/data/oak_cores.rwl');
   bai <- bai.out(rwl); write.csv(bai, '/data/basal_area_increment.csv')"`,
     bridgePaths: [
@@ -734,8 +735,8 @@ uv run --python .venv-tras python -m tras.cli --image core_scan_1200dpi.tif --ou
     language: 'R / C++ (Rcpp / dplR)',
     formats: ['RWL', 'CSV (Monthly PRISM / NOAA Climate Series)', 'RDS'],
     citation: 'Zang, C., & Biondi, F. (2015). treeclim: an R package for the numerical calibration of proxy-climate relationships. Ecography, 38(4), 431-436.',
-    recipe: `# Calibrate ring-width chronology against monthly precipitation and VPD
-docker run --rm -v "$PWD:/data" openarbor/renv-dendro:latest Rscript -e "
+    recipe: `# Run inside rocker/geospatial:4 with treeclim and dplR installed via CRAN/renv
+docker run --rm -v "$PWD:/data" rocker/geospatial:4 Rscript -e "
   library(treeclim); library(dplR);
   chrono <- read.crn('/data/quercus_crn.crn'); clim <- read.csv('/data/prism_monthly.csv');
   resp <- dcc(chrono, clim, selection = -6:9, method = 'response');
@@ -755,8 +756,8 @@ docker run --rm -v "$PWD:/data" openarbor/renv-dendro:latest Rscript -e "
     language: 'R (AMAP / CIRAD Allometric Engine)',
     formats: ['CSV', 'GeoJSON', 'RDS'],
     citation: 'Rejou-Mechain, M., et al. (2017). BIOMASS: an R package for estimating above-ground biomass and its uncertainty in tropical forests. Methods in Ecology and Evolution, 8(9), 1163-1167.',
-    recipe: `# Compute above-ground biomass (AGB) with Monte Carlo wood density uncertainty propagation
-docker run --rm -v "$PWD:/data" openarbor/renv-dendro:latest Rscript -e "
+    recipe: `# Run inside rocker/geospatial:4 with BIOMASS installed from CRAN/renv
+docker run --rm -v "$PWD:/data" rocker/geospatial:4 Rscript -e "
   library(BIOMASS); inv <- read.csv('/data/stand_inventory.csv');
   wd <- getWoodDensity(genus = inv\\$genus, species = inv\\$species);
   agb <- computeAGB(D = inv\\$dbh_cm, WD = wd\\$meanWD, H = inv\\$height_m);
@@ -779,8 +780,8 @@ docker run --rm -v "$PWD:/data" openarbor/renv-dendro:latest Rscript -e "
     language: 'R (Smithsonian ForestGEO)',
     formats: ['CSV', 'RDS', 'JSON'],
     citation: 'Gonzalez-Akre, E., et al. (2022). allodb: An R package for biomass estimation at globally distributed extratropical forest plots. Methods in Ecology and Evolution, 13(2), 330-338.',
-    recipe: `# Run extratropical species-calibrated biomass equations from Smithsonian ForestGEO allodb
-docker run --rm -v "$PWD:/data" openarbor/renv-dendro:latest Rscript -e "
+    recipe: `# Run inside rocker/geospatial:4 with allodb installed via renv/remotes
+docker run --rm -v "$PWD:/data" rocker/geospatial:4 Rscript -e "
   library(allodb); trees <- read.csv('/data/temperate_trees.csv');
   trees\\$agb_kg <- get_biomass(dbh = trees\\$dbh_cm, genus = trees\\$genus, species = trees\\$species, coords = c(-122.71, 42.19));
   write.csv(trees, '/data/allodb_biomass.csv', row.names = FALSE)"`,
@@ -803,8 +804,8 @@ docker run --rm -v "$PWD:/data" openarbor/renv-dendro:latest Rscript -e "
     language: 'Fortran / C / SQLite (USDA Forest Service)',
     formats: ['FVS Keyword (.key)', 'SQLite (.db)', 'CSV'],
     citation: 'Dixon, G. E. (2002, rev. 2024). Essential FVS: A user guide to the Forest Vegetation Simulator. Internal Rep. Fort Collins, CO: U.S. Department of Agriculture, Forest Service, Forest Management Service Center.',
-    recipe: `# Run Pacific Northwest (FVS-PN) or Southern (FVS-SN) variant inside container sidecar
-docker run --rm -v "$PWD:/work" openarbor/open-fvs:latest FVSie --keywordfile=/work/sanctuary_stand.key`,
+    recipe: `# Run compiled USDA Forest Service Open-FVS binary locally
+FVSie --keywordfile=sanctuary_stand.key`,
     bridgePaths: [
       'outcome_monitoring_schedule.five_year_lagging_indicators.sanctuary_scorecard_targets.canopy_volume_expansion_target_pct',
       'outcome_monitoring_schedule.five_year_lagging_indicators.sanctuary_scorecard_targets.restoration_potential_realized_pct',
@@ -946,8 +947,8 @@ python3 -c "import FMT; parser = FMT.Parser.FMTmodelparser(); model = parser.rea
     language: 'R (terra / Digital Hemispherical Photography)',
     formats: ['JPEG / TIFF (Fisheye Hemispherical Photo)', 'CSV'],
     citation: 'Chianucci, F., & Macek, M. (2023). hemispheR: an R package for fisheye canopy image analysis. Agricultural and Forest Meteorology, 336, 109470.',
-    recipe: `# Compute canopy gap fraction and effective Leaf Area Index (LAI) from upward fisheye photo
-docker run --rm -v "$PWD:/data" openarbor/renv-canopy:latest Rscript -e "
+    recipe: `# Run inside rocker/geospatial:4 with hemispheR installed via CRAN/renv
+docker run --rm -v "$PWD:/data" rocker/geospatial:4 Rscript -e "
   library(hemispheR); img <- import_fisheye('/data/canopy_azimuth180.jpg', circular = TRUE);
   bw <- binarize_fisheye(img); gf <- gapfrac_fisheye(bw, lens = 'equidistant');
   lai <- canopy_fisheye(gf); write.csv(lai, '/data/hemispher_lai.csv', row.names = FALSE)"`,
@@ -972,8 +973,8 @@ docker run --rm -v "$PWD:/data" openarbor/renv-canopy:latest Rscript -e "
     language: 'R (terra / lidR / sf)',
     formats: ['JPEG / TIFF', 'LAS / LAZ (Synthetic Hemispherical Views)', 'CSV'],
     citation: 'Hakai Institute Contributors (2024). gaplightr: Gap Light Analyzer workflows in R for physical and LiDAR-synthesized hemispherical views.',
-    recipe: `# Calculate Direct and Diffuse Site Factors (% Transmitted PAR) for understory guild placement
-docker run --rm -v "$PWD:/data" openarbor/renv-canopy:latest Rscript -e "
+    recipe: `# Run inside rocker/geospatial:4 with gaplightr installed via renv/remotes
+docker run --rm -v "$PWD:/data" rocker/geospatial:4 Rscript -e "
   library(gaplightr); res <- analyze_hemiphoto('/data/understory_north.tif', lat = 30.2672);
   write.csv(res, '/data/understory_light_par.csv', row.names = FALSE)"`,
     bridgePaths: [
@@ -1063,8 +1064,8 @@ function normalizePackagingTier(rawTier) {
 }
 
 /**
- * Map catalog readiness and tool id to honest Doc-414 Evidence Grade filter options:
- * ('Workflow-qualified', 'Smoke-tested', 'Installed', 'Recipe available', 'Cataloged')
+ * Map catalog readiness and tool id to Open Arbor Evidence Grade filter options:
+ * ('Workflow-qualified', 'Smoke-tested', 'Host-verified', 'Recipe available', 'Cataloged')
  * @param {object} rawEntry
  * @returns {string}
  */
@@ -1079,7 +1080,7 @@ function resolveEvidenceGrade(rawEntry) {
     return 'Smoke-tested';
   }
   if (['canopywatch', 'lidr', 'dplr', 'hemispher'].includes(id)) {
-    return 'Installed';
+    return 'Host-verified';
   }
   if (readiness === 'container-ready') {
     return 'Recipe available';
@@ -1157,7 +1158,7 @@ function getGradeBadgeClass(grade) {
       return 'badge badge-protected';
     case 'Smoke-tested':
       return 'badge badge-heritage';
-    case 'Installed':
+    case 'Host-verified':
       return 'badge badge-neutral';
     case 'Recipe available':
       return 'badge badge-warn';
@@ -1260,7 +1261,7 @@ export function initToolsCatalogUI() {
           <div class="metric-box">
             <span class="metric-label">Evidence Grade</span>
             <strong class="metric-value text-accent">${escapeHtml(tool.evidenceGrade)}</strong>
-            <span class="metric-sub">Doc-414 Governance</span>
+            <span class="metric-sub">Catalog v1.0.0 Readiness</span>
           </div>
           <div class="metric-box">
             <span class="metric-label">Supported I/O Formats</span>
@@ -1277,7 +1278,7 @@ export function initToolsCatalogUI() {
             Copy CLI Recipe
           </button>
         </div>
-        <pre id="dialog-recipe-code" class="code-preview">${escapeHtml(tool.recipe)}</pre>
+        <pre id="dialog-recipe-code" class="code-preview" tabindex="0">${escapeHtml(tool.recipe)}</pre>
       </div>
 
       <div>

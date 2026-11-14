@@ -1,5 +1,5 @@
 /**
- * Open Arbor v2.0 Offline Field Mode Service Worker (web/sw.js)
+ * Open Arbor v2.2 Offline Field Mode Service Worker (web/sw.js)
  * Cache-first offline execution engine for /demo/, /cases/, /ordinances/, /tools/, /mcp/, /spec/, and /methods/.
  * Resolves all pre-cached paths relative to self.registration.scope so it operates identically
  * at root (/) on openarbor.org and at subpath (/openarbor/) on GitHub Pages.
@@ -45,6 +45,11 @@ const PRECACHE_PATHS = [
   './agents/openarbor-steward/claude-agent.md',
   './agents/openarbor-steward/hermes-steward.yaml',
   './agents/openarbor-steward/README.md',
+  './LICENSE',
+  './LICENSE-DATA',
+  './NOTICE',
+  './CONTRIBUTING.md',
+  './docs/LAYERS.md',
 ];
 
 function resolveScopeUrls() {

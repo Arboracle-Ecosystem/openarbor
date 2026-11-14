@@ -11,7 +11,7 @@
         document.querySelector('meta[name="color-scheme"]').content = localStorage.getItem('color-scheme') ?? 'light dark';
       } catch (e) {}
     </script>
-    <title>41-Tool Forestry &amp; LiDAR Workbench | Open Arbor v2.1</title>
+    <title>41-Tool Forestry &amp; LiDAR Workbench | Open Arbor v2.2</title>
     <meta
       name="description"
       content="Open Arbor Alliance 41-Tool Forestry Workbench: 4 Core Browser/Node ESM Engines, 33 open-source forestry scientific tools, and 4 geospatial foundations mapped to RAP-Spec v2.0."
@@ -53,8 +53,8 @@
             <span>Point clouds, dendrochronology, fire behavior, and core ESM calculators.</span>
           </a>
           <a href="../mcp/index.html" class="oa-deep-popover-item">
-            <strong>MCP Agent Server Playground</strong>
-            <span>JSON-RPC 2.0 inspector so AI agents run verified math instead of guessing.</span>
+            <strong>Connect Your Agent (Unified MCP)</strong>
+            <span>One MCP connection, 1-click harness setup, and Steward Agent Pack.</span>
           </a>
           <a href="../spec/index.html" class="oa-deep-popover-item">
             <strong>RAP-Spec v2.0 &amp; 200-Yr Vault</strong>
@@ -86,7 +86,7 @@
     <section class="app-header">
       <div class="container header-inner">
         <div>
-          <span class="eyebrow">Open Arbor Alliance Commons &middot; Doc-414 Verified</span>
+          <span class="eyebrow">Open Arbor Alliance Commons &middot; Verified Open Toolchain</span>
           <h1 id="main-content" tabindex="-1">41-Tool Open Forestry &amp; LiDAR Workbench</h1>
           <p class="subtitle">
             4 Core Browser/Node ESM Engines, 33 scientific forestry models, and 4 geospatial foundations with sovereign CLI execution recipes and deterministic bridges into <code>schemas/rap_assessment.schema.json</code>.
@@ -95,6 +95,7 @@
         <div class="header-actions">
           <a href="../demo/index.html" class="btn btn-primary">Launch Live Engine Demo</a>
           <a href="../spec/index.html" class="btn btn-outline">Inspect RAP-Spec v2.0</a>
+          <a href="https://github.com/Arboracle-Ecosystem/openarbor" class="btn btn-outline">GitHub Repository</a>
         </div>
       </div>
     </section>
@@ -138,14 +139,15 @@
           <h2 id="workbench-filter-heading">Explore 41 Open Arbor &amp; Scientific Forestry Tools</h2>
         </div>
 
-        <div class="form-grid">
+        <search aria-label="Filter forestry and LiDAR tools" class="form-grid">
           <div class="field-row field-row-3">
             <div class="field">
               <label for="tool-search-input">Free-Text Search</label>
-              <span class="hint">Filter by tool name, summary, file formats, tags, or runtime language</span>
+              <span id="hint-tool-search" class="hint">Filter by tool name, summary, file formats, tags, or runtime language</span>
               <input
                 type="text"
                 id="tool-search-input"
+                aria-describedby="hint-tool-search"
                 placeholder="e.g., 3DFin, LiDAR, QSM, BirdNET, LAZ, dendrochronology..."
                 autocomplete="off"
               />
@@ -153,8 +155,8 @@
 
             <div class="field">
               <label for="tool-tier-select">Packaging Tier</label>
-              <span class="hint">Filter by execution environment and deployment model</span>
-              <select id="tool-tier-select">
+              <span id="hint-tool-tier" class="hint">Filter by execution environment and deployment model</span>
+              <select id="tool-tier-select" aria-describedby="hint-tool-tier">
                 <option value="all">All Tiers</option>
                 <option value="Core Browser/Node ESM">Core Browser/Node ESM</option>
                 <option value="Tier 1: Python/R CLI (uv/conda)">Tier 1: Python/R CLI (uv/conda)</option>
@@ -165,12 +167,12 @@
 
             <div class="field">
               <label for="tool-grade-select">Evidence Grade</label>
-              <span class="hint">Honest verification status from Doc-414 governance</span>
-              <select id="tool-grade-select">
+              <span id="hint-tool-grade" class="hint">Upstream verification and local reproducibility status</span>
+              <select id="tool-grade-select" aria-describedby="hint-tool-grade">
                 <option value="all">All Grades</option>
                 <option value="Workflow-qualified">Workflow-qualified</option>
                 <option value="Smoke-tested">Smoke-tested</option>
-                <option value="Installed">Installed</option>
+                <option value="Host-verified">Host-verified</option>
                 <option value="Recipe available">Recipe available</option>
                 <option value="Cataloged">Cataloged</option>
               </select>
@@ -230,7 +232,7 @@
               Reset Filters
             </button>
           </div>
-        </div>
+        </search>
       </section>
 
       <section aria-label="Workbench Tool Cards">
@@ -255,7 +257,10 @@
     <footer class="app-footer">
       <div class="container">
         <p>
-          Open Arbor Alliance v2.1 &middot; 41-Tool Open Forestry Workbench &middot; Zero Vendor Lock-In &middot; Grounded in ANSI A300, AS 4970, and RAP-Spec v2.0.
+          Open Arbor v2.2 &middot; Open Arbor Alliance &middot; 41-Tool Open Forestry Workbench &middot; Zero Vendor Lock-In &middot; Grounded in ANSI A300, AS 4970, and RAP-Spec v2.0.
+        </p>
+        <p>
+          AGPL-3.0 for the engine and CC0-1.0 for schemas and data &middot; <a href="../LICENSE">LICENSE</a> &middot; <a href="../LICENSE-DATA">LICENSE-DATA</a> &middot; <a href="https://github.com/Arboracle-Ecosystem/openarbor">GitHub Repository</a>
         </p>
       </div>
     </footer>

@@ -46,7 +46,7 @@ import {
 import txOrdinances from '../../data/ordinances/central_texas_ordinances.json';
 import orOrdinances from '../../data/ordinances/rogue_valley_oregon_ordinances.json';
 import { FIXED_PARITY_CASES } from '../presets.js';
-import { encodeAssessmentPermalink, inspectMunicipalityProvenance } from './masterwork-core.js';
+import { encodeReadableTreeQuery, inspectMunicipalityProvenance } from './masterwork-core.js';
 import {
   isImperialUnits,
   fmtDualInCm,
@@ -154,18 +154,30 @@ function bindDialogLightDismissFallback(dialog) {
   }
 }
 
-function buildDemoPermalinkUrl(permalinkHash) {
-  const hash = String(permalinkHash || '').startsWith('#')
-    ? permalinkHash
-    : `#${permalinkHash || ''}`;
+function buildDemoPermalinkUrl(queryOrHash) {
+  const token = String(queryOrHash || '');
+  const isQuery = token.startsWith('?');
+  const normalized = isQuery || token.startsWith('#') ? token : `#${token}`;
   if (typeof window === 'undefined' || !window.location) {
-    return `https://openarbor.org/demo/${hash}`;
+    return `https://openarbor.org/demo/${normalized}`;
   }
-  const demoUrl = new URL(
-    window.location.pathname.includes('/demo/') ? './index.html' : './demo/index.html',
-    window.location.href
-  );
-  demoUrl.hash = hash;
+  const inDemo = window.location.pathname.includes('/demo/');
+  const targetRel =
+    window.location.protocol === 'file:'
+      ? inDemo
+        ? './index.html'
+        : './demo/index.html'
+      : inDemo
+      ? './'
+      : './demo/';
+  const demoUrl = new URL(targetRel, window.location.href);
+  if (isQuery) {
+    demoUrl.search = normalized;
+    demoUrl.hash = '';
+  } else {
+    demoUrl.search = '';
+    demoUrl.hash = normalized;
+  }
   return demoUrl.href;
 }
 
@@ -251,7 +263,7 @@ export function ensureArboristHandoffDialog() {
           </div>
         </div>
         <div class="oa-handoff-actions">
-          <span class="hint" id="handoff-share-status">No data is uploaded to any server; the tree state lives inside the link hash.</span>
+          <span class="hint" id="handoff-share-status">No data is uploaded to any server; all measurements stay in the link parameters.</span>
           <div class="oa-word-of-mouth-actions">
             <button type="button" id="btn-copy-handoff-note" class="btn btn-copper">Copy Note</button>
             <button type="button" id="btn-native-share-handoff" class="btn btn-primary">Share via Phone or Email</button>
@@ -1112,8 +1124,11 @@ export function initLivingLensUI() {
       provenance,
     });
 
-    const permalinkHash = encodeAssessmentPermalink(clonedCase);
-    const shareUrl = buildDemoPermalinkUrl(permalinkHash);
+    const readableQuery = encodeReadableTreeQuery({
+      ...clonedCase,
+      archetypeKey: activeArchetype?.key,
+    });
+    const shareUrl = buildDemoPermalinkUrl(readableQuery);
 
     const holobiontUsd = Math.round(
       Number(valuation.holobiont_200yr_biological_equity_usd) || 0
@@ -1211,7 +1226,7 @@ export function initLivingLensUI() {
 
     const demoLink = document.getElementById('qc-open-demo-link');
     if (demoLink) {
-      demoLink.setAttribute('href', `./demo/index.html${permalinkHash}`);
+      demoLink.setAttribute('href', shareUrl);
     }
 
     // 3. Render Dual Real-Time Botanical SVG
@@ -1377,7 +1392,7 @@ export function initLivingLensUI() {
       speciesCommon,
       speciesScientific: speciesSci,
       dbhInches: dbhIn,
-      cityLabel: `${muni.name}, ${muni.state} (${muni.ordinance_numbers})`,
+      cityLabel: `${muni.name}, ${muni.state}`,
       protectionStatus: protLabel,
       tOverR,
       sonicTomographyVerified: Boolean(

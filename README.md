@@ -12,7 +12,7 @@
 
 Proprietary arboriculture and urban forestry software often locks field observations, municipal tree protection rules, and preservation plans inside closed cloud databases. When a practitioner, municipal forester, or researcher cannot inspect the underlying allometric equations, verify statutory ordinance citations, or export standard `GeoJSON` directly into `QGIS` or `ArcGIS Field Maps`, the software becomes a barrier rather than an instrument.
 
-**Open Arbor** (`v2.1`) refactors the core deterministic engines developed for the Arboracle platform into a zero-dependency, local-first open-standards library, field portal, and dataset. Every calculation traces to a published arboricultural standard (`ANSI A300`, `ISA BMP`, `AS 4970`, `BS 5837`), peer-reviewed urban forestry literature (`Nowak`, `McPherson & Simpson`, `Xiao`, `John White FCIN12`, `Claus Mattheck`), or a cited municipal code section.
+**Open Arbor** (`v2.2`) refactors the core deterministic engines developed for the Arboracle platform into a zero-dependency, local-first open-standards library, field portal, and dataset. Every calculation traces to a published arboricultural standard (`ANSI A300`, `ISA BMP`, `AS 4970`, `BS 5837`), peer-reviewed urban forestry literature (`Nowak`, `McPherson & Simpson`, `Xiao`, `John White FCIN12`, `Claus Mattheck`), or a cited municipal code section.
 
 ---
 
@@ -83,7 +83,7 @@ Implements the Regenerative Arboriculture Protocol (`RAP-Spec v2.0`) diagnostic 
 
 ## Platform: engines, MCP, and the ordinance commons
 
-<a href="package.json"><img src="https://img.shields.io/badge/npm-v2.1.0_(local)-cb3837.svg" alt="npm: v2.1.0 (local)" /></a>
+<a href="package.json"><img src="https://img.shields.io/badge/npm-v2.2.0_(local)-cb3837.svg" alt="npm: v2.2.0 (local)" /></a>
 <a href="server/mcp/README.md"><img src="https://img.shields.io/badge/MCP-Compatible_(8_Tools)-2d6a4f.svg" alt="MCP: Compatible (8 Tools)" /></a>
 <a href="data/ordinances/CONTRIBUTING_DATA.md"><img src="https://img.shields.io/badge/Ordinance_Commons-8_Cities-74ac00.svg" alt="Ordinance Commons: 8 Cities" /></a>
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Open Arbor v2.1 Build-Time Static Case & Falsifiability Generator (web/generate-cases-and-methods.mjs)
+ * Open Arbor v2.2 Build-Time Static Case & Falsifiability Generator (web/generate-cases-and-methods.mjs)
  * Generates:
  *   - Verified Bioregional Field Cases (out/cases/index.html + 5 case pages)
  *     rendering 100% of the determination, innate LEO-RAP answer-first triage, provenance surface,
@@ -561,7 +561,7 @@ function renderCasesIndexHtml(evaluatedCases) {
       document.querySelector('meta[name="color-scheme"]').content = localStorage.getItem('color-scheme') ?? 'light dark';
     } catch (e) {}
   </script>
-  <title>Verified Bioregional Field Cases (5 Static Determinations) | Open Arbor v2.1</title>
+  <title>Verified Bioregional Field Cases (5 Static Determinations) | Open Arbor v2.2</title>
   <meta
     name="description"
     content="Five pre-rendered, crawlable arboricultural evidentiary case determinations across Central Texas (Austin, Georgetown, Liberty Hill) and Rogue Valley, Oregon (Ashland, Medford). 100% readable with JavaScript disabled."
@@ -650,7 +650,10 @@ ${cardsHtml}
   <footer class="app-footer">
     <div class="container">
       <p>
-        Open Arbor v2.1 &middot; Verified Bioregional Field Cases &middot; Governed by the Open Arbor Alliance &middot; Licensed under AGPL-3.0-only.
+        Open Arbor v2.2 &middot; Verified Bioregional Field Cases &middot; Governed by the Open Arbor Alliance.
+      </p>
+      <p>
+        AGPL-3.0 for the engine and CC0-1.0 for schemas and data &middot; <a href="../LICENSE">LICENSE</a> &middot; <a href="../LICENSE-DATA">LICENSE-DATA</a> &middot; <a href="https://github.com/Arboracle-Ecosystem/openarbor">GitHub Repository</a>
       </p>
     </div>
   </footer>
@@ -777,7 +780,7 @@ function renderSingleCaseHtml({ caseObj, evalResult, permalinkHash, stickySummar
       document.querySelector('meta[name="color-scheme"]').content = localStorage.getItem('color-scheme') ?? 'light dark';
     } catch (e) {}
   </script>
-  <title>${escapeHtml(caseObj.label)} | Verified Bioregional Field Case | Open Arbor v2.1</title>
+  <title>${escapeHtml(caseObj.label)} | Verified Bioregional Field Case | Open Arbor v2.2</title>
   <meta
     name="description"
     content="Static pre-rendered arboricultural determination for ${escapeHtml(sb.tree_tag)} (${escapeHtml(sb.species_scientific)}) in ${escapeHtml(provenance.municipality_name)}: ${escapeHtml(stickySummary.one_line_text)}."
@@ -955,7 +958,7 @@ ${triageRowsHtml}
         <div class="metric-box highlight-box">
           <span class="metric-label">Shareable Permalink State</span>
           <strong class="metric-value"><a href="../../demo/index.html${escapeHtml(permalinkHash)}" class="text-accent">Hydrate #oa1= Payload</a></strong>
-          <span class="metric-sub">Engine v2.0.0 lossless state vector</span>
+          <span class="metric-sub">Engine v2.2.0 lossless state vector</span>
         </div>
       </div>
     </section>
@@ -1290,7 +1293,7 @@ ${companionRowsHtml}
           <div class="metric-box">
             <span class="metric-label">Cryptographic Evidence Seal (SHA-256)</span>
             <div style="margin: 4px 0;">${renderExpandableHashHtml(evalResult.sha256)}</div>
-            <span class="metric-sub">Engine Version: <code>2.1.0</code> &middot; Dataset: <code>2.0.0</code></span>
+            <span class="metric-sub">Engine Version: <code>2.2.0</code> &middot; Dataset: <code>2.0.0</code></span>
           </div>
         </div>
         <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border-subtle); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; font-size: 0.85rem;">
@@ -1306,7 +1309,10 @@ ${companionRowsHtml}
   <footer class="app-footer">
     <div class="container">
       <p>
-        Open Arbor v2.1 &middot; Verified Bioregional Field Case (<code>${escapeHtml(caseObj.slug)}</code>) &middot; Governed by the Open Arbor Alliance &middot; Licensed under AGPL-3.0-only.
+        Open Arbor v2.2 &middot; Verified Bioregional Field Case (<code>${escapeHtml(caseObj.slug)}</code>) &middot; Governed by the Open Arbor Alliance.
+      </p>
+      <p>
+        AGPL-3.0 for the engine and CC0-1.0 for schemas and data &middot; <a href="../../LICENSE">LICENSE</a> &middot; <a href="../../LICENSE-DATA">LICENSE-DATA</a> &middot; <a href="https://github.com/Arboracle-Ecosystem/openarbor">GitHub Repository</a>
       </p>
     </div>
   </footer>
@@ -1657,10 +1663,10 @@ ${renderGroupRows(soilGroups)}
       document.querySelector('meta[name="color-scheme"]').content = localStorage.getItem('color-scheme') ?? 'light dark';
     } catch (e) {}
   </script>
-  <title>Executable Proof &amp; Falsifiability Ledger (${totalVerificationGroups} Executable Groups) | Open Arbor v2.1</title>
+  <title>Executable Proof &amp; Falsifiability Ledger (${totalVerificationGroups} Executable Groups) | Open Arbor v2.2</title>
   <meta
     name="description"
-    content="Open Arbor v2.1 Executable Proof & Falsifiability Ledger: ${totalVerificationGroups} executable verification groups across ${runnerCount} deterministic test runners plus ${totalOrdinanceRecords} schema-validated municipal ordinance records (${totalParityAssertions}/${totalParityAssertions} CLI-to-browser parity metrics)."
+    content="Open Arbor v2.2 Executable Proof & Falsifiability Ledger: ${totalVerificationGroups} executable verification groups across ${runnerCount} deterministic test runners plus ${totalOrdinanceRecords} schema-validated municipal ordinance records (${totalParityAssertions}/${totalParityAssertions} CLI-to-browser parity metrics)."
   />
   <link rel="manifest" href="../manifest.webmanifest" />
   <link rel="icon" href="../icons/icon.svg" type="image/svg+xml" />
@@ -1963,7 +1969,10 @@ ${boundaryRowsHtml}
   <footer class="app-footer">
     <div class="container">
       <p>
-        Open Arbor v2.1 &middot; Executable Proof &amp; Falsifiability Ledger &middot; ${totalVerificationGroups} Executable Verification Groups &middot; Licensed under AGPL-3.0-only.
+        Open Arbor v2.2 &middot; Executable Proof &amp; Falsifiability Ledger &middot; ${totalVerificationGroups} Executable Verification Groups.
+      </p>
+      <p>
+        AGPL-3.0 for the engine and CC0-1.0 for schemas and data &middot; <a href="../LICENSE">LICENSE</a> &middot; <a href="../LICENSE-DATA">LICENSE-DATA</a> &middot; <a href="https://github.com/Arboracle-Ecosystem/openarbor">GitHub Repository</a>
       </p>
     </div>
   </footer>

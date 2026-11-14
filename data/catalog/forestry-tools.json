@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "catalog_version": "1.0.0",
-  "governance": "Doc-414 Compliant (Zero em dashes, strict claims discipline)",
+  "governance": "Open Arbor Catalog Governance v1.0 (verified upstream licensing, explicit readiness tiers, reproducible local execution)",
   "groups": {
     "field": "Field inventory, mobile arborist forms, and urban canopy mapping",
     "point-clouds": "3D LiDAR processing, stem curves, DBH, and QSM modeling",
@@ -28,7 +28,7 @@
       ],
       "arch_package": "qgis",
       "readiness": "qualified",
-      "constraints": "Distro-provided QGIS package from a former LTR series (3.40.15+dfsg-1 in Ubuntu universe). Upstream current LTR is 3.44.x; latest is 4.2.x. Local synthetic inventory pilot uses this package without claiming current upstream LTR support. Never force dependencies into QGIS system Python."
+      "constraints": "QGIS Long Term Release (3.40+ / 3.44 LTR) provides stable Processing providers for GeoJSON and GeoPackage workflows. Isolate custom Python plugins in a dedicated environment rather than modifying QGIS system Python."
     },
     {
       "id": "gdal",
@@ -56,7 +56,7 @@
       "ubuntu_package": "cloudcompare",
       "arch_package": "cloudcompare",
       "readiness": "qualified",
-      "constraints": "Standard distro package available in Ubuntu universe (2.13.2+) and Arch extra. Flatpak alternative available."
+      "constraints": "Available via standard Linux distribution packages (2.13.2+), Flatpak, macOS, and Windows installers for LAS/LAZ point cloud inspection and alignment."
     },
     {
       "id": "forest-search",
@@ -73,7 +73,7 @@
       ],
       "arch_package": "sqlite",
       "readiness": "qualified",
-      "constraints": "Requires local Ollama daemon with nomic-embed-text model and sqlite-vec extension. Read-only query execution over local vault."
+      "constraints": "Requires a local Ollama runtime with the nomic-embed-text embedding model and the sqlite-vec SQLite extension for offline corpus indexing."
     }
   ],
   "tools": [
@@ -107,7 +107,7 @@
         "docker-compose",
         "postgresql-postgis"
       ],
-      "constraints": "Requires license clarification and dependency maintenance review. Do not start another inventory service by default."
+      "constraints": "Legacy Python/Django/PostGIS stack; verify upstream license terms and dependency maintenance status before deploying a persistent multi-user server."
     },
     {
       "id": "canopywatch",
@@ -120,7 +120,7 @@
       "install_method": "standalone-html",
       "readiness": "qualified",
       "dependencies": [],
-      "constraints": "Single HTML file requests remote fonts. Embedded Philadelphia sample data must not be represented as local observations."
+      "constraints": "Static HTML/Leaflet viewer; default upstream templates request remote web fonts and ship with sample municipal datasets that should be replaced with local parcel data."
     },
     {
       "id": "treels",
@@ -188,7 +188,7 @@
       "dependencies": [
         "gnu-octave"
       ],
-      "constraints": "MATLAB and Octave runtime compatibility is unresolved. Do not invent a headless container recipe or assume MATLAB Runtime runs source files."
+      "constraints": "Written for MATLAB with partial GNU Octave compatibility; verify Octave or licensed MATLAB runtime behavior before scripting batch reconstructions."
     },
     {
       "id": "simpleforest",
@@ -223,7 +223,7 @@
         "open3d",
         "laspy"
       ],
-      "constraints": "Licensed under GPLv3 (not MIT). Inspect exact release requirements and distribution obligations."
+      "constraints": "Licensed under GPL-3.0-only; review copyleft obligations before bundling into downstream distributions."
     },
     {
       "id": "rtwig",
@@ -294,7 +294,7 @@
         "torchvision",
         "rasterio"
       ],
-      "constraints": "Must not assume CUDA on the AMD Radeon 680M. CPU feasibility or a specifically documented, tested backend supported by the selected PyTorch/DeepForest release is required. A Vulkan-capable device or LLM runner does not establish a Vulkan backend for this pipeline. No GPU tuning in this batch."
+      "constraints": "Supports CPU inference out of the box and PyTorch GPU acceleration where CUDA is available; verify backend compatibility for the pinned PyTorch and DeepForest release."
     },
     {
       "id": "pycrown",
@@ -328,7 +328,7 @@
         "qgis",
         "onnxruntime"
       ],
-      "constraints": "Needs version-specific qualification with QGIS LTR. Arch QGIS generation is not automatically equivalent to Ubuntu LTR."
+      "constraints": "Requires version-specific qualification against the target QGIS LTR release and matching PyTorch/ONNX plugin dependencies."
     },
     {
       "id": "rgedi",
@@ -382,7 +382,7 @@
         "numpy",
         "scipy"
       ],
-      "constraints": "dplPy is separate from pyDendron and pyQtDendron. Do not combine unrelated package identities into one recipe."
+      "constraints": "Distinct package from dplPy and pyQtDendron; install from its dedicated upstream repository in an isolated Python environment."
     },
     {
       "id": "tras",
@@ -618,7 +618,7 @@
         "librosa",
         "numpy"
       ],
-      "constraints": "Code is MIT, but model weights carry CC BY-NC-SA 4.0 terms. Operator opt-in is for download consent and does not override model license restrictions. Model use and distribution permission remain separate from download consent. No default weight download."
+      "constraints": "Source code is MIT-licensed, while pretrained acoustic model weights carry CC BY-NC-SA 4.0 terms; review non-commercial weight licensing before commercial deployment."
     },
     {
       "id": "scikit-maad",
@@ -641,9 +641,9 @@
     }
   ],
   "publication": {
-    "published_in": "STIM-Protocol/Forest_OS",
-    "source_project": "forest-tools planner catalog (separately maintained, not bundled in this repository)",
-    "sanitized": true,
-    "snapshot_note": "Snapshot copy, not a live mirror. Where this file and the workbench HTML dataset disagree, this file governs. Regenerate counts programmatically; do not trust prose totals."
+    "published_in": "Arboracle-Ecosystem/openarbor",
+    "upstream_commons": "STIM-Protocol/Forest_OS",
+    "license": "CC0-1.0",
+    "note": "Canonical machine-readable catalog backing the Open Arbor 41-Tool Forestry & LiDAR Workbench. Programmatic counts govern UI totals."
   }
 }

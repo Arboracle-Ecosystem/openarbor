@@ -1,4 +1,4 @@
-# Open Arbor v2.0 CLI vs. Browser Bundle Parity Verification Report
+# Open Arbor v2.2 CLI vs. Browser Bundle Parity Verification Report
 
 - **Verification Date:** `2026-10-29`
 - **Parity Verdict:** **4/4 IDENTICAL (`PASS`)**
@@ -8,21 +8,26 @@
 
 | File Path | Size (Bytes) | Role |
 | :--- | :--- | :--- |
-| `out/agents/openarbor-steward/AGENTS.md` | `2235` | Static Web Build Artifact |
-| `out/agents/openarbor-steward/README.md` | `1717` | Static Web Build Artifact |
-| `out/agents/openarbor-steward/SKILL.md` | `5104` | Static Web Build Artifact |
-| `out/agents/openarbor-steward/claude-agent.md` | `2292` | Static Web Build Artifact |
-| `out/agents/openarbor-steward/hermes-steward.yaml` | `1172` | Static Web Build Artifact |
-| `out/cases/ashland-oregon-white-oak/index.html` | `53483` | Static Pre-Rendered Bioregional Field Case Page |
-| `out/cases/austin-heritage-live-oak/index.html` | `52957` | Static Pre-Rendered Bioregional Field Case Page |
-| `out/cases/georgetown-multistem-pecan/index.html` | `51918` | Static Pre-Rendered Bioregional Field Case Page |
-| `out/cases/index.html` | `34829` | 5-Case Bioregional Field Gallery Index (`/cases/`) |
-| `out/cases/liberty-hill-post-oak/index.html` | `52189` | Static Pre-Rendered Bioregional Field Case Page |
-| `out/cases/medford-ponderosa-pine/index.html` | `52812` | Static Pre-Rendered Bioregional Field Case Page |
-| `out/data/catalog/forestry-tools.json` | `22749` | Published open dataset JSON |
+| `out/CONTRIBUTING.md` | `2887` | Open Arbor Contributor & Statutory Verification Guide |
+| `out/LICENSE` | `34523` | Engine & Web Portal License (`AGPL-3.0-only`) |
+| `out/LICENSE-DATA` | `7048` | Schemas & Municipal Datasets Public Domain Dedication (`CC0-1.0`) |
+| `out/NOTICE` | `286` | Open Arbor Attribution & Governance Notice |
+| `out/agents/openarbor-steward/AGENTS.md` | `2235` | Portable OpenArbor Steward Agent Pack (`LEO-RAP`) |
+| `out/agents/openarbor-steward/README.md` | `1717` | Portable OpenArbor Steward Agent Pack (`LEO-RAP`) |
+| `out/agents/openarbor-steward/SKILL.md` | `5104` | Portable OpenArbor Steward Agent Pack (`LEO-RAP`) |
+| `out/agents/openarbor-steward/claude-agent.md` | `2292` | Portable OpenArbor Steward Agent Pack (`LEO-RAP`) |
+| `out/agents/openarbor-steward/hermes-steward.yaml` | `1172` | Portable OpenArbor Steward Agent Pack (`LEO-RAP`) |
+| `out/cases/ashland-oregon-white-oak/index.html` | `52437` | Static Pre-Rendered Bioregional Field Case Page |
+| `out/cases/austin-heritage-live-oak/index.html` | `52019` | Static Pre-Rendered Bioregional Field Case Page |
+| `out/cases/georgetown-multistem-pecan/index.html` | `50962` | Static Pre-Rendered Bioregional Field Case Page |
+| `out/cases/index.html` | `30975` | 5-Case Bioregional Field Gallery Index (`/cases/`) |
+| `out/cases/liberty-hill-post-oak/index.html` | `51200` | Static Pre-Rendered Bioregional Field Case Page |
+| `out/cases/medford-ponderosa-pine/index.html` | `51802` | Static Pre-Rendered Bioregional Field Case Page |
+| `out/data/catalog/forestry-tools.json` | `22589` | Published open dataset JSON |
 | `out/data/ordinances/central_texas_ordinances.json` | `10712` | Published open dataset JSON |
 | `out/data/ordinances/rogue_valley_oregon_ordinances.json` | `7531` | Published open dataset JSON |
-| `out/demo/index.html` | `63603` | Interactive 3-mode Open Arbor engine demo (`/demo/`) |
+| `out/demo/index.html` | `63850` | Interactive 3-mode Open Arbor engine demo (`/demo/`) |
+| `out/docs/LAYERS.md` | `6764` | Three-Layer Epistemic Architecture & Kill Criteria (`docs/LAYERS.md`) |
 | `out/icons/apple-touch-icon.png` | `50286` | PWA & Brand Icon Asset |
 | `out/icons/icon-192.png` | `65521` | PWA & Brand Icon Asset |
 | `out/icons/icon-512.png` | `49031` | PWA & Brand Icon Asset |
@@ -31,22 +36,22 @@
 | `out/icons/icon.svg` | `5008` | PWA & Brand Icon Asset |
 | `out/icons/screenshot-desktop.png` | `216969` | PWA & Brand Icon Asset |
 | `out/icons/screenshot-mobile.png` | `147971` | PWA & Brand Icon Asset |
-| `out/index.html` | `42029` | Open Arbor (`openarbor.org`) root landing and alliance portal |
+| `out/index.html` | `43111` | Open Arbor (`openarbor.org`) root landing and alliance portal |
 | `out/manifest.webmanifest` | `2656` | PWA Web Application Manifest |
-| `out/mcp/index.html` | `24797` | 8-Tool MCP Server Playground & JSON-RPC Tester (`/mcp/`) |
-| `out/methods/index.html` | `61387` | Executable Proof & Falsifiability Ledger (`/methods/`) |
-| `out/openarbor-bundle.js` | `540040` | Compiled ESM browser bundle (engines + ordinances + catalog + schemas + UI) |
-| `out/ordinances/index.html` | `13335` | 8-City Municipal Ordinance Commons & Schema Validator (`/ordinances/`) |
+| `out/mcp/index.html` | `25073` | 8-Tool MCP Server Playground & JSON-RPC Tester (`/mcp/`) |
+| `out/methods/index.html` | `61619` | Executable Proof & Falsifiability Ledger (`/methods/`) |
+| `out/openarbor-bundle.js` | `549679` | Compiled ESM browser bundle (engines + ordinances + catalog + schemas + UI) |
+| `out/ordinances/index.html` | `13631` | 8-City Municipal Ordinance Commons & Schema Validator (`/ordinances/`) |
 | `out/schemas/municipal-ordinance.schema.json` | `3630` | Published JSON Schema (Draft 2020-12) |
 | `out/schemas/rap_assessment.schema.json` | `43105` | Published JSON Schema (Draft 2020-12) |
 | `out/schemas/rap_field_observation.schema.json` | `6317` | Published JSON Schema (Draft 2020-12) |
 | `out/schemas/rap_openbadge_v3.schema.json` | `26589` | Published JSON Schema (Draft 2020-12) |
 | `out/schemas/rca_assessment.schema.json` | `42896` | Published JSON Schema (Draft 2020-12) |
 | `out/schemas/rca_openbadge_v3.schema.json` | `26473` | Published JSON Schema (Draft 2020-12) |
-| `out/spec/index.html` | `27983` | RAP-Spec v2.0 & 200-Year Heartwood Vault Reference (`/spec/`) |
+| `out/spec/index.html` | `28236` | RAP-Spec v2.0 & 200-Year Heartwood Vault Reference (`/spec/`) |
 | `out/styles.css` | `72395` | Shared Sunlight Field & Canopy Dark design system stylesheet |
-| `out/sw.js` | `4953` | Offline-First Service Worker Cache Shell |
-| `out/tools/index.html` | `13394` | 41-tool Open-Source Forestry & Arboriculture Workbench (`/tools/`) |
+| `out/sw.js` | `5047` | Offline-First Service Worker Cache Shell |
+| `out/tools/index.html` | `14056` | 41-tool Open-Source Forestry & Arboriculture Workbench (`/tools/`) |
 
 ## 2. Executive Summary of 4 Fixed Bioregional Input Cases (Texas & Oregon)
 

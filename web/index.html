@@ -11,7 +11,7 @@
         document.querySelector('meta[name="color-scheme"]').content = localStorage.getItem('color-scheme') ?? 'light dark';
       } catch (e) {}
     </script>
-    <title>Open Arbor: Free Field Instrument for Tree Stewards &amp; Consulting Arborists</title>
+    <title>Open Arbor v2.2 | Free Field Instrument for Tree Stewards &amp; Consulting Arborists</title>
     <meta
       name="description"
       content="See what your tree is holding up before anyone starts a chainsaw. Open Arbor reads the living wood cylinder, underground root plate, soil sponge, and city tree code in one glance with zero account or paywall."
@@ -108,10 +108,18 @@
     <section class="oa-sequoia-hero">
       <div class="container">
         <div class="oa-sequoia-intro">
-          <span class="oa-sequoia-eyebrow">OPEN ARBOR</span>
+          <span class="oa-sequoia-eyebrow">OPEN ARBOR v2.2</span>
           <h1 id="main-content" tabindex="-1" class="oa-sequoia-title">City tree code, critical root zone, and permit determination in one glance.</h1>
           <p class="oa-sequoia-lead">
             Open Arbor reads trunk diameter, species protections, ANSI A300 and AS 4970 root protection zones, and municipal tree ordinances locally with zero account or paywall. Valuation models and practice economics stay separated below the primary determination.
+          </p>
+          <div class="oa-word-of-mouth-actions" style="margin-top: 14px;">
+            <a href="./demo/index.html" class="btn btn-primary btn-sm">Launch Live Engine Demo</a>
+            <a href="./spec/index.html" class="btn btn-secondary btn-sm">Inspect RAP-Spec v2.0</a>
+            <a href="https://github.com/Arboracle-Ecosystem/openarbor" class="btn btn-outline btn-sm">GitHub Repository</a>
+          </div>
+          <p class="hint" style="margin: 10px 0 0 0;">
+            AGPL-3.0 for the engine and CC0-1.0 for schemas and data &middot; <a href="./LICENSE">LICENSE</a> &middot; <a href="./LICENSE-DATA">LICENSE-DATA</a>
           </p>
         </div>
 
@@ -691,7 +699,7 @@ claude mcp add openarbor -- npx -y --package=github:Arboracle-Ecosystem/openarbo
         </div>
         <div class="oa-handoff-actions">
           <span class="hint" id="handoff-share-status">
-            No data is uploaded to any server; the tree state lives inside the link hash.
+            No data is uploaded to any server; all measurements stay in the link parameters.
           </span>
           <div class="oa-word-of-mouth-actions">
             <button type="button" id="btn-copy-handoff-note" class="btn btn-copper">Copy Note</button>
@@ -710,12 +718,16 @@ claude mcp add openarbor -- npx -y --package=github:Arboracle-Ecosystem/openarbo
     <footer class="oa-footer">
       <div class="container oa-footer-inner">
         <div>
-          <strong>Open Arbor Alliance &middot; Software as an Instrument (SaaI)</strong>
+          <strong>Open Arbor v2.2 &middot; Open Arbor Alliance &middot; Software as an Instrument (SaaI)</strong>
           <p class="hint">
             Governed under AGPL-3.0-only (code &amp; web layer) and CC0-1.0 (schemas &amp; municipal datasets). Built for a 200-year stewardship horizon (2026 to 2226) with zero cloud lock-in, zero telemetry, and open primary citations.
           </p>
+          <p class="hint" style="margin-top: 6px;">
+            AGPL-3.0 for the engine and CC0-1.0 for schemas and data &middot; <a href="./LICENSE">LICENSE</a> &middot; <a href="./LICENSE-DATA">LICENSE-DATA</a> &middot; <a href="https://github.com/Arboracle-Ecosystem/openarbor">GitHub Repository</a>
+          </p>
         </div>
         <nav class="oa-footer-links" aria-label="Footer Navigation">
+          <a href="https://github.com/Arboracle-Ecosystem/openarbor">GitHub</a>
           <a href="./demo/index.html">Field Studio</a>
           <a href="./cases/index.html">Case Studies</a>
           <a href="./ordinances/index.html">City Tree Laws</a>

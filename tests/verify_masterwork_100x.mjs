@@ -101,6 +101,81 @@ const bundle = await import(bundlePath);
     );
   }
 
+  // Compact delta compression verification for mutated assessments (< 600 chars) + readable query round-trip
+  const mutatedCase = JSON.parse(JSON.stringify(presetsToTest[0]));
+  mutatedCase.ordinance_id = 'tx-georgetown';
+  mutatedCase.crz_disturbed_pct = 24;
+  mutatedCase.assessment.structural_baseline.dbh_cm = 91.44;
+  mutatedCase.assessment.structural_baseline.sound_shell_thickness_ratio_t_over_r = 0.28;
+  mutatedCase.assessment.structural_baseline.municipal_permit_disposition.jurisdiction_id = 'tx-georgetown';
+  const mutHash = bundle.encodeAssessmentPermalink(mutatedCase);
+  const mutFullUrl = `https://openarbor.org/demo/${mutHash}`;
+  assert.ok(
+    mutFullUrl.length < 600,
+    `D1 FAIL: Mutated permalink URL must be < 600 chars via delta compression, got ${mutFullUrl.length}`
+  );
+  const mutBeforeEval = bundle.evaluateCompleteFieldCase(mutatedCase.assessment, {
+    ordinance_id: mutatedCase.ordinance_id,
+    condition_class: mutatedCase.condition_class,
+    site_condition: mutatedCase.site_condition,
+    proposed_removal: mutatedCase.proposed_removal,
+    pruning_date: mutatedCase.pruning_date,
+    crz_disturbed_pct: mutatedCase.crz_disturbed_pct,
+    cutfill_depth_in: mutatedCase.cutfill_depth_in,
+    impervious_pct: mutatedCase.impervious_pct,
+    crown_removal_pct: mutatedCase.crown_removal_pct,
+    generated_at: `${mutatedCase.assessment.structural_baseline.assessment_date}T00:00:00.000Z`,
+  });
+  const mutRestored = bundle.decodeAssessmentPermalink(mutHash);
+  const mutAfterEval = bundle.evaluateCompleteFieldCase(mutRestored.assessment, {
+    ordinance_id: mutRestored.ordinance_id,
+    condition_class: mutRestored.condition_class,
+    site_condition: mutRestored.site_condition,
+    proposed_removal: mutRestored.proposed_removal,
+    pruning_date: mutRestored.pruning_date,
+    crz_disturbed_pct: mutRestored.crz_disturbed_pct,
+    cutfill_depth_in: mutRestored.cutfill_depth_in,
+    impervious_pct: mutRestored.impervious_pct,
+    crown_removal_pct: mutRestored.crown_removal_pct,
+    generated_at: `${mutRestored.assessment.structural_baseline.assessment_date}T00:00:00.000Z`,
+  });
+  assert.equal(
+    mutAfterEval.compiledReport.sha256,
+    mutBeforeEval.compiledReport.sha256,
+    'D1 FAIL: Delta-compressed mutated permalink SHA-256 mismatch'
+  );
+
+  assert.equal(
+    typeof bundle.encodeReadableTreeQuery,
+    'function',
+    'D1 FAIL: bundle.encodeReadableTreeQuery must be exported'
+  );
+  assert.equal(
+    typeof bundle.decodeReadableTreeQuery,
+    'function',
+    'D1 FAIL: bundle.decodeReadableTreeQuery must be exported'
+  );
+  const atxReadableQuery = bundle.encodeReadableTreeQuery(presetsToTest[0]);
+  assert.ok(
+    atxReadableQuery.length < 120 && !atxReadableQuery.includes('#oa1=') && !atxReadableQuery.includes('eyJ'),
+    `D1 FAIL: Readable tree query must be short and human-readable, got ${atxReadableQuery}`
+  );
+  const decodedReadable = bundle.decodeReadableTreeQuery(
+    '?city=tx-georgetown&tree=austin-live-oak&dbh=36&cavity=72&cut=24'
+  );
+  assert.equal(decodedReadable.ordinance_id, 'tx-georgetown', 'D1 FAIL: readable query city mismatch');
+  assert.equal(
+    decodedReadable.assessment.structural_baseline.dbh_cm,
+    91.44,
+    'D1 FAIL: readable query dbh_cm mismatch'
+  );
+  assert.equal(
+    decodedReadable.assessment.structural_baseline.sound_shell_thickness_ratio_t_over_r,
+    0.28,
+    'D1 FAIL: readable query t/R mismatch'
+  );
+  assert.equal(decodedReadable.crz_disturbed_pct, 24, 'D1 FAIL: readable query cut pct mismatch');
+
   console.log(`[PASS] D1. Shareable Assessment Permalink (#oa1=...) verified across 3 presets (longest URL: ${longestUrlLength} chars)`);
 }
 

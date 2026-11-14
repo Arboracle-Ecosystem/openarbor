@@ -111,6 +111,8 @@ import {
   GALLERY_CASES,
   encodeAssessmentPermalink,
   decodeAssessmentPermalink,
+  encodeReadableTreeQuery,
+  decodeReadableTreeQuery,
   formatStickyDeterminationSummary,
   inspectMunicipalityProvenance,
   renderExpandableHashHtml,
@@ -206,6 +208,8 @@ export {
   GALLERY_CASES,
   encodeAssessmentPermalink,
   decodeAssessmentPermalink,
+  encodeReadableTreeQuery,
+  decodeReadableTreeQuery,
   formatStickyDeterminationSummary,
   inspectMunicipalityProvenance,
   renderExpandableHashHtml,
@@ -1493,6 +1497,18 @@ export function initFieldToolUI() {
     }
   }
 
+  function buildDemoShareUrl(queryOrHash) {
+    const suffix = String(queryOrHash || '');
+    if (typeof window === 'undefined' || !window.location) {
+      return `https://openarbor.org/demo/${suffix}`;
+    }
+    const cleanPath =
+      window.location.protocol === 'file:'
+        ? window.location.pathname
+        : window.location.pathname.replace(/index\.html$/, '');
+    return `${window.location.origin}${cleanPath}${suffix}`;
+  }
+
   function renderAllOutputs(assessment, res) {
     const errBanner = el('error-banner');
     if (errBanner) errBanner.hidden = true;
@@ -1519,11 +1535,10 @@ export function initFieldToolUI() {
     })();
 
     // 0. D1 Permalink & D2 Sticky Determination Bar Updates
-    currentPermalinkHash = encodeAssessmentPermalink(getCurrentCaseStateFromForm());
-    const fullShareUrl =
-      typeof window !== 'undefined' && window.location
-        ? `${window.location.origin}${window.location.pathname}${currentPermalinkHash}`
-        : `https://openarbor.org/demo/${currentPermalinkHash}`;
+    const formCaseState = getCurrentCaseStateFromForm();
+    currentPermalinkHash = encodeAssessmentPermalink(formCaseState);
+    const fullShareUrl = buildDemoShareUrl(currentPermalinkHash);
+    const fullReadableShareUrl = buildDemoShareUrl(encodeReadableTreeQuery(formCaseState));
 
     const permalinkDisplayEl = el('permalink-url-display');
     if (permalinkDisplayEl) {
@@ -2043,7 +2058,7 @@ export function initFieldToolUI() {
       removalBidUsd: res.phasedTriage.removal_bid_usd,
       marginMultiplier: res.phasedTriage.net_margin_multiplier,
       oakWiltWarning: oakFlagText,
-      shareUrl: fullShareUrl,
+      shareUrl: fullReadableShareUrl,
     });
 
     const receiverBanner = el('shared-brief-receiver-banner');
@@ -2353,10 +2368,7 @@ export function initFieldToolUI() {
     if (typeof window !== 'undefined' && window.history && typeof window.history.replaceState === 'function') {
       window.history.replaceState(null, '', currentPermalinkHash);
     }
-    const fullUrl =
-      typeof window !== 'undefined' && window.location
-        ? `${window.location.origin}${window.location.pathname}${currentPermalinkHash}`
-        : `https://openarbor.org/demo/${currentPermalinkHash}`;
+    const fullUrl = buildDemoShareUrl(currentPermalinkHash);
     if (typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
       try {
         await navigator.clipboard.writeText(fullUrl);
@@ -2384,13 +2396,11 @@ export function initFieldToolUI() {
 
   function openCurrentFieldHandoffDialog() {
     if (!latestAssessment || !latestResult) return;
+    const caseState = getCurrentCaseStateFromForm();
     if (!currentPermalinkHash) {
-      currentPermalinkHash = encodeAssessmentPermalink(getCurrentCaseStateFromForm());
+      currentPermalinkHash = encodeAssessmentPermalink(caseState);
     }
-    const shareUrl =
-      typeof window !== 'undefined' && window.location
-        ? `${window.location.origin}${window.location.pathname}${currentPermalinkHash}`
-        : `https://openarbor.org/demo/${currentPermalinkHash}`;
+    const shareUrl = buildDemoShareUrl(encodeReadableTreeQuery(caseState));
     const sb = latestAssessment.structural_baseline || {};
     const row = latestResult.evaluatedRow;
     const oakFlag = Array.isArray(row?.flags)
@@ -2528,26 +2538,39 @@ export function initFieldToolUI() {
   });
 
   function tryRestoreFromUrlHash() {
-    if (typeof window === 'undefined' || !window.location || !window.location.hash) {
+    if (typeof window === 'undefined' || !window.location) {
       isReceiverModeActive = false;
       return false;
     }
-    if (!window.location.hash.startsWith('#oa1=')) {
-      isReceiverModeActive = false;
-      return false;
-    }
-    try {
-      const decoded = decodeAssessmentPermalink(window.location.hash);
-      if (decoded && decoded.assessment) {
-        isReceiverModeActive = true;
-        document.querySelectorAll('.btn-preset').forEach((b) => {
-          b.classList.toggle('active', b.dataset.caseId === decoded.id);
-        });
-        loadCaseIntoForm(decoded);
-        return true;
+    if (window.location.hash && window.location.hash.startsWith('#oa1=')) {
+      try {
+        const decoded = decodeAssessmentPermalink(window.location.hash);
+        if (decoded && decoded.assessment) {
+          isReceiverModeActive = true;
+          document.querySelectorAll('.btn-preset').forEach((b) => {
+            b.classList.toggle('active', b.dataset.caseId === decoded.id);
+          });
+          loadCaseIntoForm(decoded);
+          return true;
+        }
+      } catch {
+        // Ignore malformed hash and fall back to readable query or default preset
       }
-    } catch {
-      // Ignore malformed hash and fall back to default preset
+    }
+    if (window.location.search) {
+      try {
+        const decodedQuery = decodeReadableTreeQuery(window.location.search);
+        if (decodedQuery && decodedQuery.assessment) {
+          isReceiverModeActive = true;
+          document.querySelectorAll('.btn-preset').forEach((b) => {
+            b.classList.toggle('active', b.dataset.caseId === decodedQuery.id);
+          });
+          loadCaseIntoForm(decodedQuery);
+          return true;
+        }
+      } catch {
+        // Ignore malformed query string and fall back to default preset
+      }
     }
     isReceiverModeActive = false;
     return false;
@@ -2555,6 +2578,9 @@ export function initFieldToolUI() {
 
   if (typeof window !== 'undefined') {
     window.addEventListener('hashchange', () => {
+      tryRestoreFromUrlHash();
+    });
+    window.addEventListener('popstate', () => {
       tryRestoreFromUrlHash();
     });
   }

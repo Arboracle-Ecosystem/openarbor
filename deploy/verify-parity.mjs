@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * OpenArbor v2.0 CLI vs. Browser Bundle Parity Verification Runner
+ * Open Arbor v2.2 CLI vs. Browser Bundle Parity Verification Runner
  * Executes three fixed Central Texas input sets through BOTH:
  *   1. Local CLI (node bin/openarbor-rap.mjs compile / counter-notice / economics --json) + Node core engines
  *   2. Compiled Browser Bundle (out/openarbor-bundle.js)
@@ -330,7 +330,7 @@ function walkOutDir(dir, prefix = 'out') {
 const outFiles = walkOutDir(path.join(rootDir, 'out'));
 
 const mdLines = [
-  '# Open Arbor v2.0 CLI vs. Browser Bundle Parity Verification Report',
+  '# Open Arbor v2.2 CLI vs. Browser Bundle Parity Verification Report',
   '',
   '- **Verification Date:** `2026-10-29`',
   '- **Parity Verdict:** **4/4 IDENTICAL (`PASS`)**',
@@ -374,6 +374,18 @@ const mdLines = [
         ? 'Published JSON Schema (Draft 2020-12)'
         : f.name.startsWith('out/data/')
         ? 'Published open dataset JSON'
+        : f.name === 'out/LICENSE'
+        ? 'Engine & Web Portal License (`AGPL-3.0-only`)'
+        : f.name === 'out/LICENSE-DATA'
+        ? 'Schemas & Municipal Datasets Public Domain Dedication (`CC0-1.0`)'
+        : f.name === 'out/NOTICE'
+        ? 'Open Arbor Attribution & Governance Notice'
+        : f.name === 'out/CONTRIBUTING.md'
+        ? 'Open Arbor Contributor & Statutory Verification Guide'
+        : f.name === 'out/docs/LAYERS.md'
+        ? 'Three-Layer Epistemic Architecture & Kill Criteria (`docs/LAYERS.md`)'
+        : f.name.startsWith('out/agents/')
+        ? 'Portable OpenArbor Steward Agent Pack (`LEO-RAP`)'
         : 'Static Web Build Artifact';
     return `| \`${f.name}\` | \`${f.bytes}\` | ${role} |`;
   }),

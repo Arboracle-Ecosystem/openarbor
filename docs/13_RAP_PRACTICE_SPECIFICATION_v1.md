@@ -18,15 +18,15 @@ The Regenerative Arboriculture Protocol (`RAP`) is an open diagnostic, evidentia
 
 ### 1.1 Protocol boundary: `RAP` / `RAPPER` vs. `ASCA` `RCA`
 
-In professional arboriculture, `RCA` denotes a Registered Consulting Arborist credentialed under `ASCA` (`ASCA_Registered_Consulting_Arborist`). Open Arbor reserves `RCA` strictly for `ASCA` Registered Consulting Arborist references. Open Arbor's diagnostic protocol is named the **Regenerative Arboriculture Protocol (`RAP`)**, and practitioners certified against `RAP-Spec v2.0` hold the **Regenerative Arboriculture Protocol Practitioner in Ecological Restoration (`RAPPER`)** designation.
+In professional arboriculture, `RCA` denotes a Registered Consulting Arborist credentialed under `ASCA` (`ASCA_Registered_Consulting_Arborist`). Open Arbor reserves `RCA` strictly for `ASCA` Registered Consulting Arborist references. Open Arbor's diagnostic protocol is named the **Regenerative Arboriculture Protocol (`RAP`)**, and practitioners certified against `RAP-Spec v2.0` hold the **Regenerative Arboriculture Protocol Practitioner in Ecological Restoration (`RAPPER`)** designation. See [docs/16_RAP_AND_RAPPER_ARCHITECTURE.md](./16_RAP_AND_RAPPER_ARCHITECTURE.md) for the protocol-first ontology, four-rung `RAPPER` progression ladder, Two-Register Citation Rule, and adoption kill criteria (`H-RAP-1` through `H-RAP-3`).
 
 ## 2. Licensing
 
 Open Arbor separates software, data schemas, and practice documentation under distinct open licenses:
 
-- **Code (`src/`, `bin/`, `web/`):** `AGPL-3.0-only`
+- **Code (`src/`, `bin/`, `web/`, `server/`):** `AGPL-3.0-only`
 - **Schemas and datasets (`schemas/`, `data/`):** `CC0-1.0`
-- **Specification prose (`docs/13_RAP_PRACTICE_SPECIFICATION_v1.md`):** `CC BY-SA 4.0`
+- **Specification prose (`docs/13_RAP_PRACTICE_SPECIFICATION_v1.md`, `docs/16_RAP_AND_RAPPER_ARCHITECTURE.md`):** `CC BY-SA 4.0`
 
 ## 3. Five Mandatory Diagnostic Domains (`schemas/rap_assessment.schema.json`)
 
@@ -44,7 +44,7 @@ A complete reference case is stored at `examples/ashland_oregon_white_oak_rap_v2
 
 `src/core/rapEngine.js` implements pure ESM functions compiled identically in Node.js CLI (`bin/openarbor-rap.mjs`) and the static browser bundle (`out/openarbor-bundle.js`):
 
-- `evaluateBiomechanicsAndRhizosphere(assessment)`: evaluates Mattheck `t/R >= 0.30` hollow-cylinder bending stability, computes concentric `SRZ`, `CRZ`, and `TIZ` areas, and scales pneumatic rhizosphere decompaction and amendment volumes (biochar at 8 percent of decompacted volume, fungal compost at 15 percent of decompacted volume, ramial woodchip mulch at 8 cm depth across `TIZ`, humate at 1.5 kg per cubic meter).
+- `evaluateBiomechanicsAndRhizosphere(assessment)`: evaluates Mattheck `t/R >= 0.30` hollow-cylinder bending stability, computes concentric `SRZ`, `CRZ`, and `TIZ` areas, and scales pneumatic rhizosphere decompaction and amendment volumes (biochar at `8%` of decompacted volume, fungal compost at `15%` of decompacted volume, ramial woodchip mulch at 8 cm depth across `TIZ`, humate at 1.5 kg per cubic meter).
 - `lintRapEvidentiaryReport(assessment)`: runs five hard evidentiary gates:
   1. `MISSING_DOMAIN`: verifies all five mandatory domains exist.
   2. `INVALID_BIOMETRICS` / `INVALID_GEO_LOCATION`: requires positive `dbh_cm` and non-empty `plus_code_global`.

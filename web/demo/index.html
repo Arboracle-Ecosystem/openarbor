@@ -11,7 +11,7 @@
       document.querySelector('meta[name="color-scheme"]').content = localStorage.getItem('color-scheme') ?? 'light dark';
     } catch (e) {}
   </script>
-  <title>Open Arbor v2.1 | Field Studio &amp; Arborist Workbench</title>
+  <title>Open Arbor v2.2 | Field Studio &amp; Arborist Workbench</title>
   <meta name="description" content="Zero-dependency, open-standards arboricultural Field Studio: ANSI A300 Part 5 root-zone protection, LEO-RAP phased stewardship triage, soil sponge capacity, municipal tree laws, multi-tree stand union rollup, and Open Badges 3.0 attestation.">
   <link rel="manifest" href="../manifest.webmanifest" />
   <link rel="icon" href="../icons/icon.svg" type="image/svg+xml" />
@@ -92,7 +92,7 @@
     <div class="card oa-receiver-banner-card">
       <div class="verdict-banner" style="margin-bottom: 10px;">
         <div>
-          <span class="eyebrow">Arborist Handoff Brief Received (#oa1= Field Link)</span>
+          <span class="eyebrow">Arborist Handoff Brief Received (Zero-Server Field Link)</span>
           <h2 id="receiver-specimen-heading">Shared Tree Assessment Loaded</h2>
           <p id="receiver-meta-line" class="subtitle"></p>
         </div>
@@ -1016,7 +1016,7 @@
       </div>
 
       <p class="subtitle" id="handoff-subject-line">
-        Share a self-contained field brief with your arborist or municipal reviewer. Every measurement, statutory citation, and phased root-collar prescription travels inside the lossless <code>#oa1=</code> link with zero cloud account required.
+        Share a self-contained field brief with your arborist or municipal reviewer. Every measurement, statutory citation, and phased root-collar prescription travels inside the link parameters with zero cloud account required.
       </p>
 
       <div class="oa-handoff-tabs" role="tablist" aria-label="Select handoff message format">
@@ -1031,15 +1031,15 @@
       </div>
 
       <div class="field">
-        <label for="handoff-share-url-input">Self-Contained Field Studio Link (<code>#oa1=...</code>)</label>
+        <label for="handoff-share-url-input">Zero-Server Field Studio Link</label>
         <div class="oa-handoff-url-row">
-          <input type="text" id="handoff-share-url-input" readonly value="https://openarbor.org/demo/#oa1=...">
+          <input type="text" id="handoff-share-url-input" readonly value="https://openarbor.org/demo/?city=tx-austin&amp;tree=austin-live-oak">
           <button type="button" id="btn-copy-handoff-url" class="btn btn-secondary btn-sm">Copy Direct Tree Link</button>
         </div>
       </div>
 
       <div class="oa-handoff-actions">
-        <span class="hint" id="handoff-share-status">No data is uploaded to any server; the tree state lives inside the link hash.</span>
+        <span class="hint" id="handoff-share-status">No data is uploaded to any server; all measurements stay in the link parameters.</span>
         <div style="display: flex; flex-wrap: wrap; gap: 8px;">
           <button type="button" id="btn-copy-handoff-note" class="btn btn-copper btn-sm">Copy Note</button>
           <button type="button" id="btn-native-share-handoff" class="btn btn-primary btn-sm">Share via Phone or Email</button>
@@ -1051,7 +1051,8 @@
   </dialog>
 
   <footer class="app-footer container">
-    <p>Open Arbor v2.1 | Open Arbor Alliance (AGPL-3.0-only) | Zero Cloud Lock-In, 100% Local Browser Execution</p>
+    <p>Open Arbor v2.2 &middot; Open Arbor Alliance &middot; Zero Cloud Lock-In, 100% Local Browser Execution</p>
+    <p>AGPL-3.0 for the engine and CC0-1.0 for schemas and data &middot; <a href="../LICENSE">LICENSE</a> &middot; <a href="../LICENSE-DATA">LICENSE-DATA</a> &middot; <a href="https://github.com/Arboracle-Ecosystem/openarbor">GitHub Repository</a></p>
   </footer>
 
   <script type="module" src="../openarbor-bundle.js"></script>

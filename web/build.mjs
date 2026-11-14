@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Open Arbor v2.0 Static Multi-Page Web Builder (esbuild)
+ * Open Arbor v2.2 Static Multi-Page Web Builder (esbuild)
  * Bundles certified src/core engines, municipal ordinance commons, 41-tool catalog,
  * JSON Schemas, multi-page UI modules, static crawlable Case Gallery (D3),
  * Service Worker (D4), and Falsifiability Page (D7) into a self-contained static artifact in out/.
@@ -93,6 +93,20 @@ if (fs.existsSync(agentsSrcDir)) {
       fs.copyFileSync(srcFile, path.join(agentsOutDir, file));
     }
   }
+}
+
+// 4c. Copy root license, notice, contributing, and layer governance docs into out/
+for (const rootDoc of ['LICENSE', 'LICENSE-DATA', 'NOTICE', 'CONTRIBUTING.md']) {
+  const srcDoc = path.join(rootDir, rootDoc);
+  if (fs.existsSync(srcDoc)) {
+    fs.copyFileSync(srcDoc, path.join(outDir, rootDoc));
+  }
+}
+const layersSrc = path.join(rootDir, 'docs', 'LAYERS.md');
+if (fs.existsSync(layersSrc)) {
+  const docsOutDir = path.join(outDir, 'docs');
+  fs.mkdirSync(docsOutDir, { recursive: true });
+  fs.copyFileSync(layersSrc, path.join(docsOutDir, 'LAYERS.md'));
 }
 
 // 5. Generate Deliverable D3 (/cases/ + 5 static case pages), Deliverable D7 (/methods/), and PWA Manifest & Icons

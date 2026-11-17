@@ -5,7 +5,7 @@ Scope: Project Open Arbor only (canonical repository `Arboracle-Ecosystem/openar
 Protocol: Regenerative Arboriculture Protocol (`RAP`), tagline `"That's a RAP"`, specification `RAP-Spec v2.0`
 Practitioner Designation: Regenerative Arboriculture Protocol Practitioner in Ecological Restoration (`RAPPER`)
 License: `CC BY-SA 4.0`
-Companion Documents: [docs/13_RAP_PRACTICE_SPECIFICATION_v1.md](./13_RAP_PRACTICE_SPECIFICATION_v1.md), [docs/LAYERS.md](./LAYERS.md), and [README.md](../README.md)
+Companion Documents: [docs/13_RAP_PRACTICE_SPECIFICATION_v1.md](./13_RAP_PRACTICE_SPECIFICATION_v1.md), [docs/LAYERS.md](./LAYERS.md), and [README.md](https://github.com/Arboracle-Ecosystem/openarbor/blob/master/README.md)
 
 ---
 

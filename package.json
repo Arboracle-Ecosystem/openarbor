@@ -44,12 +44,13 @@
     "NOTICE"
   ],
   "scripts": {
-    "test": "node tests/verify_openarbor.mjs",
+    "test": "node tests/verify_openarbor.mjs && node tests/verify_docs.mjs",
     "test:soil": "node tests/verify_soil_function.mjs",
     "test:mcp": "node tests/verify_mcp.mjs",
     "validate:ordinances": "node scripts/validate-ordinance.mjs",
     "build:web": "node web/build.mjs",
-    "verify:parity": "node deploy/verify-parity.mjs"
+    "verify:parity": "node deploy/verify-parity.mjs",
+    "build:docs": "node web/build-docs.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.28.2"

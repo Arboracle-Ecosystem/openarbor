@@ -19,6 +19,8 @@ const PRECACHE_PATHS = [
   './icons/apple-touch-icon.png',
   './styles.css',
   './openarbor-bundle.js',
+  './docs/index.html',
+  './docs/docs.css',
   './demo/index.html',
   './cases/index.html',
   './cases/austin-heritage-live-oak/index.html',
@@ -50,6 +52,16 @@ const PRECACHE_PATHS = [
   './NOTICE',
   './CONTRIBUTING.md',
   './docs/LAYERS.md',
+    './docs/00_MASTER_BLUEPRINT.html',
+    './docs/13_RAP_PRACTICE_SPECIFICATION_v1.html',
+    './docs/13_RCA_PRACTICE_SPECIFICATION_v1.html',
+    './docs/16_RAP_AND_RAPPER_ARCHITECTURE.html',
+    './docs/CONTRIBUTING_ORDINANCES.html',
+    './docs/DOCUMENTATION_ARCHITECTURE.html',
+    './docs/LAYERS.html',
+    './docs/START_QUICKSTART.html',
+    './docs/START_WHAT_OPEN_ARBOR_IS.html',
+    './docs/TOOLS_DIRECTORY.html',
 ];
 
 function resolveScopeUrls() {

@@ -1,0 +1,72 @@
+{
+  "title": "Open Arbor documentation",
+  "version": "2.2.0",
+  "generated_from": "docs/manifest.json",
+  "sections": [
+    {
+      "title": "Start",
+      "pages": [
+        {
+          "title": "What Open Arbor is",
+          "file": "START_WHAT_OPEN_ARBOR_IS.md"
+        },
+        {
+          "title": "Quickstart",
+          "file": "START_QUICKSTART.md"
+        }
+      ]
+    },
+    {
+      "title": "Field work",
+      "pages": [
+        {
+          "title": "RAP-Spec v2.0 walkthrough",
+          "file": "13_RAP_PRACTICE_SPECIFICATION_v1.md"
+        },
+        {
+          "title": "RAP and RAPPER architecture",
+          "file": "16_RAP_AND_RAPPER_ARCHITECTURE.md"
+        }
+      ]
+    },
+    {
+      "title": "Municipal codes",
+      "pages": [
+        {
+          "title": "Adding your city's code",
+          "file": "CONTRIBUTING_ORDINANCES.md"
+        }
+      ]
+    },
+    {
+      "title": "Platform",
+      "pages": [
+        {
+          "title": "Tools directory",
+          "file": "TOOLS_DIRECTORY.md"
+        },
+        {
+          "title": "Documentation architecture",
+          "file": "DOCUMENTATION_ARCHITECTURE.md"
+        }
+      ]
+    },
+    {
+      "title": "Reference",
+      "pages": [
+        {
+          "title": "Layer model",
+          "file": "LAYERS.md"
+        },
+        {
+          "title": "Master blueprint",
+          "file": "00_MASTER_BLUEPRINT.md"
+        },
+        {
+          "title": "RCA practice specification (legacy stub)",
+          "file": "13_RCA_PRACTICE_SPECIFICATION_v1.md"
+        }
+      ]
+    }
+  ]
+}

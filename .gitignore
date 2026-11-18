@@ -1,3 +1,27 @@
+# Node
 node_modules/
 .DS_Store
 out/
+
+# Marketing and public drafts — never push to public repo
+marketing/
+directives/
+HERMES_*.md
+*.swp
+*.log
+*.env
+*.pem
+*.key
+*.token
+*.pat
+
+# Internal strategy and brand docs — not for public repo
+docs/
+
+# But keep these public-facing
+!.gitignore
+!.github/
+README.md
+AGENTS.md
+package.json
+*.md in (src/|web/|schemas/|tests/) exceptions apply

@@ -321,6 +321,7 @@ function renderSharedHeader(relRoot, activeRoute) {
     { href: `${relRoot}/demo/index.html`, label: 'Field Studio', id: 'demo' },
     { href: `${relRoot}/cases/index.html`, label: 'Case Studies', id: 'cases' },
     { href: `${relRoot}/ordinances/index.html`, label: 'City Tree Laws', id: 'ordinances' },
+    { href: `${relRoot}/docs/index.html`, label: 'Docs', id: 'docs' },
   ];
 
   const veilItems = [
@@ -1283,7 +1284,7 @@ ${companionRowsHtml}
           <div class="metric-box">
             <span class="metric-label">Practitioner Name &amp; Credentials</span>
             <strong class="metric-value">George Steward</strong>
-            <span class="metric-sub">ISA Certified Arborist TX-362025A &middot; Oak Wilt Qualified &middot; RAPPER-001</span>
+            <span class="metric-sub">ISA Certified Arborist TX-362025A &middot; RAPPER-001</span>
           </div>
           <div class="metric-box">
             <span class="metric-label">Assessment &amp; Re-Inspection Schedule</span>

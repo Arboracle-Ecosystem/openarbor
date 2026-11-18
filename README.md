@@ -145,6 +145,6 @@ All files under `schemas/` and `data/` are dedicated to the public domain under 
 ## Maintainer
 
 **George Steward**  
-ISA Certified Arborist (`TX-362025A`, Oak Wilt Qualified) | Founder, [Soil Grower](https://soilgrower.com)  
+ISA Certified Arborist (`TX-362025A`) | Founder, [Soil Grower](https://soilgrower.com)  
 Master of Natural Resources (`MNR`) Candidate in Forests and Climate Change, Oregon State University  
 Practice: [soilgrower.com](https://soilgrower.com)

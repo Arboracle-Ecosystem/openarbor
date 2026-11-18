@@ -1725,7 +1725,7 @@ export function initFieldToolUI() {
           <h3>Practitioner Evidentiary Attestation &amp; Signature Block</h3>
           <p>
             <strong>Practitioner Name:</strong> ${escapeUiHtml(el('input-assessor-name')?.value.trim() || 'George Steward')} &nbsp;|&nbsp;
-            <strong>Credential:</strong> ${escapeUiHtml(el('input-assessor-credential')?.value.trim() || 'ISA Certified Arborist TX-362025A / Oak Wilt Qualified')} &nbsp;|&nbsp;
+            <strong>Credential:</strong> ${escapeUiHtml(el('input-assessor-credential')?.value.trim() || 'ISA Certified Arborist TX-362025A')}
             <strong>Assessment Date:</strong> ${sb.assessment_date || '2026-10-28'}
           </p>
           <div style="margin: 8px 0;"><strong>Canonical Evidence SHA-256:</strong> ${renderExpandableHashHtml(res.compiledReport.sha256)}</div>

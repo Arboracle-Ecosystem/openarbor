@@ -8,8 +8,8 @@ RUN npm ci
 
 COPY . .
 
-RUN npm run build:web && \
-    cp out/docs/index.html out/index.html && \
+RUN npm run build:docs && \
+    npm run build:web && \
     npm test && \
     npm run test:soil && \
     npm run test:mcp && \

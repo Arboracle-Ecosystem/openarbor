@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenArbor Ordinance Atlas</title>
+<meta name="description" content="Live municipal tree ordinance engine. Real code citations, computed root zones, mitigation obligations, and permit triggers for five Central Texas jurisdictions.">
+<style>
+  :root{
+    --ink:#12211a; --paper:#f7f4ec; --card:#ffffff; --line:#d9d3c4;
+    --green:#2d6a4f; --green-deep:#0f2419; --amber:#a86b12; --alert:#8c2f2f; --muted:#5f6b64;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  a{color:var(--green)}
+  header{background:var(--green-deep);color:#f2efe6;padding:34px 24px 30px;border-bottom:4px solid var(--amber)}
+  .wrap{max-width:1120px;margin:0 auto}
+  .kicker{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#9dbfa9;margin:0 0 10px}
+  h1{font:600 34px/1.15 Georgia,"Times New Roman",serif;margin:0 0 10px;letter-spacing:-.01em}
+  header p{margin:0;max-width:62ch;color:#cfdcd2}
+  .badges{margin-top:16px;display:flex;gap:8px;flex-wrap:wrap}
+  .badge{font-size:11.5px;letter-spacing:.04em;border:1px solid #3c5f4c;color:#c9ded1;
+    padding:4px 9px;border-radius:999px;background:#163025}
+  main{max-width:1120px;margin:0 auto;padding:28px 24px 8px}
+  .grid{display:grid;grid-template-columns:360px 1fr;gap:22px;align-items:start}
+  @media (max-width:860px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px}
+  h2{font:600 13px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 16px}
+  label{display:block;font-size:13px;font-weight:600;margin:0 0 6px;color:#2b3a32}
+  .field{margin-bottom:15px}
+  select,input[type=text],input[type=number]{
+    width:100%;padding:10px 11px;border:1px solid #c9c2b1;border-radius:7px;background:#fdfcf8;
+    font:15px inherit;color:var(--ink)}
+  select:focus,input:focus{outline:2px solid #9dcfae;outline-offset:1px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  input[type=range]{width:100%;accent-color:var(--green);margin:6px 0 0}
+  .seg{display:flex;border:1px solid #c9c2b1;border-radius:7px;overflow:hidden}
+  .seg button{flex:1;padding:9px 6px;background:#fdfcf8;border:0;font:14px inherit;cursor:pointer;color:#3b4a42}
+  .seg button[aria-pressed=true]{background:var(--green);color:#fff;font-weight:600}
+  .hint{font-size:12px;color:var(--muted);margin:6px 0 0}
+  .verdict{display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:10px;
+    border:1px solid var(--line);background:#fbfaf5;margin-bottom:18px}
+  .chip{font-size:12px;font-weight:700;letter-spacing:.1em;padding:6px 11px;border-radius:6px;
+    text-transform:uppercase;white-space:nowrap}
+  .chip.heritage{background:#f3e3c3;color:#6d4a05;border:1px solid #dfc48a}
+  .chip.protected{background:#dcebe1;color:#1d4d35;border:1px solid #a9cbaf}
+  .chip.none{background:#eceae2;color:#57544a;border:1px solid #cfcabc}
+  .chip.excepted{background:#e8e3ee;color:#4a3a5c;border:1px solid #c6bad4}
+  .verdict .vt{font-size:15px;font-weight:600}
+  .verdict .vs{font-size:13px;color:var(--muted)}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+  @media (max-width:700px){.stats{grid-template-columns:repeat(2,1fr)}}
+  .stat{border:1px solid var(--line);border-radius:9px;padding:13px 14px;background:#fdfcf8}
+  .stat .lab{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .stat .val{font:600 25px/1.2 Georgia,serif;margin-top:5px}
+  .stat .sub{font-size:11.5px;color:var(--muted)}
+  .svgbox{display:flex;gap:18px;align-items:center;border:1px solid var(--line);
+    border-radius:9px;padding:14px;background:#fdfcf8;margin-bottom:18px}
+  .svgbox p{margin:0;font-size:13px;color:var(--muted);max-width:34ch}
+  .lines{margin:0;padding:0;list-style:none}
+  .lines li{padding:9px 0;border-top:1px dashed #e0dbcc;font-size:14px;display:flex;gap:10px}
+  .lines li:first-child{border-top:0}
+  .lines .t{font-weight:600;min-width:56px}
+  .cite{font-size:12.5px;color:var(--muted);margin-top:3px}
+  .money{font-variant-numeric:tabular-nums}
+  .note{font-size:12.5px;color:var(--muted);border-left:3px solid var(--amber);
+    padding:2px 0 2px 12px;margin:14px 0 0}
+  footer{max-width:1120px;margin:26px auto 40px;padding:0 24px;color:var(--muted);font-size:12.5px}
+  footer .src{margin-top:8px}
+  .empty{padding:26px;text-align:center;color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <p class="kicker">OpenArbor · Ordinance Atlas</p>
+    <h1>Every tree rule, computed from the code that writes it</h1>
+    <p>Pick a jurisdiction, enter a tree, and the same engine that ships in the repo returns
+    protected status, root zone, permit trigger, and mitigation obligation. Every number cites
+    a section. No lookup tables, no borrowed defaults between cities.</p>
+    <div class="badges">
+      <span class="badge">Schema v2.0</span>
+      <span class="badge">5 jurisdictions</span>
+      <span class="badge">ANSI A300 root zone</span>
+      <span class="badge">Runs in your browser</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="grid">
+    <section class="card">
+      <h2>Site input</h2>
+
+      <div class="field">
+        <label for="city">Jurisdiction</label>
+        <select id="city"></select>
+        <p class="hint" id="cityHint"></p>
+      </div>
+
+      <div class="field">
+        <label for="species">Species</label>
+        <input id="species" type="text" list="speciesList" value="Quercus virginiana (Live Oak)" autocomplete="off">
+        <datalist id="speciesList"></datalist>
+      </div>
+
+      <div class="field">
+        <label for="dbh">DBH (inches)</label>
+        <input id="dbh" type="number" min="1" max="120" step="0.5" value="24">
+        <input id="dbhRange" type="range" min="1" max="60" step="0.5" value="24" aria-label="DBH slider">
+      </div>
+
+      <div class="field">
+        <label>Proposed work</label>
+        <div class="seg" role="group" aria-label="Proposed work">
+          <button type="button" id="wRemoval" aria-pressed="true">Removal</button>
+          <button type="button" id="wPruning" aria-pressed="false">Pruning only</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="disturb">Root zone disturbed (%) <span class="hint" style="display:inline">optional</span></label>
+        <input id="disturb" type="number" min="0" max="100" step="5" placeholder="0">
+        <p class="hint">Above the city's threshold, the tree counts as removed.</p>
+      </div>
+
+      <button type="button" id="reset" style="width:100%;padding:10px;border:1px solid #c9c2b1;
+        background:#fdfcf8;border-radius:7px;cursor:pointer;font:14px inherit;color:#3b4a42">
+        Reset to example
+      </button>
+    </section>
+
+    <section id="out"></section>
+  </div>
+</main>
+
+<footer>
+  <div>Computed locally in your browser by <code>src/core/ordinanceEngine.js</code> against
+  <code>data/ordinances/central_texas_ordinances.json</code>. Nothing is uploaded.</div>
+  <div class="src" id="srcLine"></div>
+  <div style="margin-top:10px">Not legal advice. Ordinance text controls. Verify against the
+  cited section before any filing or removal.</div>
+</footer>
+
+<script type="module">
+import { evaluateTreeInventory, permitDetermination, permitSummary, computeMitigationPlan, statusLabel }
+  from '../src/core/ordinanceEngine.js';
+
+const DATA_URL = '../data/ordinances/central_texas_ordinances.json';
+const $ = (id) => document.getElementById(id);
+let DATA = null, work = 'removal';
+
+const money = (n) => n == null ? 'n/a' : '$' + Number(n).toLocaleString('en-US', {maximumFractionDigits:0});
+const num = (n, d = 1) => n == null ? 'n/a' : Number(n).toFixed(d).replace(/\.0$/, '');
+
+function parseSpecies(v) {
+  const m = String(v).match(/^\s*([^(]+?)\s*(?:\(([^)]+)\))?\s*$/);
+  return { scientific: (m && m[1] ? m[1] : v).trim(), common: (m && m[2] ? m[2] : '').trim() };
+}
+
+function ordinance() {
+  return DATA.municipalities.find(m => m.id === $('city').value);
+}
+
+function render() {
+  const o = ordinance();
+  const sp = parseSpecies($('species').value || 'Unknown tree');
+  const dbh = Number($('dbh').value) || 0;
+  const disturbed = $('disturb').value === '' ? null : Number($('disturb').value);
+
+  const tree = {
+    id: 'T-1', tag: 'T-1',
+    species_common: sp.common || sp.scientific,
+    species_scientific: sp.scientific,
+    dbh_inches: dbh,
+    recommended_actions: work === 'removal' ? ['removal'] : ['pruning'],
+    removal: work === 'removal',
+    crz_disturbed_pct: disturbed,
+  };
+
+  const rows = evaluateTreeInventory([tree], o, []);
+  const r = rows[0];
+  const permit = permitDetermination(rows, o);
+  const mit = computeMitigationPlan(rows, o);
+
+  const cls = r.heritage ? 'heritage' : (r.protected || r.likely_protected) ? 'protected'
+            : r.excepted ? 'excepted' : 'none';
+  const label = statusLabel(r);
+
+  const thresh = o.dbh_threshold_inches;
+  const hthresh = o.heritage_threshold_inches;
+  const explanation = r.excepted
+    ? 'Listed as an excepted species in this jurisdiction, so the protection threshold does not apply.'
+    : r.heritage
+      ? `At ${num(dbh)} in this tree meets the heritage standard for ${o.name} (${hthresh} in or a listed heritage species).`
+      : r.protected
+        ? `At ${num(dbh)} in this tree meets the ${thresh} in protection threshold for ${o.name}.`
+        : `At ${num(dbh)} in this tree sits below the ${thresh} in protection threshold for ${o.name}.`;
+
+  const rz = (o.plan_rules && o.plan_rules.root_zone) || {};
+  const crzCitation = rz.citation || 'ANSI A300 Part 5 default';
+  const scale = Math.max(0.6, Math.min(3.2, 110 / Math.max(r.crz_ft, 1)));
+  const crzR = Math.max(8, Math.min(110, r.crz_ft * scale));
+  const tpzR = Math.max(4, Math.min(110, r.tpz_ft * scale));
+
+  const lines = [];
+  lines.push(`<li><span class="t">Status</span><span>${label}. ${explanation}
+    <div class="cite">Protection threshold ${thresh} in, heritage ${hthresh} in.
+    ${o.ordinance_numbers}</div></span></li>`);
+
+  lines.push(`<li><span class="t">Permit</span><span>${permitSummary(permit) || 'No permit trigger found in the record.'}
+    <div class="cite">${permit.citation || 'No verified trigger table on file for this city.'}</div></span></li>`);
+
+  if (mit) {
+    const steps = mit.exemption_steps.length
+      ? `<div class="cite">${mit.exemption_steps.join(' ')}</div>` : '';
+    lines.push(`<li><span class="t">Mitigation</span><span class="money">
+      ${money(mit.cash_in_lieu_usd)} cash in lieu, ${num(mit.replacement_inches_owed)} replacement inches,
+      ${num(mit.replacement_trees_owed)} trees owed.
+      ${steps}
+      <div class="cite">${mit.citation}</div></span></li>`);
+    if (mit.unpermitted_penalty && mit.unpermitted_penalty.total_penalty_usd > 0) {
+      lines.push(`<li><span class="t">If removed<br>without permit</span><span class="money">
+        ${money(mit.unpermitted_penalty.total_penalty_usd)} in doubled fee and civil penalty.
+        <div class="cite">${mit.unpermitted_penalty.citation || ''}</div></span></li>`);
+    }
+  } else {
+    lines.push(`<li><span class="t">Mitigation</span><span>No mitigation schedule on file for this jurisdiction.
+      Verify with the city.</span></li>`);
+  }
+
+  if (r.flags && r.flags.length) {
+    lines.push(`<li><span class="t">Flags</span><span>${r.flags.map(f => `<div>${f}</div>`).join('')}</span></li>`);
+  }
+
+  $('out').innerHTML = `
+    <div class="verdict">
+      <span class="chip ${cls}">${label}</span>
+      <div><div class="vt">${o.name}, ${o.state}</div>
+      <div class="vs">${num(dbh)} in ${sp.common || sp.scientific} · ${work === 'removal' ? 'removal' : 'pruning only'}</div></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="lab">Critical root zone</div>
+        <div class="val">${num(r.crz_ft)} ft</div>
+        <div class="sub">${num(r.crz_area, 0)} sq ft area</div></div>
+      <div class="stat"><div class="lab">TPZ (A300)</div>
+        <div class="val">${num(r.tpz_ft)} ft</div>
+        <div class="sub">tree protection zone</div></div>
+      <div class="stat"><div class="lab">Replacement owed</div>
+        <div class="val">${mit ? num(mit.replacement_inches_owed) : 'n/a'}</div>
+        <div class="sub">${mit ? num(mit.replacement_trees_owed) + ' trees' : 'no schedule'}</div></div>
+      <div class="stat"><div class="lab">Cash in lieu</div>
+        <div class="val money">${mit ? money(mit.cash_in_lieu_usd) : 'n/a'}</div>
+        <div class="sub">${mit ? 'per the fee schedule' : 'no schedule'}</div></div>
+    </div>
+    <div class="card" style="margin-bottom:18px">
+      <h2>Root zone geometry</h2>
+      <div class="svgbox">
+        <svg width="240" height="240" viewBox="0 0 240 240" role="img" aria-label="Critical root zone diagram">
+          <circle cx="120" cy="120" r="${crzR}" fill="#e5efe6" stroke="#2d6a4f" stroke-width="2"/>
+          <circle cx="120" cy="120" r="${tpzR}" fill="none" stroke="#a86b12" stroke-width="2" stroke-dasharray="5 4"/>
+          <circle cx="120" cy="120" r="6" fill="#2d6a4f"/>
+          <circle cx="120" cy="120" r="${Math.max(crzR, tpzR)}" fill="none" stroke="#d9d3c4" stroke-width="1"/>
+        </svg>
+        <p><strong style="color:#2d6a4f">Solid:</strong> critical root zone at ${num(r.crz_ft)} ft
+        (${crzCitation}).<br>
+        <strong style="color:#a86b12">Dashed:</strong> TPZ at ${num(r.tpz_ft)} ft per ANSI A300 Part 5.
+        ${Math.abs(r.crz_ft - r.tpz_ft) < 0.05 ? '<br><em>At this diameter the TPZ and CRZ coincide, so the dashed ring sits on the solid one.</em>' : ''}<br><br>
+        Fence line: ${num(r.fence_ft)} ft from the trunk.</p>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Determination</h2>
+      <ul class="lines">${lines.join('')}</ul>
+      <p class="note">Every figure above is computed from the ordinance record, not typed in.
+      ${o.source_url ? `Source: <a href="${o.source_url}" target="_blank" rel="noopener">${o.name} code</a>.` : ''}</p>
+    </div>`;
+
+  $('srcLine').innerHTML = `Dataset ${DATA.dataset_version} · ${DATA.region} · ${DATA.standard}`;
+  $('cityHint').textContent =
+    `${o.mitigation_fee_schedule ? 'Mitigation schedule' : 'No mitigation schedule'} · protected at ${o.dbh_threshold_inches} in`;
+}
+
+function fillSpecies() {
+  const o = ordinance();
+  const set = new Set();
+  Object.keys(o.heritage_species_thresholds || {}).forEach(s => set.add(s));
+  ['Quercus virginiana (Live Oak)','Quercus buckleyi (Texas Red Oak)','Ulmus crassifolia (Cedar Elm)',
+   'Carya illinoinensis (Pecan)','Taxodium distichum (Bald Cypress)','Celtis occidentalis (Hackberry)',
+   'Melia azedarach (Chinaberry)','Triadica sebifera (Chinese Tallow)','Ligustrum lucidum (Glossy Privet)',
+   'Ailanthus altissima (Tree of Heaven)'].forEach(s => set.add(s));
+  $('speciesList').innerHTML = [...set].map(s => `<option value="${s}">`).join('');
+}
+
+function reset() {
+  $('species').value = 'Quercus virginiana (Live Oak)';
+  $('dbh').value = 24; $('dbhRange').value = 24;
+  $('disturb').value = '';
+  work = 'removal'; $('wRemoval').setAttribute('aria-pressed','true'); $('wPruning').setAttribute('aria-pressed','false');
+  render();
+}
+
+fetch(DATA_URL).then(r => r.json()).then(d => {
+  DATA = d;
+  $('city').innerHTML = d.municipalities.map(m => `<option value="${m.id}">${m.name}, ${m.state}</option>`).join('');
+  fillSpecies();
+  $('city').addEventListener('change', () => { fillSpecies(); render(); });
+  $('species').addEventListener('input', render);
+  $('dbh').addEventListener('input', () => { $('dbhRange').value = $('dbh').value; render(); });
+  $('dbhRange').addEventListener('input', () => { $('dbh').value = $('dbhRange').value; render(); });
+  $('disturb').addEventListener('input', render);
+  $('wRemoval').addEventListener('click', () => { work='removal';
+    $('wRemoval').setAttribute('aria-pressed','true'); $('wPruning').setAttribute('aria-pressed','false'); render(); });
+  $('wPruning').addEventListener('click', () => { work='pruning';
+    $('wPruning').setAttribute('aria-pressed','true'); $('wRemoval').setAttribute('aria-pressed','false'); render(); });
+  $('reset').addEventListener('click', reset);
+  render();
+}).catch(err => {
+  $('out').innerHTML = `<div class="card empty">Could not load the ordinance dataset.<br>
+    Run this page from a local server or the published site.<br><code>${err}</code></div>`;
+});
+</script>
+</body>
+</html>

@@ -2,7 +2,7 @@
 
 **Scope:** `/home/george/Myceliate_Master/UNDERSTORY/arboracle-ecosystem/openarbor` (canonical repository for `product-openarbor`; note `/home/george/Myceliate_Master/ARBORETUM/Active/OpenArbor` is a retired stale clone and must not be read from or written to)
 **Domain & Version:** `product-openarbor` (`openarbor@2.2.0`, `RAP-Spec v2.0`, `openarbor-mcp v2.2.0`) | **Canonical Repo:** `https://github.com/Arboracle-Ecosystem/openarbor.git`
-**Owner:** George Steward (`ISA Certified Arborist TX-362025A`, Oak Wilt Qualified)
+**Owner:** George Steward (`ISA Certified Arborist TX-362025A`)
 
 Global law in [`/home/george/AGENTS.md`](file:///home/george/AGENTS.md) applies at full strength; this overlay adds Project Open Arbor rules below and removes none. All `RAP` and `RAPPER` terminology, citation, and credentialing rules defined here are strictly confined to Project Open Arbor and are not universal fleet law.
 
